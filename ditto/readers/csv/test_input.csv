@@ -1,0 +1,3 @@
+Load.name,Load.nominal_voltage,Load.phase_loads[0].p,Load.phase_loads[0].q,Load.phase_loads[2].p
+load1,240,5,1,4
+load2,240,4,2,3

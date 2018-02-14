@@ -1,0 +1,3202 @@
+{
+    "objects": {
+        "recorder": {
+            "parent": null,
+            "properties": [
+                {
+                    "description": "The unique name of the object",
+                    "name": "name",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The parent of the object. This is used in parent-child inheritance but is not included in the Gridlab-d online manual.",
+                    "name": "parent",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "By default, the name of the file to write the recorder output to. If left empty, the recorder will generate a file name based on the target object class and internal ID number. The exact mode is dependent on the format of this string.",
+                    "name": "file",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Comma-separated list of published properties that will be read, in order, and written to the recorder's output file. Property names are case sensitive, and whitespace between properties is verboten. Properties with units may be converted to other relevant units.",
+                    "name": "property",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The frequency at which the recorder samples the specified properties, in seconds. A frequency of 0 indicates that they should be read & written every iteration.",
+                    "name": "interval",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The number of rows to write to the output stream. A non-positive value puts no limit on the file size (use at your own risk). By default, this is 0.",
+                    "name": "limit",
+                    "type": "object",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "billdump": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Tells the object what file to print all information to. While a *.csv is not necessary, it is recommended as the formatted output is in *.csv format.",
+                    "name": "filename",
+                    "type": "char32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Using the groupid feature, this allows only triplex meters with the matching groupid to be dumped into the output file. If this is not specified, every triplex meter in the system will be recorded.",
+                    "name": "group",
+                    "type": "char32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Tells the object at what time to output the bills of the system. Can be in either seconds from epoch (Unix time) or with a timestamp ('2006-01-01 00:00:00'). If not specified, the default is immediately after the first time step solution.",
+                    "name": "runtime",
+                    "type": "timestamp",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "capacitor": {
+            "parent": "node",
+            "properties": [
+                {
+                    "description": "Determines the participating phases. These are the phases the various control schemes will monitor to determine their actions. Follows the same conventions as the overall phases property in powerflow.",
+                    "name": "pt_phase",
+                    "type": "set",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Connection of the capacitors. This allows for delta-connected capacitors on a wye-connected system and vice versa. Follows the same conventions as the overall phases property. If left empty or undefined, defaults to the phases property of the capacitor.",
+                    "name": "phases_connected",
+                    "type": "set",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the switch that enables or disables the capacitor attached to phase A if wye-connected or AB if delta-connected.",
+                    "name": "switchA",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the switch that enables or disables the capacitor attached to phase B if wye-connected or BC if delta-connected.",
+                    "name": "switchB",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the switch that enables or disables the capacitor attached to phase C if wye-connected or CA if delta-connected.",
+                    "name": "switchC",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Hold of the number of times the switch has changed (OPEN to CLOSED, CLOSED to OPEN) on phase A if wye-connected or AB if delta-connected.",
+                    "name": "cap_A_switch_count",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Hold of the number of times the switch has changed (OPEN to CLOSED, CLOSED to OPEN) on phase B if wye-connected or BC if delta-connected.",
+                    "name": "cap_B_switch_count",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Hold of the number of times the switch has changed (OPEN to CLOSED, CLOSED to OPEN) on phase C if wye-connected or CA if delta-connected.",
+                    "name": "cap_C_switch_count",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Defines the control scheme the capacitor will utilize to perform switching operations. Valid control mode keywords are MANUAL - Capacitor switching is controlled manually through switchA, switchB, and switchC. VAR - VAR controlled mode. A remote line needs to be specified in remote_sense or remote_sense_B that will have its reactive power checked against VAr_set_high and VAr_set_low. VOLT - Voltage controlled mode. The capacitor node itself or a node specified by remote_sense or remote_sense_B has its voltage checked against voltage_set_high and voltage_set_low. VARVOLT - Combination control scheme. Has two modes. If voltage_set_low is specified, performs control similar to VOLT first, and then VAR second. If voltage_set_low is unspecified or set to zero, operates in VAR mode primarily. However, voltage_set_high is monitored and will switch the capacitors off and lock them out if exceeded (voltage safety).",
+                    "name": "control",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "High setpoint for voltage-based capacitor switching operations. This setpoint will turn the capacitors off.",
+                    "name": "voltage_set_high",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Low setpoint for voltage-based capacitor switching operations. This setpoint will turn the capacitors on.",
+                    "name": "voltage_set_low",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "reactive High setpoint for VAr-based capacitor switching operations. This setpoint will turn the capacitors on.",
+                    "name": "VAr_set_high",
+                    "type": "double",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Low setpoint for VAr-based capacitor switching operations. This setpoint will turn the capacitors off.",
+                    "name": "VAr_set_low",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Capacitor size information for capacitor connected to phase A in a wye connection or on phase AB in a delta connection.",
+                    "name": "capacitor_A",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Capacitor size information for capacitor connected to phase B in a wye connection or on phase BC in a delta connection.",
+                    "name": "capacitor_B",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Capacitor size information for capacitor connected to phase C in a wye connection or on phase CA in a delta connection.",
+                    "name": "capacitor_C",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Capacitor rated nominal voltage. Used for situations when nominal_voltage doesn't match the rated voltage or if a line-to-line voltage is specified when the capacitors are on a wye-connected system. If left blank, defaults to the nominal_voltage specified.",
+                    "name": "cap_nominal_voltage",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Time delay before any capacitor switching operation takes place. Represents mechanical switching delays.",
+                    "name": "time_delay",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Time period a switching operation must be consistently requested before any switching operation is attempted. Serves as a transient filter or additional hysteresis to prevent transient events from causing excessive capacitor switching.",
+                    "name": "dwell_time",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Time period a capacitor will lock out switching operations after voltage_set_high is exceeded in the VARVOLT control method.",
+                    "name": "lockout_time",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Remote node or link object for VOLT, VAR, or VARVOLT control schemes. If a node object is specified, the remote voltage is read. If link object is specified, the reactive power is read.",
+                    "name": "remote_sense",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Remote node or link object for VOLT, VAR, or VARVOLT control schemes. If a node object is specified, the remote voltage is read. If link object is specified, the reactive power is read. Under the VARVOLT control scheme, this must be the opposite of the type specified in remote_sense.",
+                    "name": "remote_sense_B",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Specifies how the switching action occurs for all phases of the capacitor. Valid keywords are BANK - All capacitors are switched based on the control scheme and pt_phase property. INDIVIDUAL - Capacitors are switched individually based on the control scheme and pt_phase property.",
+                    "name": "control_level",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "currdump": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Tells the object what file to print all information to. While a *.csv is not necessary, it is recommended as the formatted output is in *.csv format.",
+                    "name": "filename",
+                    "type": "char32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Using the group_id feature, this allows only nodes with the matching group_id to be dumped into the output file.",
+                    "name": "group",
+                    "type": "char32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Tells the object at what time to output the currents of the system. Can be in either seconds from epoch (Unix time) or with a timestamp ('2006-01-01 00:00:00'). If not specified, the default is immediately after the first time step solution.",
+                    "name": "runtime",
+                    "type": "timestamp",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Allows the user to choose between polar and rectangular coordinates when printing output. Valid choices are rect rectangular coordinates (default) polar polar coordinates (in radians)",
+                    "name": "mode",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "fault_check": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Defines the fault checking scheme utilized. Valid entries are SINGLE - Fault checks and voltage support checks are only performed once, before the first solver pass of the NR solver. ONCHANGE - Fault checks and voltage support checks are performed any time an admittance change is flagged on the NR solver. ALL - Fault checks and voltage support checks are performed on every iteration",
+                    "name": "check_mode",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "File name for the text file of support check status values. Will output the bus number and phases unsupported at each timestamp the fault_check obejct runs.",
+                    "name": "output_filename",
+                    "type": "char1024",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Boolean flag to indicate if the fault_check object is running in a reliability-module-based mode. Reliability will toggle this mode and it is only provided for user information, it is not a specifiable property.",
+                    "name": "reliability_mode",
+                    "type": "bool",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Object link to an eventgen object in the reliability module. This object will be used to implement any \"unscheduled\" faults, such as switch openings or fuses blowing. Without this object specified, such objects will still open or trip, but may result in an unsolvable system matrix and prematurely terminate the simulation.",
+                    "name": "eventgen_object",
+                    "type": "object",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "fuse": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "Current rating for the fuse. If exceeded, the particular phase will go to an open circuit condition.",
+                    "name": "current_limit",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Mean time to replace the fuse if blown. This could represent a travel requirement (remote location) or scarcity requirement (shipping time for parts). This value overrides any value specified in mean_repair_time for the link object itself.",
+                    "name": "mean_replacement_time",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Status of the fuse on phase A (only valid if phase A is in the phases property). Two keywords are valid: GOOD - The fuse on phase A is still conducting and has not exceeded its current limit. BLOWN - The fuse on phase A has exceeded its current limit and is no longer conducting.",
+                    "name": "phase_A_status",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the fuse on phase B (only valid if phase B is in the phases property). Two keywords are valid: GOOD - The fuse on phase B is still conducting and has not exceeded its current limit. BLOWN - The fuse on phase B has exceeded its current limit and is no longer conducting.",
+                    "name": "phase_B_status",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the fuse on phase C (only valid if phase C is in the phases property). Two keywords are valid: GOOD - The fuse on phase C is still conducting and has not exceeded its current limit. BLOWN - The fuse on phase C has exceeded its current limit and is no longer conducting.",
+                    "name": "phase_C_status",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Distribution to be used after a fuse has blow to restore it. Current valid settings are: NONE - No distribution is used and the value in mean_replacement_time is taken directly. EXPONENTIAL - An exponential distribution is used with mean_replacement_time taken as one over the lambda value.",
+                    "name": "repair_dist_type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "line": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "Length of the line object.",
+                    "name": "length",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Name or reference to the particular configuration object that describes the properties of the line object.",
+                    "name": "configuration",
+                    "type": "object",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "line_configuration": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Object describing the conductor of phase A in the overhead or underground line object. (overhead_line_conductor or underground_line_conductor)",
+                    "name": "conductor_A",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Object describing the conductor of phase B in the overhead or underground line object. (overhead_line_conductor or underground_line_conductor)",
+                    "name": "conductor_B",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Object describing the conductor of phase C in the overhead or underground line object. (overhead_line_conductor or underground_line_conductor)",
+                    "name": "conductor_C",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Object describing the conductor of phase N in the overhead or underground line object. (overhead_line_conductor or underground_line_conductor)",
+                    "name": "conductor_N",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "line_spacing object describing how the conductors are physically oriented on the pole or in the bundle.",
+                    "name": "spacing",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z11",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z12",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z13",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z21",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z22",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z23",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z31",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z32",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "describes the z-matrix directly for either underground or overhead lines instead of using the geometric configurations (This will over-write geometric configurations).",
+                    "name": "z33",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                }
+            ]
+        },
+        "line_spacing": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Distance between conductors of phase A and phase B.",
+                    "name": "distance_AB",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductors of phase B and phase C.",
+                    "name": "distance_BC",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductors of phase C and phase A.",
+                    "name": "distance_AC",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductors of phase A and the neutral phase.",
+                    "name": "distance_AN",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductors of phase B and the neutral phase.",
+                    "name": "distance_BN",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductors of phase C and the neutral phase.",
+                    "name": "distance_CN",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductor of phase A and the earth (ground).",
+                    "name": "distance_AE",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductor of phase B and the earth (ground).",
+                    "name": "distance_BE",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductor of phase C and the earth (ground).",
+                    "name": "distance_CE",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Distance between conductor of the neutral phase (phase N) and the earth (ground).",
+                    "name": "distance_NE",
+                    "type": "double",
+                    "unit": "feet"
+                }
+            ]
+        },
+        "link": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "One connecting end of the link object. This will be the name or reference to a node-based object elsewhere in the powerflow model.",
+                    "name": "from",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The other connecting end of the link object. This will be the name or reference to a node-based object elsewhere in the powerflow model.",
+                    "name": "to",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The calculated power flowing into the particular link object as a sum of all three phases.",
+                    "name": "power_in",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power flowing out of the particular link object as a sum of all three phases.",
+                    "name": "power_out",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power loss for all three phases between the input and output of the link..",
+                    "name": "power_losses",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power on phase A flowing into the link.",
+                    "name": "power_in_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power on phase B flowing into the link.",
+                    "name": "power_in_B",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power on phase C flowing into the link.",
+                    "name": "power_in_C",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power on phase A flowing out of the link.",
+                    "name": "power_out_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power on phase B flowing out of the link.",
+                    "name": "power_out_B",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power on phase C flowing out of the link.",
+                    "name": "power_out_C",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power loss between the input and output of the link on phase A.",
+                    "name": "power_losses_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power loss between the input and output of the link on phase B.",
+                    "name": "power_losses_B",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The calculated power loss between the input and output of the link on phase C.",
+                    "name": "power_losses_C",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Status of the line in terms of being OPEN or CLOSED. This property is mainly used for switches and fuses, but may be used to remove lines from service. This functionality is primarily used in the FBS solver mode.",
+                    "name": "status",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The calculated current flowing out of the link object on phase A. Note: This has not been fully tested for every object.",
+                    "name": "current_out_A",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The calculated current flowing out of the link object on phase B. Note: This has not been fully tested for every object.",
+                    "name": "current_out_B",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The calculated current flowing out of the link object on phase C. Note: This has not been fully tested for every object.",
+                    "name": "current_out_C",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The calculated current flowing into the link object on phase A. Note: This has not been fully tested for every object.",
+                    "name": "current_in_A",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The calculated current flowing into the link object on phase B. Note: This has not been fully tested for every object.",
+                    "name": "current_in_B",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The calculated current flowing into the link object on phase C. Note: This has not been fully tested for every object.",
+                    "name": "current_in_C",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "This is a flag telling which direction current is flowing, relative to the to and from designations, on a each phase of a link object. 0x000 - UNKNOWN - The flow direction is indeterminate. 0x001 - AF - Current is flowing from the from node to the to node on phase A. 0x002 - AR - Current is flowing from the to node to the from node on phase A (reverse flow). 0x003 - AN - No current is flowing on phase A. 0x010 - BF - Current is flowing from the from node to the to node on phase B. 0x020 - BR - Current is flowing from the to node to the from node on phase B (reverse flow). 0x030 - BN - No current is flowing on phase B. 0x100 - CF - Current is flowing from the from node to the to node on phase C. 0x200 - CR - Current is flowing from the to node to the from node on phase C (reverse flow). 0x300 - CN - No current is flowing on phase C.",
+                    "name": "flow_direction",
+                    "type": "set",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Time after a fault has cleared before the object will be restored to service. Utilized by the reliability module.",
+                    "name": "mean_repair_time",
+                    "type": "double",
+                    "unit": "seconds"
+                }
+            ]
+        },
+        "ZIPload": {
+            "parent": "load",
+            "properties": [
+                {
+                    "description": "this is the constant power fraction of base power ",
+                    "name": "power_fraction",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                
+                {
+                    "description": "A point to measure the voltage of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage directly.",
+                    "name": "measured_voltage",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The constant power quantity of the load attached.",
+                    "name": "constant_power",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The constant current quantity of the load attached.",
+                    "name": "constant_current",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+
+                {
+                    "description": "The constant impedance quantity of the load attached ",
+                    "name": "constant_impedance",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "in similar format as ZIPload this represents the nominal power before applying ZIP fractions",
+                    "name": "base_power",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the constant power portion of load",
+                    "name": "power_pf",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the constant current portion of load",
+                    "name": "current_pf",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the constant impedance portion of load",
+                    "name": "impedance_pf",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power ",
+                    "name": "power_fraction",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power ",
+                    "name": "current_fraction",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power ",
+                    "name": "impedance_fraction",
+                    "type": "double",
+                    "unit": "pu"
+                }
+
+            ]
+        },
+
+        "load": {
+            "parent": "node",
+            "properties": [
+                {
+                    "description": "Describes the type of load the object represents. Used for informational purposes only. Valid types may be referenced by keyword or number 0 - U - Unknown load type 1 - R - Residential load 2 - C - Commercial load 3 - I - Industrial load 4 - A - Agricultural load",
+                    "name": "load_class",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "A point to measure the voltage on phase A of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage_A directly.",
+                    "name": "measured_voltage_A",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "A point to measure the voltage on phase B of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage_B directly.",
+                    "name": "measured_voltage_B",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "A point to measure the voltage on phase C of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage_C directly.",
+                    "name": "measured_voltage_C",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "A point to measure the voltage on delta-phase AB of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage_AB directly.",
+                    "name": "measured_voltage_AB",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "A point to measure the voltage on delta-phase BC of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage_BC directly.",
+                    "name": "measured_voltage_BC",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "A point to measure the voltage on delta-phase CA of the load. Note that this value will be from the previous powerflow iteration, so may not be up to date. For best results, read voltage_CA directly.",
+                    "name": "measured_voltage_CA",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The constant power quantity of the load attached to phase A in a wye connection and phase AB in a delta connection.",
+                    "name": "constant_power_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The constant power quantity of the load attached to phase B in a wye connection and phase BC in a delta connection.",
+                    "name": "constant_power_B",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The constant power quantity of the load attached to phase C in a wye connection and phase CA in a delta connection.",
+                    "name": "constant_power_C",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The constant current quantity of the load attached to phase A in a wye connection and phase AB in a delta connection.",
+                    "name": "constant_current_A",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The constant current quantity of the load attached to phase B in a wye connection and phase BC in a delta connection.",
+                    "name": "constant_current_B",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The constant current quantity of the load attached to phase C in a wye connection and phase CA in a delta connection.",
+                    "name": "constant_current_C",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The constant impedance quantity of the load attached to phase A in a wye connection and phase AB in a delta connection.",
+                    "name": "constant_impedance_A",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "The constant impedance quantity of the load attached to phase B in a wye connection and phase BC in a delta connection.",
+                    "name": "constant_impedance_B",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "The constant impedance quantity of the load attached to phase C in a wye connection and phase CA in a delta connection.",
+                    "name": "constant_impedance_C",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "in similar format as ZIPload this represents the nominal power on phase A before applying ZIP fractions",
+                    "name": "base_power_A",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload this represents the nominal power on phase B before applying ZIP fractions",
+                    "name": "base_power_B",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload this represents the nominal power on phase C before applying ZIP fractions",
+                    "name": "base_power_C",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase A constant power portion of load",
+                    "name": "power_pf_A",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase A constant current portion of load",
+                    "name": "current_pf_A",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase A constant impedance portion of load",
+                    "name": "impedance_pf_A",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase B constant power portion of load",
+                    "name": "power_pf_B",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase B constant current portion of load",
+                    "name": "current_pf_B",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase B constant impedance portion of load",
+                    "name": "impedance_pf_B",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase C constant power portion of load",
+                    "name": "power_pf_C",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase C constant current portion of load",
+                    "name": "current_pf_C",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload this is the power factor of the phase C constant impedance portion of load",
+                    "name": "impedance_pf_C",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power on phase A",
+                    "name": "power_fraction_A",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power on phase A",
+                    "name": "current_fraction_A",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power on phase A",
+                    "name": "impedance_fraction_A",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power on phase B",
+                    "name": "power_fraction_B",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power on phase B",
+                    "name": "current_fraction_B",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power on phase B",
+                    "name": "impedance_fraction_B",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power on phase C",
+                    "name": "power_fraction_C",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power on phase C",
+                    "name": "current_fraction_C",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power on phase C",
+                    "name": "impedance_fraction_C",
+                    "type": "double",
+                    "unit": "pu"
+                }
+            ]
+        },
+        "meter": {
+            "parent": "node",
+            "properties": [
+                {
+                    "description": "Measurement of the real energy (accumulation of the real power) that has flowed through the meter since it was reset.",
+                    "name": "measured_real_energy",
+                    "type": "double",
+                    "unit": "Watt-hours"
+                },
+                {
+                    "description": "Measurement of the reactive energy (accumulation of the reactive power) that has flowed through the meter since it was reset.",
+                    "name": "measured_reactive_energy",
+                    "type": "double",
+                    "unit": "VA-hours"
+                },
+                {
+                    "description": "Measurement of the complex power flowing through the meter at that instant in time.",
+                    "name": "measured_power",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Power drawn by the meter itself.",
+                    "name": "meter_power_consumption",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+
+                {
+                    "description": "Measurement of the complex power flowing through the meter at that instant in time on phase A.",
+                    "name": "measured_power_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measurement of the complex power flowing through the meter at that instant in time on phase B.",
+                    "name": "measured_power_B",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measurement of the complex power flowing through the meter at that instant in time on phase C.",
+                    "name": "measured_power_C",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measurement of the peak power demand of downstream objects.",
+                    "name": "measured_demand",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Measurement of the real portion of the power flowing through the meter at that instant in time.",
+                    "name": "measured_real_power",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Measurement of the reactive portion of the power flowing through the meter at that instant in time.",
+                    "name": "measured_reactive_power",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Measurement of the voltage on phase A of the meter. May or may not be as up to date as reading voltage_A directly.",
+                    "name": "measured_voltage_A",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Measurement of the voltage on phase B of the meter. May or may not be as up to date as reading voltage_B directly.",
+                    "name": "measured_voltage_B",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Measurement of the voltage on phase C of the meter. May or may not be as up to date as reading voltage_C directly.",
+                    "name": "measured_voltage_C",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Measurement of the current on phase A of the meter at that instant in time.",
+                    "name": "measured_current_A",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Measurement of the current on phase B of the meter at that instant in time.",
+                    "name": "measured_current_B",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Measurement of the current on phase C of the meter at that instant in time.",
+                    "name": "measured_current_C",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Sets the date of the month at which the final monthly bill is calculated (at midnight). Maximum value is 28.",
+                    "name": "bill_day",
+                    "type": "int32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Determines the instantaneous market price of energy. Where the price comes from depends upon the bill_mode.",
+                    "name": "price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "This is a recurrent monthly service charge that is added into the bill on the first day of the billing cycle (no pro-rating).",
+                    "name": "monthly_fee",
+                    "type": "double",
+                    "unit": "$"
+                },
+                {
+                    "description": "This is the running monthly bill at the particular meter as a function of price and the amount of energy used in that month.",
+                    "name": "monthly_bill",
+                    "type": "double",
+                    "unit": "$"
+                },
+                {
+                    "description": "This stores the total bill from the previous month after the bill has been processed on the bill_day.",
+                    "name": "previous_monthly_bill",
+                    "type": "double",
+                    "unit": "$"
+                },
+                {
+                    "description": "The rolling amount of energy consumed during the current month at that meter. Used to calculate monthly_bill.",
+                    "name": "monthly_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Stores the previous month's total energy consumption.",
+                    "name": "previous_monthly_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Describes the method in which the meter receives its price signal. 0 - NONE - Billing is not used (default). 1 - UNIFORM - A static price is used through variable price, however, this may change over time using a player or schedule. 2 - TIERED - Tiered pricing plan where the price changes as a function of the amount of energy used in the month. See tier_price and tier_energy. 3 - HOURLY - This is used in conjunction with an auction or stubauction object. Receives its price directly from a market signal, but only updates on an hourly basis. Used in conjunction with power_market.",
+                    "name": "bill_mode",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "When using bill_mode HOURLY, this points the meter to the object where it will receive a price signal.",
+                    "name": "power_market",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "When using bill_mode TIERED, this determines the energy price after energy increases above first_tier_energy, but below second_tier_energy. If second_tier_energy is not defined, then this price will be used to infinity. While energy is below first_tier_energy, price is used to calculate the monthly_bill.",
+                    "name": "first_tier_price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "When using bill_mode TIERED, this determines the energy price after energy increases above second_tier_energy, but below third_tier_energy. If third_tier_energy is not defined, then this price will be used to infinity.",
+                    "name": "second_tier_price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "When using bill_mode TIERED, this determines the energy price after energy increases above third_tier_energy and is used to infinite energy.",
+                    "name": "third_tier_price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "Determines the point at which the price of energy changes from price to first_tier_price.",
+                    "name": "first_tier_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Determines the point at which the price of energy changes from first_tier_price to second_tier_price.",
+                    "name": "second_tier_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Determines the point at which the price of energy changes from second_tier_price to third_tier_price.",
+                    "name": "third_tier_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                }
+            ]
+        },
+        "node": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "The voltage on phase A of a three-phase system. This may be specified in rectangular (7200.0+0.0j) or polar (7200.0+0.0d) formats.",
+                    "name": "voltage_A",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase B of a three-phase system. This may be specified in rectangular (7200.0+0.0j) or polar (7200.0+0.0d) formats.",
+                    "name": "voltage_B",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase C of a three-phase system. This may be specified in rectangular (7200.0+0.0j) or polar (7200.0+0.0d) formats.",
+                    "name": "voltage_C",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase AB of a delta-connected three-phase system. This is a derived quantity and can be read, but it is not recommended you set this value.",
+                    "name": "voltage_AB",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase BC of a delta-connected three-phase system. This is a derived quantity and can be read, but it is not recommended you set this value.",
+                    "name": "voltage_BC",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase CA of a delta-connected three-phase system. This is a derived quantity and can be read, but it is not recommended you set this value.",
+                    "name": "voltage_CA",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The current load on phase A (wye) or phase AB (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "current_A",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The current load on phase B (wye) or phase BC (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "current_B",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The current load on phase C (wye) or phase CA (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "current_C",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The power load on phase A (wye) or phase AB (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "power_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The power load on phase B (wye) or phase BC (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "power_B",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The power load on phase C (wye) or phase CA (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "power_C",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The shunt admittance load on phase A (wye) or phase AB (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "shunt_A",
+                    "type": "complex",
+                    "unit": "Siemens(mhos)"
+                },
+                {
+                    "description": "The shunt admittance load on phase B (wye) or phase BC (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "shunt_B",
+                    "type": "complex",
+                    "unit": "Siemens(mhos)"
+                },
+                {
+                    "description": "The shunt admittance load on phase C (wye) or phase CA (delta) of the node. This value is typically handled through the load object, so modification is not recommended here.",
+                    "name": "shunt_C",
+                    "type": "complex",
+                    "unit": "Siemens(mhos)"
+                },
+                {
+                    "description": "The type of bus the node represents. The different bus distinctions are only valid for the Gauss-Seidel and Newton-Raphson solver methods. The Forward-Back Sweep method (Kersting's method) does not presently incorporate anything other than the PQ bus. Valid choices are PQ for a constant power bus (default) PV for a voltage-controlled (magnitude) bus SWING for the infinite bus of a system.",
+                    "name": "bustype",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The maximum voltage error for convergence checks in the different powerflow solvers. If left blank, it is derived from the nominal_voltage parameter.",
+                    "name": "maximum_voltage_error",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "A flag to indicate if the current bus has a source or not. Mainly used for PV implementations. The only valid entries are HASSOURCE to indicate it is a supported bus, or an empty value indicating it is not. Unused at this time.",
+                    "name": "busflags",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "A reference node elsewhere in the system that the node will use to obtain frequency information if necessary (unimplemented in GridLAB-D at this point).",
+                    "name": "reference_bus",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Time after a fault clears for the object to be considered back in service. Mainly used for reliability module interactions at this time.",
+                    "name": "mean_repair_time",
+                    "type": "double",
+                    "unit": "seconds"
+                }
+            ]
+        },
+        "overhead_line": {
+            "parent": "line",
+            "properties": []
+        },
+        "overhead_line_conductor": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "The GMR of the wire.",
+                    "name": "geometric_mean_radius",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "The resistance of the particular conductor, incorporating size and material effects.",
+                    "name": "resistance",
+                    "type": "double",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "Diameter of the conductor - used for capacitance calculations.",
+                    "name": "diameter",
+                    "type": "double",
+                    "unit": "inches"
+                },
+                {
+                    "description": "The continuous rating for the conductor during summer month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.summer.continuous",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The emergency (short time) rating for the conductor during summer month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.summer.emergency",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The continuous rating for the conductor during winter month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.winter.continuous",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The emergency (short time) rating for the conductor during winter month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.winter.emergency",
+                    "type": "double",
+                    "unit": "Amperes"
+                }
+            ]
+        },
+        "power_metrics": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "The simulation-long computed value of the System Average Interruption Duration Index",
+                    "name": "SAIDI",
+                    "type": "double",
+                    "unit": "Customer-interruption-duration-over-total-customers-served"
+                },
+                {
+                    "description": "The interval-long computed value of the System Average Interruption Duration Index. The interval is defined by the base_time_Value property.",
+                    "name": "SAIDI_int",
+                    "type": "double",
+                    "unit": "Customer-interruption-duration-over-total-customers-served"
+                },
+                {
+                    "description": "The simulation-long computed value of the System Average Interruption Frequency Index",
+                    "name": "SAIFI",
+                    "type": "double",
+                    "unit": "Customers-interrupted-over-customers-served"
+                },
+                {
+                    "description": "The interval-long computed value of the System Average Interruption Frequency Index. The interval is defined by the base_time_Value property.",
+                    "name": "SAIFI_int",
+                    "type": "double",
+                    "unit": "Customers-interrupted-over-customers-served"
+                },
+                {
+                    "description": "The simulation-long computed value of the Average Service Availability Index.",
+                    "name": "ASAI",
+                    "type": "double",
+                    "unit": "Customer-hours-availability-over-customer-hours-demand"
+                },
+                {
+                    "description": "The interval-long computed value of the Average Service Availability Index. The interval is defined by the base_time_Value property.",
+                    "name": "ASAI_int",
+                    "type": "double",
+                    "unit": "Customer-hours-availability-over-customer-hours-demand"
+                },
+                {
+                    "description": "The simulation-long computed value of the Customer Average Interruption Duration Index.",
+                    "name": "CAIDI",
+                    "type": "double",
+                    "unit": "Customer-interruption-duration-over-total-customer-interrupted"
+                },
+                {
+                    "description": "The interval-long computed value of the Customer Average Interruption Duration Index. The interval is defined by the base_time_Value property.",
+                    "name": "CAIDI_int",
+                    "type": "double",
+                    "unit": "Customer-interruption-duration-over-total-customer-interrupted"
+                },
+                {
+                    "description": "The simulation-long computed value of the Momentary Average Interruption Frequency Index",
+                    "name": "MAIFI",
+                    "type": "double",
+                    "unit": "Customer-momentary-interruptions-over-total-customers-served"
+                },
+                {
+                    "description": "The interval-long computed value of the Momentary Average Interruption Frequency Index. The interval is defined by the base_time_Value property.",
+                    "name": "MAIFI_int",
+                    "type": "double",
+                    "unit": "Customer-momentary-interruptions-over-total-customers-served"
+                },
+                {
+                    "description": "Interval duration for IEEE 1366-2003 statistics to be computed. This information is the basis for any time calculations. For example, the interruption duration for a CAIDI calculation can be interruptions per hour, interruptions per minute, or any other time base. base_time_value dictates this base for the calculations. The value defaults to 1 minute.",
+                    "name": "base_time_value",
+                    "type": "double",
+                    "unit": "seconds"
+                }
+            ]
+        },
+        "powerflow": {
+            "parent": null,
+            "properties": [
+                {
+                    "description": "The unique name of the object",
+                    "name": "name",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The phases property has a variety of valid inputs. These are: A - Phase A of a three phase connection B - Phase B of a three phase connection C - Phase C of a three phase connection D - Delta connected phases - this implies ABC, but explicitly specifying them is recommended N - Neutral phase G - Ground phase S - Split phase - this represents residential level wires (2 \"hot\" and 1 neutral wire)",
+                    "name": "phases",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "This parameter is used to ensure connected objects are in the proper region (have the same nominal voltage) and also to specify an initial value for the convergence criteria of the different solver methods.",
+                    "name": "nominal_voltage",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The parent of the object. This is used in parent-child inheritance but is not included in the Gridlab-d online manual.",
+                    "name": "parent",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The groupid of the object.",
+                    "name": "groupid",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The number of seconds to offset any input schedule signals by, used to smooth out the otherwise lock-step behavior when changing parameters. Positive and negative integers are equally valid, telling the object to use the value later or sooner, respectively",
+                    "name": "schedule_skew",
+                    "type": "object",
+                    "unit": "N/A"
+
+                }
+
+            ]
+        },
+        "pqload": {
+            "parent": "load",
+            "properties": [
+                {
+                    "description": "Link to the climate object used in for parameters of the load.",
+                    "name": "weather",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Nominal temperature Note: Unused at this time",
+                    "name": "T_nominal",
+                    "type": "double",
+                    "unit": "Fahrenheit"
+                },
+                {
+                    "description": "Coefficient of how resistive impedance varies for temperature.",
+                    "name": "Zp_T",
+                    "type": "double",
+                    "unit": "Ohm/degree-Fahrenheit"
+                },
+                {
+                    "description": "Coefficient for how resistive impedance varies with humidity.",
+                    "name": "Zp_H",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Coefficient for how resistive impedance varies with solar gains.",
+                    "name": "Zp_S",
+                    "type": "double",
+                    "unit": "Ohm-Hour/BTU"
+                },
+                {
+                    "description": "Coefficient for how resistive impedance varies with wind speed.",
+                    "name": "Zp_W",
+                    "type": "double",
+                    "unit": "Ohm-Hour/Mile"
+                },
+                {
+                    "description": "Coefficient for how resistive impedance varies with rain fall.",
+                    "name": "Zp_R",
+                    "type": "double",
+                    "unit": "Ohm-Hour/Inch"
+                },
+                {
+                    "description": "Baseline, unvarying resistive impedance value.",
+                    "name": "Zp",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Coefficient of how reactive impedance varies for temperature.",
+                    "name": "Zq_T",
+                    "type": "double",
+                    "unit": "Farad/degree-Fahrenheit"
+                },
+                {
+                    "description": "Coefficient for how reactive impedance varies with humidity.",
+                    "name": "Zq_H",
+                    "type": "double",
+                    "unit": "Farad"
+                },
+                {
+                    "description": "Coefficient for how reactive impedance varies with solar gains.",
+                    "name": "Zq_S",
+                    "type": "double",
+                    "unit": "Farad-Hour/BTU"
+                },
+                {
+                    "description": "Coefficient for how reactive impedance varies with wind speed.",
+                    "name": "Zq_W",
+                    "type": "double",
+                    "unit": "Farad-Hour/Mile"
+                },
+                {
+                    "description": "Coefficient for how reactive impedance varies with rain fall.",
+                    "name": "Zq_R",
+                    "type": "double",
+                    "unit": "Farad-Hour/Inch"
+                },
+                {
+                    "description": "Baseline, unvarying reactive impedance value.",
+                    "name": "Zq",
+                    "type": "double",
+                    "unit": "Farads"
+                },
+                {
+                    "description": "Coefficient of how current magnitude varies for temperature.",
+                    "name": "Im_T",
+                    "type": "double",
+                    "unit": "Ampere/degree-Fahrenheit"
+                },
+                {
+                    "description": "Coefficient for how current magnitude varies with humidity.",
+                    "name": "Im_H",
+                    "type": "double",
+                    "unit": "Ampere"
+                },
+                {
+                    "description": "Coefficient for how current magnitude varies with solar gains.",
+                    "name": "Im_S",
+                    "type": "double",
+                    "unit": "Ampere-Hour/BTU"
+                },
+                {
+                    "description": "Coefficient for how current magnitude varies with wind speed.",
+                    "name": "Im_W",
+                    "type": "double",
+                    "unit": "Ampere-Hour/Mile"
+                },
+                {
+                    "description": "Coefficient for how current magnitude varies with rain fall.",
+                    "name": "Im_R",
+                    "type": "double",
+                    "unit": "Ampere-Hour/Inch"
+                },
+                {
+                    "description": "Baseline, unvarying current magnitude value.",
+                    "name": "Im",
+                    "type": "double",
+                    "unit": "Ampere"
+                },
+                {
+                    "description": "Coefficient of how current angle varies for temperature.",
+                    "name": "Ia_T",
+                    "type": "double",
+                    "unit": "degrees/degree-Fahrenheit"
+                },
+                {
+                    "description": "Coefficient for how current angle varies with humidity.",
+                    "name": "Ia_H",
+                    "type": "double",
+                    "unit": "degrees"
+                },
+                {
+                    "description": "Coefficient for how current angle varies with solar gains.",
+                    "name": "Ia_S",
+                    "type": "double",
+                    "unit": "degree-Hour/BTU"
+                },
+                {
+                    "description": "Coefficient for how current angle varies with wind speed.",
+                    "name": "Ia_W",
+                    "type": "double",
+                    "unit": "degree-Hour/Mile"
+                },
+                {
+                    "description": "Coefficient for how current angle varies with rain fall.",
+                    "name": "Ia_R",
+                    "type": "double",
+                    "unit": "degree-Hour/Inch"
+                },
+                {
+                    "description": "Baseline, unvarying current angle value.",
+                    "name": "Ia",
+                    "type": "double",
+                    "unit": "degrees"
+                },
+                {
+                    "description": "Coefficient of how resistive power varies for temperature.",
+                    "name": "Pp_T",
+                    "type": "double",
+                    "unit": "Watts/degree-Fahrenheit"
+                },
+                {
+                    "description": "Coefficient for how resistive power varies with humidity.",
+                    "name": "Pp_H",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Coefficient for how resistive power varies with solar gains.",
+                    "name": "Pp_S",
+                    "type": "double",
+                    "unit": "Watt-Hour/BTU"
+                },
+                {
+                    "description": "Coefficient for how resistive power varies with wind speed.",
+                    "name": "Pp_W",
+                    "type": "double",
+                    "unit": "Watt-Hour/Mile"
+                },
+                {
+                    "description": "Coefficient for how resistive power varies with rain fall.",
+                    "name": "Pp_R",
+                    "type": "double",
+                    "unit": "Watt-Hour/Inch"
+                },
+                {
+                    "description": "Baseline, unvarying resistive power value.",
+                    "name": "Pp",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Coefficient of how reactive power varies for temperature.",
+                    "name": "Pq_T",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive/degree-Fahrenheit"
+                },
+                {
+                    "description": "Coefficient for how reactive power varies with humidity.",
+                    "name": "Pq_H",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Coefficient for how reactive power varies with solar gains.",
+                    "name": "Pq_S",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive-Hour/BTU"
+                },
+                {
+                    "description": "Coefficient for how reactive power varies with wind speed.",
+                    "name": "Pq_W",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive-Hour/Mile"
+                },
+                {
+                    "description": "Coefficient for how reactive power varies with rain fall.",
+                    "name": "Pq_R",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive-Hour/Inch"
+                },
+                {
+                    "description": "Baseline, unvarying reactive power value.",
+                    "name": "Pq",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Observed temperature. (read-only)",
+                    "name": "input_temp",
+                    "type": "double",
+                    "unit": "degrees-Fahrenheit"
+                },
+                {
+                    "description": "Observed humidity. (read-only)",
+                    "name": "input_humid",
+                    "type": "double",
+                    "unit": "Percentage"
+                },
+                {
+                    "description": "Observed solar gains. (read-only)",
+                    "name": "input_solar",
+                    "type": "double",
+                    "unit": "BTU/hour"
+                },
+                {
+                    "description": "Observed wind speed. (read-only)",
+                    "name": "input_wind",
+                    "type": "double",
+                    "unit": "Miles/hour"
+                },
+                {
+                    "description": "Observed rainfall. (read-only)",
+                    "name": "input_rain",
+                    "type": "double",
+                    "unit": "inches/hour"
+                },
+                {
+                    "description": "Observed load resistive impedance value. (read-only)",
+                    "name": "output_imped_p",
+                    "type": "double",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "Observed load reactive impedance value. (read-only)",
+                    "name": "output_imped_q",
+                    "type": "double",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "Observed load current magnitude value. (read-only)",
+                    "name": "output_current_m",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Observed load current angular value. (read-only)",
+                    "name": "output_current_a",
+                    "type": "double",
+                    "unit": "degrees"
+                },
+                {
+                    "description": "Observed load resistive power value. (read-only)",
+                    "name": "output_power_p",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Observed load reactive power value. (read-only)",
+                    "name": "output_power_q",
+                    "type": "double",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Observed load combined impedance value. (read-only)",
+                    "name": "output_impedance",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "Observed load combined current value. (read-only)",
+                    "name": "output_current",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Observed load combined power value. (read-only)",
+                    "name": "output_power",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                }
+            ]
+        },
+        "recloser": {
+            "parent": "switch",
+            "properties": [
+                {
+                    "description": "The time to wait in seconds before trying to close after a fault condition is detected. This parameter is unused at this time and is put in place for future functionality.",
+                    "name": "retry_time",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "the maximum number of times the recloser tries to close and fails before it permanently opens.",
+                    "name": "maximum_number_of_tries",
+                    "type": "double",
+                    "unit": "unitless"
+                },
+                {
+                    "description": "number of tries a recloser has been actuated in the current fault condition.",
+                    "name": "number_of_tries",
+                    "type": "double",
+                    "unit": "unitless"
+                }
+            ]
+        },
+        "regulator": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "regulator_configuration object that describes the specific regulator implementation.",
+                    "name": "configuration",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Position of the tap on phase A of a wye-connected or phase AB of a delta-connected system. This parameter is most useful to be read in automatic regulator modes, but serves as the input for tap position of the phase under the manual control scheme.",
+                    "name": "tap_A",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Position of the tap on phase B of a wye-connected or phase BC of a delta-connected system. This parameter is most useful to be read in automatic regulator modes, but serves as the input for tap position of the phase under the manual control scheme.",
+                    "name": "tap_B",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Position of the tap on phase C of a wye-connected or phase CA of a delta-connected system. This parameter is most useful to be read in automatic regulator modes, but serves as the input for tap position of the phase under the manual control scheme.",
+                    "name": "tap_C",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Remote node for the automatic control method to monitor. Only utilized in REMOTE_NODE control scheme. This must be a node-based object to work properly.",
+                    "name": "sense_node",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Holds the number of times the tap position on phase A of a wye-connected or phase AB of a delta-connected system has changed.",
+                    "name": "tap_A_change_count",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Holds the number of times the tap position on phase B of a wye-connected or phase BC of a delta-connected system has changed.",
+                    "name": "tap_B_change_count",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Holds the number of times the tap position on phase C of a wye-connected or phase CA of a delta-connected system has changed.",
+                    "name": "tap_C_change_count",
+                    "type": "int16",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "regulator_configuration": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Selection method for the electrical connection type of the regulator implemented. Valid types may be referred to by number or keyword 0 - UNKNOWN - Unknown regulator implementation that will throw an error if used 1 - WYE_WYE - Wye connected regulator implementation 2 - OPEN_DELTA_ABBC - Open delta connected regulator with CA open - Note: Unimplemented at this time 3 - OPEN_DELTA_BCAC - Open delta connected regulator with AB open - Note: Unimplemented at this time 4 - OPEN_DELTA_CABA - Open delta connected regulator with BC open - Note: Unimplemented at this time 5 - CLOSED_DELTA - Closed delta connected regulator implementation - Note: Unimplemented at this time",
+                    "name": "connect_type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Center point of the voltage level desired.",
+                    "name": "band_center",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Allowed range for the voltage to vary before a change is implemented. Centered around band_center, so limits are at band_center - band_width/2 and band_center + band_width/2.",
+                    "name": "band_width",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Amount of time from a change request to the physical changing of the tap position on the regulator. Represents mechanical delays in the regulator.",
+                    "name": "time_delay",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Amount of time a change must be consistently requested before enacted upon. Represents a transient filter or additional hysteresis implementation to prevent excessive tap changes due to transient spikes.",
+                    "name": "dwell_time",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Upper limit of tap positions allowed in the regulator.",
+                    "name": "raise_taps",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Lower limit of tap positions allowed in the regulator. Note: This value is represented as a magnitude value. The actual lower limit of the tap positions is assumed to be -lower_taps.",
+                    "name": "lower_taps",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Turns ratio for current transducer for the line-drop compensator control method.",
+                    "name": "current_transducer_ratio",
+                    "type": "double",
+                    "unit": "per-unit"
+                },
+                {
+                    "description": "Turns ratio for the power transducer for the line-drop compensator control method.",
+                    "name": "power_transducer_ratio",
+                    "type": "double",
+                    "unit": "per-unit"
+                },
+                {
+                    "description": "Compensator resistive value for phase A.",
+                    "name": "compensator_r_setting_A",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Compensator resistive value for phase B.",
+                    "name": "compensator_r_setting_B",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Compensator resistive value for phase C.",
+                    "name": "compensator_r_setting_C",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Compensator reactive value for phase A.",
+                    "name": "compensator_x_setting_A",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Compensator reactive value for phase B.",
+                    "name": "compensator_x_setting_B",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Compensator reactive value for phase C.",
+                    "name": "compensator_x_setting_C",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Current transducer connection phase. Valid keywords are A - Phase A current transducer B - Phase B current transducer C - Phase C current transducer Note: This function is not implemented at this time.",
+                    "name": "CT_phase",
+                    "type": "set",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Power transducer connection phase. Valid keywords are A - Phase A power transducer B - Phase B power transducer C - Phase C power transducer Note: This function is not implemented at this time.",
+                    "name": "PT_phase",
+                    "type": "set",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Indicates range of voltage adjustment possible (i.e., per tap change ratio equals regulation / raise taps, or regulation of 0.1 indicates 10% rise in voltage at maximum tap position)",
+                    "name": "regulation",
+                    "type": "double",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Defines the control scheme the regulator will use to operate. Valid keywords are: MANUAL - Manual control mode. User specifies all tap changes. OUTPUT_VOLTAGE - Output node of the regulator's voltage is examined. Tap changes are performed based on band_center and band_width. LINE_DROP_COMP - Line drop compensator control mode. Utilizes compensator information in addition to band_center and band_width to determine tap changes. REMOTE_NODE - Voltage of a remote node (specified by sense_node in the regulator object) in the system is examined. Tap changes are performed based on band_center and band_width.",
+                    "name": "Control",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Defines how automatic controls influence the tap settings of the regulator. Valid keywords are: INDIVIDUAL - Each phase is controlled individually. BANK - All phases are controlled identically. Using the PT_phase property, the regulator determines any control actions and applies it to all phases identically.",
+                    "name": "control_level",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Type of step-voltage regulator implemented. Valid keywords are: A - Type A step-voltage regulator B - Type B step-voltage regulator",
+                    "name": "Type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Initial tap position for phase A. If left empty, the regulator will take a best guess at the initial tap position.",
+                    "name": "tap_pos_A",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Initial tap position for phase B. If left empty, the regulator will take a best guess at the initial tap position.",
+                    "name": "tap_pos_B",
+                    "type": "int16",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Initial tap position for phase C. If left empty, the regulator will take a best guess at the initial tap position.",
+                    "name": "tap_pos_C",
+                    "type": "int16",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "relay": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "Time to physically change out or reset the relay/recloser after it has locked out. Note: This feature is unimplemented at this time.",
+                    "name": "time_to_change",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Time from a trip before the recloser will attempt to close the circuit again.",
+                    "name": "recloser_delay",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Number of reclosing attempts before the recloser object will lock in the open position.",
+                    "name": "recloser_tries",
+                    "type": "int16",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "restoration": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Number of reconfiguration attempts a system will perform before giving up and determining the system can not be fully restored at that condition.",
+                    "name": "reconfig_attempts",
+                    "type": "double",
+                    "unit": "Tries"
+                },
+                {
+                    "description": "Number of powerflow iterations a particular reconfiguration can try before failing. Used to prevent infinite iterating by the solver.",
+                    "name": "reconfig_interation_limit",
+                    "type": "double",
+                    "unit": "count"
+                },
+                {
+                    "description": "Flag to populate the tree structure of the feeder. Used for the algorithm implmeented to increase reconfiguration iterations and attempts. Should be set to TRUE whenever reconfiguration is used.",
+                    "name": "populate_tree",
+                    "type": "boolean",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "sectionalizer": {
+            "parent": "switch",
+            "properties": []
+        },
+        "series_reactor": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "Series impedance on phase A.",
+                    "name": "phase_A_impedance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series resistance on phase A. Maps directly into phase_A_impedance, but allows user to specify real portion separately.",
+                    "name": "phase_A_resistance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series reactance on phase A. Maps directly into phase_A_impedance, but allows user to specify reactive portion separately.",
+                    "name": "phase_A_impedance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series impedance on phase B.",
+                    "name": "phase_B_impedance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series resistance on phase B. Maps directly into phase_B_impedance, but allows user to specify real portion separately.",
+                    "name": "phase_B_resistance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series reactance on phase B. Maps directly into phase_B_impedance, but allows user to specify reactive portion separately.",
+                    "name": "phase_B_impedance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series impedance on phase C.",
+                    "name": "phase_C_impedance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series resistance on phase C. Maps directly into phase_C_impedance, but allows user to specify real portion separately.",
+                    "name": "phase_C_resistance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Series reactance on phase C. Maps directly into phase_C_impedance, but allows user to specify reactive portion separately.",
+                    "name": "phase_C_impedance",
+                    "type": "double",
+                    "unit": "Ohm"
+                },
+                {
+                    "description": "Rated current limit for the reactor. Not used at this time.",
+                    "name": "rated_current_limit",
+                    "type": "double",
+                    "unit": "Amps"
+                }
+            ]
+        },
+        "substation": {
+            "parent": "node",
+            "properties": [
+                {
+                    "description": "The positive sequence voltage given from a PowerWorld bus model or a user specified value.",
+                    "name": "positive_sequence_voltage",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The phase that will be used as the reference angle for the powerflow solution. PHASE_A(Default) PHASE_B PHASE_C",
+                    "name": "reference_phase",
+                    "type": "enumeration",
+                    "unit": "None"
+                },
+                {
+                    "description": "The positive-sequence constant power load to be posted directly to the pw_load object (powerflow solver does not handle this, it is explicitly converted and posted to PowerWorld's solver).",
+                    "name": "transmission_level_constant_power_load",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The positive-sequence constant impedance load to be posted directly to the pw_load object (powerflow solver does not handle this, it is explicitly converted and posted to PowerWorld's solver).",
+                    "name": "transmission_level_constant_impedance_load",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "the positive-sequence constant current load to be posted directly to the pw_load object (powerflow solver does not handle this, it is explicitly converted and posted to PowerWorld's solver).",
+                    "name": "transmission_level_constant_current_load",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The average of the loads on all three phases at the substation object.",
+                    "name": "average_distribution_load",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The measured power of the attached powerflow on phase A.",
+                    "name": "distribution_power_A",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "The measured power of the attached powerflow on phase B.",
+                    "name": "distribution_power_B",
+                    "type": "complex",
+                    "unit": "Volts-Amperes"
+                },
+                {
+                    "description": "The measured power of the attached powerflow on phase C.",
+                    "name": "distribution_power_C",
+                    "type": "complex",
+                    "unit": "Volts-Amperes"
+                }
+            ]
+        },
+        "switch": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "Status of the phase A portion of the switch. Valid states are: OPEN - switch is open and no current can flow CLOSED - switch is closed and conducting",
+                    "name": "phase_A_state",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the phase B portion of the switch. Valid states are: OPEN - switch is open and no current can flow CLOSED - switch is closed and conducting",
+                    "name": "phase_B_state",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Status of the phase C portion of the switch. Valid states are: OPEN - switch is open and no current can flow CLOSED - switch is closed and conducting",
+                    "name": "phase_C_state",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Switching operations governing criterion. Two settings are available: INDIVIDUAL - each phase of the switch object is controlled individually. BANKED - all valid phases of the switch object are controlled together. A voting scheme of valid phases is used to determine this. For example, if a switch has phases A, B, and C with only phase C closed, phase A and B will override it and open phase A.",
+                    "name": "operating_mode",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "transformer": {
+            "parent": "link",
+            "properties": [
+                {
+                    "description": "Experimental value used in determining the transformer insulation breaking point. The default is 15000 K.",
+                    "name": "aging_constant",
+                    "type": "double",
+                    "unit": "Kelvin"
+                },
+                {
+                    "description": "The maximum time step between transformer age and internal temperature updates. The default is 300 seconds.",
+                    "name": "aging_granularity",
+                    "type": "double",
+                    "unit": "sec"
+                },
+                {
+                    "description": "Output of the ambient temperature around the transformer. The default is 22.8 C.",
+                    "name": "ambient_temperature",
+                    "type": "double",
+                    "unit": "Celsius"
+                },
+                {
+                    "description": "climate object that determines the outside ambient temperature around the transformer.",
+                    "name": "climate",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "transformer_configuration object that describes the specific transformer implementation.",
+                    "name": "configuration",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The percent amount of transformer's operational life used. If no initial value is given then the transformer is considered brand new.",
+                    "name": "percent_loss_of_life",
+                    "type": "double",
+                    "unit": "%"
+                },
+                {
+                    "description": "The hot spot temperature of the top-oil in the transformer. Default initial value is the ambient temperature.",
+                    "name": "top_oil_hot_spot_temperature",
+                    "type": "double",
+                    "unit": "Celsius"
+                },
+                {
+                    "description": "Flag used to enable use of the thermal/aging model. Default is FALSE.",
+                    "name": "use_thermal_model",
+                    "type": "boolean",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The hot spot temperature of the transformer windings. Default initial value is the ambient temperature.",
+                    "name": "winding_hot_spot_temperature",
+                    "type": "double",
+                    "unit": "Celsius"
+                }
+            ]
+        },
+        "transformer_configuration": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Describes the electrical connection between the high and low side of the transformer. These may be referenced by keyword or number 0 - UNKNOWN - An unknown transformer that will throw an error when used. 1 - WYE_WYE - A wye to wye connected transformer. 2 - DELTA_DELTA - A delta to delta connected transformer. 3 - DELTA_GWYE - A delta to grounded-wye connected transformer. 4 - SINGLE_PHASE - A single leg of a wye to wye connected transformer. 5 - SINGLE_PHASE_CENTER_TAPPED - A single-phase, center-tapped transformer or split-phase transformer. Used to connect three-phase distribution to triplex-distribution.",
+                    "name": "connect_type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Describes the type of transformer the object represents. Used for informational purposes only. Valid types may be referenced by keyword or number 0 - UNKNOWN - No information on the transformer physical type. 1 - POLETOP - A pole-mounted transformer. 2 - PADMOUNT - A pad, or ground level transformer. 3 - VAULT - An enclosed transformer \"building,\" either underground or above ground.",
+                    "name": "install_type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Nominal voltage of the primary winding side of the transformer.",
+                    "name": "primary_voltage",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Nominal voltage of the secondary winding side of the transformer.",
+                    "name": "secondary_voltage",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Nominal power rating of the entire transformer.",
+                    "name": "power_rating",
+                    "type": "double",
+                    "unit": "kilo-Volt-Amperes"
+                },
+                {
+                    "description": "Nominal power rating of windings associated with phase A if wye-connected or AB if delta-connected.",
+                    "name": "powerA_rating",
+                    "type": "double",
+                    "unit": "kilo-Volt-Amperes"
+                },
+                {
+                    "description": "Nominal power rating of windings associated with phase B if wye-connected or BC if delta-connected.",
+                    "name": "powerB_rating",
+                    "type": "double",
+                    "unit": "kilo-Volt-Amperes"
+                },
+                {
+                    "description": "Nominal power rating of windings associated with phase C if wye-connected or CA if delta-connected.",
+                    "name": "powerC_rating",
+                    "type": "double",
+                    "unit": "kilo-Volt-Amperes"
+                },
+                {
+                    "description": "De-referenced characteristic resistance of the transformer",
+                    "name": "resistance",
+                    "type": "double",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "De-referenced characteristic reactance of the transformer",
+                    "name": "reactance",
+                    "type": "double",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "De-referenced characteristic impedance of the transformer. Note that resistance and reactance above directly write the real and complex portions of this parameter, so only resistance and reactance or just impedance need to be specified.",
+                    "name": "impedance",
+                    "type": "complex",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "Some transformer models support a shunt impedance value to represent no load losses (only wye-wye and center-tap transformers use this value at this time).",
+                    "name": "shunt_impedance",
+                    "type": "complex",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "De-referenced characteristic impedance of the transformer. Currently only used with center-tap transformers. Defaults to zero; not required for operation. Allows user to reflect impedance values on both the primary and secondary side of transformer (primary is specified by impedance, secondary by impedance1 and impedance2). Phase 1 equals phase 1 of split-phasing.",
+                    "name": "impedance1",
+                    "type": "complex",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "De-referenced characteristic impedance of the transformer. Currently only used with center-tap transformers. Defaults to zero; not required for operation. Allows user to reflect impedance values on both the primary and secondary side of transformer (primary is specified by impedance, secondary by impedance1 and impedance2). Phase 2 equals phase 2 of split-phasing.",
+                    "name": "impedance2",
+                    "type": "complex",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "This is the losses of the transformer when at rated load.",
+                    "name": "full_load_loss",
+                    "type": "double",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "The losses through the transformer when there is no load.",
+                    "name": "no_load_loss",
+                    "type": "double",
+                    "unit": "per-unit-Ohm"
+                },
+                {
+                    "description": "The ratio the reactance to the resistance for both shunt and series impedances of the transformer. default is 10.",
+                    "name": "reactance_resistance_ratio",
+                    "type": "double",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The weight of the transformer's tank and fittings assembly.",
+                    "name": "tank_fittings_weight",
+                    "type": "double",
+                    "unit": "Pounds"
+                },
+                {
+                    "description": "The amount of oil contained within the transformer.",
+                    "name": "oil_volume",
+                    "type": "double",
+                    "unit": "Gallons"
+                },
+                {
+                    "description": "The weight of the transformer's core and coil assembly.",
+                    "name": "core_coil_weight",
+                    "type": "double",
+                    "unit": "Pounds"
+                },
+                {
+                    "description": "The winding hot spot temperature rise over ambient at rated transformer load. Default is 80 degrees C.",
+                    "name": "rated_winding_hot_spot_rise",
+                    "type": "double",
+                    "unit": "Celsius"
+                },
+                {
+                    "description": "The top oil temperature rise over ambient at rated transformer load.",
+                    "name": "rated_top_oil_rise",
+                    "type": "double",
+                    "unit": "Celsius"
+                },
+                {
+                    "description": "The winding's time constant.",
+                    "name": "rated_winding_time_constant",
+                    "type": "double",
+                    "unit": "Hours"
+                },
+                {
+                    "description": "The transformer's operational time span.",
+                    "name": "installed_insulation_life",
+                    "type": "double",
+                    "unit": "Hours"
+                },
+                {
+                    "description": "The type of coolant used in the transformer. Valid types may be referenced by keyword or number 0 - UNKNOWN - An unknown and unknown coolant type that will throw an error when used. 1 - MINERAL_OIL - A transformer immersed in mineral oil. 2 - DRY - A transformer with air as its coolant. This type is not handled yet.",
+                    "name": "coolant_type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The type of cooling used in the transformer. Valid types may be referenced by keyword or number 0 - UNKNOWN - An unknown and unknown cooling type that will throw an error when used. 1 - OA - A liquid immersed self cooled transformer. 2 - FA - A forced air cooled liquid immersed transformer. 3 - NDFOA - A transformer with non-direction forced oil and air flow. 4 - NDFOw - A transformer with non-direction forced oil and water flow. 5 - DFOA - A transformer with direction forced oil and air flow. 6 - DFOw - A transformer with direction forced oil and water flow.",
+                    "name": "cooling_type",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                }
+            ]
+        },
+        "triplex_line": {
+            "parent": "line",
+            "properties": []
+        },
+        "triplex_line_conductor": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Resistance of the conductor.",
+                    "name": "resistance",
+                    "type": "double",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "GMR of conductor.",
+                    "name": "geometric_mean_radius",
+                    "type": "double",
+                    "unit": "feet"
+                }
+            ]
+        },
+        "triplex_line_configuration": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "triplex_conductor object that represents the physical wire of phase 1.",
+                    "name": "conductor_1",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "triplex_conductor object that represents the physical wire of phase 2.",
+                    "name": "conductor_2",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "triplex_conductor object that represents the physical wire of the neutral phase.",
+                    "name": "conductor_N",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Thickness of the insulation around the phase 1 and phase 2 conductors",
+                    "name": "insulation_thickness",
+                    "type": "double",
+                    "unit": "inches"
+                },
+                {
+                    "description": "Diameter of the conductor",
+                    "name": "diameter",
+                    "type": "double",
+                    "unit": "inches"
+                },
+                {
+                    "description": "line_spacing object with information on the physical layout of the conductors. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "spacing",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Describes the z-matrix explicitly as opposed to using geometric configurations. Using this will over-write the geometric configurations.",
+                    "name": "z11",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "Describes the z-matrix explicitly as opposed to using geometric configurations. Using this will over-write the geometric configurations.",
+                    "name": "z12",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "Describes the z-matrix explicitly as opposed to using geometric configurations. Using this will over-write the geometric configurations.",
+                    "name": "z21",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "Describes the z-matrix explicitly as opposed to using geometric configurations. Using this will over-write the geometric configurations.",
+                    "name": "z22",
+                    "type": "complex",
+                    "unit": "Ohm/mile"
+                }
+            ]
+        },
+        "triplex_load": {
+            "parent": "triplex_node",
+            "properties": [
+                {
+                    "description": "in similar format as ZIPload & load this represents the nominal power on phase 1 before applying ZIP fractions",
+                    "name": "base_power_1",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this represents the nominal power on phase 2 before applying ZIP fractions",
+                    "name": "base_power_2",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this represents the nominal power on phase 12 before applying ZIP fractions",
+                    "name": "base_power_12",
+                    "type": "double",
+                    "unit": "VA"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 1 constant power portion of load",
+                    "name": "power_pf_1",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 1 constant current portion of load",
+                    "name": "current_pf_1",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 1 constant impedance portion of load",
+                    "name": "impedance_pf_1",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 2 constant power portion of load",
+                    "name": "power_pf_2",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 2 constant current portion of load",
+                    "name": "current_pf_2",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 2 constant impedance portion of load",
+                    "name": "impedance_pf_2",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 12 constant power portion of load",
+                    "name": "power_pf_12",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 12 constant current portion of load",
+                    "name": "current_pf_12",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "in similar format as ZIPload & load this is the power factor of the phase 12 constant impedance portion of load",
+                    "name": "impedance_pf_12",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power on phase 1",
+                    "name": "power_fraction_1",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power on phase 1",
+                    "name": "current_fraction_1",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power on phase 1",
+                    "name": "impedance_fraction_1",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power on phase 2",
+                    "name": "power_fraction_2",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power on phase 2",
+                    "name": "current_fraction_2",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power on phase 2",
+                    "name": "impedance_fraction_2",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant power fraction of base power on phase 12",
+                    "name": "power_fraction_12",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant current fraction of base power on phase 12",
+                    "name": "current_fraction_12",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "this is the constant impedance fraction of base power on phase 12",
+                    "name": "impedance_fraction_12",
+                    "type": "double",
+                    "unit": "pu"
+                },
+                {
+                    "description": "the current measured voltage on phase 1",
+                    "name": "measured_voltage_1",
+                    "type": "complex",
+                    "unit": "V"
+                },
+                {
+                    "description": "the current measured voltage on phase 2",
+                    "name": "measured_voltage_2",
+                    "type": "complex",
+                    "unit": "V"
+                },
+                {
+                    "description": "the current measured voltage on phase 12",
+                    "name": "measured_voltage_12",
+                    "type": "complex",
+                    "unit": "V"
+                }
+            ]
+        },
+        "triplex_meter": {
+            "parent": "triplex_node",
+            "properties": [
+                {
+                    "description": "The power consumption of the meter",
+                    "name": "meter_power_consumption",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+
+                {
+                    "description": "Measurement of the real energy (accumulation of the real power) that has flowed through the triplex_meter since it was reset.",
+                    "name": "measured_real_energy",
+                    "type": "double",
+                    "unit": "Watt-hours"
+                },
+                {
+                    "description": "Measurement of the reactive energy (accumulation of the reactive power) that has flowed through the triplex_meter since it was reset.",
+                    "name": "measured_reactive_energy",
+                    "type": "double",
+                    "unit": "Volt-Amperes-hours"
+                },
+                {
+                    "description": "Measurement of the complex power flowing through the triplex meter at that instant in time.",
+                    "name": "measured_power",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Power drawn by the meter itself.",
+                    "name": "meter_power_consumption",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measurement of the peak power demand of downstream objects.",
+                    "name": "measured_demand",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Measurement of the real portion of the power flowing through the triplex meter at that instant in time.",
+                    "name": "measured_real_power",
+                    "type": "double",
+                    "unit": "Watts"
+                },
+                {
+                    "description": "Measurement of the reactive portion of the power flowing through the meter at that instant in time.",
+                    "name": "measured_reactive_power",
+                    "type": "double",
+                    "unit": "Volt-Amperes-reactive"
+                },
+                {
+                    "description": "Measures the complex power flowing through the meter on phase 1.",
+                    "name": "indiv_measured_power_1",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measures the complex power flowing through the meter on phase 2.",
+                    "name": "indiv_measured_power_2",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measures the complex power flowing through the meter on phase N.",
+                    "name": "indiv_measured_power_N",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Measurement of the voltage on phase 1 of the split-phase or triplex system. May or may not be as up to date as reading voltage_1 directly.",
+                    "name": "measured_voltage_1",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Measurement of the voltage on phase 2 of the split-phase or triplex system. May or may not be as up to date as reading voltage_2 directly.",
+                    "name": "measured_voltage_2",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Measurement of the voltage on the neutral phase of the split-phase or triplex system.. May or may not be as up to date as reading voltage_N directly.",
+                    "name": "measured_voltage_N",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Measurement of the current on phase 1 of the triplex meter at that instant in time.",
+                    "name": "measured_current_1",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Measurement of the current on phase 2 of the triplex meter at that instant in time.",
+                    "name": "measured_current_2",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Measurement of the current on the neutral phase of the triplex meter at that instant in time.",
+                    "name": "measured_current_N",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Sets the date of the month at which the final monthly bill is calculated (at midnight). Maximum value is 28.",
+                    "name": "bill_day",
+                    "type": "int32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Determines the instantaneous market price of energy. Where the price comes from depends upon the bill_mode.",
+                    "name": "price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "This is a recurrent monthly service charge that is added into the bill on the first day of the billing cycle (no pro-rating).",
+                    "name": "monthly_fee",
+                    "type": "double",
+                    "unit": "$"
+                },
+                {
+                    "description": "This is the running monthly bill at the particular meter as a function of price and the amount of energy used in that month.",
+                    "name": "monthly_bill",
+                    "type": "double",
+                    "unit": "$"
+                },
+                {
+                    "description": "This stores the total bill from the previous month after the bill has been processed on the bill_day.",
+                    "name": "previous_monthly_bill",
+                    "type": "double",
+                    "unit": "$"
+                },
+                {
+                    "description": "The rolling amount of energy consumed during the current month at that meter. Used to calculate monthly_bill.",
+                    "name": "monthly_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Stores the previous month's total energy consumption.",
+                    "name": "previous_monthly_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Describes the method in which the meter receives its price signal. 0 - NONE - Billing is not used (default). 1 - UNIFORM - A static price is used through variable price, however, this may change over time using a player or schedule. 2 - TIERED - Tiered pricing plan where the price changes as a function of the amount of energy used in the month. See tier_price and tier_energy. 3 - HOURLY - This is used in conjunction with an auction or stubauction object. Receives its price directly from a market signal, but only updates on an hourly basis. Used in conjunction with power_market. NOTE: while this says \"hourly\", it will actually update any time the price changes in the auction. 4 - TIERED_RTP - Merges TIERED and HOURLY modes. Applies both a real time price via the auction to energy usage, but then also applies block / tiered rates to the total monthly energy use.",
+                    "name": "bill_mode",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "When using bill_mode HOURLY, this points the meter to the object where it will receive a price signal.",
+                    "name": "power_market",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "When using bill_mode TIERED, this determines the energy price after energy increases above first_tier_energy, but below second_tier_energy. If second_tier_energy is not defined, then this price will be used to infinity. While energy is below first_tier_energy, price is used to calculate the monthly_bill.",
+                    "name": "first_tier_price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "When using bill_mode TIERED, this determines the energy price after energy increases above second_tier_energy, but below third_tier_energy. If third_tier_energy is not defined, then this price will be used to infinity.",
+                    "name": "second_tier_price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "When using bill_mode TIERED, this determines the energy price after energy increases above third_tier_energy and is used to infinite energy.",
+                    "name": "third_tier_price",
+                    "type": "double",
+                    "unit": "$/kWh"
+                },
+                {
+                    "description": "Determines the point at which the price of energy changes from price to first_tier_price.",
+                    "name": "first_tier_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Determines the point at which the price of energy changes from first_tier_price to second_tier_price.",
+                    "name": "second_tier_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                },
+                {
+                    "description": "Determines the point at which the price of energy changes from second_tier_price to third_tier_price.",
+                    "name": "third_tier_energy",
+                    "type": "double",
+                    "unit": "kWh"
+                }
+            ]
+        },
+        "triplex_node": {
+            "parent": "node",
+            "properties": [
+                {
+                    "description": "The type of bus the node represents. The different bus distinctions are only valid for the Gauss-Seidel and Newton-Raphson solver methods. The Forward-Back Sweep method (Kersting's method) does not presently incorporate anything other than the PQ bus. Valid choices are PQ for a constant power bus (default) PV for a voltage-controlled (magnitude) bus SWING for the infinite bus of a system.",
+                    "name": "bustype",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "A flag to indicate if the current bus has a source or not. Mainly used for PV implementations. The only valid entries are HASSOURCE to indicate it is a supported bus, or an empty value indicating it is not.",
+                    "name": "busflags",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "A reference node elsewhere in the system that the triplex_node will use to obtain frequency information if necessary (unimplemented in GridLAB-D at this point).",
+                    "name": "reference_bus",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "The maximum voltage error for convergence checks in the different powerflow solvers. If left blank, it is derived from the nominal_voltage parameter.",
+                    "name": "maximum_voltage_error",
+                    "type": "double",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase 1 of a split-phase or triplex system. This may be specified in rectangular (7200.0+0.0j) or polar (7200.0+0.0d) formats.",
+                    "name": "voltage_1",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on phase 2 of a split-phase or triplex system. This may be specified in rectangular (7200.0+0.0j) or polar (7200.0+0.0d) formats.",
+                    "name": "voltage_2",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage on the neutral phase of a split-phase or triplex system. This may be specified in rectangular (7200.0+0.0j) or polar (7200.0+0.0d) formats.",
+                    "name": "voltage_N",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage between phases 1 and 2 of the split-phase or triplex system. This is a derived quantity and can be read, but it is not recommended you set this value.",
+                    "name": "voltage_12",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage between phases 1 and N of the split-phase or triplex system. This is a derived quantity and can be read, but it is not recommended you set this value.",
+                    "name": "voltage_1N",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "The voltage between phases 2 and N of the split-phase or triplex system. This is a derived quantity and can be read, but it is not recommended you set this value.",
+                    "name": "voltage_2N",
+                    "type": "complex",
+                    "unit": "Volts"
+                },
+                {
+                    "description": "Constant current load on phase 1 of the split-phase or triplex system.",
+                    "name": "current_1",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Constant current load on phase 2 of the split-phase or triplex system.",
+                    "name": "current_2",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Constant current load on the neutral phase of the split-phase or triplex system.",
+                    "name": "current_N",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Constant current load on across phases 1 and 2 of the split-phase or triplex system.",
+                    "name": "current_12",
+                    "type": "complex",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "Constant power load on phase 1 of the split-phase or triplex system.",
+                    "name": "power_1",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Constant power load on phase 2 of the split-phase or triplex system.",
+                    "name": "power_2",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Constant power load across phases 1 and 2 of the split-phase or triplex system.",
+                    "name": "power_12",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Constant real power load across phases 1 and 2 of the split-phase or triplex system.",
+                    "name": "power_12_real",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Constant reactive power load across phases 1 and 2 of the split-phase or triplex system.",
+                    "name": "power_12_reac",
+                    "type": "complex",
+                    "unit": "Volt-Amperes"
+                },
+                {
+                    "description": "Constant admittance load on phase 1 of the split-phase or triplex system.",
+                    "name": "shunt_1",
+                    "type": "complex",
+                    "unit": "Siemens(mhos)"
+                },
+                {
+                    "description": "Constant admittance load on phase 2 of the split-phase or triplex system.",
+                    "name": "shunt_2",
+                    "type": "complex",
+                    "unit": "Siemens(mhos)"
+                },
+                {
+                    "description": "Constant admittance load across phases 1 and 2 of the split-phase or triplex system.",
+                    "name": "shunt_12",
+                    "type": "complex",
+                    "unit": "Siemens(mhos)"
+                },
+                {
+                    "description": "Constant impedance load on phase 1 of the split-phase or triplex system.",
+                    "name": "impedance_1",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "Constant impedance load on phase 2 of the split-phase or triplex system.",
+                    "name": "impedance_2",
+                    "type": "complex",
+                    "unit": "Ohms"
+                },
+                {
+                    "description": "Constant impedance load across phases 1 and 2 of the split-phase or triplex system.",
+                    "name": "impedance_12",
+                    "type": "complex",
+                    "unit": "Ohms"
+                }
+            ]
+        },
+        "underground_line": {
+            "parent": "line",
+            "properties": []
+        },
+        "underground_line_conductor": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Diameter of the outside of the cable, including jacketing and shielding.",
+                    "name": "outer_diameter",
+                    "type": "double",
+                    "unit": "inches"
+                },
+                {
+                    "description": "Geometric mean radius of the conductor at the center of the concentric cable.",
+                    "name": "conductor_gmr",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Diameter of the conductor at the center of the concentric cable.",
+                    "name": "conductor_diameter",
+                    "type": "double",
+                    "unit": "inches"
+                },
+                {
+                    "description": "Resistance of the conductor at the center of the concentric cable.",
+                    "name": "conductor_resistance",
+                    "type": "double",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "Geometric mean radius of the concentric neutral of the cable.",
+                    "name": "neutral_gmr",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Diameter of the concentric neutral of the cable.",
+                    "name": "neutral_diameter",
+                    "type": "double",
+                    "unit": "inches"
+                },
+                {
+                    "description": "Resistance of the concentric neutral of the cable.",
+                    "name": "neutral_resistance",
+                    "type": "double",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "Number of strands composing the concentric neutral conductor.",
+                    "name": "neutral_strands",
+                    "type": "integer",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Relative permitivitty of the insulation in a concentric neutral cable - relative to air - used for capacitance calculations.",
+                    "name": "insulation_relative_permitivitty",
+                    "type": "double",
+                    "unit": "N/A(scalar)"
+                },
+                {
+                    "description": "Geometric mean radius of the shielding of the cable.",
+                    "name": "shield_gmr",
+                    "type": "double",
+                    "unit": "feet"
+                },
+                {
+                    "description": "Resistance of the cable shielding.",
+                    "name": "shield_resistance",
+                    "type": "double",
+                    "unit": "Ohm/mile"
+                },
+                {
+                    "description": "The continuous rating for the conductor during summer month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.summer.continuous",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The emergency (short time) rating for the conductor during summer month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.summer.emergency",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The continuous rating for the conductor during winter month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.winter.continuous",
+                    "type": "double",
+                    "unit": "Amperes"
+                },
+                {
+                    "description": "The emergency (short time) rating for the conductor during winter month usage. This parameter is unused at this point. Future versions of GridLAB-D may implement this functionality",
+                    "name": "rating.winter.emergency",
+                    "type": "double",
+                    "unit": "Amperes"
+                }
+            ]
+        },
+        "volt_var_control": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Defines the control scheme the volt_var_control object is currently operating in. There are two modes currently supported: STANDBY - The volt_var_control is inactive and all regulator and capacitor control is handled by their local definitions. ACTIVE - The volt_var_control is actively adjusting the regulators of interest, as well as coordinating capacitor insertions and removals. This is the default state.",
+                    "name": "control_method",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Default delay for any capacitors under the volt_var_control object's control. If a delay is not explicitly defined in the capacitor's local properties, this value will be used as the time delay for all switching operations. Defaults to 5.0 seconds.",
+                    "name": "capacitor_delay",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Default delay for any regulators under the volt_var_control object's control. If a delay is not explicityly defined in the regulator_configuration object association with the regulator, this value will be used as the time delay in all tap-changing operations. Defaults to 5.0 seconds.",
+                    "name": "regulator_delay",
+                    "type": "double",
+                    "unit": "seconds"
+                },
+                {
+                    "description": "Desired power-factor for the system to try and achieve. Used for setting threshold values for switching capacitors in and out of the system. The power factor is determined at the substation_link object. Defaults to 0.98.",
+                    "name": "desired_pf",
+                    "type": "double",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Scaling constant for switching the capacitors on as a ratio of their size to the required reactive power correction. Typically between 0.3 and 0.6. It must not overlap with d_min, and a larger spread between the two values helps prevent capacitor switching oscillations. Defaults to 0.6.",
+                    "name": "d_max",
+                    "type": "double",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Scaling constant for switching the capacitors off as a ratio of their size and the required reactive power correction. Typically between 0.1 and 0.4. It must not overlap with d_max. As with d_max, a larger spread between d_min and d_max will help prevent capacitor switching oscillations. Defaults to 0.3.",
+                    "name": "d_min",
+                    "type": "double",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Defines the link to extract power information from for power factor correction. This object must be of the main-type link. Typically, this will be attached to a subtransmission-level transformer object to monitor reactive power for the entire network. If unpopulated, this defaults to monitoring the power through the first regulator specified in regulator_list.",
+                    "name": "substation_link",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Defines the phases of substation_link to monitor and accumulate for the power factor calculations. pf_phase can be any combination of PHASE_A, PHASE_B, or PHASE_C. If left blank, pf_phase will default to the phases of the substation_link object.",
+                    "name": "pf_phase",
+                    "type": "set",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "List of regulators for the volt_var_control object to control. The list is a comma-separated object name for each regulator for which control is desired. No trailing comma is required. One regulator would be specified as regulator_list reg799781;, while three would be regulator_list reg799781,reg981,reg01;.",
+                    "name": "regulator_list",
+                    "type": "char1024",
+                    "unit": "Regulator-objects-(implied)"
+                },
+                {
+                    "description": "List of capacitors for the volt_var_control object to control. This list is also comma-separated, like the regulator_list. If no capacitors are specified, no reactive adjustments are performed. All capacitors are operated in banked mode by the volt_var_control object. The listed capacitors are sorted by size and distance for switching operations. An example capacitor list is capacitor_list CapA,CapB,CapC.",
+                    "name": "capacitor_list",
+                    "type": "char1024",
+                    "unit": "Capacitor-objects-(implied)"
+                },
+                {
+                    "description": "List of end-of-line measurements for the volt_var_control to use in regulator control. This list is comma-separated, like the capacitor_list and regulator_list. If left blank, the measurement point defaults to load side of each regulator in regulator_list. The list can take two formats, depending on the number of regulators: One regulator - The list is a comma-separated list of just the object names. No regulator designation is necessary, since only one regulator is present. An example is measurement_list NodeA,NodeB,NodeC,NodeD;. One or more regulators - The list is a comma-separated list of object names, and their associated regulator. All measurements must be represented as a pair in the list. The first item is the object name, and the second item is the regulator position in the regulator_list variable. For example, measurement_list NodeA,1,NodeC,2,NodeB,1; will assign NodeA and NodeB to regulator 1, and NodeC to regulator 2. Notice these can occur in any regulator order, as long as the second portion of the data pair is the regulator number.",
+                    "name": "voltage_measurements",
+                    "type": "char1024",
+                    "unit": "Objects-(implied)"
+                },
+                {
+                    "description": "List of minimum voltages for the volt_var_control object to maintain. If only 1 value is specified, this value will be used for all regulators in regulator_list. A value can be specified for each regulator as a comma-separated list. For example, to specify two minimum voltage levels for two different regulators, use minimum_voltages 2600,2500;. If left blank, the minimimum voltage is set at 0.95 p.u. of the regulator's TO node nominal_voltage.",
+                    "name": "minimum_voltages",
+                    "type": "char1024",
+                    "unit": "Volts-(implied)"
+                },
+                {
+                    "description": "List of maximum voltages for the volt_var_control object to maintain. If only 1 value is specified, this value will be used for all regulators in regulator_list. A value can be specified for each regulator as a comma-separated list. For example, to specify two maximum voltage levels for two different regulators, use maximum_voltages 4500,4400;. If left blank, the maximimum voltage is set at 1.05 p.u. of the regulator's TO node nominal_voltage.",
+                    "name": "maximum_voltages",
+                    "type": "char1024",
+                    "unit": "Volts-(implied)"
+                },
+                {
+                    "description": "List of desired, or target voltages for the volt_var_control object to maintain. If only 1 value is specified, this value will be used for all regulators in regulator_list. A value can be specified for each regulator as a comma-separated list. For example, to specify two desired voltage levels for two different regulators, use desired_voltages 4500,4400;. If left blank, the desired voltage is set at the regulator's TO node nominal_voltage.",
+                    "name": "desired_voltages",
+                    "type": "char1024",
+                    "unit": "Volts-(implied)"
+                },
+                {
+                    "description": "List of voltage drop thresholds for high or low loading operation (selection of high_load_deadband or low_load_deadband for a regulator). If the voltage drop between the regulator and the lowest end-of-line measurement is greater than max_vdrop, the corresponding high_load_deadband is used. Otherwise, the corresponding low_load_deadband is used. max_vdrop can be a comma-separated list of values for each regulator of regulator_list. if only one value is specified, that value will be used for all regulators. If left blank, max_vdrop defaults to 1.5x the corresponding regulator object's step up tap voltage value.",
+                    "name": "max_vdrop",
+                    "type": "char1024",
+                    "unit": "Volts-(implied)"
+                },
+                {
+                    "description": "List of tap-changing bandwidth thresholds for high loading operation (as determined by max_vdrop). high_load_deadband represents a +/- high_load_deadband deadband around the desired voltage before a tap change is requested on the regulator. This can be specified for each regulator as a comma-separated list. If a single value is specified, that value will be used on all regulators in the regulator_list. If unspecified, high_load_deadband defaults to the voltage value associated with a single tap change on the regulator.",
+                    "name": "high_load_deadband",
+                    "type": "char1024",
+                    "unit": "Volts-(implied)"
+                },
+                {
+                    "description": "List of tap-changing bandwidth thresholds for low loading operation (as determined by max_vdrop). low_load_deadband represents a +/- low_load_deadband deadband around the desired voltage before a tap change is requested on the regulator. This can be specified for each regulator as a comma-separated list. If a single value is specified, that value will be used on all regulators in the regulator_list. If unspecified, low_load_deadband defaults to the voltage value associated with a two tap change on the regulator (2x the default of high_load_deadband).",
+                    "name": "low_load_deadband",
+                    "type": "char1024",
+                    "unit": "Volts-(implied)"
+                }
+            ]
+        },
+        "voltdump": {
+            "parent": "powerflow",
+            "properties": [
+                {
+                    "description": "Tells the object what file to print all information to. While a *.csv is not necessary, it is recommended as the formatted output is in *.csv format.",
+                    "name": "filename",
+                    "type": "char32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Using the group_id feature, this allows only nodes with the matching group_id to be dumped into the output file.",
+                    "name": "group",
+                    "type": "char32",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Tells the object at what time to output the voltages of the system. Can be in either seconds from epoch (Unix time) or with a timestamp ('2006-01-01 00:00:00'). If not specified, the default is immediately after the first time step solution.",
+                    "name": "runtime",
+                    "type": "timestamp",
+                    "unit": "N/A"
+                },
+                {
+                    "description": "Allows the user to choose between polar and rectangular coordinates when printing output. Valid choices are rect rectangular coordinates polar polar coordinates (default - in radians)",
+                    "name": "mode",
+                    "type": "enumeration",
+                    "unit": "N/A"
+                }
+            ]
+        }
+    }
+}
