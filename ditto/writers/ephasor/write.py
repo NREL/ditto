@@ -366,10 +366,11 @@ class Writer(abstract_writer):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = 'b' + num_str + ' (uS/Mile)'
+
                             print("length",line.length)
                             print("R", np.real(elt))
                             print("X", np.imag(elt))
-                            print("")
+                            print()
 
                             # -6.3581 line valie
                             # -.602 siemens per mile
