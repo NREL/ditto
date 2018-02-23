@@ -117,7 +117,7 @@ Author: Nicolas Gensollen. January 2018
 
             #Loop over the object properties.
             #Ex: name, postion...
-            for object_property,property_value in _object.iteritems():
+            for object_property,property_value in _object.items():
 
                 if object_property!='klass':
 
@@ -151,7 +151,7 @@ Author: Nicolas Gensollen. January 2018
 
                                 #Loop over the winding properties
                                 #Ex: rated_power...
-                                for element_property,element_value in element.iteritems():
+                                for element_property,element_value in element.items():
 
                                     if element_property!='klass':
 
@@ -178,7 +178,7 @@ Author: Nicolas Gensollen. January 2018
                                                     api_object_two_level_deep=eval(element_deep_class)(self.model)
 
                                                     #Amd loop over its attributes
-                                                    for nested_object_property,nested_object_property_value in element_deep.iteritems():
+                                                    for nested_object_property,nested_object_property_value in element_deep.items():
 
                                                         if nested_object_property!='klass':
 

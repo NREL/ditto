@@ -94,7 +94,7 @@ The output file is configured in the constructor.
                 _model[-1]['name']={'klass':'str', 'value':None}
                 pass
 
-            for key,value in obj._trait_values.iteritems():
+            for key,value in obj._trait_values.items():
                 if key in ['capacitance_matrix', 'impedance_matrix','reactances']:
                     _model[-1][key]={'klass':'list','value':[]}
                     for v in value:
@@ -119,7 +119,7 @@ The output file is configured in the constructor.
 
                         elif isinstance(v,Position):
                             _model[-1][key]['value'].append({'klass':'Position'})
-                            for kkk,vvv in v._trait_values.iteritems():
+                            for kkk,vvv in v._trait_values.items():
                                 _model[-1][key]['value'][-1][kkk]={'klass':str(type(vvv)).split("'")[1],'value':vvv}
 
                         elif isinstance(v,Unicode):
@@ -127,28 +127,28 @@ The output file is configured in the constructor.
 
                         elif isinstance(v,Wire):
                             _model[-1][key]['value'].append({'klass':'Wire'})
-                            for kkk,vvv in v._trait_values.iteritems():
+                            for kkk,vvv in v._trait_values.items():
                                 _model[-1][key]['value'][-1][kkk]={'klass':str(type(vvv)).split("'")[1],'value':vvv}
 
                         elif isinstance(v,PhaseCapacitor):
                             _model[-1][key]['value'].append({'klass':'PhaseCapacitor'})
-                            for kkk,vvv in v._trait_values.iteritems():
+                            for kkk,vvv in v._trait_values.items():
                                 _model[-1][key]['value'][-1][kkk]={'klass':str(type(vvv)).split("'")[1],'value':vvv}
 
                         elif isinstance(v,Winding):
                             _model[-1][key]['value'].append({'klass':'Winding'})
-                            for kkk,vvv in v._trait_values.iteritems():
+                            for kkk,vvv in v._trait_values.items():
                                 if kkk!='phase_windings':
                                     _model[-1][key]['value'][-1][kkk]={'klass':str(type(vvv)).split("'")[1],'value':vvv}
                             _model[-1][key]['value'][-1]['phase_windings']={'klass':'list','value':[]}
                             for phw in v.phase_windings:
                                 _model[-1][key]['value'][-1]['phase_windings']['value'].append({'klass':'PhaseWinding'})
-                                for kkkk,vvvv in phw._trait_values.iteritems():
+                                for kkkk,vvvv in phw._trait_values.items():
                                     _model[-1][key]['value'][-1]['phase_windings']['value'][-1][kkkk]={'klass':str(type(vvvv)).split("'")[1],'value':vvvv}
 
                         elif isinstance(v,PhaseLoad):
                             _model[-1][key]['value'].append({'klass':'PhaseLoad'})
-                            for kkk,vvv in v._trait_values.iteritems():
+                            for kkk,vvv in v._trait_values.items():
                                 _model[-1][key]['value'][-1][kkk]={'klass':str(type(vvv)).split("'")[1],'value':vvv}
 
                     continue

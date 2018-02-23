@@ -239,7 +239,7 @@ COPY PASTE FROM CONSTRCTOR
 		new_mapping={}
 
 		#Loop over the default header mapping and update as requested
-		for key,value in self.header_mapping.iteritems():
+		for key,value in self.header_mapping.items():
 			if key in update and value!=update[key]:
 				new_mapping[key]=update[key]
 			else:
@@ -783,7 +783,7 @@ The user is then responsible to check the differences betweeen the two versions.
 		for line in self.content:
 			subs.update(self.parser_helper(line, ['substation'], ['id', 'mva', 'kvll', 'conn'], mapp_sub))
 
-		for sid, sdata in sources.iteritems():
+		for sid, sdata in sources.items():
 
 			source_equivalent_data=None
 
@@ -794,7 +794,7 @@ The user is then responsible to check the differences betweeen the two versions.
 			if sid in subs:
 
 				#Find the section
-				for k,v in self.section_phase_mapping.iteritems():
+				for k,v in self.section_phase_mapping.items():
 					if v['fromnodeid']==sdata['nodeid']:
 						sectionID=k
 						_from=v['fromnodeid']
@@ -943,7 +943,7 @@ The user is then responsible to check the differences betweeen the two versions.
 		for line in self.content:
 			nodes.update(self.parser_helper(line, ['node'], ['nodeid', 'coordx', 'coordy', 'ratedvoltage'], mapp))
 
-		for ID,node in nodes.iteritems():
+		for ID,node in nodes.items():
 			#Create a new DiTTo node object
 			try:
 				api_node=Node(model)
@@ -1508,7 +1508,7 @@ section_1_feeder_2,node_1,node_2,ABC
 		#We have then to put everything back together using the foreign keys
 		#
 		#Loop over the sections
-		for sectionID,settings in self.settings.iteritems():
+		for sectionID,settings in self.settings.items():
 
 			sectionID=sectionID.strip('*').lower()
 
@@ -1579,7 +1579,7 @@ section_1_feeder_2,node_1,node_2,ABC
 						api_wire=self.configure_wire(model, {}, {}, p, True, False)
 						new_line['wires'].append(api_wire)
 					api_line=Line(model)
-					for k,v in new_line.iteritems():
+					for k,v in new_line.items():
 						setattr(api_line,k,v)
 					continue
 
@@ -1591,7 +1591,7 @@ section_1_feeder_2,node_1,node_2,ABC
 						api_wire=self.configure_wire(model, {}, {}, p, True, False)
 						new_line['wires'].append(api_wire)
 					api_line=Line(model)
-					for k,v in new_line.iteritems():
+					for k,v in new_line.items():
 						setattr(api_line,k,v)
 					continue
 
@@ -1603,7 +1603,7 @@ section_1_feeder_2,node_1,node_2,ABC
 						api_wire=self.configure_wire(model, {}, {}, p, True, False)
 						new_line['wires'].append(api_wire)
 					api_line=Line(model)
-					for k,v in new_line.iteritems():
+					for k,v in new_line.items():
 						setattr(api_line,k,v)
 					continue
 
@@ -1924,7 +1924,7 @@ section_1_feeder_2,node_1,node_2,ABC
 					pass
 
 			api_line=Line(model)
-			for k,v in new_line.iteritems():
+			for k,v in new_line.items():
 				setattr(api_line,k,v)
 
 			#Append the line DiTTo object to the list of DiTTo lines
@@ -2044,7 +2044,7 @@ section_1_feeder_2,node_1,node_2,ABC
 				                                      mapp_shunt_capacitor))
 
 
-		for sectionID,settings in self.settings.iteritems():
+		for sectionID,settings in self.settings.items():
 
 			sectionID=sectionID.strip('*').lower()
 
@@ -2437,7 +2437,7 @@ section_1_feeder_2,node_1,node_2,ABC
 				                                  ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift'],
 				                                  mapp_transformer) )
 
-		for sectionID, settings in self.settings.iteritems():
+		for sectionID, settings in self.settings.items():
 
 			sectionID=sectionID.strip('*').lower()
 
@@ -2783,7 +2783,7 @@ section_1_feeder_2,node_1,node_2,ABC
 				                                mapp_regulators) )
 
 
-		for sectionID, settings in self.settings.iteritems():
+		for sectionID, settings in self.settings.items():
 
 			sectionID=sectionID.strip('*').lower()
 
@@ -3021,7 +3021,7 @@ section_1_feeder_2,node_1,node_2,ABC
 				                                    mapp_customer_class) )
 
 		import math
-		for sectionID, settings in self.customer_loads.iteritems():
+		for sectionID, settings in self.customer_loads.items():
 
 			sectionID=sectionID.strip('*').lower()
 

@@ -1327,7 +1327,7 @@ author: Nicolas Gensollen. October 2017.
                     cnt+=1
 
         fp = open(self.output_path+'Linecodes.dss', 'w')
-        for linecode,linecode_data in self.all_linecodes.iteritems():
+        for linecode,linecode_data in self.all_linecodes.items():
             fp.write('New Linecode.{linecode_data} {linecode}\n'.format(linecode=linecode, linecode_data=linecode_data))
 
         return 1

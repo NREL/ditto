@@ -221,7 +221,7 @@ Author: Nicolas Gensollen. December 2017
         card=pd.DataFrame(columns=cols)
 
         n_row=0
-        for key,data in self.results.iteritems():
+        for key,data in self.results.items():
             card.loc[n_row]=[key]+[data[x] if x in data else None for x in cols[1:]]
             n_row+=1
 
@@ -373,7 +373,7 @@ This will create the data structure for the whole network.
             elif isinstance(network, nx.classes.graph.Graph) or isinstance(network, nx.classes.digraph.DiGraph):
                 #Cache the network
                 _net=network
-                for feeder_name,nett in self.feeder_networks.iteritems():
+                for feeder_name,nett in self.feeder_networks.items():
                     if nett==_net:
                         _src=feeder_name
                         network=feeder_name

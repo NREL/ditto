@@ -469,7 +469,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 
 								if valid_code:
 									found=False
-									for key,value in self.conductors.iteritems():
+									for key,value in self.conductors.items():
 										if value==new_code:
 											cond_id[wire.phase]=key
 											found=True
@@ -536,7 +536,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 									new_line_string+=',cable_'+str(ID_cable)
 								else:
 									found=False
-									for k,v in self.cablecodes.iteritems():
+									for k,v in self.cablecodes.items():
 										if v==tt:
 											new_line_string+=',cable_'+str(k)
 											found=True
@@ -602,7 +602,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							#Otherwise, loop over the dict to find a matching linecode
 							else:
 								found=False
-								for k,v in self.linecodes.iteritems():
+								for k,v in self.linecodes.items():
 									if v==tt:
 										new_line_string+=',line_'+str(k)
 										found=True
@@ -737,7 +737,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							pass
 
 					found=False
-					for k,d in self.capcodes.iteritems():
+					for k,d in self.capcodes.items():
 						if d==new_capacitor_object_line:
 							new_capacitor_line+=','+new_section_ID+',capacitor_'+str(k)
 							found=True
@@ -937,7 +937,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 									new_transformer_object_line+='{type},{kva},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType}'.format(type=TYPE,kva=KVA,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2)
 
 									found=False
-									for k,d in self.two_windings_trans_codes.iteritems():
+									for k,d in self.two_windings_trans_codes.items():
 										if d==new_transformer_object_line:
 											new_transformer_line+=',transformer_'+str(k)+',transformer_'+str(k)
 											found=True
@@ -1059,7 +1059,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 					new_regulator_object_line='{kva},{band},{ct},{pt},{Type},{KVLN},{MaxBuck},{MaxBoost},{Taps},{Reversible}'.format(kva=_KVA,band=_band,ct=_CT,pt=_PT,Type=0,KVLN=_KVLN,MaxBuck=10,MaxBoost=10,Taps=0,Reversible=0)
 
 					found=False
-					for k,d in self.reg_codes.iteritems():
+					for k,d in self.reg_codes.items():
 						if d==new_regulator_object_line:
 							new_regulator_string+=',regulator_'+str(k)+','+new_section_ID
 							found=True
@@ -1300,7 +1300,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							new_transformer_object_line+='{type},{kva},{voltageUnit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift}'.format(phaseshift=phase_shift,type=TYPE,kva=KVA,voltageUnit=voltageUnit,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2,noloadloss=NOLOADLOSS)
 
 							found=False
-							for k,d in self.two_windings_trans_codes.iteritems():
+							for k,d in self.two_windings_trans_codes.items():
 								if d==new_transformer_object_line:
 									new_transformer_line+=',transformer_'+str(k)+','+new_section_ID
 									found=True
@@ -1474,7 +1474,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 																noloadloss=NOLOADLOSS)
 
 							found=False
-							for k,d in self.three_windings_trans_codes.iteritems():
+							for k,d in self.three_windings_trans_codes.items():
 								if d==new_transformer_object_line:
 									new_transformer_line+=',3_wdg_transformer_'+str(k)+','+new_section_ID
 									found=True
@@ -1533,7 +1533,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			f.write('FORMAT_SOURCE=SourceID,DeviceNumber,NodeID,NetworkID\n')
 			k=0
 			self.substation_IDs={}
-			for _source,_voltage in self.sources.iteritems():
+			for _source,_voltage in self.sources.items():
 				k+=1
 				for j,sub in enumerate(self.substations):
 					if sub['connecting_element']==_source:
@@ -1549,7 +1549,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			#	nodeID=source_string.split(',')[0]
 			#	f.write('{nodeID},{NetID}\n'.format(nodeID=nodeID, NetID=k))
 
-			for f_name,section_l in self.section_line_feeder_mapping.iteritems():
+			for f_name,section_l in self.section_line_feeder_mapping.items():
 				head=model[f_name].headnode#self.section_headnode_mapping[f_name]
 				f.write('{nodeID},{NetID}\n'.format(nodeID=head, NetID=f_name))
 
@@ -1561,7 +1561,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			for source_string in source_string_list:
 				f.write(source_string+'\n')
 
-			for f_name,section_l in self.section_line_feeder_mapping.iteritems():
+			for f_name,section_l in self.section_line_feeder_mapping.items():
 				if f_name!='subtransmission':
 					temp=model[f_name]
 					if hasattr(temp,'nominal_voltage') and temp.nominal_voltage is not None:
@@ -1588,7 +1588,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			#	section_list=self.merge_regulators(self.section_line_list)
 			#	for section_line in section_list:
 			#		f.write(section_line+'\n')
-			for f_name,section_l in self.section_line_feeder_mapping.iteritems():
+			for f_name,section_l in self.section_line_feeder_mapping.items():
 				head=model[f_name].headnode#self.section_headnode_mapping[f_name]
 				f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=0))
 				for sec in section_l:
@@ -1783,7 +1783,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			f.write('\n[CABLE]\n')
 			f.write('FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,UserDefinedImpedances,Frequency,Temperature\n')
 			f.write('DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,1,60.000000,25.000000\n')
-			for ID,data in self.cablecodes.iteritems():
+			for ID,data in self.cablecodes.items():
 				f.write('cable_'+str(ID))
 				for key in ['R1','R0','X1','X0','B1','B0','amps']:
 					if key in data:
@@ -1798,7 +1798,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				f.write('\n[LINE UNBALANCED]\n')
 				f.write('FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances\n')
 
-				for ID,data in self.linecodes.iteritems():
+				for ID,data in self.linecodes.items():
 					f.write('line_'+str(ID))
 					for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
 						if key in data:
@@ -1816,7 +1816,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				f.write('\n[CONDUCTOR]\n')
 				f.write('FORMAT_CONDUCTOR=ID,Diameter,GMR,Amps,WithstandRating\n')
 
-				for ID,data in self.conductors.iteritems():
+				for ID,data in self.conductors.items():
 					f.write(ID+',')
 					f.write(data)
 					f.write('\n')
@@ -1828,7 +1828,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				f.write('\n[SHUNT CAPACITOR]\n')
 				f.write('FORMAT_SHUNTCAPACITOR=ID,KVAR,KV,CostForFixedBank,CostForSwitchedBank,Type\n')
 
-				for ID,data in self.capcodes.iteritems():
+				for ID,data in self.capcodes.items():
 					f.write('capacitor_'+str(ID)+',')
 					f.write(data.strip(','))
 					f.write(',0,0,0')
@@ -1841,7 +1841,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				f.write('\n[TRANSFORMER]\n')
 				f.write('FORMAT_TRANSFORMER=ID,Type,KVA,VoltageUnit,KVLLprim,KVLLsec,Z1,Z0,XR,XR0,Conn,WindingType,NoLoadLosses,PhaseShift\n')
 
-				for ID,data in self.two_windings_trans_codes.iteritems():
+				for ID,data in self.two_windings_trans_codes.items():
 					f.write('transformer_'+str(ID)+',')
 					f.write(data.strip(','))
 					f.write('\n')
@@ -1852,7 +1852,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			if len(self.three_windings_trans_codes)>0:
 				f.write('\n[THREE WINDING TRANSFORMER]\n')
 				f.write('FORMAT_THREEWINDINGTRANSFORMER=ID,PrimaryRatedCapacity,PrimaryVoltage,PrimaryConnection,PrimaryToSecondaryZ1,PrimaryToSecondaryZ0,PrimaryToSecondaryXR1,PrimaryToSecondaryXR0,PrimaryToTertiaryZ1,PrimaryToTertiaryZ0,PrimaryToTertiaryXR1,PrimaryToTertiaryXR0,SecondaryToTertiaryZ1,SecondaryToTertiaryZ0,SecondaryToTertiaryXR1,SecondaryToTertiaryXR0,SecondaryCapacityLimit1,SecondaryCapacityLimit2,TertiaryCapacityLimit1,TertiaryCapacityLimit2,TertiaryConnection,NoLoadLosses\n')
-				for ID,data in self.three_windings_trans_codes.iteritems():
+				for ID,data in self.three_windings_trans_codes.items():
 					f.write('3_wdg_transformer_'+str(ID)+',')
 					f.write(data.strip(','))
 					f.write('\n')
@@ -1863,7 +1863,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				f.write('\n[REGULATOR]\n')
 				f.write('FORMAT_REGULATOR=ID,KVA,Bandwidth,CT,PT,Type,KVLN,MaxBuck,MaxBoost,Taps,Reversible\n')
 
-				for ID,data in self.reg_codes.iteritems():
+				for ID,data in self.reg_codes.items():
 					f.write('regulator_'+str(ID)+',')
 					f.write(data.strip(','))
 					f.write('\n')

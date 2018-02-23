@@ -351,7 +351,7 @@ class writer:
                         dic['impedance2'] = complex(resistance,i.reactance[2])
 
                 dic_set = set()
-                for a,b in dic.iteritems():
+                for a,b in dic.items():
                     dic_set.add((a,b))
                 dic_set = frozenset(dic_set)
 
@@ -444,7 +444,7 @@ class writer:
                 dic['connect_type'] = 'WYE_WYE' # All reguators in GLD are wye-wye
 
                 dic_set = set()
-                for a,b in dic.iteritems():
+                for a,b in dic.items():
                     dic_set.add((a,b))
                 dic_set = frozenset(dic_set)
 
@@ -596,7 +596,7 @@ class writer:
 
 
                     dic_set = set()
-                    for a,b in dic.iteritems():
+                    for a,b in dic.items():
                         dic_set.add((a,b))
                     dic_set = frozenset(dic_set)
 

@@ -209,7 +209,7 @@ This might be handy when trying to find all the objects below a substation such 
 
 
         #Build the list of equipment names downstream
-        for source,destinations in childrens.iteritems():
+        for source,destinations in childrens.items():
             _elts.add(source)
             for destination in destinations:
                 _elts.add(destination)

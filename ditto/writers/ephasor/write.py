@@ -256,7 +256,7 @@ class Writer(abstract_writer):
 
 
             index += 1
-            for key, value in obj_dict.iteritems():
+            for key, value in obj_dict.items():
                 value.append(None)
 
             if hasattr(line, 'name') and line.name is not None:
@@ -501,7 +501,7 @@ class Writer(abstract_writer):
                     self._transformer_dict[i.from_element]['kva'] += i.windings[0].rated_power
                     self._transformer_dict[i.from_element]["Tap " + pp] = i.windings[0].phase_windings[0].tap_position,
                 else:
-                    for key, value in obj_dict.iteritems():
+                    for key, value in obj_dict.items():
                         value.append(None)
                     index += 1
                     print(i.windings[0].phase_windings[0].tap_position)
@@ -511,12 +511,12 @@ class Writer(abstract_writer):
                                                               "Tap "+pp:i.windings[0].phase_windings[0].tap_position,
                                                               "kva":i.windings[0].rated_power}
             else:
-                for key, value in obj_dict.iteritems():
+                for key, value in obj_dict.items():
                     value.append(None)
 
         index = -1
         for i in self._transformers:
-            # for key, value in obj_dict.iteritems():
+            # for key, value in obj_dict.items():
             #     value.append(None)
             index += 1
 
@@ -661,7 +661,7 @@ class Writer(abstract_writer):
         _transformer_dict = {i.from_element:i for i in self._transformers }
 
         for index,i in enumerate(self._powersources):
-            for key, value in obj_dict.iteritems():
+            for key, value in obj_dict.items():
                 value.append(None)
 
             if hasattr(i,'connecting_element') and i.connecting_element is not None:
@@ -706,7 +706,7 @@ class Writer(abstract_writer):
         # for c,i in enumerate(nodes):
         #     if i.phases is not None:
         #         for phase in i.phases:
-        #             for key, value in obj_dict.iteritems():
+        #             for key, value in obj_dict.items():
         #                 value.append(None)
         #             obj_dict['Bus'][index] = i.name + '_' + str(phase.default_value).lower()
         #             obj_dict['Voltage (V)'][index] = i.nominal_voltage
@@ -739,7 +739,7 @@ class Writer(abstract_writer):
                     #     obj_dict['Bus'][index] = line.from_element + "_" + temp_phase
                     for wire in line.wires:
                         if hasattr(wire, 'phase') and wire.phase is not None and wire.phase != 'N':
-                            for key, value in obj_dict.iteritems():
+                            for key, value in obj_dict.items():
                                 value.append(None)
                             obj_dict['Bus'][index] = line.from_element + "_" + wire.phase
                             line_dict[line.from_element + "_" + wire.phase] = line.from_element + "_" + wire.phase
@@ -747,7 +747,7 @@ class Writer(abstract_writer):
                             index += 1
 
                             if line.to_element + "_" + wire.phase not in line_dict:
-                                for key, value in obj_dict.iteritems():
+                                for key, value in obj_dict.items():
                                     value.append(None)
                                 obj_dict['Bus'][index] = line.from_element + "_" + wire.phase
                                 line_dict[line.from_element + "_" + wire.phase] = line.from_element + "_" + wire.phase
@@ -797,7 +797,7 @@ class Writer(abstract_writer):
                 if i.name[-1].lower() == 'a' or i.name[-1].lower() == 'b' or i.name[-1].lower() == 'c':
                     n_name = i.name[0:-1]
                     if not n_name in load_dict:
-                        for key, value in obj_dict.iteritems():
+                        for key, value in obj_dict.items():
                             value.append(None)
                         index += 1
                         load_dict[n_name] = index
@@ -806,7 +806,7 @@ class Writer(abstract_writer):
                     else:
                         index = load_dict[n_name]
                 else:
-                    for key, value in obj_dict.iteritems():
+                    for key, value in obj_dict.items():
                         value.append(None)
                     index += 1
                     obj_dict['ID'][index] = i.name

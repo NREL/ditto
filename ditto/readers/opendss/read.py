@@ -112,7 +112,7 @@ Because the reader is relying on OpenDSSdirect, we only need the path to the mas
 		if not isinstance(new_names, dict):
 			self.logger.error('set_dss_file_names() expects a dictionary')
 			return -1
-		for key,value in new_names.iteritems():
+		for key,value in new_names.items():
 			if key not in ['Nodes', 'master']:
 				return -1
 			self.DSS_file_names[key]=value
@@ -261,7 +261,7 @@ Responsible for calling the sub-parsers and logging progress.
 			if not feed in substation_transformers:
 				substation_transformers[feed]=sub.lower().replace('.','')
 
-		for f_name,f_data in feeders.iteritems():
+		for f_name,f_data in feeders.items():
 			api_feeder_metadata=Feeder_metadata(model)
 			api_feeder_metadata.name=f_name
 			if f_name in substation_transformers:
@@ -281,7 +281,7 @@ Responsible for calling the sub-parsers and logging progress.
 '''
 		sources=dss.utils.class_to_dataframe('Vsource')
 
-		for source_name,source_data in sources.iteritems():
+		for source_name,source_data in sources.items():
 
 			#Instanciate DiTTo PowerSource object
 			try:
@@ -425,7 +425,7 @@ Responsible for calling the sub-parsers and logging progress.
 		lines=dss.utils.class_to_dataframe('line')
 
 		#Loop over the lines to get the phases
-		for name,data in lines.iteritems():
+		for name,data in lines.items():
 
 			#Parse bus1 data
 			if '.' in data['bus1']:
@@ -485,7 +485,7 @@ Responsible for calling the sub-parsers and logging progress.
 		#Extract the load data
 		loads=dss.utils.class_to_dataframe('load')
 		#Loop over the loads to get the phases
-		for name,data in loads.iteritems():
+		for name,data in loads.items():
 			#Parse bus1 data
 			if '.' in data['bus1']:
 				temp=data['bus1'].split('.')
@@ -516,7 +516,7 @@ Responsible for calling the sub-parsers and logging progress.
 		self._nodes=[]
 
 		#Loop over the dictionary of nodes and create the DiTTo Node objects
-		for name,data in buses.iteritems():
+		for name,data in buses.items():
 
 			api_node=Node(model)
 
@@ -563,11 +563,11 @@ Responsible for calling the sub-parsers and logging progress.
         #In OpenDSS, fuses are attached to line objects
 		#Here, we get all the line names which have a fuse
 		fuses=dss.utils.class_to_dataframe('Fuse')
-		fuses_names=[d['MonitoredObj'].lower().split('.')[1] for name,d in fuses.iteritems()]
+		fuses_names=[d['MonitoredObj'].lower().split('.')[1] for name,d in fuses.items()]
 
 		#In the same way, reclosers are also attached to line objects
 		reclosers=dss.utils.class_to_dataframe('recloser')
-		reclosers_names=[d['MonitoredObj'].lower().split('.')[1] for name,d in reclosers.iteritems()]
+		reclosers_names=[d['MonitoredObj'].lower().split('.')[1] for name,d in reclosers.items()]
 
 		start=time.time()
 		lines=dss.utils.class_to_dataframe('Line')
@@ -578,7 +578,7 @@ Responsible for calling the sub-parsers and logging progress.
 		N_lines=len(lines)
 		self._lines=[]
 
-		for name,data in lines.iteritems():
+		for name,data in lines.items():
 
 			api_line=Line(model)
 			api_line.name=None
@@ -1066,7 +1066,7 @@ Responsible for calling the sub-parsers and logging progress.
 		transformers=dss.utils.class_to_dataframe('transformer')
 		self._transformers=[]
 
-		for name,data in transformers.iteritems():
+		for name,data in transformers.items():
 
 			api_transformer=PowerTransformer(model)
 			api_transformer.name=None
@@ -1293,7 +1293,7 @@ Responsible for calling the sub-parsers and logging progress.
 						pass
 
 					regulators=dss.utils.class_to_dataframe('RegControl')
-					for reg_name,reg_data in regulators.iteritems():
+					for reg_name,reg_data in regulators.items():
 
 						if 'transformer' in reg_data and reg_data['transformer'].lower()==api_transformer.name.lower():
 							if 'R' in reg_data:
@@ -1328,7 +1328,7 @@ Responsible for calling the sub-parsers and logging progress.
 		transformers=dss.utils.class_to_dataframe('Transformer')
 		self._regulators=[]
 
-		for name,data in regulators.iteritems():
+		for name,data in regulators.items():
 
 			api_regulator=Regulator(model)
 			#Initialize the data as Nones and update with real values if possible
@@ -1562,7 +1562,7 @@ Responsible for calling the sub-parsers and logging progress.
 		cap_control=dss.utils.class_to_dataframe('CapControl')
 		self._capacitors=[]
 
-		for name,data in capacitors.iteritems():
+		for name,data in capacitors.items():
 
 			api_capacitor=Capacitor(model)
 			#Initialize the data as Nones and update with real values if possible
@@ -1616,7 +1616,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 			control_id=None
 			#Find the capControl that corresponds to the capacitor if any
-			for capc_name,capc_data in cap_control.iteritems():
+			for capc_name,capc_data in cap_control.items():
 				if capc_data['capacitor'].lower()==api_capacitor.name:
 					control_id=capc_name
 					break
@@ -1779,7 +1779,7 @@ Responsible for calling the sub-parsers and logging progress.
 		loads=dss.utils.class_to_dataframe('Load')
 		self._loads=[]
 
-		for name,data in loads.iteritems():
+		for name,data in loads.items():
 
 			api_load=Load(model)
 			api_load.name=None
