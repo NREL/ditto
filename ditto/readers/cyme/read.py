@@ -136,26 +136,26 @@ Author: Nicolas Gensollen. October 2017
 		#Setting the file names and path
 		#
 		#Set the path to the CYME data files
-		if kwargs.has_key('data_folder_path'):
+		if 'data_folder_path' in kwargs:
 			self.data_folder_path=kwargs['data_folder_path']
 		#Default is current directory
 		else:
 			self.data_folder_path='./'
 
 		#Set the name of the network file
-		if kwargs.has_key('network_filename'):
+		if 'network_filename' in kwargs:
 			self.network_filename=kwargs['network_filename']
 		else:
 			self.network_filename='network.txt'
 
 		#Set the name of the equipment file
-		if kwargs.has_key('equipment_filename'):
+		if 'equipment_filename' in kwargs:
 			self.equipment_filename=kwargs['equipment_filename']
 		else:
 			self.equipment_filename='equipment.txt'
 
 		#Set the name of the load file
-		if kwargs.has_key('load_filename'):
+		if 'load_filename' in kwargs:
 			self.load_filename=kwargs['load_filename']
 		else:
 			self.load_filename='load.txt'
@@ -240,7 +240,7 @@ COPY PASTE FROM CONSTRCTOR
 
 		#Loop over the default header mapping and update as requested
 		for key,value in self.header_mapping.iteritems():
-			if update.has_key(key) and value!=update[key]:
+			if key in update and value!=update[key]:
 				new_mapping[key]=update[key]
 			else:
 				new_mapping[key]=value
@@ -587,7 +587,7 @@ This function takes these as inputs and outputs P and Q of the load.
 		if not isinstance(obj, str):
 			raise ValueError('check_object_in_line expects a string for both line and object. A {type} instance was provided for object.'.format(type=type(obj)))
 
-		if not self.header_mapping.has_key(obj):
+		if not obj in self.header_mapping:
 			raise ValueError('{obj} is not a valid object name for the object<->header mapping.'.format(obj=obj))
 
 		return self.header_mapping[obj] in line
@@ -661,7 +661,7 @@ The function returns a list of dictionaries, where each dictionary contains the 
 
 						if len(data)>1:
 
-							while result.has_key(ID):
+							while ID in result:
 								ID+='*'
 							result[ID]={}
 
@@ -692,7 +692,7 @@ The function returns a list of dictionaries, where each dictionary contains the 
 :type verbose: bool
 
 '''
-		if kwargs.has_key('verbose') and isinstance(kwargs['verbose'], bool):
+		if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
 			self.verbose=kwargs['verbose']
 		else:
 			self.verbose=False
@@ -787,11 +787,11 @@ The user is then responsible to check the differences betweeen the two versions.
 
 			source_equivalent_data=None
 
-			if sdata.has_key('nodeid') and source_equivalents.has_key(sdata['nodeid']):
+			if 'nodeid' in sdata and sdata['nodeid'] in source_equivalents:
 				source_equivalent_data=source_equivalents[sdata['nodeid']]
 
 
-			if subs.has_key(sid):
+			if sid in subs:
 
 				#Find the section
 				for k,v in self.section_phase_mapping.iteritems():
@@ -808,7 +808,7 @@ The user is then responsible to check the differences betweeen the two versions.
 				api_source.name=_from
 
 				try:
-					if sdata.has_key('desiredvoltage'):
+					if 'desiredvoltage' in sdata:
 						api_source.nominal_voltage=float(sdata['desiredvoltage'])*10**3
 					else:
 						api_source.nominal_voltage=float(source_equivalent_data['voltage'])*10**3
@@ -1561,7 +1561,7 @@ section_1_feeder_2,node_1,node_2,ABC
 			new_line['is_switch']=False
 			new_line['is_fuse']=False
 			new_line['is_recloser']=False
-			if settings.has_key('type'):
+			if 'type' in settings:
 
 				#Overhead lines
 				if 'overhead' in settings['type']:
@@ -1610,15 +1610,15 @@ section_1_feeder_2,node_1,node_2,ABC
 
 			line_data=None
 			#If we have a linecableid for the current section
-			if settings.has_key('linecableid'):
+			if 'linecableid' in settings:
 				#And if we have line data with the matching ID
-				if self.balanced_lines.has_key(settings['linecableid']):
+				if settings['linecableid'] in self.balanced_lines:
 					#Cache the line data
 					line_data=self.balanced_lines[settings['linecableid']]
-				if self.unbalanced_lines.has_key(settings['linecableid']):
+				if settings['linecableid'] in self.unbalanced_lines:
 					#Cache the line data
 					line_data=self.unbalanced_lines[settings['linecableid']]
-				if self.concentric_neutral_cable.has_key(settings['linecableid']):
+				if settings['linecableid'] in self.concentric_neutral_cable:
 					#Cache the line data
 					line_data=self.concentric_neutral_cable[settings['linecableid']]
 					line_data['type']='balanced_line'
@@ -1627,17 +1627,17 @@ section_1_feeder_2,node_1,node_2,ABC
 			#
 			#TODO: Decide if I should remove this or not...
 			#
-			elif settings.has_key('devicenumber'):
-				#if self.balanced_lines.has_key(settings['devicenumber']):
+			elif 'devicenumber' in settings:
+				#if settings['devicenumber'] in self.balanced_lines:
 				#	#Cache the line data
 				#	line_data=self.balanced_lines[settings['devicenumber']]
-				#elif self.unbalanced_lines.has_key(settings['devicenumber']):
+				#elif settings['devicenumber'] in self.unbalanced_lines:
 				#	#Cache the line data
 				#	line_data=self.unbalanced_lines[settings['devicenumber']]
-				if self.concentric_neutral_cable.has_key(settings['devicenumber']):
+				if settings['devicenumber'] in self.concentric_neutral_cable:
 					line_data=self.concentric_neutral_cable[settings['devicenumber']]
 					line_data['type']='balanced_line'
-				elif settings.has_key('condid_a') and settings.has_key('condid_b') and settings.has_key('condid_c') and settings.has_key('condid_n1') and settings.has_key('spacingid'):
+				elif 'condid_a' in settings and 'condid_b' in settings and 'condid_c' in settings and 'condid_n1' in settings and 'spacingid' in settings:
 					line_data={'type':'unbalanced_spacing_conf'}
 
 			if line_data is None:
@@ -1684,13 +1684,13 @@ section_1_feeder_2,node_1,node_2,ABC
 
 					#In the balanced case, we should have two conductor IDs: One for the phases and one for the neutral
 					#Handle the Phase conductors first:
-					if line_data.has_key('phasecondid') and self.conductors.has_key(line_data['phasecondid']):
+					if 'phasecondid' in line_data and line_data['phasecondid'] in self.conductors:
 						conductor_data=self.conductors[line_data['phasecondid']]
 					else:
 						conductor_data={}
 
 					#In addition, we might have some information on the spacings
-					if line_data.has_key('spacingid') and self.spacings.has_key(line_data['spacingid']):
+					if 'spacingid' in line_data and line_data['spacingid'] in self.spacings:
 						spacing_data=self.spacings[line_data['spacingid']]
 					else:
 						spacing_data={}
@@ -1702,13 +1702,13 @@ section_1_feeder_2,node_1,node_2,ABC
 						new_line['wires'].append(api_wire)
 
 					#Handle the neutral conductor
-					if line_data.has_key('neutralcondid') and self.conductors.has_key(line_data['neutralcondid']):
+					if 'neutralcondid' in line_data and line_data['neutralcondid'] in self.conductors:
 						conductor_data=self.conductors[line_data['neutralcondid']]
 					else:
 						conductor_data={}
 
 					#In addition, we might have some information on the spacings
-					if line_data.has_key('spacingid') and self.spacings.has_key(line_data['spacingid']):
+					if 'spacingid' in line_data and line_data['spacingid'] in self.spacings:
 						spacing_data=self.spacings[line_data['spacingid']]
 					else:
 						spacing_data={}
@@ -1757,17 +1757,17 @@ section_1_feeder_2,node_1,node_2,ABC
 					#Loop over the phases and create the wires
 					new_line['wires']=[]
 					for phase in phases:
-						if(line_data.has_key('condid_{}'.format(phase.lower())) and
+						if('condid_{}'.format(phase.lower()) in line_data and
 						   line_data['condid_{}'.format(phase.lower())].lower()!='none' and
-						   self.conductors.has_key(line_data['condid_{}'.format(phase.lower())])):
+						   line_data['condid_{}'.format(phase.lower())] in self.conductors):
 							conductor_data=self.conductors[line_data['condid_{}'.format(phase.lower())]]
 						else:
 							conductor_data={}
 
 						#In addition, we might have some information on the spacings
-						if(line_data.has_key('spacingid') and
+						if('spacingid' in line_data and
 						   line_data['spacingid'].lower()!='none' and
-						   self.spacings.has_key(line_data['spacingid'])):
+						   line_data['spacingid'] in self.spacings):
 							spacing_data=self.spacings[line_data['spacingid']]
 						else:
 							spacing_data={}
@@ -1781,19 +1781,19 @@ section_1_feeder_2,node_1,node_2,ABC
 					#If we have only condid_n1 or condid_n alone ==> create 1 wire only
 					#
 					#In addition, we might have some information on the spacings
-					if(line_data.has_key('spacingid') and
+					if ('spacingid' in line_data and
 					   line_data['spacingid'].lower()!='none' and
-						self.spacings.has_key(line_data['spacingid'])):
+						 line_data['spacingid'] in self.spacings ):
 						spacing_data=self.spacings[line_data['spacingid']]
 					else:
 						spacing_data={}
 
-					if(line_data.has_key('condid_n1') and
+					if( 'condid_n1' in line_data and
 					   line_data['condid_n1'].lower()!='none' and
-					   self.conductors.has_key(line_data['condid_n1']) and
-					   line_data.has_key('condid_n2') and
+					   line_data['condid_n1'] in self.conductors and
+					   'condid_n2' in line_data and
 					   line_data['condid_n2'].lower()!='none' and
-					   self.conductors.has_key(line_data['condid_n2'])):
+					   line_data['condid_n2'] in self.conductors):
 
 						conductor_n1_data=self.conductors[line_data['condid_n1']]
 						conductor_n2_data=self.conductors[line_data['condid_n2']]
@@ -1803,13 +1803,13 @@ section_1_feeder_2,node_1,node_2,ABC
 						new_line['wires'].append(api_wire_n1)
 						new_line['wires'].append(api_wire_n2)
 
-					elif line_data.has_key('condid_n') and line_data['condid_n'].lower()!='none' and self.conductors.has_key(line_data['condid_n']):
+					elif 'condid_n' in line_data and line_data['condid_n'].lower()!='none' and line_data['condid_n'] in self.conductors:
 						conductor_data=self.conductors[line_data['condid_n']]
 						api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
 						new_line['wires'].append(api_wire)
 
 					else:
-						if(line_data.has_key('condid_n1') and line_data['condid_n1'].lower()!='none' and self.conductors.has_key(line_data['condid_n1'])):
+						if ( 'condid_n1' in line_data and line_data['condid_n1'].lower()!='none' and line_data['condid_n1'] in self.conductors):
 							conductor_data=self.conductors[line_data['condid_n1']]
 							api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
 							new_line['wires'].append(api_wire)
@@ -1820,7 +1820,7 @@ section_1_feeder_2,node_1,node_2,ABC
 					#IMPEDANCE MATRIX FROM SPACINGS
 					#
 					#First, we have to get the wires' positions:
-					if self.spacings.has_key(settings['spacingid']):
+					if settings['spacingid'] in self.spacings:
 						#Get the spacing data
 						spacing_data=self.spacings[settings['spacingid']]
 						pos=[]
@@ -1828,7 +1828,7 @@ section_1_feeder_2,node_1,node_2,ABC
 						for i,p in enumerate(phases):
 							pos.append([None,None])
 							for j,k in enumerate(['x','y']):
-								if spacing_data.has_key('posofcond{i}_{k}'.format(i=i+1,k=k)):
+								if 'posofcond{i}_{k}'.format(i=i+1,k=k) in spacing_data:
 									try:
 										pos[-1][j]=float(spacing_data['posofcond{i}_{k}'.format(i=i+1,k=k)])
 									except:
@@ -1836,7 +1836,7 @@ section_1_feeder_2,node_1,node_2,ABC
 
 						pos.append([None,None])
 
-						if spacing_data.has_key('posofneutralcond_x') and spacing_data.has_key('posofneutralcond_y'):
+						if 'posofneutralcond_x' in spacing_data and 'posofneutralcond_y' in spacing_data:
 							try:
 								pos[-1][0]=float(spacing_data['posofneutralcond_x'])
 								pos[-1][1]=float(spacing_data['posofneutralcond_y'])
@@ -1845,7 +1845,7 @@ section_1_feeder_2,node_1,node_2,ABC
 
 						pos.append([None,None])
 
-						if spacing_data.has_key('posofneutralcond_n2_x') and spacing_data.has_key('posofneutralcond_n2_y'):
+						if 'posofneutralcond_n2_x' in spacing_data and 'posofneutralcond_n2_y' in spacing_data:
 							try:
 								pos[-1][0]=float(spacing_data['posofneutralcond_n2_x'])
 								pos[-1][1]=float(spacing_data['posofneutralcond_n2_y'])
@@ -1869,13 +1869,13 @@ section_1_feeder_2,node_1,node_2,ABC
 
 						#Get GMR and resistance of valid conductor
 						for p in phases:
-							if settings.has_key('condid_{}'.format(p.lower())) and self.conductors.has_key(settings['condid_{}'.format(p.lower())]):
+							if 'condid_{}'.format(p.lower()) in settings and settings['condid_{}'.format(p.lower())] in self.conductors:
 								gmr_list.append(0.0328084*float(self.conductors[settings['condid_{}'.format(p.lower())]]['gmr']))
 								resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_{}'.format(p.lower())]]['r25']))
-						if settings.has_key('condid_n'):
+						if 'condid_n' in settings:
 							gmr_list.append(0.0328084*float(self.conductors[settings['condid_n']]['gmr']))
 							resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n']]['r25']))
-						elif settings.has_key('condid_n1'):
+						elif 'condid_n1' in settings:
 							gmr_list.append(0.0328084*float(self.conductors[settings['condid_n1']]['gmr']))
 							resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n1']]['r25']))
 
@@ -1889,13 +1889,13 @@ section_1_feeder_2,node_1,node_2,ABC
 					new_line['wires']=[]
 
 					for phase in phases:
-						if settings.has_key('condid_{}'.format(phase.lower())) and self.conductors.has_key(settings['condid_{}'.format(phase.lower())]):
+						if 'condid_{}'.format(phase.lower()) in settings and settings['condid_{}'.format(phase.lower())] in self.conductors:
 							conductor_data=self.conductors[settings['condid_{}'.format(phase.lower())]]
 						else:
 							conductor_data={}
 
 						#In addition, we might have some information on the spacings
-						if settings.has_key('spacingid') and self.spacings.has_key(settings['spacingid']):
+						if 'spacingid' in settings and settings['spacingid'] in self.spacings:
 							spacing_data=self.spacings[settings['spacingid']]
 						else:
 							spacing_data={}
@@ -1904,13 +1904,13 @@ section_1_feeder_2,node_1,node_2,ABC
 						new_line['wires'].append(api_wire)
 
 					#Handle the neutral conductors
-					if settings.has_key('condid_n') and self.conductors.has_key(settings['condid_n']):
+					if 'condid_n' in settings and settings['condid_n'] in self.conductors:
 						conductor_data=self.conductors[settings['condid_n']]
 					else:
 						conductor_data={}
 
 					#In addition, we might have some information on the spacings
-					if settings.has_key('spacingid') and self.spacings.has_key(settings['spacingid']):
+					if 'spacingid' in settings and settings['spacingid'] in self.spacings:
 						spacing_data=self.spacings[settings['spacingid']]
 					else:
 						spacing_data={}
@@ -2091,16 +2091,16 @@ section_1_feeder_2,node_1,node_2,ABC
 				pass
 
 			#Get the device number
-			if settings.has_key('eqid'):
+			if 'eqid' in settings:
 				dev_num=settings['eqid']
-			elif settings.has_key('shuntcapacitorid'):
+			elif 'shuntcapacitorid' in settings:
 				dev_num=settings['shuntcapacitorid']
 			else:
 				dev_num=None
 
 			capacitor_data=None
 			if dev_num is not None:
-				if self.capacitors.has_key(dev_num):
+				if dev_num in self.capacitors:
 					capacitor_data=self.capacitors[dev_num]
 
 					#Reactance
@@ -2126,7 +2126,7 @@ section_1_feeder_2,node_1,node_2,ABC
 			#If the capacitor is one phase, we have a line-to-neutral,
 			#and line-to-line if it is 3 phase
 			#
-			if settings.has_key('kv'):
+			if 'kv' in settings:
 				try:
 					if api_capacitor.connection_type=='Y' or len(phases)==1:
 						api_capacitor.nominal_voltage=float(settings['kv'])*10**3 #DiTTo in var
@@ -2155,7 +2155,7 @@ section_1_feeder_2,node_1,node_2,ABC
 					pass
 
 				#Set var value
-				if settings.has_key('fixedkvara') and settings.has_key('fixedkvarb') and settings.has_key('fixedkvarc'):
+				if 'fixedkvara' in settings and 'fixedkvarb' in settings and 'fixedkvarc' in settings:
 					try:
 						if p=='A': api_phaseCapacitor.var=float(settings['fixedkvara'])*10**3 #Ditto in var
 						if p=='B': api_phaseCapacitor.var=float(settings['fixedkvarb'])*10**3 #Ditto in var
@@ -2541,7 +2541,7 @@ section_1_feeder_2,node_1,node_2,ABC
 			#Handle two windings transformers
 			if settings['type']=='transformer':
 
-				if self.transformers.has_key(settings['eqid']):
+				if settings['eqid'] in self.transformers:
 					transformer_data=self.transformers[settings['eqid']]
 				else:
 					transformer_data={}
@@ -2633,7 +2633,7 @@ section_1_feeder_2,node_1,node_2,ABC
 			#Handle Grounding transformers
 			if settings['type']=='grounding_transformer':
 
-				if self.grounding_transformers.has_key(settings['equipmentid']):
+				if settings['equipmentid'] in self.grounding_transformers:
 					transformer_data=self.grounding_transformers[settings['equipmentid']]
 				else:
 					transformer_data={}
@@ -2797,7 +2797,7 @@ section_1_feeder_2,node_1,node_2,ABC
 			except:
 				raise ValueError('Unable to get phases for regulator {}'.format(sectionID))
 
-			if settings.has_key('eqid') and self.regulators.has_key(settings['eqid']):
+			if 'eqid' in settings and settings['eqid'] in self.regulators:
 				regulator_data=self.regulators[settings['eqid']]
 			else:
 				regulator_data={}
@@ -2860,16 +2860,16 @@ section_1_feeder_2,node_1,node_2,ABC
 					pass
 
 				try:
-					if p=='A' and settings.has_key('bandwidtha') and settings['bandwidtha'] is not None: api_regulator.bandwidth=float(settings['bandwidtha'])
-					elif regulator_data.has_key('forwardbandwidth'): api_regulator.bandwidth=float(regulator_data['forwardbandwidth'])
+					if p=='A' and 'bandwidtha' in settings and settings['bandwidtha'] is not None: api_regulator.bandwidth=float(settings['bandwidtha'])
+					elif 'forwardbandwidth' in regulator_data: api_regulator.bandwidth=float(regulator_data['forwardbandwidth'])
 					else: api_regulator.bandwidth=float(regulator_data['bandwidth']) #For old CYME versions
 
-					if p=='B' and settings.has_key('bandwidthb') and settings['bandwidthb'] is not None: api_regulator.bandwidth=float(settings['bandwidthb'])
-					elif regulator_data.has_key('forwardbandwidth'): api_regulator.bandwidth=float(regulator_data['forwardbandwidth'])
+					if p=='B' and 'bandwidthb' in settings and settings['bandwidthb'] is not None: api_regulator.bandwidth=float(settings['bandwidthb'])
+					elif 'forwardbandwidth' in regulator_data: api_regulator.bandwidth=float(regulator_data['forwardbandwidth'])
 					else: api_regulator.bandwidth=float(regulator_data['bandwidth']) #For old CYME versions
 
-					if p=='C' and settings.has_key('bandwidthc') and settings['bandwidthc'] is not None: api_regulator.bandwidth=float(settings['bandwidthc'])
-					elif regulator_data.has_key('forwardbandwidth'): api_regulator.bandwidth=float(regulator_data['forwardbandwidth'])
+					if p=='C' and 'bandwidthc' in settings and settings['bandwidthc'] is not None: api_regulator.bandwidth=float(settings['bandwidthc'])
+					elif 'forwardbandwidth' in regulator_data: api_regulator.bandwidth=float(regulator_data['forwardbandwidth'])
 					else: api_regulator.bandwidth=float(regulator_data['bandwidth']) #For old CYME versions
 				except:
 					pass
@@ -3025,15 +3025,15 @@ section_1_feeder_2,node_1,node_2,ABC
 
 			sectionID=sectionID.strip('*').lower()
 
-			if self.loads.has_key(sectionID):
+			if sectionID in self.loads:
 				load_data=self.loads[sectionID]
 			else:
 				load_data={}
 
-			if settings.has_key('valuetype'):
+			if 'valuetype' in settings:
 				value_type=int(settings['valuetype'])
 
-			if settings.has_key('value1') and settings.has_key('value2'):
+			if 'value1' in settings and 'value2' in settings:
 				if value_type==0: #P and Q are given
 					try:
 						p,q=float(settings['value1']), float(settings['value2'])
@@ -3043,7 +3043,7 @@ section_1_feeder_2,node_1,node_2,ABC
 				elif value_type==1: #KVA and PF are given
 					try:
 						kva,PF=float(settings['value1']), float(settings['value2'])*0.01
-						if kva==0 and settings.has_key('connectedkva'):
+						if kva==0 and 'connectedkva' in settings:
 							kva=float(settings['connectedkva'])
 						p=kva*PF
 						q=math.sqrt(kva**2-p**2)
@@ -3064,12 +3064,12 @@ section_1_feeder_2,node_1,node_2,ABC
 
 				if p>0 or q>0:
 
-					if settings.has_key('loadphase'):
+					if 'loadphase' in settings:
 						phases=settings['loadphase']
 					else:
 						phases=[]
 
-					if self._loads.has_key(sectionID):
+					if sectionID in self._loads:
 						fusion=True
 						api_load=self._loads[sectionID]
 					else:
@@ -3091,7 +3091,7 @@ section_1_feeder_2,node_1,node_2,ABC
 						pass
 
 					if not fusion:
-						if settings.has_key('loadtype') and self.customer_class.has_key(settings['loadtype']):
+						if 'loadtype' in settings and settings['loadtype'] in self.customer_class:
 							load_type_data=self.customer_class[settings['loadtype']]
 						else:
 							load_type_data={}

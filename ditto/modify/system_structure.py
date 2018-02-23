@@ -122,10 +122,10 @@ succesors but modify this value if there is a voltage transformation.
             previous=self.source
         else:
             node,voltage,previous=args
-        if self.edge_equipment.has_key((previous,node)) and self.edge_equipment[(previous,node)]=='PowerTransformer':
+        if (previous,node) in self.edge_equipment and self.edge_equipment[(previous,node)]=='PowerTransformer':
             trans_name=self.edge_equipment_name[(previous,node)]
             new_value=min([w.nominal_voltage for w in self.model[trans_name].windings if w.nominal_voltage is not None])
-        elif self.edge_equipment.has_key((node,previous)) and self.edge_equipment[(node,previous)]=='PowerTransformer':
+        elif (node,previous) in self.edge_equipment and self.edge_equipment[(node,previous)]=='PowerTransformer':
             trans_name=self.edge_equipment_name[(node,previous)]
             new_value=min([w.nominal_voltage for w in self.model[trans_name].windings if w.nominal_voltage is not None])
         else:
@@ -177,17 +177,17 @@ Default values are:
     - delta_elevation=0
 
 '''
-        if kwargs.has_key('delta_longitude') and isinstance(kwargs['delta_longitude'], (int,float)):
+        if 'delta_longitude' in kwargs and isinstance(kwargs['delta_longitude'], (int,float)):
             delta_longitude=kwargs['delta_longitude']
         else:
             delta_longitude=0.1
 
-        if kwargs.has_key('delta_latitude') and isinstance(kwargs['delta_latitude'], (int,float)):
+        if 'delta_latitude' in kwargs and isinstance(kwargs['delta_latitude'], (int,float)):
             delta_latitude=kwargs['delta_latitude']
         else:
             delta_latitude=0.1
 
-        if kwargs.has_key('delta_elevation') and isinstance(kwargs['delta_elevation'], (int,float)):
+        if 'delta_elevation' in kwargs and isinstance(kwargs['delta_elevation'], (int,float)):
             delta_elevation=kwargs['delta_elevation']
         else:
             delta_elevation=0
@@ -336,7 +336,7 @@ The implementation is less obvious but should be much faster.
         self.model.set_names()
 
         #We will remove all edges representing transformers
-        edges_to_remove=[edge for edge in self.G.graph.edges(data=True) if edge[2].has_key('equipment') and edge[2]['equipment']=='PowerTransformer']
+        edges_to_remove=[edge for edge in self.G.graph.edges(data=True) if 'equipment' in edge[2] and edge[2]['equipment']=='PowerTransformer']
 
         #Do it!!
         self.G.graph.remove_edges_from(edges_to_remove)
@@ -524,9 +524,9 @@ The purpose of this function is to find this transformer as well as all the line
 
                 #Look for the type of equipment that makes the connection between from_node and to_node
                 _type=None
-                if self.edge_equipment.has_key((from_node,end_node)):
+                if (from_node,end_node) in self.edge_equipment:
                     _type=self.edge_equipment[(from_node,end_node)]
-                elif self.edge_equipment.has_key((end_node,from_node)):
+                elif (end_node,from_node) in self.edge_equipment:
                     _type=self.edge_equipment[(end_node,from_node)]
 
                 #It could be a Line, a Transformer...
@@ -537,10 +537,10 @@ The purpose of this function is to find this transformer as well as all the line
                     continu=False
 
                     #...and grab the transformer name to retrieve the data from the DiTTo object
-                    if self.edge_equipment_name.has_key((from_node,end_node)):
+                    if (from_node,end_node) in self.edge_equipment_name:
                         transformer_names.append(self.edge_equipment_name[(from_node,end_node)])
                         load_list[idx].upstream_transformer_name=self.edge_equipment_name[(from_node,end_node)]
-                    elif self.edge_equipment_name.has_key((end_node,from_node)):
+                    elif (end_node,from_node) in self.edge_equipment_name:
                         transformer_names.append(self.edge_equipment_name[(end_node,from_node)])
                         load_list[idx].upstream_transformer_name=self.edge_equipment_name[(end_node,from_node)]
                     #If we cannot find the object, raise an error because it sould not be the case...
@@ -549,9 +549,9 @@ The purpose of this function is to find this transformer as well as all the line
 
                 #...if it is a Line, store the name to modify the wires later, once the upstream transformer will be found
                 elif _type=='Line':
-                    if self.edge_equipment_name.has_key((from_node,end_node)):
+                    if (from_node,end_node) in self.edge_equipment_name:
                         line_names[-1].append(self.edge_equipment_name[(from_node,end_node)])
-                    elif self.edge_equipment_name.has_key((end_node,from_node)):
+                    elif (end_node,from_node) in self.edge_equipment_name:
                         line_names[-1].append(self.edge_equipment_name[(end_node,from_node)])
                     #Again, if we cannot find the object, raise an error because it sould not be the case...
                     else:

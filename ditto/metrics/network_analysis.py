@@ -222,7 +222,7 @@ Author: Nicolas Gensollen. December 2017
 
         n_row=0
         for key,data in self.results.iteritems():
-            card.loc[n_row]=[key]+[data[x] if data.has_key(x) else None for x in cols[1:]]
+            card.loc[n_row]=[key]+[data[x] if x in data else None for x in cols[1:]]
             n_row+=1
 
         #Instanciate the writer
@@ -242,7 +242,7 @@ Author: Nicolas Gensollen. December 2017
         for obj in self.model.models:
             if hasattr(obj,'feeder_name'):
                 if isinstance(obj,Node):
-                    if self.node_feeder_mapping.has_key(obj.name):
+                    if obj.name in self.node_feeder_mapping:
                         obj.feeder_name=self.node_feeder_mapping[obj.name]
                         obj.substation_name=self.substations[obj.feeder_name]
                     else:
@@ -250,7 +250,7 @@ Author: Nicolas Gensollen. December 2017
                         obj.substation_name=self.source
                         print('Node {name} was not found in feeder mapping'.format(name=obj.name))
                 elif hasattr(obj,'connecting_element'):
-                    if self.node_feeder_mapping.has_key(obj.connecting_element):
+                    if obj.connecting_element in self.node_feeder_mapping:
                         obj.feeder_name=self.node_feeder_mapping[obj.connecting_element]
                         obj.substation_name=self.substations[obj.feeder_name]
                     else:
@@ -258,7 +258,7 @@ Author: Nicolas Gensollen. December 2017
                         obj.substation_name=self.source
                         print('Object {name} connecting element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.connecting_element))
                 elif hasattr(obj,'from_element'):
-                    if self.node_feeder_mapping.has_key(obj.from_element):
+                    if obj.from_element in self.node_feeder_mapping:
                         obj.feeder_name=self.node_feeder_mapping[obj.from_element]
                         obj.substation_name=self.substations[obj.feeder_name]
                     else:
@@ -345,7 +345,7 @@ This will create the data structure for the whole network.
                 #Check that this is the name of a feeder
                 if network in self.feeder_names:
 
-                    if self.substations.has_key(network):
+                    if network in self.substations:
                         _src=self.substations[network]
                     else:
                         raise ValueError('Could not find the substation for feeder {}'.format(network))
@@ -354,7 +354,7 @@ This will create the data structure for the whole network.
                     if self.feeder_networks is not None:
 
                         #Check that the name is linked to a graph object
-                        if self.feeder_networks.has_key(network):
+                        if network in self.feeder_networks:
                             _net=self.feeder_networks[network]
 
                         #Error raising...
@@ -442,7 +442,7 @@ This will create the data structure for the whole network.
                  'substation_name':_src,
                  'Feeder_type':None,
                  }
-        if 'feeder_types' in self.__dict__ and self.feeder_types.has_key(network):
+        if 'feeder_types' in self.__dict__ and network in self.feeder_types:
             results['Feeder_type']=self.feeder_types[network]
         return results
 
@@ -560,7 +560,7 @@ All information needed for the metric extraction is updated here.
                 self.results[feeder_name]['number_of_customers']+=obj.num_users
 
             if hasattr(obj, 'upstream_transformer_name') and obj.upstream_transformer_name is not None:
-                if self.results[feeder_name]['nb_load_per_transformer'].has_key(obj.upstream_transformer_name):
+                if obj.upstream_transformer_name in self.results[feeder_name]['nb_load_per_transformer']:
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name]+=1
                 else:
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name]=1
@@ -670,11 +670,11 @@ All information needed for the metric extraction is updated here.
 If no matching feeder is found, the function returns None.
 
 '''
-        if self.node_feeder_mapping.has_key(obj.name):
+        if obj.name in self.node_feeder_mapping:
             return self.node_feeder_mapping[obj.name]
-        elif hasattr(obj,'connecting_element') and self.node_feeder_mapping.has_key(obj.connecting_element):
+        elif hasattr(obj,'connecting_element') and obj.connecting_element in self.node_feeder_mapping:
             return self.node_feeder_mapping[obj.connecting_element]
-        elif hasattr(obj, 'from_element') and self.node_feeder_mapping.has_key(obj.from_element):
+        elif hasattr(obj, 'from_element') and obj.from_element in self.node_feeder_mapping:
             return self.node_feeder_mapping[obj.from_element]
         else:
             print('Could not find feeder for {}'.format(obj.name))
@@ -733,12 +733,12 @@ If no matching feeder is found, the function returns None.
 
             #Convert to miles
             for k in keys_to_convert_to_miles:
-                if self.results[_feeder_ref].has_key(k):
+                if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k]*=0.000621371
 
             #Divide by 10^3
             for k in keys_to_divide_by_1000:
-                if self.results[_feeder_ref].has_key(k):
+                if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k]*=10**-3
 
 
@@ -791,12 +791,12 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
 
             #Convert to miles
             for k in keys_to_convert_to_miles:
-                if self.results[_feeder_ref].has_key(k):
+                if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k]*=0.000621371
 
             #Divide by 10^3
             for k in keys_to_divide_by_1000:
-                if self.results[_feeder_ref].has_key(k):
+                if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k]*=10**-3
 
 

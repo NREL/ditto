@@ -19,6 +19,6 @@ gridlabd_models = ['13node_simplified.glm',
 def test_gld_reader():
     for modelfile in gridlabd_models:
         m = Store()
-        reader = Reader()
-        reader.parse(m, os.path.join(gridlabd_models_dir,modelfile))
+        r = reader()
+        r.parse(m, os.path.join(gridlabd_models_dir,modelfile))
 

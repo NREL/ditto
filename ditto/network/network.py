@@ -213,9 +213,9 @@ This might be handy when trying to find all the objects below a substation such 
             _elts.add(source)
             for destination in destinations:
                 _elts.add(destination)
-                if edge_equipment_name.has_key((source,destination)):
+                if (source,destination) in edge_equipment_name:
                     _elts.add(edge_equipment_name[(source,destination)])
-                elif edge_equipment_name.has_key((destination,source)):
+                elif (destination,source) in edge_equipment_name:
                     _elts.add(edge_equipment_name[(destination,source)])
 
 

@@ -83,7 +83,7 @@ author: Nicolas Gensollen. October 2017.
         #Set the linecode flag
         #If True, linecodes will be used when writing the lines
         #If False, linegeometries and wiredata will be used when writing the lines
-        if kwargs.has_key('linecodes_flag') and isinstance(kwargs['linecodes_flag'], bool):
+        if 'linecodes_flag' in kwargs and isinstance(kwargs['linecodes_flag'], bool):
             self.linecodes_flag=kwargs['linecodes_flag']
         else:
             self.linecodes_flag=True
@@ -106,12 +106,12 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         #Verbose print the progress
-        if kwargs.has_key('verbose') and isinstance(kwargs['verbose'], bool):
+        if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose=kwargs['verbose']
         else:
             self.verbose=False
 
-        if kwargs.has_key('write_taps'):
+        if 'write_taps' in kwargs:
             self.write_taps=kwargs['write_taps']
         else:
             self.write_taps=False
@@ -361,19 +361,19 @@ author: Nicolas Gensollen. October 2017.
 
                         for phase_winding in winding.phase_windings:
                             if hasattr(phase_winding, 'compensator_r') and phase_winding.compensator_r is not None:
-                                if not self.compensator.has_key(i.name):
+                                if not i.name in self.compensator:
                                     self.compensator[i.name]={}
                                     self.compensator[i.name]['R']=set([phase_winding.compensator_r])
-                                elif self.compensator[i.name].has_key('R'):
+                                elif 'R' in self.compensator[i.name]:
                                     self.compensator[i.name]['R'].add(phase_winding.compensator_r)
                                 else:
                                     self.compensator[i.name]['R']=set([phase_winding.compensator_r])
 
                             if hasattr(phase_winding, 'compensator_x') and phase_winding.compensator_x is not None:
-                                if not self.compensator.has_key(i.name):
+                                if not i.name in self.compensator:
                                     self.compensator[i.name]={}
                                     self.compensator[i.name]['X']=set([phase_winding.compensator_x])
-                                elif self.compensator[i.name].has_key('X'):
+                                elif 'X' in self.compensator[i.name]:
                                     self.compensator[i.name]['X'].add(phase_winding.compensator_x)
                                 else:
                                     self.compensator[i.name]['X']=set([phase_winding.compensator_x])
@@ -907,8 +907,8 @@ author: Nicolas Gensollen. October 2017.
                     fp.write(' vlimit={vlim}'.format(vlim=i.voltage_limit))
 
                 #X (Store in the Phase Windings of the transformer)
-                if self.compensator.has_key(i.name):
-                    if self.compensator[i.name].has_key('X'):
+                if i.name in self.compensator:
+                    if 'X' in self.compensator[i.name]:
                         if len(self.compensator[i.name]['X'])==1:
                             fp.write(' X={x}'.format(x=list(self.compensator[i.name]['X'])[0]))
                         else:
@@ -918,8 +918,8 @@ author: Nicolas Gensollen. October 2017.
                             fp.write(' X={x}'.format(x=list(self.compensator[i.name]['X'])[0]))
 
                 #R (Store in the Phase Windings of the transformer)
-                if self.compensator.has_key(i.name):
-                    if self.compensator[i.name].has_key('R'):
+                if i.name in self.compensator:
+                    if 'R' in self.compensator[i.name]:
                         if len(self.compensator[i.name]['R'])==1:
                             fp.write(' R={r}'.format(r=list(self.compensator[i.name]['R'])[0]))
                         else:

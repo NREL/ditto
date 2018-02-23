@@ -86,18 +86,18 @@ class Writer(abstract_writer):
         abstract_writer.__init__(self, **kwargs)
 
         log_file = 'ephasor_writer.log'
-        if kwargs.has_key('log_file'):
+        if 'log_file' in kwargs:
             log_file = kwargs['log_file']
 
         self.linecodes_flag = True
-        if kwargs.has_key('linecodes_flag') and isinstance(kwargs['linecodes_flag'], bool):
+        if 'linecodes_flag' in kwargs and isinstance(kwargs['linecodes_flag'], bool):
             self.linecodes_flag=kwargs['linecodes_flag']
 
         self.output_path = './'
-        if kwargs.has_key('output_path'):
+        if 'output_path' in kwargs:
             self.output_path=kwargs['output_path']
         self.output_name = 'ephasor_model.xlsx'
-        if kwargs.has_key('output_name'):
+        if 'output_name' in kwargs:
             self.output_name = kwargs['output_name']
 
 

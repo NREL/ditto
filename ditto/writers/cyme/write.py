@@ -120,7 +120,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 '''
 		section_reg={}
 		for reg in regulators:
-			if section_reg.has_key(reg.split(',')[0]):
+			if reg.split(',')[0] in section_reg:
 				section_reg[reg.split(',')[0]]=self.merge(section_reg[reg.split(',')[0]],reg)
 			else:
 				section_reg[reg.split(',')[0]]=reg
@@ -181,7 +181,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 		self.section_headnode_mapping={}
 
 		#Verbose print the progress
-		if kwargs.has_key('verbose') and isinstance(kwargs['verbose'], bool):
+		if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
 			self.verbose=kwargs['verbose']
 		else:
 			self.verbose=False
@@ -426,7 +426,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							new_line_string+=new_sectionID
 							new_section_line='{id},{f},{t}'.format(id=new_sectionID,f=i.from_element,t=i.to_element)
 							if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-								if self.section_feeder_mapping.has_key(i.feeder_name):
+								if i.feeder_name in self.section_feeder_mapping:
 									self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
 								else:
 									self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
@@ -548,19 +548,19 @@ The purpose of this is to merge all the single phase regulators on the same sect
 						elif hasattr(i, 'impedance_matrix') and i.impedance_matrix is not None:
 							#try:
 							tt={}
-							if cond_id.has_key('A'):
+							if 'A' in cond_id:
 								tt['CondID_A']=cond_id['A']
 							else:
 								tt['CondID_A']='DEFAULT'
-							if cond_id.has_key('B'):
+							if 'B' in cond_id:
 								tt['CondID_B']=cond_id['B']
 							else:
 								tt['CondID_B']='DEFAULT'
-							if cond_id.has_key('C'):
+							if 'C' in cond_id:
 								tt['CondID_C']=cond_id['C']
 							else:
 								tt['CondID_C']='DEFAULT'
-							if cond_id.has_key('N'):
+							if 'N' in cond_id:
 								tt['CondID_N']=cond_id['N']
 							else:
 								tt['CondID_N']='DEFAULT'
@@ -646,7 +646,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							try:
 								self.section_line_list.append(new_section_line)
 								if hasattr(i,'feeder_name') and i.feeder_name is not None:
-									if self.section_line_feeder_mapping.has_key(i.feeder_name):
+									if i.feeder_name in self.section_line_feeder_mapping:
 										self.section_line_feeder_mapping[i.feeder_name].append(new_section_line)
 									else:
 										self.section_line_feeder_mapping[i.feeder_name]=[new_section_line]
@@ -685,7 +685,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 								self.nodeID_list.append(i.name)
 								self.node_string_list.append('{},0,0'.format(i.name))
 							if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-								if self.section_feeder_mapping.has_key(i.feeder_name):
+								if i.feeder_name in self.section_feeder_mapping:
 									self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
 								else:
 									self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
@@ -755,7 +755,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 					if new_section is not None:
 						self.section_line_list.append(new_section)
 						if hasattr(i,'feeder_name') and i.feeder_name is not None:
-							if self.section_line_feeder_mapping.has_key(i.feeder_name):
+							if i.feeder_name in self.section_line_feeder_mapping:
 								self.section_line_feeder_mapping[i.feeder_name].append(new_section)
 							else:
 								self.section_line_feeder_mapping[i.feeder_name]=[new_section]
@@ -776,7 +776,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							new_section='{f}_{t},{f},{t},'.format(f=i.from_element,t=i.to_element)
 							new_section_ID='{f}_{t}'.format(f=i.from_element,t=i.to_element)
 							if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-								if self.section_feeder_mapping.has_key(i.feeder_name):
+								if i.feeder_name in self.section_feeder_mapping:
 									self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
 								else:
 									self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
@@ -801,7 +801,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 									new_section='{f}_{t},{f},{t},'.format(f=i.to_element+'_reg',t=i.to_element)
 									new_section_ID='{f}_{t}'.format(f=i.to_element+'_reg',t=i.to_element)
 									if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-										if self.section_feeder_mapping.has_key(i.feeder_name):
+										if i.feeder_name in self.section_feeder_mapping:
 											self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
 										else:
 											self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
@@ -822,7 +822,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 									if new_trans_section is not None and new_trans_section not in self.section_line_list:
 											self.section_line_list.append(new_trans_section)
 											if hasattr(i,'feeder_name') and i.feeder_name is not None:
-												if self.section_line_feeder_mapping.has_key(i.feeder_name):
+												if i.feeder_name in self.section_line_feeder_mapping:
 													self.section_line_feeder_mapping[i.feeder_name].append(new_trans_section)
 												else:
 													self.section_line_feeder_mapping[i.feeder_name]=[new_trans_section]
@@ -962,7 +962,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 					if new_section is not None and new_section not in self.section_line_list:
 						self.section_line_list.append(new_section)
 						if hasattr(i,'feeder_name') and i.feeder_name is not None:
-							if self.section_line_feeder_mapping.has_key(i.feeder_name):
+							if i.feeder_name in self.section_line_feeder_mapping:
 								self.section_line_feeder_mapping[i.feeder_name].append(new_section)
 							else:
 								self.section_line_feeder_mapping[i.feeder_name]=[new_section]
@@ -1089,7 +1089,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 							new_section='{f}_{t},{f},{t},'.format(f=i.from_element,t=i.to_element)
 							new_section_ID='{f}_{t}'.format(f=i.from_element,t=i.to_element)
 							if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-								if self.section_feeder_mapping.has_key(i.feeder_name):
+								if i.feeder_name in self.section_feeder_mapping:
 									self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
 								else:
 									self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
@@ -1112,7 +1112,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 						if new_section is not None and new_section not in self.section_line_list:
 								self.section_line_list.append(new_section)
 								if hasattr(i,'feeder_name') and i.feeder_name is not None:
-									if self.section_line_feeder_mapping.has_key(i.feeder_name):
+									if i.feeder_name in self.section_line_feeder_mapping:
 										self.section_line_feeder_mapping[i.feeder_name].append(new_section)
 									else:
 										self.section_line_feeder_mapping[i.feeder_name]=[new_section]
@@ -1696,13 +1696,13 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				f.write('MinorRepairTime,MajorFailureProportion,SymbolID,Favorite,Flags,Comments\n')
 
 				for sub in self.substations:
-					if sub.has_key('sub_ID'):
+					if 'sub_ID' in sub:
 						f.write(sub['sub_ID']+',')
-						if sub.has_key('MVA'):
+						if 'MVA' in sub:
 							f.write(sub['MVA']+',')
 						else:
 							f.write(',')
-						if sub.has_key('KVLL'):
+						if 'KVLL' in sub:
 							#NOTE: Setting the voltage to 1.05pu at the feeder head is raw coded here
 							#TODO: Come up with a less dirty way to have 1.05pu at the substation
 							f.write('{a},{b},'.format(a=sub['KVLL'],b=float(sub['KVLL'])*1.05))
@@ -1711,41 +1711,41 @@ The purpose of this is to merge all the single phase regulators on the same sect
 						#
 						#TODO: automatically detect if default or real values should be used for source impedance
 						#
-						#if sub.has_key('R1'):
+						#if 'R1' in sub:
 							#f.write(sub['R1']+',')
 						f.write('DEFAULT,')
 						#else:
 						#	f.write(',')
-						#if sub.has_key('X1'):
+						#if 'X1' in sub:
 						#	f.write(sub['X1']+',')
 						f.write('DEFAULT,')
 						#else:
 						#	f.write(',')
-						#if sub.has_key('R0'):
+						#if 'R0' in sub:
 						#	f.write(sub['R0']+',')
 						f.write('DEFAULT,')
 						#else:
 						#	f.write(',')
-						#if sub.has_key('X0'):
+						#if 'X0' in sub:
 						#	f.write(sub['X0']+',')
 						f.write('DEFAULT,')
 						#else:
 						#	f.write(',')
-						#if sub.has_key('R2'):
+						#if 'R2' in sub:
 						#	f.write(sub['R2']+',')
 						f.write('DEFAULT,')
-						#elif sub.has_key('R0'):
+						#elif 'R0' in sub:
 						#	f.write(sub['R0']+',')
 						#else:
 						#	f.write(',')
-						#if sub.has_key('X2'):
+						#if 'X2' in sub:
 						#	f.write(sub['X2']+',')
 						f.write('DEFAULT,')
-						#elif sub.has_key('X0'):
+						#elif 'X0' in sub:
 						#	f.write(sub['X0']+',')
 						#else:
 						#	f.write(',')
-						if sub.has_key('phase_angle'):
+						if 'phase_angle' in sub:
 							f.write(sub['phase_angle']+',')
 						else:
 							f.write(',')
@@ -1786,7 +1786,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 			for ID,data in self.cablecodes.iteritems():
 				f.write('cable_'+str(ID))
 				for key in ['R1','R0','X1','X0','B1','B0','amps']:
-					if data.has_key(key):
+					if key in data:
 						f.write(','+str(data[key]))
 					else:
 						f.write(',')
@@ -1801,7 +1801,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 				for ID,data in self.linecodes.iteritems():
 					f.write('line_'+str(ID))
 					for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
-						if data.has_key(key):
+						if key in data:
 							f.write(','+str(data[key]))
 						else:
 							if key in ['CondID_A','CondID_B','CondID_C','SpacingID']:
@@ -1897,7 +1897,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 						new_section_ID='{f}_{t}'.format(f=i.connecting_element,t=i.name)
 						new_section='{f}_{t},{f},{t},'.format(f=i.connecting_element,t=i.name)
 						if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-							if self.section_feeder_mapping.has_key(i.feeder_name):
+							if i.feeder_name in self.section_feeder_mapping:
 								self.section_feeder_mapping[i.feeder_name].append(new_section_ID)
 							else:
 								self.section_feeder_mapping[i.feeder_name]=[new_section_ID]
@@ -1994,7 +1994,7 @@ The purpose of this is to merge all the single phase regulators on the same sect
 					if new_section is not None:
 						self.section_line_list.append(new_section)
 						if hasattr(i,'feeder_name') and i.feeder_name is not None:
-							if self.section_line_feeder_mapping.has_key(i.feeder_name):
+							if i.feeder_name in self.section_line_feeder_mapping:
 								self.section_line_feeder_mapping[i.feeder_name].append(new_section)
 							else:
 								self.section_line_feeder_mapping[i.feeder_name]=[new_section]

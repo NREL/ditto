@@ -78,12 +78,12 @@ Use to read and parse an OpenDSS circuit model to DiTTo.
 
 		self.DSS_file_names={}
 
-		if kwargs.has_key('master_file'):
+		if 'master_file' in kwargs:
 			self.DSS_file_names['master']=kwargs['master_file']
 		else:
 			self.DSS_file_names['master']='./master.dss'
 
-		if kwargs.has_key('buscoordinates_file'):
+		if 'buscoordinates_file' in kwargs:
 			self.DSS_file_names['Nodes']=kwargs['buscoordinates_file']
 		else:
 			self.DSS_file_names['Nodes']='./buscoords.dss'
@@ -228,13 +228,13 @@ Responsible for calling the sub-parsers and logging progress.
 		end=time.time()
 		print('Build OpenDSSdirect= {}'.format(end-start))
 
-		if kwargs.has_key('feeder_file'):
+		if 'feeder_file' in kwargs:
 			self.feeder_file=kwargs['feeder_file']
 			self.parse_feeder_metadata(model)
 
 
 		read_power_source = True
-		if kwargs.has_key('read_power_source'):
+		if 'read_power_source' in kwargs:
 			read_power_source = kwargs['read_power_source']
 		if read_power_source:
 			self.parse_power_source(model) #TODO: push this to abstract reader once power source parsing is stable...
@@ -252,21 +252,21 @@ Responsible for calling the sub-parsers and logging progress.
 		substation_transformers={}
 		for line in lines[1:]:
 			node,sub,feed,sub_trans=map(lambda x:x.strip(), line.split(' '))
-			if not feeders.has_key(feed):
+			if not feed in feeders:
 				feeders[feed]=[node.lower().replace('.','')]
 			else:
 				feeders[feed].append(node.lower().replace('.',''))
-			if not substations.has_key(feed):
+			if not feed in substations:
 				substations[feed]=sub.lower().replace('.','')
-			if not substation_transformers.has_key(feed):
+			if not feed in substation_transformers:
 				substation_transformers[feed]=sub.lower().replace('.','')
 
 		for f_name,f_data in feeders.iteritems():
 			api_feeder_metadata=Feeder_metadata(model)
 			api_feeder_metadata.name=f_name
-			if substation_transformers.has_key(f_name):
+			if f_name in substation_transformers:
 				api_feeder_metadata.transformer=substation_transformers[f_name]
-			if substations.has_key(f_name):
+			if f_name in substations:
 				api_feeder_metadata.substation=substations[f_name]
 
 	@timeit
@@ -320,26 +320,26 @@ Responsible for calling the sub-parsers and logging progress.
 				pass
 
 			#Zero sequence impedance
-			if source_data.has_key('Z0') and isinstance(source_data['Z0'], list):
+			if 'Z0' in source_data and isinstance(source_data['Z0'], list):
 				if len(source_data['Z0'])==2:
 					try:
 						api_power_source.zero_sequence_impedance=complex(float(source_data['Z0'][0]), float(source_data['Z0'][1]))
 					except:
 						pass
-			elif source_data.has_key('R0') and source_data['R0']!='' and source_data.has_key('X0') and source_data['X0']!='':
+			elif 'R0' in source_data and source_data['R0']!='' and 'X0' in source_data and source_data['X0']!='':
 				try:
 					api_power_source.zero_sequence_impedance=complex(float(source_data['R0']), float(source_data['X0']))
 				except:
 					pass
 
 			#Positive sequence impedance
-			if source_data.has_key('Z1') and isinstance(source_data['Z1'], list):
+			if 'Z1' in source_data and isinstance(source_data['Z1'], list):
 				if len(source_data['Z1'])==2:
 					try:
 						api_power_source.positive_sequence_impedance=complex(float(source_data['Z1'][0]), float(source_data['Z1'][1]))
 					except:
 						pass
-			elif source_data.has_key('R1') and source_data['R1']!='' and source_data.has_key('X1') and source_data['X1']!='':
+			elif 'R1' in source_data and source_data['R1']!='' and 'X1' in source_data and source_data['X1']!='':
 				try:
 					api_power_source.positive_sequence_impedance=complex(float(source_data['R1']), float(source_data['X1']))
 				except:
@@ -385,7 +385,7 @@ Responsible for calling the sub-parsers and logging progress.
 		self.bus_coord_file=self.DSS_file_names['Nodes']
 
 		#Get the delimiter
-		if kwargs.has_key('coordinates_delimiter') and isinstance(kwargs['coordinates_delimiter'], str):
+		if 'coordinates_delimiter' in kwargs and isinstance(kwargs['coordinates_delimiter'], str):
 			self.coordinates_delimiter=kwargs['coordinates_delimiter']
 		else:
 			self.coordinates_delimiter=','
@@ -411,7 +411,7 @@ Responsible for calling the sub-parsers and logging progress.
 				self.logger.warning('Could not cast coordinates {X}, {Y} for bus {name}'.format(X=X, Y=Y, name=name))
 				pass
 
-			if not buses.has_key(name):
+			if not name in buses:
 				buses[name]={}
 				buses[name]['positions']=[X,Y]
 				if name not in self.all_object_names:
@@ -452,7 +452,7 @@ Responsible for calling the sub-parsers and logging progress.
 				b2_phases=None
 
 			#Update the buses dictionary
-			if b1_name is not None and not buses.has_key(b1_name):
+			if b1_name is not None and not b1_name in buses:
 				if b1_name not in self.all_object_names:
 					self.all_object_names.append(b1_name)
 				else:
@@ -460,14 +460,14 @@ Responsible for calling the sub-parsers and logging progress.
 				buses[b1_name]={}
 				buses[b1_name]['positions']=None
 				buses[b1_name]['phases']=b1_phases
-			elif not buses[b1_name].has_key('phases'):
+			elif not 'phases' in buses[b1_name]:
 				buses[b1_name]['phases']=b1_phases
 			else:
 				buses[b1_name]['phases']+=b1_phases
 				buses[b1_name]['phases']=np.unique(buses[b1_name]['phases']).tolist()
 
         	#Update the buses dictionary
-			if b2_name is not None and not buses.has_key(b2_name):
+			if b2_name is not None and not b2_name in buses:
 				if b2_name not in self.all_object_names:
 					self.all_object_names.append(b2_name)
 				else:
@@ -475,7 +475,7 @@ Responsible for calling the sub-parsers and logging progress.
 				buses[b2_name]={}
 				buses[b2_name]['positions']=None
 				buses[b2_name]['phases']=b2_phases
-			elif not buses[b2_name].has_key('phases'):
+			elif not 'phases' in buses[b2_name]:
 				buses[b2_name]['phases']=b2_phases
 			else:
 				buses[b2_name]['phases']+=b2_phases
@@ -498,7 +498,7 @@ Responsible for calling the sub-parsers and logging progress.
 				b1_name=None
 				b1_phases=None
 			#Update the buses dictionary
-			if b1_name is not None and not buses.has_key(b1_name):
+			if b1_name is not None and not b1_name in buses:
 				if b1_name not in self.all_object_names:
 					self.all_object_names.append(b1_name)
 				else:
@@ -506,7 +506,7 @@ Responsible for calling the sub-parsers and logging progress.
 				buses[b1_name]={}
 				buses[b1_name]['positions']=None
 				buses[b1_name]['phases']=b1_phases
-			elif not buses[b1_name].has_key('phases'):
+			elif not 'phases' in buses[b1_name]:
 				buses[b1_name]['phases']=b1_phases
 			else:
 				buses[b1_name]['phases']+=b1_phases
@@ -622,7 +622,7 @@ Responsible for calling the sub-parsers and logging progress.
 			#If we have a valid linecode, try to get the data
 			if linecode is not None:
 				linecodes=dss.utils.class_to_dataframe('linecode')
-				if linecodes.has_key('linecode.'+linecode.lower()):
+				if 'linecode.'+linecode.lower() in linecodes:
 					linecode_data=linecodes['linecode.'+linecode.lower()]
 				else:
 					linecode_data=None
@@ -694,16 +694,16 @@ Responsible for calling the sub-parsers and logging progress.
 				api_line.is_recloser=1
 			elif 'breaker' in line_name:
 				api_line.is_breaker=1
-			elif data.has_key('Switch') and data['Switch']:
+			elif 'Switch' in data and data['Switch']:
 				api_line.is_switch=1
 
 			#faultrate
-			if data.has_key('faultrate'):
+			if 'faultrate' in data:
 				try:
 					api_line.faultrate=float(data['faultrate'])
 				except:
 					pass
-			elif linecode_data is not None and linecode_data.has_key('faultrate'):
+			elif linecode_data is not None and 'faultrate' in linecode_data:
 				try:
 					api_line.faultrate=float(linecode_data['faultrate'])
 				except:
@@ -711,10 +711,10 @@ Responsible for calling the sub-parsers and logging progress.
 
 			#impedance_matrix
 			#We have the Rmatrix and Xmatrix
-			if data.has_key('rmatrix') and data.has_key('xmatrix'):
+			if 'rmatrix' in data and 'xmatrix' in data:
 				Rmatrix=data['rmatrix']
 				Xmatrix=data['xmatrix']
-			elif linecode_data.has_key('rmatrix') and linecode_data.has_key('xmatrix'):
+			elif 'rmatrix' in linecode_data and 'xmatrix' in linecode_data:
 				Rmatrix=linecode_data['rmatrix']
 				Xmatrix=linecode_data['xmatrix']
 			else:
@@ -757,9 +757,9 @@ Responsible for calling the sub-parsers and logging progress.
 				except:
 					pass
 
-			if data.has_key('cmatrix'):
+			if 'cmatrix' in data:
 				Cmatrix=data['cmatrix']
-			elif linecode_data.has_key('cmatrix'):
+			elif 'cmatrix' in linecode_data:
 				Cmatrix=linecode_data['cmatrix']
 			else:
 				Cmatrix=None
@@ -1025,16 +1025,16 @@ Responsible for calling the sub-parsers and logging progress.
 										#(99.9999% of the time they should match, but just for safety...)
 										new_length=self.unit_conversion(length, unit, Runits)
 										wires[p].resistance=Rac*new_length
-									except: 
+									except:
 										pass
 
-					if wires[p].ampacity is None and data.has_key('normamps'):
+					if wires[p].ampacity is None and 'normamps' in data:
 						try:
 							wires[p].ampacity=float(data['normamps'])
 						except:
 							pass
 
-					if wires[p].ampacity_emergency is None and data.has_key('emergamps'):
+					if wires[p].ampacity_emergency is None and 'emergamps' in data:
 						try:
 							wires[p].ampacity_emergency=float(data['emergamps'])
 						except:
@@ -1189,21 +1189,21 @@ Responsible for calling the sub-parsers and logging progress.
 				pass
 
 			#reactances
-			if data.has_key('Xscarray'):
+			if 'Xscarray' in data:
 				try:
 					api_transformer.reactances=map(lambda x: float(x), data['Xscarray'])
 				except:
 					pass
 
-			elif N_windings==1 and data.has_key('XHL'):
+			elif N_windings==1 and 'XHL' in data:
 				api_transformer.reactances=[float(data['XHL'])]
 			elif N_windings==2:
 				api_transformer.reactances=[]
-				if data.has_key('XHL'):
+				if 'XHL' in data:
 					api_transformer.reactances.append(float(data['XHL']))
-				if data.has_key('XLT'):
+				if 'XLT' in data:
 					api_transformer.reactances.append(float(data['XLT']))
-				if data.has_key('XHT'):
+				if 'XHT' in data:
 					api_transformer.reactances.append(float(data['XHT']))
 			#Number of phases
 			try:
@@ -1275,12 +1275,12 @@ Responsible for calling the sub-parsers and logging progress.
 					phase_windings[p].compensator_x=None
 
 					#tap position
-					if data.has_key('taps'):
+					if 'taps' in data:
 						try:
 							phase_windings[p].tap_position=float(data['taps'][w])
 						except:
 							pass
-					elif data.has_key('tap'):
+					elif 'tap' in data:
 						try:
 							phase_windings[p].tap_position=float(data['tap'])
 						except:
@@ -1295,10 +1295,10 @@ Responsible for calling the sub-parsers and logging progress.
 					regulators=dss.utils.class_to_dataframe('RegControl')
 					for reg_name,reg_data in regulators.iteritems():
 
-						if reg_data.has_key('transformer') and reg_data['transformer'].lower()==api_transformer.name.lower():
-							if reg_data.has_key('R'):
+						if 'transformer' in reg_data and reg_data['transformer'].lower()==api_transformer.name.lower():
+							if 'R' in reg_data:
 								phase_windings[p].compensator_r=float(reg_data['R'])
-							if reg_data.has_key('X'):
+							if 'X' in reg_data:
 								phase_windings[p].compensator_x=float(reg_data['X'])
 
 				#Store the phase winding objects in the winding objects
@@ -1373,7 +1373,7 @@ Responsible for calling the sub-parsers and logging progress.
 			#windings (The actual Windings Ditto objects)
 			#
 			#We need the transformer data first
-			if data.has_key('transformer') and transformers.has_key('Transformer.{}'.format(data['transformer'].lower())):
+			if 'transformer' in data and 'Transformer.{}'.format(data['transformer'].lower()) in transformers:
 				trans=transformers['Transformer.{}'.format(data['transformer'].lower())]
 
 				#Total number of windings
@@ -1384,7 +1384,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 				#Connection type
 				for w in range(N_windings):
-					if trans.has_key('conns'):
+					if 'conns' in trans:
 						try:
 							api_regulator.windings[w].connection_type= trans['conns'][w]
 						except:
@@ -1392,7 +1392,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 				#nominal_voltage
 				for w in range(N_windings):
-					if trans.has_key('kVs'):
+					if 'kVs' in trans:
 						try:
 							api_regulator.windings[w].nominal_voltage=float(trans['kVs'][w])*10**3 #DiTTo in Volts
 						except:
@@ -1400,7 +1400,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 				#resistance
 				for w in range(N_windings):
-					if trans.has_key('%Rs'):
+					if '%Rs' in trans:
 						try:
 							api_regulator.windings[w].resistance=float(trans['%Rs'][w])
 						except:
@@ -1408,7 +1408,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 				#rated_power
 				for w in range(N_windings):
-					if trans.has_key('kVAs'):
+					if 'kVAs' in trans:
 						try:
 							api_regulator.windings[w].rated_power=float(trans['kVAs'][w])*10**3 #DiTTo in volt ampere
 						except:
@@ -1416,7 +1416,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 				#emergency_power
 				for w in range(N_windings):
-					if trans.has_key('emerghkVA'):
+					if 'emerghkVA' in trans:
 						try:
 							api_regulator.windings[w].emergency_power=float(trans['emerghkVA'][w])*10**3 #DiTTo in volt ampere
 						except:
@@ -1425,7 +1425,7 @@ Responsible for calling the sub-parsers and logging progress.
 				#phase_windings
 				for w in range(N_windings):
 					#Get the phase
-					if trans.has_key('buses'):
+					if 'buses' in trans:
 						try:
 							bus=trans['buses'][w]
 						except:
@@ -1445,18 +1445,18 @@ Responsible for calling the sub-parsers and logging progress.
 						api_regulator.windings[w].phase_windings[p].phase=self.phase_mapping(phase)
 
 						#tap_position
-						if trans.has_key('taps'):
+						if 'taps' in trans:
 							api_regulator.windings[w].phase_windings[p].tap_position=float(trans['taps'][w])
 
 						#compensator_r
-						if data.has_key('R'):
+						if 'R' in data:
 							try:
 								api_regulator.windings[w].phase_windings[p].compensator_r=float(data['R'])
 							except:
 								pass
 
 						#compensator_x
-						if data.has_key('X'):
+						if 'X' in data:
 							try:
 								api_regulator.windings[w].phase_windings[p].compensator_x=float(data['X'])
 							except:

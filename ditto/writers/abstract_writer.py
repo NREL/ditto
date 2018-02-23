@@ -14,17 +14,17 @@ author: Nicolas Gensollen. October 2017.
 		'''Abstract class CONSTRUCTOR.
 
 '''
-		if kwargs.has_key('log_file'):
+		if 'log_file' in kwargs:
 			log_file=kwargs['log_file']
 		else:
 			log_file='writer.log'
 
-		if kwargs.has_key('output_path'):
+		if 'output_path' in kwargs:
 			self.output_path=kwargs['output_path']
 		else:
 			self.output_path='./'
 
-		# create logger 
+		# create logger
 		self.logger=logging.getLogger('writer')
 		self.logger.setLevel(logging.INFO)
 
@@ -104,15 +104,15 @@ The ratios used are the ones provided by Google. The following table summerize t
 +--------+------------+
 |   cm   |     100    |
 +--------+------------+
-            
+
 .. note:: If the unit is not one of these, the function returns None
 
 .. warning:: This function is a duplicate (also exists for the OpenDSS reader). Reproduce here for convenience.
 
 .. seealso:: convert_to_meters, unit_conversion
-        
+
 '''
-		if kwargs.has_key('inverse') and isinstance(kwargs['inverse'], bool):
+		if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
 			inverse=kwargs['inverse']
 		else:
 			inverse=False
@@ -132,13 +132,13 @@ The ratios used are the ones provided by Google. The following table summerize t
 				return quantity/0.000621371
 			else:
 				return 0.000621371*quantity
-                
+
 		elif unit.lower()=='km':
 			if inverse:
 				return quantity/10**-3
 			else:
 				return 10**-3*quantity
-                
+
 		elif unit.lower()=='kft':
 			if inverse:
 				return quantity/0.00328084

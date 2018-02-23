@@ -15,12 +15,12 @@ author: Nicolas Gensollen. October 2017.
 		'''Abstract class CONSTRUCTOR.
 
 '''
-		if kwargs.has_key('log_file'):
+		if 'log_file' in kwargs:
 			log_file=kwargs['log_file']
 		else:
 			log_file='reader.log'
 
-		# create logger 
+		# create logger
 		self.logger=logging.getLogger('reader')
 		self.logger.setLevel(logging.INFO)
 
@@ -58,7 +58,7 @@ The function expects a list of lists, and turns it into a symmetric list of list
 [[.1,.2,.4],[.2,.1,.5],[.4,.5,.1]]
 
 ..note:: Probably, many more elegant (and faster!) ways to do this...
-		
+
 '''
 		N_rows=len(matrix)
 		N_cols=max(map(lambda x:len(x), matrix))
@@ -94,7 +94,7 @@ The function expects a list of lists, and turns it into a symmetric list of list
 :type inverse: bool
 :returns: The distance in meters
 :rtype: float
-				
+
 **Units supported:**
 
 The units supported are the OpenDSS available units:
@@ -128,19 +128,19 @@ The ratios used are the ones provided by Google. The following table summerize t
 +--------+------------+
 |   cm   |    0.01    |
 +--------+------------+
-			
+
 .. note::	If the unit is not one of these, the function returns None
 
-.. note:: 
+.. note::
 
-	Inverse parameter: If True, use the inverse ratio for conversion. 
-	This is useful if we have a quantity in something per unit distance. 
+	Inverse parameter: If True, use the inverse ratio for conversion.
+	This is useful if we have a quantity in something per unit distance.
 	For example, if we want to convert x Ohms per miles in Ohms per meters, then flag inverse as True.
 
 .. seealso:: convert_from_meters, unit_conversion
 
 '''
-		if kwargs.has_key('inverse') and isinstance(kwargs['inverse'], bool):
+		if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
 			inverse=kwargs['inverse']
 		else:
 			inverse=False
@@ -160,13 +160,13 @@ The ratios used are the ones provided by Google. The following table summerize t
 				return quantity/1609.34
 			else:
 				return 1609.34*quantity
-				
+
 		elif unit.lower()=='km':
 			if inverse:
 				return quantity/1000.0
 			else:
 				return 1000*quantity
-				
+
 		elif unit.lower()=='kft':
 			if inverse:
 				return quantity/304.8
@@ -246,14 +246,14 @@ The ratios used are the ones provided by Google. The following table summerize t
 +--------+------------+
 |   cm   |     100    |
 +--------+------------+
-			
+
 .. note:: If the unit is not one of these, the function returns None
 
 .. seealso:: convert_to_meters, unit_conversion
-		
+
 '''
 
-		if kwargs.has_key('inverse') and isinstance(kwargs['inverse'], bool):
+		if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
 			inverse=kwargs['inverse']
 		else:
 			inverse=False
@@ -273,13 +273,13 @@ The ratios used are the ones provided by Google. The following table summerize t
 				return quantity/0.000621371
 			else:
 				return 0.000621371*quantity
-				
+
 		elif unit.lower()=='km':
 			if inverse:
 				return quantity/10**-3
 			else:
 				return 10**-3*quantity
-				
+
 		elif unit.lower()=='kft':
 			if inverse:
 				return quantity/0.00328084
@@ -325,7 +325,7 @@ Basically converts to meters and then to the desired unit.
 :type unit_to: str
 :returns: Distance in unit_to unit
 :rtype: float
-			
+
 **Units supported:**
 
 The units supported are the OpenDSS available units:
@@ -341,7 +341,7 @@ The units supported are the OpenDSS available units:
 .. note:: If the unit is not one of these, the function returns None
 
 .. seealso:: convert_to_meters, convert_from_meters
-		
+
 '''
 
 		supported_units=['km','m','ft','kft','in','cm','mi']
@@ -390,7 +390,7 @@ The units supported are the OpenDSS available units:
 		except:
 			raise ValueError('sequence_impedance_matrix is not valid.')
 
-        
+
 
 	def get_positive_sequence_impedance(self, sequence_impedance_matrix):
 		'''Get positive-sequence impedance from sequence impedance matrix.
@@ -400,7 +400,7 @@ The units supported are the OpenDSS available units:
 			return sequence_impedance_matrix[1,1]
 		except:
 			raise ValueError('sequence_impedance_matrix is not valid.')
-        
+
 
 
 	def get_negative_sequence_impedance(self, sequence_impedance_matrix):
@@ -413,7 +413,7 @@ The units supported are the OpenDSS available units:
 			raise ValueError('sequence_impedance_matrix is not valid.')
 
 
-        
+
 	def get_sequence_impedance_matrix(self, phase_impedance_matrix):
 		'''Get sequence impedance matrix from phase impedance matrix.
 
@@ -483,7 +483,7 @@ The units supported are the OpenDSS available units:
 
 	def update_dict(self, d1, d2):
 		for k2,v2 in d2.iteritems():
-			if d1.has_key(k2):
+			if k2 in d1:
 				d1[k2].update(v2)
 			else:
 				d1[k2]=v2
@@ -505,7 +505,7 @@ Responsible for calling the sub-parsers and logging progress.
 '''
 		#Verbose print the progress
 		#This will be logged anyway
-		if kwargs.has_key('verbose') and isinstance(kwargs['verbose'], bool):
+		if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
 			self.verbose=kwargs['verbose']
 		else:
 			self.verbose=False
@@ -514,7 +514,7 @@ Responsible for calling the sub-parsers and logging progress.
 		if self.verbose: print('Parsing the nodes...')
 		self.logger.info('Parsing the nodes...')
 		s=self.parse_nodes(model)
-		if self.verbose and s!=-1: print('Succesful!') 
+		if self.verbose and s!=-1: print('Succesful!')
 
 		#Parse the lines
 		if self.verbose: print('Parsing the lines...')

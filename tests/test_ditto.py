@@ -28,6 +28,7 @@ def test_imports():
     print(Store())
 
 
+@pt.mark.skip(msg="Core currently disabled")
 def test_creation():
 
     from ditto.environment import ACLineSegment, ACLineSegmentPhase
@@ -57,6 +58,7 @@ def test_creation():
     assert aclsp.ACLineSegment is acls
 
 
+@pt.mark.skip(msg="Core currently disabled")
 def test_two_way_binding():
 
     from ditto.environment import ACLineSegment, BaseVoltage
@@ -87,6 +89,7 @@ def test_two_way_binding():
     assert len(bv.ConductingEquipment) == 0, "Length of BaseVoltage.ConductingEquipment must be zero"
 
 
+@pt.mark.skip(msg="Core currently disabled")
 def read_cim_13_node():
     import lxml
 

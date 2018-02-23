@@ -68,7 +68,7 @@ Author: Nicolas Gensollen. January 2018.
         '''Class CONSTRUCTOR
 
 '''
-        if kwargs.has_key('output_path'):
+        if 'output_path' in kwargs:
             self.output_path=kwargs['output_path']
         else:
             self.output_path='./out.json'

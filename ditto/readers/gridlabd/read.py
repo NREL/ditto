@@ -41,10 +41,9 @@ class reader:
     """
 
     def __init__(self,**kwargs):
-        '''Gridlabd class CONSTRCTOR.
+        '''Gridlabd class CONSTRCTOR.'''
 
-'''
-        if kwargs.has_key('input_file'):
+        if "input_file" in kwargs:
             self.input_file=kwargs['input_file']
         else:
             self.input_file='./input.glm'

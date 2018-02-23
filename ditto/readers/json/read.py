@@ -78,7 +78,7 @@ Author: Nicolas Gensollen. January 2018
         '''Class CONSTRUCTOR
 
 '''
-        if kwargs.has_key('input_file'):
+        if 'input_file' in kwargs:
             self.input_file=kwargs['input_file']
         else:
             raise ValueError('No input file provided to the reader.')

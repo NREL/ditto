@@ -28,17 +28,17 @@ class writer:
 
     def __init__(self, **kwargs):
 
-        if kwargs.has_key('log_file'):
+        if 'log_file' in kwargs:
             log_file=kwargs['log_file']
         else:
             log_file='GridLAB-D_writer.log'
 
-        if kwargs.has_key('output_path'):
+        if 'output_path' in kwargs:
             self.output_path=kwargs['output_path']
         else:
             self.output_path='./'
 
-        # create logger 
+        # create logger
         self.logger=logging.getLogger('GridLAB-D_writer')
         self.logger.setLevel(logging.INFO)
 
@@ -72,16 +72,16 @@ class writer:
 :type write_taps: bool
 :returns: 1 for success, -1 for failure
 :rtype: int
-        
+
 '''
         #Verbose print the progress
-        if kwargs.has_key('verbose') and isinstance(kwargs['verbose'], bool):
+        if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose=kwargs['verbose']
         else:
             self.verbose=False
 
         # Whether or not to write wires (default is to write impdence matrix)
-        if kwargs.has_key('write_wires') and isinstance(kwargs['write_wires'],bool):
+        if 'write_wires' in kwargs and isinstance(kwargs['write_wires'],bool):
             self.write_wires = True
         else:
             self.write_wires = False
@@ -166,7 +166,7 @@ class writer:
         for i in model.models:
             if isinstance(i, Node):
                 fp.write('object node {\n')
-                
+
                 # Name
                 if hasattr(i, 'name') and i.name is not None:
                     fp.write('    name n{name};\n'.format( name=i.name))
@@ -184,7 +184,7 @@ class writer:
                 if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
                     fp.write('     nominal_voltage {nv};\n'.format(nv=i.nominal_voltage))
                 else:
-                    fp.write('    nominal_voltage 12470;\n') #TODO: FIX THIS so that the nomainl voltage is computed internally for all nodes 
+                    fp.write('    nominal_voltage 12470;\n') #TODO: FIX THIS so that the nomainl voltage is computed internally for all nodes
 
                 fp.write('};\n\n')
 
@@ -240,7 +240,7 @@ class writer:
                     print('Warning - No phases provided for the Capacitor. No vars will be supplied')
                 fp.write('};\n\n')
 
-        
+
     def write_loads(self, model, fp):
         for i in model.models:
             if isinstance(i,Load):
@@ -259,7 +259,7 @@ class writer:
                     for j in i.phase_loads:
                         if hasattr(j,'phase') and j.phase is not None:
                             phases = phases+j.phase
-                        
+
                             if hasattr(j,'use_zip') and j.use_zip is not None:
                                 if j.use_zip ==1: #This means that all the required values are not None
                                     fp.write('    current_fraction_{phase} {cf};\n'.format(phase=j.phase, cf=(j.ppercentcurrent+j.qpercentcurrent)))
@@ -276,9 +276,9 @@ class writer:
                                         fp.write('    constant_power_{phase} {cp};\n'.format(phase=j.phase,cp=str(complex(j.p,j.q)).strip('()')))
 
                 fp.write('};\n\n')
-                                        
 
-                                
+
+
     def write_transformer_configurations(self, model, fp):
         configuration_count = 1
         for i in model.models:
@@ -409,7 +409,7 @@ class writer:
 
                 fp.write('};\n\n')
 
-                                
+
 
     def write_regulator_configurations(self,model,fp):
         configuration_count = 1
@@ -437,7 +437,7 @@ class writer:
 
                 if hasattr(i,'bandcenter') and i.bandcenter is not None:
                     dic['band_center'] = i.bandcenter
-                    
+
                 if hasattr(i,'pt_phase') and i.pt_phase is not None:
                     dic['pt_phase'] = i.pt_phase
 
@@ -460,7 +460,7 @@ class writer:
                                             if hasattr(pw,'phase') and pw.phase is not None:
                                                 if hasattr(pw,'tap_position'):
                                                     self.regulator_phases[dic_set]['tap_pos_{phase}'.format(phase=pw.phase)] = pw.tap_position
-            
+
                                                 if hasattr(pw,'compensator_r') and pw.compensator_r is not None:
                                                     self.regulator_phases[dic_set]['compensator_r_setting_{phase}'.format(phase=pw.phase)] = pw.compensator_r
                                                 if hasattr(pw,'compensator_x') and pw.compensator_x is not None:
@@ -499,7 +499,7 @@ class writer:
                 fp.write('    {key} {value};\n'.format(key=j,value=self.regulator_phases[dic][j]))
             fp.write('};\n\n')
 
-        
+
 
     def write_regulators(self, model, fp):
         for i in model.models:
@@ -527,7 +527,7 @@ class writer:
                                         for pw in w.phase_windings:
                                             if hasattr(pw,'phase') and pw.phase is not None:
                                                 phases = phases + pw.phase
-                                               
+
 
 
                 elif hasattr(i,'windings') and i.windings is not None:
@@ -599,11 +599,11 @@ class writer:
                     for a,b in dic.iteritems():
                         dic_set.add((a,b))
                     dic_set = frozenset(dic_set)
-    
+
                     if dic_set in self.line_configurations:
                         self.line_configurations_name[i.name] = self.line_configurations[dic_set]
                         continue
-    
+
                     self.line_configurations[dic_set]='line_config_{num}'.format(num=configuration_count)
                     dic['name'] = 'line_config_{num}'.format(num=configuration_count)
                     self.line_configurations_name[i.name] = 'line_config_{num}'.format(num=configuration_count)
@@ -618,7 +618,7 @@ class writer:
             if isinstance(i,Line):
                 # Default is overhead_line
                 if hasattr(i,'line_type') and i.line_type is not None and i.line_type == 'underground':
-                    fp.write('object underground_line{\n') 
+                    fp.write('object underground_line{\n')
                     if hasattr(i,'length') and i.length is not None:
                         fp.write('    length {len};\n'.format(len=i.length*3.28084))
                     if hasattr(i,'name') and i.name is not None and i.name in self.line_configurations_name:
@@ -658,7 +658,7 @@ class writer:
 
                 if phases !='':
                     fp.write('    phases {ph};\n'.format(ph=phases))
-                    
+
 
 
 

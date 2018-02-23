@@ -37,12 +37,12 @@ class reader():
         '''reader class CONSTRUCTOR.
 
 '''
-        if kwargs.has_key('input_file_path'):
+        if 'input_file_path' in kwargs:
             self.input_file_path=kwargs['input_file_path']
         else:
             self.input_file_path='./input_file.dew'
 
-        if kwargs.has_key('databasepath'):
+        if 'databasepath' in kwargs:
             self.databasepath=kwargs['databasepath']
         else:
             self.databasepath='./data_base.xlsx'
