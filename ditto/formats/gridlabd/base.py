@@ -1,5 +1,6 @@
 from builtins import super
 
+
 class GridLABDBase(object):
 
     _properties = []

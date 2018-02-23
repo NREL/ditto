@@ -3,6 +3,7 @@
 import sys
 import logging
 
+
 class abstract_writer:
     '''Abstract class for DiTTo writers.
 
@@ -10,41 +11,40 @@ author: Nicolas Gensollen. October 2017.
 
 '''
 
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
         '''Abstract class CONSTRUCTOR.
 
 '''
         if 'log_file' in kwargs:
-            log_file=kwargs['log_file']
+            log_file = kwargs['log_file']
         else:
-            log_file='writer.log'
+            log_file = 'writer.log'
 
         if 'output_path' in kwargs:
-            self.output_path=kwargs['output_path']
+            self.output_path = kwargs['output_path']
         else:
-            self.output_path='./'
+            self.output_path = './'
 
         # create logger
-        self.logger=logging.getLogger('writer')
+        self.logger = logging.getLogger('writer')
         self.logger.setLevel(logging.INFO)
 
         # create file handler which logs everything
-        self.fh=logging.FileHandler(log_file)
+        self.fh = logging.FileHandler(log_file)
         self.fh.setLevel(logging.INFO)
 
         # create console handler with WARNING log level
-        self.ch=logging.StreamHandler()
+        self.ch = logging.StreamHandler()
         self.ch.setLevel(logging.WARNING)
 
         # create formatter and add it to the handlers
-        formatter=logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.fh.setFormatter(formatter)
         self.ch.setFormatter(formatter)
 
         # add the handlers to the logger
         self.logger.addHandler(self.fh)
         self.logger.addHandler(self.ch)
-
 
     #@abstractmethod
     def write(self, model, **kwargs):
@@ -54,9 +54,6 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         pass
-
-
-
 
     def convert_from_meters(self, quantity, unit, **kwargs):
         '''Converts a distance in meters to a distance in given unit.
@@ -113,9 +110,9 @@ The ratios used are the ones provided by Google. The following table summerize t
 
 '''
         if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
-            inverse=kwargs['inverse']
+            inverse = kwargs['inverse']
         else:
-            inverse=False
+            inverse = False
 
         if unit is None:
             return None
@@ -127,46 +124,44 @@ The ratios used are the ones provided by Google. The following table summerize t
         if quantity is None:
             return None
 
-        if unit.lower()=='mi':
+        if unit.lower() == 'mi':
             if inverse:
-                return quantity/0.000621371
+                return quantity / 0.000621371
             else:
-                return 0.000621371*quantity
+                return 0.000621371 * quantity
 
-        elif unit.lower()=='km':
+        elif unit.lower() == 'km':
             if inverse:
-                return quantity/10**-3
+                return quantity / 10**-3
             else:
-                return 10**-3*quantity
+                return 10**-3 * quantity
 
-        elif unit.lower()=='kft':
+        elif unit.lower() == 'kft':
             if inverse:
-                return quantity/0.00328084
+                return quantity / 0.00328084
             else:
-                return 0.00328084*quantity
+                return 0.00328084 * quantity
 
-        elif unit.lower()=='m':
+        elif unit.lower() == 'm':
             return quantity
 
-        elif unit.lower()=='ft':
+        elif unit.lower() == 'ft':
             if inverse:
-                return quantity/3.28084
+                return quantity / 3.28084
             else:
-                return 3.28084*quantity
+                return 3.28084 * quantity
 
-        elif unit.lower()=='in':
+        elif unit.lower() == 'in':
             if inverse:
-                return quantity/39.3701
+                return quantity / 39.3701
             else:
-                return 39.3701*quantity
+                return 39.3701 * quantity
 
-        elif unit.lower()=='cm':
+        elif unit.lower() == 'cm':
             if inverse:
-                return quantity/100
+                return quantity / 100
             else:
-                return 100*quantity
+                return 100 * quantity
 
         else:
             return None
-
-

@@ -2,6 +2,7 @@ import os
 from glob import glob
 import argparse
 
+
 def main():
     '''This module is designed for cleaning log files that might accumulate in the validation folder.
 
@@ -31,20 +32,18 @@ Author: Nicolas Gensollen. November 2017.
 
 '''
     #Parse the arguments
-    parser=argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
 
     #Feeder list
     parser.add_argument('-f', action='append', dest='folder_list', default=[])
 
-    results=parser.parse_args()
+    results = parser.parse_args()
 
     #If nothing is provided, clean everything...
-    if results.folder_list==[]:
+    if results.folder_list == []:
         remove_log_and_return_subfolders('./logs/')
     else:
         [remove_log_and_return_subfolders(folder) for folder in results.folder_list]
-
-
 
 
 def remove_log_and_return_subfolders(path):
@@ -53,16 +52,17 @@ def remove_log_and_return_subfolders(path):
 - List all subfolders and repeat
 
 '''
-    log_files=glob(path.strip('/')+'/*.log')
+    log_files = glob(path.strip('/') + '/*.log')
     for log_file in log_files:
         os.remove(log_file)
         print('-->cleaned:: {}'.format(log_file))
 
-    subfolders=[path.strip('/')+'/'+x for x in os.listdir(path) if '.' not in x]
-    if len(subfolders)==0:
+    subfolders = [path.strip('/') + '/' + x for x in os.listdir(path) if '.' not in x]
+    if len(subfolders) == 0:
         return
     else:
         return [remove_log_and_return_subfolders(folder) for folder in subfolders]
+
 
 if __name__ == '__main__':
     main()

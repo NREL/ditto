@@ -27,12 +27,10 @@ from .core.base import DiTToBase, DiTToTypeError
 from .modify.modify import Modifier
 from .models.node import Node
 
-
 logger = logging.getLogger(__name__)
 
 
 class Store(object):
-
     """The Store class holds all functions supported in the transformation.
 
     The Store stores all the instances of objects of different classes in a list
@@ -59,11 +57,7 @@ class Store(object):
 
     def __repr__(self):
         return '<%s.%s(elements=%s, models=%s) object at %s>' % (
-            self.__class__.__module__,
-            self.__class__.__name__,
-            len(self.elements),
-            len(self.models),
-            hex(id(self))
+            self.__class__.__module__, self.__class__.__name__, len(self.elements), len(self.models), hex(id(self))
         )
 
     def __getitem__(self, k):
@@ -102,11 +96,11 @@ class Store(object):
             self.cim_store[element.UUID] = element
 
     """ All objects with a name field included in a dictionary which maps the name to the object. Set in set_name() on the object itself if the object has a name. The dictionary is reset to empty first"""
+
     def set_names(self):
         self._model_names = {}
         for m in self.models:
             m.set_name(self)
-
 
     def build_networkx(self):
         self._network.build(self)
@@ -125,27 +119,26 @@ class Store(object):
         Use heuristic of removing edge in the middle of the longest single phase section of the loop
         If no single phase sections, remove edge the furthest from the source
     '''
+
     def delete_cycles(self):
         for i in self._network.find_cycles():
-            if len(i)>2:
-                 print('Detected cycle {cycle}'.format(cycle=i))
-                 edge = self._network.middle_single_phase(i)
-                 for j in self.models:
-                    if hasattr(j,'name') and j.name == edge:
-                        print('deleting '+edge)
+            if len(i) > 2:
+                print('Detected cycle {cycle}'.format(cycle=i))
+                edge = self._network.middle_single_phase(i)
+                for j in self.models:
+                    if hasattr(j, 'name') and j.name == edge:
+                        print('deleting ' + edge)
                         modifier = Modifier()
-                        modifier.delete_element(self,j)
+                        modifier.delete_element(self, j)
         self.build_networkx()
-
-
 
     def direct_from_source(self):
         ordered_nodes = self._network.bfs_order()
         #print(ordered_nodes)
         for i in self.models:
-            if hasattr(i,'from_element') and i.from_element is not None and hasattr(i,'to_element') and i.to_element is not None:
-                original = (i.from_element,i.to_element)
-                flipped = (i.to_element,i.from_element)
+            if hasattr(i, 'from_element') and i.from_element is not None and hasattr(i, 'to_element') and i.to_element is not None:
+                original = (i.from_element, i.to_element)
+                flipped = (i.to_element, i.from_element)
                 if flipped in ordered_nodes and (not original in ordered_nodes): #i.e. to cover the case where lines go both ways
                     tmp = i.from_element
                     i.from_element = i.to_element
@@ -153,34 +146,30 @@ class Store(object):
 
     def delete_disconnected_nodes(self):
         for i in self.models:
-            if isinstance(i,Node) and hasattr(i,'name') and i.name is not None:
+            if isinstance(i, Node) and hasattr(i, 'name') and i.name is not None:
                 connected_nodes = self._network.get_nodes()
                 if not i.name in connected_nodes:
-                    print('deleting '+i.name)
+                    print('deleting ' + i.name)
                     modifier = Modifier()
-                    modifier.delete_element(self,i)
+                    modifier.delete_element(self, i)
 
-            if isinstance(i,Node) and hasattr(i,'name') and i.name is None:
+            if isinstance(i, Node) and hasattr(i, 'name') and i.name is None:
                 self.remove_element(i)
         self.build_networkx() #Should be redundant since the networkx graph is only build on connected elements
 
     def set_node_voltages(self):
         self.set_names()
         for i in self.models:
-            if isinstance(i,Node) and hasattr(i,'name') and i.name is not None:
-                upstream_transformer = self._network.get_upstream_transformer(self,i.name)
+            if isinstance(i, Node) and hasattr(i, 'name') and i.name is not None:
+                upstream_transformer = self._network.get_upstream_transformer(self, i.name)
                 try:
                     upstream_voltage = self[upstream_transformer].windings[-1].nominal_voltage
-                    i.nominal_voltage = upstream_voltage 
+                    i.nominal_voltage = upstream_voltage
                 except KeyError:
                     pass
 
-
-    def get_internal_edges(self,nodeset):
-        return(self._network.find_internal_edges(nodeset))
-
-
-
+    def get_internal_edges(self, nodeset):
+        return (self._network.find_internal_edges(nodeset))
 
     @property
     def cim_store(self):
@@ -196,7 +185,6 @@ class Store(object):
 
 
 class EnvAttributeIntercepter(object):
-
     def __init__(self, model):
         self.model = model
         self.generate_attributes()
@@ -217,13 +205,7 @@ def model_builder(self, klass, model, *args, **kwargs):
     ic = partial(init_callback, model=model)
     ic.__name__ = init_callback.__name__
 
-    cim_object = klass(
-        init_callback=ic,
-        get_callback=get_callback,
-        set_callback=set_callback,
-        del_callback=del_callback,
-        **kwargs
-    )
+    cim_object = klass(init_callback=ic, get_callback=get_callback, set_callback=set_callback, del_callback=del_callback, **kwargs)
 
     return cim_object
 
@@ -238,18 +220,12 @@ def init_callback(self, model, **kwargs):
 
 def get_callback(self, name, val):
     assert self.UUID in self.link_model.cim_store, "UUID {} not found in Store {}. {} attributes value is {}".format(
-        self.UUID,
-        self.link_model,
-        name,
-        val
+        self.UUID, self.link_model, name, val
     )
 
 
 def set_callback(self, name, value):
-    assert self.UUID in self.link_model.cim_store, "{} not found in Store {}".format(
-        self.UUID,
-        self.link_model
-    )
+    assert self.UUID in self.link_model.cim_store, "{} not found in Store {}".format(self.UUID, self.link_model)
     if isinstance(value, tuple):
         for v in value:
             assert v.UUID in self.link_model.cim_store, "{} not found in Store {}".format(self.UUID, self.link_model)

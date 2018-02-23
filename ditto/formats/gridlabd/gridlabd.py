@@ -5,6 +5,7 @@ import networkx as nx
 from .base import GridLABDBase
 from ditto.compat import common_str
 
+
 def __create():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -14,11 +15,11 @@ def __create():
     schema = json.loads(string)
     klasses = OrderedDict()
 
-    G=nx.DiGraph()
+    G = nx.DiGraph()
     for i in schema['objects']:
-        parent=schema['objects'][i]['parent']
+        parent = schema['objects'][i]['parent']
         if parent is not None:
-            G.add_edge(parent,i)
+            G.add_edge(parent, i)
         else:
             G.add_node(i)
 

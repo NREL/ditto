@@ -2,7 +2,6 @@
 This module facilitates the creation of DiTTo layerstacks (https://github.com/Smart-DS/layerstack).
 """
 
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +12,7 @@ from .core.exceptions import DiTToNotImplementedError
 
 class DiTToLayerBase(ModelLayerBase):
     @classmethod
-    def _check_model_type(cls,model):
+    def _check_model_type(cls, model):
         # Check to make sure model is of the proper type
         pass
 
