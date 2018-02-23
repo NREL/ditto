@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from codecs import open
 from setuptools import setup, find_packages
 
 try:
@@ -14,14 +15,16 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open('README.md') as readme_file:
     readme = convert_text(readme_file.read(), 'rst', format='md')
 
-with open('HISTORY.md') as history_file:
-    history = convert_text(history_file.read(), 'rst', format='md')
+with open(os.path.join(here, 'ditto', 'version.py'), encoding='utf-8') as f:
+    version = f.read()
+
+version = version.split()[2].strip('"').strip("'")
 
 setup(
     name='ditto',
-    version='0.1.0',
+    version=version,
     description="Distribution Feeder Conversion Tool",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author="Tarek Elgindy",
     author_email='tarek.elgindy@nrel.gov',
     url='https://github.com/NREL/ditto',
