@@ -46,16 +46,20 @@ setup(
     ],
     test_suite='tests',
     install_requires=[
-        "future",
-        "six",
+        "aenum",
         "click",
-        "networkx",
+        "croniter",
         "funcsigs",
+        "future",
         "fuzzywuzzy",
         "jinja2",
-        "aenum",
         "lxml",
+        "networkx",
+        "OpenDSSDirect.py",
+        "pandas",
         "pytest",
+        "six",
+        "xlrd"
     ],
     extras_require={
         "dev": [
