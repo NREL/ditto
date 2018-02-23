@@ -248,7 +248,7 @@ Author: Nicolas Gensollen. December 2017
                     else:
                         obj.feeder_name='subtransmission'
                         obj.substation_name=self.source
-                        print 'Node {name} was not found in feeder mapping'.format(name=obj.name)
+                        print('Node {name} was not found in feeder mapping'.format(name=obj.name))
                 elif hasattr(obj,'connecting_element'):
                     if self.node_feeder_mapping.has_key(obj.connecting_element):
                         obj.feeder_name=self.node_feeder_mapping[obj.connecting_element]
@@ -256,7 +256,7 @@ Author: Nicolas Gensollen. December 2017
                     else:
                         obj.feeder_name='subtransmission'
                         obj.substation_name=self.source
-                        print 'Object {name} connecting element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.connecting_element)
+                        print('Object {name} connecting element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.connecting_element))
                 elif hasattr(obj,'from_element'):
                     if self.node_feeder_mapping.has_key(obj.from_element):
                         obj.feeder_name=self.node_feeder_mapping[obj.from_element]
@@ -264,9 +264,9 @@ Author: Nicolas Gensollen. December 2017
                     else:
                         obj.feeder_name='subtransmission'
                         obj.substation_name=self.source
-                        print 'Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element)
+                        print('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
                 else:
-                    print obj.name,type(obj)
+                    print(obj.name,type(obj))
 
 
 
@@ -677,7 +677,7 @@ If no matching feeder is found, the function returns None.
         elif hasattr(obj, 'from_element') and self.node_feeder_mapping.has_key(obj.from_element):
             return self.node_feeder_mapping[obj.from_element]
         else:
-            print 'Could not find feeder for {}'.format(obj.name)
+            print('Could not find feeder for {}'.format(obj.name))
             return None
 
 

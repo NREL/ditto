@@ -257,7 +257,7 @@ Each object has an attribute 'substation_name' which is then set to the name of 
                     skip=False
                     for down_elt in downstream_elts:
                         if hasattr(down_elt,'is_substation') and down_elt.is_substation==1:
-                            print 'Info: substation {a} found downstream of substation {b}'.format(b=elt.name,a=down_elt.name)
+                            print('Info: substation {a} found downstream of substation {b}'.format(b=elt.name,a=down_elt.name))
                             skip=True
                             break
                     #If no substation was found downstream, then set the substation_name and feeder_name attributes of the objects

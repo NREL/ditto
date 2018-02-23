@@ -1,4 +1,4 @@
-from datetime import datetime 
+from datetime import datetime
 from datetime import timedelta
 from croniter import croniter
 import numpy as np
@@ -400,8 +400,8 @@ class reader:
                             #    value = value/1000.0
                         # Assuming no nested objects for now.
                         curr_object[element] = value
-    
-    
+
+
                     if len(row) >= 1:
                         if row[-1] == '}' or row[-2:] == '};':
                             if ignore_elements: #Assumes only one layer of nesting
@@ -411,11 +411,11 @@ class reader:
                                     self.all_gld_objects[curr_object['name']] = curr_object
                                     curr_object = None
                                 except:
-                                        
+
                                     if curr_object['from'] != None and curr_object['to'] != None:
                                         curr_object['name'] = curr_object['from']+'-'+curr_object['to']
                                         self.all_gld_objects[curr_object['name']] = curr_object
-    
+
                                     else:
                                         print("Warning object missing a name")
                                     curr_object = None
@@ -440,7 +440,7 @@ class reader:
                             found_schedule = False
 
 
-        print all_schedules
+        print(all_schedules)
         for obj_name,obj in self.all_gld_objects.items():
             obj_type=type(obj).__name__
 
@@ -853,7 +853,7 @@ class reader:
                             phaseload.use_zip = 1
                         except AttributeError:
                             pass
-                       
+
 
                         phaseloads.append(phaseload)
 
@@ -1302,7 +1302,7 @@ class reader:
                             api_wire.resistance = api_wire.resistance/1609.34 # In Ohms per meter
                     except AttributeError:
                         pass
-                    
+
 
             if obj_type == 'triplex_line':
                 api_line = Line(model)
@@ -1595,7 +1595,7 @@ class reader:
                             first_y = -10
                             first_i = -1
                             for w in conductors:
-                                i = rev_lookup[w.phase] 
+                                i = rev_lookup[w.phase]
                                 if i != max_to and i!= max_from:
                                     heron_s = (max_dist + distances[i][max_to] + distances[i][max_from])/2.0
                                     heron_area = heron_s*(heron_s -max_dist)*(heron_s - distances[i][max_to])*(heron_s-distances[i][max_from])
@@ -1608,7 +1608,7 @@ class reader:
                                         first_x = w.X
                                         first_y = w.Y
                                         first_i = i
-                                        
+
                                     else:
                                         # Warning: possible bug here - needs extra testing.
                                         w.Y = -6+height

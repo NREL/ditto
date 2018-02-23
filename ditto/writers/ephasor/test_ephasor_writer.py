@@ -13,7 +13,7 @@ def test_opendss():
     gridlabd_models_dir = os.path.join(ditto_dir, 'readers', 'gridlabd')
 
     modelfile = os.path.join(input_path, 'master.dss')
-    print (input_path)
+    print(input_path)
     modelfile = '../../validation/inputs/opendss/ieee_13_node/master.dss'
 
     _reader.build_opendssdirect(modelfile)
