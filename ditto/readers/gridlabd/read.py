@@ -440,7 +440,7 @@ class reader:
                             found_schedule = False
 
 
-        print all_schedules
+        print(all_schedules)
         for obj_name,obj in self.all_gld_objects.items():
             obj_type=type(obj).__name__
 
