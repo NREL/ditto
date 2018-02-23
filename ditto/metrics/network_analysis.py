@@ -108,10 +108,10 @@ Author: Nicolas Gensollen. December 2017
         self.G=Network()
         self.G.build(self.model, source=self.source)
 
-		#Set the attributes in the graph
+        #Set the attributes in the graph
         self.G.set_attributes(self.model)
 
-		#Equipment types and names on the edges
+        #Equipment types and names on the edges
         self.edge_equipment     =nx.get_edge_attributes(self.G.graph,'equipment')
         self.edge_equipment_name=nx.get_edge_attributes(self.G.graph,'equipment_name')
 

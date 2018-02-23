@@ -18,4 +18,4 @@ class DiTToAttributeError(DiTToError,AttributeError):
     pass
 
 class DiTToNameError(DiTToError,AttributeError):
-	pass
+    pass

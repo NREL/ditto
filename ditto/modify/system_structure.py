@@ -64,12 +64,12 @@ Author: Nicolas Gensollen. December 2017.
         self.G=Network()
         self.G.build(self.model, source=self.source)
 
-		#Set the attributes in the graph
+        #Set the attributes in the graph
         self.G.set_attributes(self.model)
 
         self.model.set_names()
 
-		#Equipment types and names on the edges
+        #Equipment types and names on the edges
         self.edge_equipment     =nx.get_edge_attributes(self.G.graph,'equipment')
         self.edge_equipment_name=nx.get_edge_attributes(self.G.graph,'equipment_name')
 
@@ -230,9 +230,9 @@ Each object has an attribute 'substation_name' which is then set to the name of 
 
 .. note::
 
-	- A transformer is not a node in the network representation, but an edge.
-	- This means that we have to use the secondary bus to perform the dfs.
-	- If a substation has multiple feeders attached to it, it should still be possible to easily use this function.
+    - A transformer is not a node in the network representation, but an edge.
+    - This means that we have to use the secondary bus to perform the dfs.
+    - If a substation has multiple feeders attached to it, it should still be possible to easily use this function.
 
 '''
         #Store the list of objects per feeder.
@@ -481,9 +481,9 @@ The purpose of this function is to find this transformer as well as all the line
 
 .. note::
 
-	- This function is using the network module to find upstream elements in an efficient way.
-	- If we need to delete elments like phase loads or wires, we set the drop flag of the corresponding element to 1 such that they won't be outputed in the writer.
-	  This is much faster than deleting the elements for now (delete is looping which is time consumming).
+    - This function is using the network module to find upstream elements in an efficient way.
+    - If we need to delete elments like phase loads or wires, we set the drop flag of the corresponding element to 1 such that they won't be outputed in the writer.
+      This is much faster than deleting the elements for now (delete is looping which is time consumming).
 
 '''
         #Set the names in the model.
@@ -575,7 +575,7 @@ The purpose of this function is to find this transformer as well as all the line
                 t_obj=self.model[t_name]
                 #Get the phases and clean
                 _phases=np.array([[phase_winding.phase for phase_winding in winding.phase_windings]
-                                                        			   for winding in t_obj.windings])
+                                                                       for winding in t_obj.windings])
                 _phases=np.unique(_phases.flatten())
                 phases.append(_phases)
             except:
