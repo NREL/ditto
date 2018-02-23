@@ -381,7 +381,7 @@ class Writer(abstract_writer):
                                 B = 1 / (np.imag(elt) * line.length)
 
                             print("Siemens line units ", B)
-                            print np.imag(B) * 0.000621371
+                            print(np.imag(B) * 0.000621371)
                             B = np.imag(B) * 0.000621371 * 1e6
                             print("done", B)
 
