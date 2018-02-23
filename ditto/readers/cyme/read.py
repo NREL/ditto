@@ -3052,7 +3052,7 @@ section_1_feeder_2,node_1,node_2,ABC
                         continue
                 elif value_type==2: #P and PF are given
                     try:
-                         p,PF=float(settings['value1']), float(settings['value2'])
+                        p,PF=float(settings['value1']), float(settings['value2'])
                         q=p*math.sqrt((1-PF**2)/PF**2)
                     except:
                         print('WARNING:: Skipping load on section {}'.format(sectionID))
