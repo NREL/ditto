@@ -115,9 +115,9 @@ class Writer(abstract_writer):
 
         # Loop over the DiTTo objects
         nodes = [i for i in self.m.models if isinstance(i, Node)]
-        print len(nodes)
+        print(len(nodes))
         for i in nodes:
-            print i.name
+            print(i.name)
 
 
         for i in self.m.models:
@@ -366,10 +366,10 @@ class Writer(abstract_writer):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = 'b' + num_str + ' (uS/Mile)'
-                            print "length",line.length
-                            print "R", np.real(elt)
-                            print "X", np.imag(elt)
-                            print
+                            print("length",line.length)
+                            print("R", np.real(elt))
+                            print("X", np.imag(elt))
+                            print()
 
                             # -6.3581 line valie
                             # -.602 siemens per mile
@@ -377,13 +377,13 @@ class Writer(abstract_writer):
                             B = 0
                             if (np.imag(elt) != 0):
                                 B = 1 / self.convert_from_meters(np.imag(elt), units, inverse=True)
-                                print "Sub ", B
+                                print("Sub ", B)
                                 B = 1 / (np.imag(elt) * line.length)
 
-                            print "Siemens line units ", B
-                            print np.imag(B) * 0.000621371
+                            print("Siemens line units ", B)
+                            print(np.imag(B) * 0.000621371)
                             B = np.imag(B) * 0.000621371 * 1e6
-                            print "done", B
+                            print("done", B)
 
                             # B = self.convert_from_meters(np.imag(B), units, inverse=True)
                             # print B
@@ -416,15 +416,15 @@ class Writer(abstract_writer):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = 'b' +num_str+ ' (uS/Mile)'
-                            print "C matrix"
-                            print line.length * 0.000621371
-                            print np.real(elt)
-                            print (np.real(elt) * line.length) * 0.000621371
-                            print (np.real(elt) * line.length) * 0.000621371 * 1e6
+                            print("C matrix")
+                            print(line.length * 0.000621371)
+                            print(np.real(elt))
+                            print((np.real(elt) * line.length) * 0.000621371)
+                            print((np.real(elt) * line.length) * 0.000621371 * 1e6)
                             B = (np.real(elt) * line.length * 0.000621371) * 1e6
 
                             B = np.real(elt) * line.length
-                            print "line units ", B
+                            print("line units ", B)
                             B = self.convert_from_meters(np.real(B), units, inverse=False)
                             B = B * 1e6
                             obj_dict[name][index] = B
@@ -459,7 +459,7 @@ class Writer(abstract_writer):
             # if hasattr(line.wires[0], 'ampacity_emergency') and line.wires[0].ampacity_emergency is not None:
             #     result += ' emergamps={emer}'.format(emer=line.wires[0].ampacity_emergency)
 
-            print result
+            print(result)
         df1 = pd.DataFrame(obj_dict)
         # df1 = df1[
         #     ['bus0a','bus0b','bus0c','bus1a','bus1b','bus1c','name','Length (Mile)','r0 (ohm / Mile)','x0 (ohm / Mile)','r1 (ohm / Mile)','x1 (ohm / Mile)','b0 (uS / Mile)','b1 (uS / Mile)','r11 (ohm / Mile)','x11 (ohm / Mile)','r21 (ohm / Mile)','x21 (ohm / Mile)','r22 (ohm / Mile)','x22 (ohm / Mile)','r31 (ohm / Mile)','x31 (ohm / Mile)','r32 (ohm / Mile)','x32 (ohm / Mile)','r33 (ohm / Mile)', 'x33 (ohm / Mile)','b11 (uS / Mile)','b21 (uS / Mile)','b22 (uS / Mile)','b31 (uS / Mile)','b32 (uS / Mile)','b33 (uS / Mile)']]
@@ -503,7 +503,7 @@ class Writer(abstract_writer):
                     for key, value in obj_dict.iteritems():
                         value.append(None)
                     index += 1
-                    print i.windings[0].phase_windings[0].tap_position
+                    print(i.windings[0].phase_windings[0].tap_position)
                     self._transformer_dict[i.from_element] = {"combined": False, "name": i.name,
                                                               "i": index,
                                                               "kv1": i.windings[0].nominal_voltage,
@@ -533,7 +533,7 @@ class Writer(abstract_writer):
                 #     self._transformer_dict[i.from_element] = {"name": i.name,
                 #                                               "i": index, "kv": i.winding[0].nominal_voltage}
 
-            print index
+            print(index)
             if hasattr(i, 'name') and i.name is not None:
                 print('New Transformer.'+i.name)
                 obj_dict['ID'][index] = i.name
@@ -550,7 +550,7 @@ class Writer(abstract_writer):
 
             if len(i.windings) >= 2:
 
-                print 'here',i.reactances,i.reactances[0],i.name
+                print('here',i.reactances,i.reactances[0],i.name)
                 obj_dict['X (pu)'][index] = i.reactances[0] # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
                 if hasattr(i, 'windings') and i.windings is not None:
                     N_phases = []
@@ -591,7 +591,7 @@ class Writer(abstract_writer):
                                 if pw.tap_position is None:
                                     obj_dict[tap_name][index] = 0
                                 else:
-                                    print i.name, tap_name,  pw.tap_position
+                                    print(i.name, tap_name,  pw.tap_position)
                                     obj_dict[tap_name][index] = pw.tap_position
                                     # if i.from_element in self._transformer_dict:
                                     #     print self._transformer_dict[i.from_element]
@@ -630,8 +630,8 @@ class Writer(abstract_writer):
             obj_dict['Max Range (%)'][index] = 10
 
         df4 = pd.DataFrame(obj_dict)
-        print 'df4'
-        print df4
+        print('df4')
+        print(df4)
 
         df4 = df4[
             ['ID', 'W1Bus A', 'W1Bus B', 'W1Bus C', 'W1V (kV)', 'W1S_base (kVA)', 'W1R (pu)', 'W1Conn. type', 'W2Bus A',
@@ -778,14 +778,14 @@ class Writer(abstract_writer):
 
         nodes = [i for i in self.m.models if isinstance(i, Node)]
         for i in nodes:
-            print i
+            print(i)
 
         loads = [i for i in self.m.models if isinstance(i, Load)]
         # loadnames = [i.name for i in self.m.models if isinstance(i, Load)]
         # print (loadnames)
 
         load_dict = {}
-        print len(loads)
+        print(len(loads))
         index = -1
         for x, i in enumerate(loads):
             ##
@@ -825,7 +825,7 @@ class Writer(abstract_writer):
                 for j in i.phase_loads:
                     if hasattr(j, 'phase') and j.phase is not None:
                         phases = phases + j.phase
-                        print 'here', i.name, str(j.p), j.phase
+                        print('here', i.name, str(j.p), j.phase)
 
                         if hasattr(j, 'use_zip') and j.use_zip is not None:
                             if j.use_zip == 1:  # This means that all the required values are not None
