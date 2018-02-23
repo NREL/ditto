@@ -8,7 +8,7 @@ Tests for `ditto` module readers
 """
 import os
 
-from ditto.readers.gridlabd.read import Reader
+from ditto.readers.gridlabd.read import reader
 from ditto.store import Store
 from tests import ditto_dir
 
