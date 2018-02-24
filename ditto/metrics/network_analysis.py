@@ -293,8 +293,8 @@ The underlying assumption is that all nodes lying on the shortest path are actua
 
         #cc is a generator and calling list() on it is a bad idea...
         #We simply grab the first two components...
-        first_component = cc.next()
-        second_component = cc.next()
+        first_component = next(cc)
+        second_component = next(cc)
 
         #...and we grab one node at random from each component.
         n1 = first_component.pop()

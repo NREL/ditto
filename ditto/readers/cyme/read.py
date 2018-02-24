@@ -625,7 +625,7 @@ The function returns a list of dictionaries, where each dictionary contains the 
         #If we have a least one
         if any(checks):
                 #Get the next line
-                next_line=self.content.next()
+                next_line=next(self.content)
 
                 #If the next line provides the format, then grab it
                 if 'format' in next_line.lower():
@@ -647,7 +647,7 @@ The function returns a list of dictionaries, where each dictionary contains the 
                     except:
                         pass
 
-                    next_line=self.content.next()
+                    next_line=next(self.content)
 
                 #At this point, we should have the mapping for the parameters of interest
                 #while next_line[0] not in ['[','',' ','\n','\r\n']:
@@ -674,7 +674,7 @@ The function returns a list of dictionaries, where each dictionary contains the 
                             result[ID].update(additional_information)
 
                     try:
-                        next_line=self.content.next()
+                        next_line=next(self.content)
                     except StopIteration:
                         break
 
@@ -1098,7 +1098,7 @@ section_1_feeder_2,node_1,node_2,ABC
 
                 job_is_done=True
 
-                line=self.content.next()
+                line=next(self.content)
                 #Until we meet the next section header, work...
                 while len(line)>2 and (line[0]!='[' or line[0]!=' ' or line[0]!='\n' or line[0]!='\t\n'):
 
@@ -1179,7 +1179,7 @@ section_1_feeder_2,node_1,node_2,ABC
                         self.section_feeder_mapping[_sectionID]=_netID
 
                     #Finally, move on to next line
-                    line=self.content.next()
+                    line=next(self.content)
 
 
 
