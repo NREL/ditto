@@ -2,13 +2,15 @@
 
 ## What is DiTTo?
 
-DiTTo stands for _Distribution Transformation Tool_ and aims at providing an open source framework to convert various distribution systems modeling formats. DiTTo implements a _many-to-one-to-many_ parsing framework which makes it modular and robust. The main idea is that DiTTo has a core representation of what a distribution system is. Readers and writers are then implemented to perform the translation from a given format to the core representation, or the other way around.
+DiTTo stands for _Distribution Transformation Tool_ and aims at providing an open source framework to convert various distribution systems modeling formats.
+DiTTo implements a _many-to-one-to-many_ parsing framework which makes it modular and robust.
+The main idea is that DiTTo has a core representation of what a distribution system is.
+Readers and writers are then implemented to perform the translation from a given format to the core representation, or the other way around.
 
 ## Requirements
 
-DiTTo is written in Python 2.7 and relies mostly on standards libraries. Some libraries from the classic Python scientific stack like Numpy or Pandas are used more sparsely. Using DiTTo in a Python 3 environnement has not been tested yet.
-
-Opendssdirect TODO
+DiTTo requires >=Python2.7.
+Additional Python dependencies are listed in the [setup.py](./setup.py)
 
 ## What parsers are currently implemented?
 
@@ -44,10 +46,10 @@ cd ./ditto
 pip install -e .
 ```
 
-- Step 3 (optional): Pip install openDSSdirect if you plan to use the OpenDSS reader:
+- Step 3 (optional): Pip install OpenDSSDirect if you plan to use the OpenDSS reader:
 
 ```bash
-pip install -e opendssdirect
+pip install OpenDSSDirect.py
 ```
 
 - Step 3: Run installation tests (Not implemented Yet)
@@ -63,7 +65,7 @@ from ditto.store import Store
 m=Store()
 ```
 
-- Instanciate a reader object with the required arguments. These arguments may vary depending on the format. For example, the openDSS reader expects a path for the master.dss file as well as a path for the buscoord.dss file.
+- Instanciate a reader object with the required arguments. These arguments may vary depending on the format. For example, the OpenDSS reader expects a path for the master.dss file as well as a path for the buscoord.dss file.
 
 ```python
 from ditto.readers.opendss.read import reader
