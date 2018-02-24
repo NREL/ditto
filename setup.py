@@ -55,11 +55,12 @@ setup(
         "jinja2",
         "lxml",
         "networkx",
-        "OpenDSSDirect.py",
         "pandas",
         "pytest",
+        "python-Levenshtein",
         "six",
-        "xlrd"
+        "xlrd",
+        "OpenDSSDirect.py",
     ],
     extras_require={
         "dev": [
