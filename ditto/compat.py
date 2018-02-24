@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from builtins import super, range, zip, round, map
-from __future__ import absolute_import, division, print_function
 """
 ditto.core.compat
 
 This module handles compatibility issues between Python 2 and Python 3.
 """
 
+from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
 import types
 import sys
 

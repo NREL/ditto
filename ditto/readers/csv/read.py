@@ -1,9 +1,10 @@
-from builtins import super, range, zip, round, map
-from __future__ import absolute_import, division, print_function
 """ Read CSV file into raw ditto form. The rows represent different DiTTo equipment objects. Each column is the attribute that is being added. The column headers are delimited by colons. e.g. For the Var value of a capacitor on phase A, the column would be "Capacitor.phase_capacitors[0].var". This specifies the value of the var attribute of a PhaseCapacitor value of a capacitor.
 
 Empty cells are left as None
 """
+
+from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
 
 import math
 import sys

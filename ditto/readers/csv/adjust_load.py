@@ -1,5 +1,6 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 import pandas as pd
 df = pd.read_csv('rnm_load.csv')
 df['Load.phase_loads[0].phase']=''

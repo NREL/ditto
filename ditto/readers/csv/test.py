@@ -1,5 +1,6 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 from read import Reader
 from ditto.store import Store
 
@@ -16,4 +17,4 @@ for i in m.model_names['load1'].traits():
     #print(i,type(m.model_names['load1'].traits()[i]))
     class_name = str(type(m.model_names['load1'].traits()[i])).strip("<>'").split('.')[-1]
     if class_name == 'List':
-        print(m.model_names['load1'].traits()[i]._trait.klass) 
+        print(m.model_names['load1'].traits()[i]._trait.klass)

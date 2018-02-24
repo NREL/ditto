@@ -1,13 +1,24 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
 
 from .position import Position
+
+
 class Wire(DiTToHasTraits):
     phase = Unicode(help='''The phase (A, B, C, N, s1, s2) of the wire''', default_value=None)
     nameclass = Unicode(help='''The nameclass (e.g. 1/0_ACSR) of the wire''', default_value=None)
-    X = Float(help='''The horizontal placement of the wire on a cross section of the line w.r.t. some point of reference (typically one wire on the configuration)''', default_value=None)
-    Y = Float(help='''The vertical placement above (or below) ground of the wire on a cross section of the line w.r.t. some point of reference (typically one wire on the configuration)''', default_value=None)
+    X = Float(
+        help=
+        '''The horizontal placement of the wire on a cross section of the line w.r.t. some point of reference (typically one wire on the configuration)''',
+        default_value=None
+    )
+    Y = Float(
+        help=
+        '''The vertical placement above (or below) ground of the wire on a cross section of the line w.r.t. some point of reference (typically one wire on the configuration)''',
+        default_value=None
+    )
     diameter = Float(help='''The diameter of the conductor''', default_value=None)
     gmr = Float(help='''The geometric mean radius of the wire''', default_value=None)
     ampacity = Float(help='''The ampacity rating for the wire under nomal conditions''', default_value=None)
@@ -34,11 +45,11 @@ class Wire(DiTToHasTraits):
     #Modification: Nicolas (January 2018)
     is_breaker = Int(help='''This flag indicates whether or not this wire is also a recloser''', default_value=None)
 
-
-
     def build(self, model):
         self._model = model
         pass
+
+
 #        self._wp = self._model.env.WirePosition()
 #
 #

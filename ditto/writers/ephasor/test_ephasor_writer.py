@@ -1,5 +1,5 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
 from ditto.writers.ephasor.write import Writer
 from ditto.store import Store
 import os

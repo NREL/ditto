@@ -1,5 +1,6 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 import warnings
 from traitlets.traitlets import ObserveHandler, _deprecated_method, _CallbackWrapper, EventHandler
 import traitlets as T
@@ -7,7 +8,6 @@ from builtins import super
 import pandas as pd
 
 import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,12 @@ class DiTToHasTraits(T.HasTraits):
         try:
             name = self.name
             if name in model.model_names:
-                warnings.warn("Duplicate name %s being set. Object overwritten."%name)
-                print("Duplicate name %s being set. Object overwritten."%name)
-                print(model.model_names[name],self)
-            model.model_names[name]=self
+                warnings.warn("Duplicate name %s being set. Object overwritten." % name)
+                print("Duplicate name %s being set. Object overwritten." % name)
+                print(model.model_names[name], self)
+            model.model_names[name] = self
         except AttributeError:
             pass
-
 
     def build(self, model):
         raise NotImplementedError("Build function must be implemented by derived classes")
@@ -51,7 +50,9 @@ class DiTToHasTraits(T.HasTraits):
         # Call them all now
         # Traits catches and logs errors here.  I allow them to raise
         if len(callables) > 1:
-            raise TypeError("Maximum number of callables allowed for a single attribute using the 'fetch' event is 1. Please check the documentation of DiTTo")
+            raise TypeError(
+                "Maximum number of callables allowed for a single attribute using the 'fetch' event is 1. Please check the documentation of DiTTo"
+            )
         for c in callables:
             # Bound methods have an additional 'self' argument.
 
@@ -62,9 +63,11 @@ class DiTToHasTraits(T.HasTraits):
 
             return c(bunch)
 
+
 class DiTToTraitType(T.TraitType):
 
-    allow_none=True
+    allow_none = True
+
     def get(self, obj, cls=None):
         # Call notify_access with event type fetch
         # If and only if one event exists, a return value will be produced
@@ -81,11 +84,10 @@ class DiTToTraitType(T.TraitType):
             old_value = obj._trait_values[self.name]
 
             if r is not None and r != old_value:
-                logger.debug("Response from callback event 'fetch' on property {} does not match previous value. Overloading existing value {} with new value {}".format(
-                    self.name,
-                    old_value,
-                    r
-                    ))
+                logger.debug(
+                    "Response from callback event 'fetch' on property {} does not match previous value. Overloading existing value {} with new value {}".
+                    format(self.name, old_value, r)
+                )
                 obj._trait_values[self.name] = r
         except KeyError:
             pass
@@ -96,8 +98,10 @@ class DiTToTraitType(T.TraitType):
 class Float(T.Float, DiTToTraitType):
     pass
 
+
 class Complex(T.Complex, DiTToTraitType):
     pass
+
 
 class Unicode(T.Unicode, DiTToTraitType):
     pass
@@ -120,5 +124,3 @@ class Instance(T.Instance, DiTToTraitType):
 
 
 observe = T.observe
-
-

@@ -1,21 +1,32 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
 
 from .position import Position
 from .phase_load import PhaseLoad
 from .timeseries import Timeseries
 
-class Load(DiTToHasTraits):
 
+class Load(DiTToHasTraits):
 
     name = Unicode(help='''Name of the load object''', default_value='')
     nominal_voltage = Float(help='''This is the nominal voltage of the load.''', default_value=None)
     connection_type = Unicode(help='''The connection type (D, Y, Z, A) for Delta, Wye, Zigzag or autotransformer.''', default_value=None)
     vmin = Float(help='''The minimum per-unit voltage value. Going below this implies constant impedance.''', default_value=None)
     vmax = Float(help='''The maximum per-unit voltage value. Going below this implies constant impedance.''', default_value=None)
-    phase_loads = List(Instance(PhaseLoad),help='''A list of the different phase loads connected to the load. This contains information about the phase as well as the p&q or zip load data.''', default_value=None)
-    positions = List(Instance(Position), help='''This parameter is a list of positional points describing the load- it should only contain one. The positions are objects containing elements of long, lat and elevation.''', default_value=None)
+    phase_loads = List(
+        Instance(PhaseLoad),
+        help=
+        '''A list of the different phase loads connected to the load. This contains information about the phase as well as the p&q or zip load data.''',
+        default_value=None
+    )
+    positions = List(
+        Instance(Position),
+        help=
+        '''This parameter is a list of positional points describing the load- it should only contain one. The positions are objects containing elements of long, lat and elevation.''',
+        default_value=None
+    )
 
     timeseries = List(Instance(Timeseries), help='''A list of all the timeseries elements used to represent the loads''', default_value=None)
 
@@ -34,7 +45,6 @@ class Load(DiTToHasTraits):
     num_levels = Float(help='''The number of floors (levels) that the building load has''', default_value=None)
     num_users = Float(help='''The number of users at the loadpoint''', default_value=None)
 
-
     #Modification: Nicolas (December 2017)
     #Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
     #I think we need both since a substation might have multiple feeders attached to it.
@@ -44,9 +54,6 @@ class Load(DiTToHasTraits):
 
     #Modification: Nicolas (December 2017)
     upstream_transformer_name = Unicode(help='''The name of the distribution transformer which serves this load''', default=None)
-
-
-
 
     def build(self, model):
         self._model = model

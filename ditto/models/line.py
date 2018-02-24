@@ -1,5 +1,6 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 from .base import DiTToHasTraits, Float, Complex, Unicode, Any, Int, List, observe, Instance
 
 from .position import Position
@@ -7,7 +8,6 @@ from .wire import Wire
 
 
 class Line(DiTToHasTraits):
-
     """
 
     Inheritance:
@@ -29,12 +29,32 @@ class Line(DiTToHasTraits):
     to_element = Any(help=''''Name of the node which connects to the 'to' end of the line''', default_value=None)
     is_fuse = Int(help='''This flag indicates whether or not the line is also a fuse''', default_value=None)
     is_switch = Int(help='''This flag indicates whether or not the line is also a switch''', default_value=None)
-    is_banked = Int(help='''This flag indicates whether or not the switch is banked. If this is true, the switch objects are controlled together''', default_value=None)
+    is_banked = Int(
+        help='''This flag indicates whether or not the switch is banked. If this is true, the switch objects are controlled together''',
+        default_value=None
+    )
     faultrate = Float(help='''The number of faults that occur per year''', default_value=None)
-    wires = List(Instance(Wire), help='''This parameter is a list of all the wires included on the line. The wires are objects containing elements of phase, X and Y. ''', default_value=None)
-    positions = List(Instance(Position), help='''This parameter is a list of positional points describing the line. The positions are objects containing elements of long, lat and elevation. The points can be used to map the position of the line.  ''', default_value=None)
-    impedance_matrix = List(List(Complex), help='''This provides the matrix representation of the line impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.''')
-    capacitance_matrix = List(List(Complex), help='''This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.''')
+    wires = List(
+        Instance(Wire),
+        help='''This parameter is a list of all the wires included on the line. The wires are objects containing elements of phase, X and Y. ''',
+        default_value=None
+    )
+    positions = List(
+        Instance(Position),
+        help=
+        '''This parameter is a list of positional points describing the line. The positions are objects containing elements of long, lat and elevation. The points can be used to map the position of the line.  ''',
+        default_value=None
+    )
+    impedance_matrix = List(
+        List(Complex),
+        help=
+        '''This provides the matrix representation of the line impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.'''
+    )
+    capacitance_matrix = List(
+        List(Complex),
+        help=
+        '''This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.'''
+    )
 
     #Modification: Nicolas (December 2017)
     #Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
@@ -50,20 +70,23 @@ class Line(DiTToHasTraits):
     #Modification: Nicolas (January 2018)
     is_breaker = Int(help='''This flag indicates whether or not the line is also a breaker''', default_value=None)
 
-
-
-    def build(self, model,
-            Asset=None,
-            Line=None,
-            ACLineSegment=None,
-            PSRType=None,
-            baseVoltage=None,
-            wireSpacingInfo=None,
-            Location=None,
-            Terminal1=None,
-            Terminal2=None):
+    def build(
+        self,
+        model,
+        Asset=None,
+        Line=None,
+        ACLineSegment=None,
+        PSRType=None,
+        baseVoltage=None,
+        wireSpacingInfo=None,
+        Location=None,
+        Terminal1=None,
+        Terminal2=None
+    ):
 
         pass
+
+
 #
 #        self._model = model
 #

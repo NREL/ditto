@@ -1,6 +1,7 @@
-from builtins import super, range, zip, round, map
-from __future__ import absolute_import, division, print_function
 '''This class defines the network structure of DiTTo using the Store classes'''
+
+from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
 
 import random
 import networkx as nx

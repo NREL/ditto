@@ -1,5 +1,6 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 import os
 from ditto.models.base import DiTToHasTraits, Float, Complex, Unicode, Any, Int, List, observe, Instance
 

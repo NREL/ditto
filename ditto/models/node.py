@@ -1,8 +1,10 @@
-from builtins import super, range, zip, round, map
 from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
 
 from .position import Position
+
 
 class Node(DiTToHasTraits):
     """Inheritance:
@@ -15,7 +17,11 @@ class Node(DiTToHasTraits):
     name = Unicode(help='''Name of the node object''')
     nominal_voltage = Float(help='''This parameter defines the base voltage at the node.''', default_value=None)
     phases = List(Instance(Unicode), help='''This parameter is a list of all the phases at the node.''')
-    positions = List(Instance(Position), help='''This parameter is a list of positional points describing the node - it should only contain one. The positions are objects containing elements of long, lat and elevation.''')
+    positions = List(
+        Instance(Position),
+        help='''This parameter is a list of positional points describing the node - it should only contain one.
+        The positions are objects containing elements of long, lat and elevation.''',
+    )
 
     #Modification: Nicolas (December 2017)
     #Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
@@ -24,10 +30,10 @@ class Node(DiTToHasTraits):
     substation_name = Unicode(help='''The name of the substation to which the object is connected.''', default=None)
     feeder_name = Unicode(help='''The name of the feeder the object is on.''', default=None)
 
-
     def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
 
         self._model = model
+
 
 #        if ConnectivityNode is None:
 #            self._cn = self._model.env.ConnectivityNode()
