@@ -636,9 +636,9 @@ The function returns a list of dictionaries, where each dictionary contains the 
                         arg_list=next_line.split('=')[1]
                         arg_list=arg_list.split(',')
                         #Put everything in lower case
-                        arg_list=map(lambda x:x.lower().strip('\r\n'), arg_list)
-                        arg_list=map(lambda x:x.strip('\n'), arg_list)
-                        arg_list=map(lambda x:x.strip('\r'), arg_list)
+                        arg_list=list(map(lambda x:x.lower().strip('\r\n'), arg_list))
+                        arg_list=list(map(lambda x:x.strip('\n'), arg_list))
+                        arg_list=list(map(lambda x:x.strip('\r'), arg_list))
 
                         #We want the attributes in the attribute list
                         for idx,arg in enumerate(arg_list):
@@ -1106,11 +1106,11 @@ section_1_feeder_2,node_1,node_2,ABC
 
                     #First, we grab the format used to define sections
                     if 'format_section' in line.lower():
-                        format_section=map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(',')))
+                        format_section=list(map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(','))))
 
                     #Then, we grab the format used to define feeders
                     elif 'format_feeder' in line.lower():
-                        format_feeder=map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(',')))
+                        format_feeder=list(map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(','))))
 
                     #If we have a new feeder declaration
                     elif len(line)>=7 and line[:7].lower()=='feeder=':
@@ -1161,7 +1161,7 @@ section_1_feeder_2,node_1,node_2,ABC
                         if _netID is None:
                             raise ValueError('No network ID available when reading line \n'+line)
                         #Extract the data for this section
-                        section_data=map(lambda x:x.strip(), line.split(','))
+                        section_data=list(map(lambda x:x.strip(), line.split(',')))
 
                         #Check length coherence...
                         if len(section_data)!=len(format_section):

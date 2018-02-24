@@ -748,7 +748,7 @@ class reader:
                         if i == 'A' or i == 'B' or i == 'C':
                             phases.append(i)
                     if not has_parent:
-                        api_node.phases = map(lambda x: Unicode(x), phases)
+                        api_node.phases = list(map(lambda x: Unicode(x), phases))
                 except AttributeError:
                     pass
                 num_phases = 0

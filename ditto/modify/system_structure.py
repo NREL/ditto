@@ -290,7 +290,7 @@ If the cut was done properly, we shouldn't have elements in multiple feeders.
         print('Number of feeders defined = {}'.format(N_feeder))
 
         #Size distribution
-        feeder_sizes = map(len, self._list_of_feeder_objects)
+        feeder_sizes = list(map(len, self._list_of_feeder_objects))
         print('Sizes of the feeders = {}'.format(feeder_sizes))
 
         #Intersections (should be empty...)

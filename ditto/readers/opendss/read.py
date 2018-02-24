@@ -233,7 +233,7 @@ Responsible for calling the sub-parsers and logging progress.
         substations = {}
         substation_transformers = {}
         for line in lines[1:]:
-            node, sub, feed, sub_trans = map(lambda x: x.strip(), line.split(' '))
+            node, sub, feed, sub_trans = list(map(lambda x: x.strip(), line.split(' ')))
             if not feed in feeders:
                 feeders[feed] = [node.lower().replace('.', '')]
             else:
@@ -375,7 +375,7 @@ Responsible for calling the sub-parsers and logging progress.
         for line in coordinates:
 
             try:
-                name, X, Y = map(lambda x: x.strip(), line.split(self.coordinates_delimiter))
+                name, X, Y = list(map(lambda x: x.strip(), line.split(self.coordinates_delimiter)))
                 name = name.lower()
             except:
                 self.logger.warning('Could not parse line : ' + str(line))
@@ -411,7 +411,7 @@ Responsible for calling the sub-parsers and logging progress.
             if '.' in data['bus1']:
                 temp = data['bus1'].split('.')
                 b1_name = temp[0].strip()
-                b1_phases = map(lambda x: int(x), temp[1:])
+                b1_phases = list(map(lambda x: int(x), temp[1:]))
             elif data['phases'] == '3':
                 b1_name = data['bus1'].strip()
                 b1_phases = [1, 2, 3]
@@ -423,7 +423,7 @@ Responsible for calling the sub-parsers and logging progress.
             if '.' in data['bus2']:
                 temp = data['bus2'].split('.')
                 b2_name = temp[0].strip()
-                b2_phases = map(lambda x: int(x), temp[1:])
+                b2_phases = list(map(lambda x: int(x), temp[1:]))
             elif data['phases'] == '3':
                 b2_name = data['bus2'].strip()
                 b2_phases = [1, 2, 3]
@@ -469,7 +469,7 @@ Responsible for calling the sub-parsers and logging progress.
             if '.' in data['bus1']:
                 temp = data['bus1'].split('.')
                 b1_name = temp[0].strip()
-                b1_phases = map(lambda x: int(x), temp[1:])
+                b1_phases = list(map(lambda x: int(x), temp[1:]))
             elif data['phases'] == '3':
                 b1_name = data['bus1'].strip()
                 b1_phases = [1, 2, 3]
@@ -512,7 +512,7 @@ Responsible for calling the sub-parsers and logging progress.
                 pass
 
             try:
-                api_node.phases = map(lambda x: Unicode(self.phase_mapping(x)), data['phases'])
+                api_node.phases = list(map(lambda x: Unicode(self.phase_mapping(x)), data['phases']))
             except:
                 pass
 
@@ -631,7 +631,7 @@ Responsible for calling the sub-parsers and logging progress.
                 if '.' in data['bus1']:
                     temp = data['bus1'].split('.')
                     api_line.from_element = temp[0]
-                    phases_bus1 = map(int, temp[1:])
+                    phases_bus1 = list(map(int, temp[1:]))
                 else:
                     api_line.from_element = data['bus1'].strip()
                     phases_bus1 = [1, 2, 3]
@@ -644,7 +644,7 @@ Responsible for calling the sub-parsers and logging progress.
                 if '.' in data['bus2']:
                     temp = data['bus2'].split('.')
                     api_line.to_element = temp[0]
-                    phases_bus2 = map(int, temp[1:])
+                    phases_bus2 = list(map(int, temp[1:]))
                 else:
                     api_line.to_element = data['bus2'].strip()
                     phases_bus2 = [1, 2, 3]
@@ -700,25 +700,25 @@ Responsible for calling the sub-parsers and logging progress.
                 try:
                     if isinstance(Rmatrix, list) and len(Rmatrix) == 1 and '|' in Rmatrix[0]:
                         rowsR = Rmatrix[0].split('|')
-                        rowsR = map(lambda x: x.strip(), rowsR)
+                        rowsR = list(map(lambda x: x.strip(), rowsR))
                         new_Rmatrix = []
                         for rowR in rowsR:
                             new_Rmatrix.append([])
-                            new_Rmatrix[-1] += map(lambda x: self.convert_to_meters(float(x.strip()), line_unit, inverse=True), rowR.split(' '))
+                            new_Rmatrix[-1] += list(map(lambda x: self.convert_to_meters(float(x.strip()), line_unit, inverse=True), rowR.split(' ')))
                         new_Rmatrix = self.symmetrize(new_Rmatrix)
                     else:
-                        new_Rmatrix = map(lambda x: self.convert_to_meters(float(x), line_unit, inverse=True), Rmatrix)
+                        new_Rmatrix = list(map(lambda x: self.convert_to_meters(float(x), line_unit, inverse=True), Rmatrix))
 
                     if isinstance(Xmatrix, list) and len(Xmatrix) == 1 and '|' in Xmatrix[0]:
                         rowsX = Xmatrix[0].split('|')
-                        rowsX = map(lambda x: x.strip(), rowsX)
+                        rowsX = list(map(lambda x: x.strip(), rowsX))
                         new_Xmatrix = []
                         for rowX in rowsX:
                             new_Xmatrix.append([])
-                            new_Xmatrix[-1] += map(lambda x: self.convert_to_meters(float(x.strip()), line_unit, inverse=True), rowX.split(' '))
+                            new_Xmatrix[-1] += list(map(lambda x: self.convert_to_meters(float(x.strip()), line_unit, inverse=True), rowX.split(' ')))
                         new_Xmatrix = self.symmetrize(new_Xmatrix)
                     else:
-                        new_Xmatrix = map(lambda x: self.convert_to_meters(float(x), line_unit, inverse=True), Xmatrix)
+                        new_Xmatrix = list(map(lambda x: self.convert_to_meters(float(x), line_unit, inverse=True), Xmatrix))
 
                     new_Rmatrix = np.array(new_Rmatrix)
                     new_Xmatrix = np.array(new_Xmatrix)
@@ -742,14 +742,14 @@ Responsible for calling the sub-parsers and logging progress.
                 try:
                     if isinstance(Cmatrix, list) and len(Cmatrix) == 1 and '|' in Cmatrix[0]:
                         rowsC = Cmatrix[0].split('|')
-                        rowsC = map(lambda x: x.strip(), rowsC)
+                        rowsC = list(map(lambda x: x.strip(), rowsC))
                         new_Cmatrix = []
                         for rowC in rowsC:
                             new_Cmatrix.append([])
-                            new_Cmatrix[-1] += map(lambda x: self.convert_to_meters(float(x.strip()), line_unit, inverse=True), rowC.split(' '))
+                            new_Cmatrix[-1] += list(map(lambda x: self.convert_to_meters(float(x.strip()), line_unit, inverse=True), rowC.split(' ')))
                         new_Cmatrix = self.symmetrize(new_Cmatrix)
                     else:
-                        new_Cmatrix = map(lambda x: self.convert_to_meters(float(x), line_unit, inverse=True), Cmatrix)
+                        new_Cmatrix = list(map(lambda x: self.convert_to_meters(float(x), line_unit, inverse=True), Cmatrix))
                     new_Cmatrix = np.array(new_Cmatrix)
                     if new_Cmatrix.ndim == 1:
                         new_Cmatrix = [new_Cmatrix.tolist()]
@@ -1166,7 +1166,7 @@ Responsible for calling the sub-parsers and logging progress.
             #reactances
             if 'Xscarray' in data:
                 try:
-                    api_transformer.reactances = map(lambda x: float(x), data['Xscarray'])
+                    api_transformer.reactances = list(map(lambda x: float(x), data['Xscarray']))
                 except:
                     pass
 
@@ -1829,7 +1829,7 @@ Responsible for calling the sub-parsers and logging progress.
                 if '.' in data['bus1']:
                     temp = data['bus1'].split('.')
                     bus = temp[0]
-                    phases = map(lambda x: int(x), temp[1:])
+                    phases = list(map(lambda x: int(x), temp[1:]))
                 else:
                     bus = data['bus1']
                     phases = ['A', 'B', 'C']
@@ -1946,7 +1946,7 @@ Responsible for calling the sub-parsers and logging progress.
                 if _model == 8:
                     #Try to get the ZIPV coefficients
                     try:
-                        ZIPV = map(lambda x: float(data['ZIPV']))
+                        ZIPV = list(map(lambda x: float(data['ZIPV'])))
                     except:
                         ZIPV = None
                         pass
