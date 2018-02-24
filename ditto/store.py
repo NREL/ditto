@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from builtins import super, range, zip, round, map
+from __future__ import absolute_import, division, print_function
 """This is the module that defines a Store class
 
 This module details all supported functions on the Store, as described in the specification.

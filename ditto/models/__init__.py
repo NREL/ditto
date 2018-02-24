@@ -1,3 +1,5 @@
+from builtins import super, range, zip, round, map
+from __future__ import absolute_import, division, print_function
 from .winding import Winding
 from .powertransformer import PowerTransformer
 from .line import Line
