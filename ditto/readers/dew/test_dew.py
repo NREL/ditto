@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from builtins import super, range, zip, round, map
-from __future__ import absolute_import, division, print_function
 """
 EDD DEW TO DiTTo Conversion
 
@@ -10,6 +8,10 @@ Created on Mon Aug 20 20:18:01 2017
 
 Developed based on EDD DEW Version V10.62.0
 """
+
+from __future__ import absolute_import, division, print_function
+from builtins import super, range, zip, round, map
+
 import os
 from ditto.readers.dew.read import reader
 from ditto.store import Store
