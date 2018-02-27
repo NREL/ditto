@@ -19,6 +19,8 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.timeseries import Timeseries
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
+from ditto.models.storage import Storage 
+from ditto.models.phase_storage import PhaseStorage
 
 from ditto.writers.abstract_writer import abstract_writer
 
@@ -175,6 +177,12 @@ author: Nicolas Gensollen. October 2017.
         self.logger.info('Writting the lines...')
         if self.verbose: print('Writting the lines...')
         s = self.write_lines(model)
+        if self.verbose and s != -1: print('Succesful!')
+
+        #Write the storage elements
+        self.logger.info('Writting the storage devices...')
+        if self.verbose: print('Writting the storage devices...')
+        s = self.write_storages(model)
         if self.verbose and s != -1: print('Succesful!')
 
         self.logger.info('Done.')
@@ -542,6 +550,106 @@ author: Nicolas Gensollen. October 2017.
                 fp.write('\n\n')
 
         return 1
+
+
+    def write_storages(self, model):
+        '''Write the storage devices stored in the model.
+
+            .. note:: Pretty straightforward for now since the DiTTo storage model class was built from the OpenDSS documentation.
+                      The core representation is succeptible to change when mapping with other formats.
+
+            .. todo:: Develop the docstring a little bit more...
+
+        '''
+        with open(self.output_path + 'Storages.dss', 'w') as fp:
+            for i in model.models:
+                if isinstance(i, Storage):
+                    #Name
+                    if hasattr(i, 'name') and i.name is not None:
+                        fp.write('New Storage.{name}'.format(name=i.name))
+
+                    #Phases
+                    if hasattr(i, 'phase_storages') and i.phase_storages is not None:
+                        fp.write(' phases={N_phases}'.format(N_phases=len(i.phase_storages)))
+
+                        #kW (Need to sum over the phase_storage elements)
+                        if sum([1 for phs in i.phase_storages if phs.p is None])==0:
+                            p_tot=sum([phs.p for phs in i.phase_storages])
+                            fp.write(' kW={kW}'.format(kW=p_tot*10**-3)) #DiTTo in watts
+
+                            #Power factor
+                            if sum([1 for phs in i.phase_storages if phs.q is None])==0:
+                                q_tot=sum([phs.q for phs in i.phase_storages])
+                                pf=float(p_tot)/math.sqrt(p_tot**2+q_tot**2)
+                                fp.write(' pf={pf}'.format(pf=pf))
+
+                    #connecting_element
+                    if hasattr(i, 'connecting_element') and i.connecting_element is not None:
+                        fp.write(' Bus1={elt}'.format(elt=i.connecting_element))
+
+                    #nominal_voltage
+                    if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
+                        fp.write(' kV={volt}'.format(volt=i.nominal_voltage*10**-3)) #DiTTo in volts
+
+                    #rated_power
+                    if hasattr(i, 'rated_power') and i.rated_power is not None:
+                        fp.write(' kWRated={kW}'.format(kW=i.rated_power*10**-3)) #DiTTo in watts
+
+                    #rated_kWh
+                    if hasattr(i, 'rated_kWh') and i.rated_kWh is not None:
+                        fp.write(' kWhRated={kWh}'.format(kWh=i.rated_kWh))
+
+                    #stored_kWh
+                    if hasattr(i, 'stored_kWh') and i.stored_kWh is not None:
+                        fp.write(' kWhStored={stored}'.format(stored=i.stored_kWh))
+
+                    #state
+                    if hasattr(i, 'state') and i.state is not None:
+                        fp.write(' State={state}'.format(state=i.state))
+                    else:
+                        fp.write(' State=IDLING') #Default value in OpenDSS
+
+                    #reserve
+                    if hasattr(i, 'reserve') and i.reserve is not None:
+                        fp.write(' %reserve={reserve}'.format(reserve=i.reserve))
+
+                    #discharge_rate
+                    if hasattr(i, 'discharge_rate') and i.discharge_rate is not None:
+                        fp.write(' %Discharge={discharge_rate}'.format(discharge_rate=i.discharge_rate))
+
+                    #charge_rate
+                    if hasattr(i, 'charge_rate') and i.charge_rate is not None:
+                        fp.write(' %Charge={charge_rate}'.format(charge_rate=i.charge_rate))
+
+                    #charging_efficiency
+                    if hasattr(i, 'charging_efficiency') and i.charging_efficiency is not None:
+                        fp.write(' %EffCharge={charge_eff}'.format(charge_eff=i.charging_efficiency))
+
+                    #discharging_efficiency
+                    if hasattr(i, 'discharging_efficiency') and i.discharging_efficiency is not None:
+                        fp.write(' %EffDischarge={discharge_eff}'.format(discharge_eff=i.discharging_efficiency))
+
+                    #resistance
+                    if hasattr(i, 'resistance') and i.resistance is not None:
+                        fp.write(' %R={resistance}'.format(resistance=i.resistance))
+
+                    #reactance
+                    if hasattr(i, 'reactance') and i.reactance is not None:
+                        fp.write(' %X={reactance}'.format(reactance=i.reactance))
+
+                    #model
+                    if hasattr(i, 'model_') and i.model_ is not None:
+                        fp.write(' model={model}'.format(model=i.model_))
+
+                    #Yearly/Daily/Duty/Charge trigger/Discharge trigger
+                    #
+                    #TODO: See with Tarek and Elaine how we can support that
+
+                    fp.write('\n')
+
+
+
+
 
     def write_timeseries(self, model):
         '''Write all the unique timeseries objects to csv files if they are in memory.
