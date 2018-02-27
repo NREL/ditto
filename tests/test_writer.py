@@ -46,6 +46,8 @@ def test_opendss_writer(change_to_writer_dir):
     from ditto.store import Store
     from ditto.models.storage import Storage 
     from ditto.models.phase_storage import PhaseStorage
+    from ditto.models.base import Unicode
+    from ditto.models.power_source import PowerSource
 
     m = Store()
     node1 = Node(m, name='n1')
@@ -69,11 +71,17 @@ def test_opendss_writer(change_to_writer_dir):
     storage = Storage(m, name='store1', connecting_element='n3', nominal_voltage=12470.0, rated_power=10000.0, rated_kWh=100.0, stored_kWh=75.5, 
                          reserve=20.0, discharge_rate=25.0, charge_rate=18.7, charging_efficiency=15.3, discharging_efficiency=22.0, resistance=20, 
                          reactance=10, model_=1, phase_storages=[phase_storage_A, phase_storage_B] )
+
+    #PV systems testing
+    PV_system = PowerSource(m, name='PV1', is_sourcebus=0, nominal_voltage=12470, phases=[Unicode('A'),Unicode('C')], rated_power=20000.0, connection_type='D',
+                               cutout_percent=30.0, cutin_percent=15.3, resistance=14.0, reactance=5.2, v_max_pu=100, v_min_pu=60, power_factor=.9)
+
     writer = Writer()
     writer.write_wiredata(m)
     writer.write_linegeometry(m)
     writer.write_linecodes(m)
     writer.write_storages(m)
+    writer.write_PVs(m)
     writer.write_lines(m,linecodes=False)
     writer.write_loads(m)
     writer.write_transformers(m)
