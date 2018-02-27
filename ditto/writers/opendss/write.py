@@ -23,7 +23,7 @@ from ditto.models.winding import Winding
 from ditto.writers.abstract_writer import abstract_writer
 
 
-class writer(abstract_writer):
+class Writer(abstract_writer):
     '''DiTTo--->OpenDSS writer class.
 Use to write a DiTTo model to OpenDSS format.
 
