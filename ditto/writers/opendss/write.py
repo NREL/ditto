@@ -21,6 +21,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 from ditto.models.storage import Storage 
 from ditto.models.phase_storage import PhaseStorage
+from ditto.models.power_source import PowerSource
 
 from ditto.writers.abstract_writer import abstract_writer
 
@@ -183,6 +184,12 @@ author: Nicolas Gensollen. October 2017.
         self.logger.info('Writting the storage devices...')
         if self.verbose: print('Writting the storage devices...')
         s = self.write_storages(model)
+        if self.verbose and s != -1: print('Succesful!')
+
+        #Write the PV
+        self.logger.info('Writting the PVs...')
+        if self.verbose: print('Writting the PVs...')
+        s = self.write_PVs(model)
         if self.verbose and s != -1: print('Succesful!')
 
         self.logger.info('Done.')
@@ -646,6 +653,75 @@ author: Nicolas Gensollen. October 2017.
                     #TODO: See with Tarek and Elaine how we can support that
 
                     fp.write('\n')
+
+    def write_PVs(self, model):
+        '''Write the PVs.
+
+        '''
+        with open(self.output_path + 'PV_systems.dss', 'w') as fp:
+            for i in model.models:
+                if isinstance(i, PowerSource):
+                    #If is_sourcebus is set to 1, then the object represents a source and not a PV system
+                    if hasattr(i, 'is_sourcebus') and i.is_sourcebus==0:
+                        #Name
+                        if hasattr(i, 'name') and i.name is not None:
+                            fp.write('New PVSystem.{name}'.format(name=i.name))
+
+                        #Phases
+                        if hasattr(i, 'phases') and i.phases is not None:
+                            fp.write(' phases={n_phases}'.format(n_phases=len(i.phases)))
+
+                        #connecting element
+                        if hasattr(i, 'connecting_element') and i.connecting_element is not None:
+                            fp.write(' bus1={connecting_elt}'.format(connecting_elt=i.connecting_element))
+
+                        #nominal voltage
+                        if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
+                            fp.write(' kV={kV}'.format(kV=i.nominal_voltage*10**-3)) #DiTTo in volts
+
+                        #rated power
+                        if hasattr(i, 'rated_power') and i.rated_power is not None:
+                            fp.write(' kVA={kVA}'.format(kVA=i.rated_power*10**-3)) #DiTTo in vars
+
+                        #connection type
+                        if hasattr(i, 'connection_type') and i.connection_type is not None:
+                            mapps={'D':'delta', 'Y':'wye'}
+                            if i.connection_type in mapps:
+                                fp.write(' conn={conn}'.format(conn=mapps[i.connection_type]))
+                            else:
+                                raise NotImplementedError('Connection {conn} for PV systems is currently not supported.'.format(conn=i.connection_type))
+
+                        #cutout_percent
+                        if hasattr(i, 'cutout_percent') and i.cutout_percent is not None:
+                            fp.write(' %Cutout={cutout}'.format(cutout=i.cutout_percent))
+
+                        #cutin_percent
+                        if hasattr(i, 'cutin_percent') and i.cutin_percent is not None:
+                            fp.write(' %Cutin={cutin}'.format(cutin=i.cutin_percent))
+
+                        #resistance
+                        if hasattr(i, 'resistance') and i.resistance is not None:
+                            fp.write(' %R={resistance}'.format(resistance=i.resistance))
+
+                        #reactance
+                        if hasattr(i, 'reactance') and i.reactance is not None:
+                            fp.write(' %X={reactance}'.format(reactance=i.reactance))
+
+                        #v_max_pu
+                        if hasattr(i, 'v_max_pu') and i.v_max_pu is not None:
+                            fp.write(' Vmaxpu={v_max_pu}'.format(v_max_pu=i.v_max_pu))
+
+                        #v_min_pu
+                        if hasattr(i, 'v_min_pu') and i.v_min_pu is not None:
+                            fp.write(' Vminpu={v_min_pu}'.format(v_min_pu=i.v_min_pu))
+
+                        #power_factor
+                        if hasattr(i, 'power_factor') and i.power_factor is not None:
+                            fp.write(' pf={power_factor}'.format(power_factor=i.power_factor))
+
+                        fp.write('/n')
+
+
 
 
 
