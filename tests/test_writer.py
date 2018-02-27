@@ -42,11 +42,15 @@ def test_opendss_writer(change_to_writer_dir):
     from ditto.models.capacitor import Capacitor
     from ditto.models.powertransformer import PowerTransformer
     from ditto.models.winding import Winding
-    from ditto.model import Model
+    #from ditto.model import Model
+    from ditto.store import Store
+    from ditto.models.storage import Storage 
+    from ditto.models.phase_storage import PhaseStorage
 
-    m = Model()
+    m = Store()
     node1 = Node(m, name='n1')
     node2 = Node(m, name='n2')
+    node3 = Node(m, name='n3')
     wirea = Wire(m, gmr=1.3, X=2, Y = 20)
     wiren = Wire(m, gmr=1.2, X=2, Y = 20)
     line1 = Line(m, name='l1', wires=[wirea, wiren])
@@ -57,13 +61,22 @@ def test_opendss_writer(change_to_writer_dir):
     transformer1 = PowerTransformer(m, name='t1', resistance=0.5, reactance=6, num_phases=3, windings=[winding1, winding2]) 
     reg1 = Regulator(m, name='t1_reg', connected_transformer='t1', connected_winding=2, pt_ratio=60, delay=2)
     cap1 = Capacitor(m, name='cap1', connecting_element='n2', num_phases=3, nominal_voltage=7.2, var=300, connection_type='Y')
-    print(line1.resistance)
+    print(line1.impedance_matrix)
+
+    #Storage testing
+    phase_storage_A = PhaseStorage(m, phase='A', p=15.0, q=5.0)
+    phase_storage_B = PhaseStorage(m, phase='B', p=16.0, q=6.0)
+    storage = Storage(m, name='store1', connecting_element='n3', nominal_voltage=12470.0, rated_power=10000.0, rated_kWh=100.0, stored_kWh=75.5, 
+                         reserve=20.0, discharge_rate=25.0, charge_rate=18.7, charging_efficiency=15.3, discharging_efficiency=22.0, resistance=20, 
+                         reactance=10, model_=1, phase_storages=[phase_storage_A, phase_storage_B] )
     writer = Writer()
     writer.write_wiredata(m)
     writer.write_linegeometry(m)
     writer.write_linecodes(m)
+    writer.write_storages(m)
     writer.write_lines(m,linecodes=False)
     writer.write_loads(m)
     writer.write_transformers(m)
     writer.write_regulators(m)
     writer.write_capacitors(m)
+    
