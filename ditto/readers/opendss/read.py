@@ -538,11 +538,11 @@ Responsible for calling the sub-parsers and logging progress.
         #In OpenDSS, fuses are attached to line objects
         #Here, we get all the line names which have a fuse
         fuses = dss.utils.class_to_dataframe('Fuse')
-        fuses_names = [d['MonitoredObj'].lower().split('.')[1] for name, d in fuses.items()]
+        fuses_names = [d['MonitoredObj'][0].lower().split('.')[1] for name, d in fuses.items()]
 
         #In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe('recloser')
-        reclosers_names = [d['MonitoredObj'].lower().split('.')[1] for name, d in reclosers.items()]
+        reclosers_names = [d['MonitoredObj'][0].lower().split('.')[1] for name, d in reclosers.items()]
 
         start = time.time()
         lines = dss.utils.class_to_dataframe('Line')
