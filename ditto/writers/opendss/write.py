@@ -259,7 +259,7 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
-        fp = open(self.output_path + 'buscoords.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'buscoords.dss'), 'w')
 
         #Loop over the DiTTo objects
         for i in model.models:
@@ -287,7 +287,7 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         #Create and open the transformer DSS file
-        fp = open(self.output_path + 'Transformers.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'Transformers.dss'), 'w')
 
         #Loop over the DiTTo objects
         for i in model.models:
@@ -568,7 +568,7 @@ author: Nicolas Gensollen. October 2017.
             .. todo:: Develop the docstring a little bit more...
 
         '''
-        with open(self.output_path + 'Storages.dss', 'w') as fp:
+        with open(os.path.join(self.output_path,'Storages.dss'), 'w') as fp:
             for i in model.models:
                 if isinstance(i, Storage):
                     #Name
@@ -587,8 +587,9 @@ author: Nicolas Gensollen. October 2017.
                             #Power factor
                             if sum([1 for phs in i.phase_storages if phs.q is None])==0:
                                 q_tot=sum([phs.q for phs in i.phase_storages])
-                                pf=float(p_tot)/math.sqrt(p_tot**2+q_tot**2)
-                                fp.write(' pf={pf}'.format(pf=pf))
+                                if q_tot !=0 and p_tot!=0:
+                                    pf=float(p_tot)/math.sqrt(p_tot**2+q_tot**2)
+                                    fp.write(' pf={pf}'.format(pf=pf))
 
                     #connecting_element
                     if hasattr(i, 'connecting_element') and i.connecting_element is not None:
@@ -658,7 +659,7 @@ author: Nicolas Gensollen. October 2017.
         '''Write the PVs.
 
         '''
-        with open(self.output_path + 'PV_systems.dss', 'w') as fp:
+        with open(os.path.join(self.output_path, 'PV_systems.dss'), 'w') as fp:
             for i in model.models:
                 if isinstance(i, PowerSource):
                     #If is_sourcebus is set to 1, then the object represents a source and not a PV system
@@ -719,7 +720,7 @@ author: Nicolas Gensollen. October 2017.
                         if hasattr(i, 'power_factor') and i.power_factor is not None:
                             fp.write(' pf={power_factor}'.format(power_factor=i.power_factor))
 
-                        fp.write('/n')
+                        fp.write('\n')
 
 
 
@@ -734,7 +735,7 @@ author: Nicolas Gensollen. October 2017.
            Currently all loadshapes are assumed to be yearly
            TODO: Add daily profiles as well
         '''
-        fp = open(self.output_path + 'Loadshapes.dss', 'w')
+        fp = open(os.path.join(self.output_path,  'Loadshapes.dss'), 'w')
 
         all_data = set()
         for i in model.models:
@@ -794,7 +795,7 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
-        fp = open(self.output_path + 'Loads.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'Loads.dss'), 'w')
 
         for i in model.models:
             if isinstance(i, Load):
@@ -925,7 +926,7 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
-        fp = open(self.output_path + 'Regulators.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'Regulators.dss'), 'w')
 
         #It might be the case that we have to create new transformers from the regulators.
         #In this case, we build the strings and store them in a list.
@@ -1121,7 +1122,7 @@ author: Nicolas Gensollen. October 2017.
 
         #If we have new transformers to add...
         if len(transfo_creation_string_list) > 0:
-            with open(self.output_path + 'Transformers.dss', 'a') as f:
+            with open(os.path.join(self.output_path, 'Transformers.dss'), 'a') as f:
                 for trans_string in transfo_creation_string_list:
                     f.write(trans_string)
                     f.write('\n\n')
@@ -1137,7 +1138,7 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
-        fp = open(self.output_path + 'Capacitors.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'Capacitors.dss'), 'w')
 
         for i in model.models:
 
@@ -1260,7 +1261,7 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
-        fp = open(self.output_path + 'Lines.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'Lines.dss'), 'w')
 
         for i in model.models:
             if isinstance(i, Line):
@@ -1421,7 +1422,7 @@ author: Nicolas Gensollen. October 2017.
                     self.all_wires[ser] = 'Code' + str(cnt)
                     cnt += 1
 
-        fp = open(self.output_path + 'WireData.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'WireData.dss'), 'w')
         for wire in self.all_wires:
             fp.write('New WireData.' + self.all_wires[wire] + wire + '\n')
 
@@ -1449,7 +1450,7 @@ author: Nicolas Gensollen. October 2017.
                             name += '_' + self.all_wires[seri]
                     self.all_geometries[ser] = name
 
-        fp = open(self.output_path + 'LineGeometry.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'LineGeometry.dss'), 'w')
         for geometry in self.all_geometries:
             fp.write('New LineGeometry.' + self.all_geometries[geometry] + geometry + '\n')
 
@@ -1492,7 +1493,7 @@ author: Nicolas Gensollen. October 2017.
                     self.all_linecodes[ser] = '{class_}Code{N}'.format(class_=nameclass, N=cnt)
                     cnt += 1
 
-        fp = open(self.output_path + 'Linecodes.dss', 'w')
+        fp = open(os.path.join(self.output_path, 'Linecodes.dss'), 'w')
         for linecode, linecode_data in self.all_linecodes.items():
             fp.write('New Linecode.{linecode_data} {linecode}\n'.format(linecode=linecode, linecode_data=linecode_data))
 
