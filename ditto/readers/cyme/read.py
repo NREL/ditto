@@ -2615,7 +2615,7 @@ section_1_feeder_2,node_1,node_2,ABC
                 xhl=Z_perc.imag
 
                 try:
-                    api_transformer.reactances=[xhl]
+                    api_transformer.reactances.append(xhl)
                 except:
                     pass
 
