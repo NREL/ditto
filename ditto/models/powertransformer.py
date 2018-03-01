@@ -21,10 +21,9 @@ class PowerTransformer(DiTToHasTraits):
     from_element = Any(help='''Name of the node which connects to the 'from' end of the transformer''', default_value=None)
     to_element = Any(help=''''Name of the node which connects to the 'to' end of the transformer''', default_value=None)
 
-    reactances = List(
-        (Instance(Int), Instance(Int), Instance(Float)),
+    reactances = List(Instance(Float),
         help=
-        '''Reactances are described between all the windings. There are n*(n-1)/2 reactances (where n is the number of windings). For two a winding transformer this gives one value, and for a 3 winding transformer it gives 3.  The list elements have (from_winding, to_winding, reactance) where from_winding and to_winding are the 1-based indices of the windings list.''',
+        '''Reactances are described between all the windings. There are n*(n-1)/2 reactances (where n is the number of windings). For two a winding transformer this gives one value, and for a 3 winding transformer it gives 3.''',
         default_value=None
     )
 
