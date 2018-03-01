@@ -138,28 +138,28 @@ Author: Nicolas Gensollen. October 2017
         #
         #Set the path to the CYME data files
         if 'data_folder_path' in kwargs:
-            self.data_folder_path=kwargs['data_folder_path']
+            self.data_folder_path = kwargs['data_folder_path']
         #Default is current directory
         else:
-            self.data_folder_path='.'
+            self.data_folder_path ='.'
 
         #Set the name of the network file
         if 'network_filename' in kwargs:
-            self.network_filename=kwargs['network_filename']
+            self.network_filename = kwargs['network_filename']
         else:
-            self.network_filename='network.txt'
+            self.network_filename ='network.txt'
 
         #Set the name of the equipment file
         if 'equipment_filename' in kwargs:
-            self.equipment_filename=kwargs['equipment_filename']
+            self.equipment_filename = kwargs['equipment_filename']
         else:
-            self.equipment_filename='equipment.txt'
+            self.equipment_filename ='equipment.txt'
 
         #Set the name of the load file
         if 'load_filename' in kwargs:
-            self.load_filename=kwargs['load_filename']
+            self.load_filename = kwargs['load_filename']
         else:
-            self.load_filename='load.txt'
+            self.load_filename ='load.txt'
 
         #Header_mapping.
         #
@@ -2528,7 +2528,6 @@ section_1_feeder_2,node_1,node_2,ABC
 
             #Handle the three winding transformers
             if settings['type'] in ['three_winding_transformer', 'three_winding_auto_transformer']:
-
                 #Here we know that we have three windings...
                 for w in range(3):
 
