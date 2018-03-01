@@ -851,71 +851,71 @@ The user is then responsible to check the differences betweeen the two versions.
                 except:
                     pass
 
-                try:
-                    api_transformer=PowerTransformer(model)
-                except:
-                    pass
+                # try:
+                #     api_transformer=PowerTransformer(model)
+                # except:
+                #     pass
 
-                try:
-                    api_transformer.is_substation=1
-                except:
-                    pass
+                # try:
+                #     api_transformer.is_substation=1
+                # except:
+                #     pass
 
-                try:
-                    api_transformer.name=sid
-                except:
-                    pass
+                # try:
+                #     api_transformer.name=sid
+                # except:
+                #     pass
 
-                try:
-                    api_transformer.rated_power=10**3*float(subs[sid]['mva'])
-                except:
-                    pass
+                # try:
+                #     api_transformer.rated_power=10**3*float(subs[sid]['mva'])
+                # except:
+                #     pass
 
-                try:
-                    api_transformer.from_element=_from
-                except:
-                    pass
+                # try:
+                #     api_transformer.from_element=_from
+                # except:
+                #     pass
 
-                try:
-                    api_transformer.to_element=_to
-                except:
-                    pass
+                # try:
+                #     api_transformer.to_element=_to
+                # except:
+                #     pass
 
-                for w in range(2):
-                    try:
-                        api_winding=Winding(model)
-                    except:
-                        pass
+                # for w in range(2):
+                #     try:
+                #         api_winding=Winding(model)
+                #     except:
+                #         pass
 
-                    try:
-                        api_winding.connection_type=self.transformer_connection_configuration_mapping(subs[sid]['conn'])
-                    except:
-                        pass
+                #     try:
+                #         api_winding.connection_type=self.transformer_connection_configuration_mapping(subs[sid]['conn'])
+                #     except:
+                #         pass
 
-                    try:
-                        api_winding.nominal_voltage=10**3*float(subs[sid]['kvll'])
-                    except:
-                        pass
+                #     try:
+                #         api_winding.nominal_voltage=10**3*float(subs[sid]['kvll'])
+                #     except:
+                #         pass
 
-                    try:
-                        api_winding.rated_power=10**6*float(subs[sid]['mva'])
-                    except:
-                        pass
+                #     try:
+                #         api_winding.rated_power=10**6*float(subs[sid]['mva'])
+                #     except:
+                #         pass
 
-                    for p in phases:
-                        try:
-                            api_phase_winding=PhaseWinding(model)
-                        except:
-                            pass
+                #     for p in phases:
+                #         try:
+                #             api_phase_winding=PhaseWinding(model)
+                #         except:
+                #             pass
 
-                        try:
-                            api_phase_winding.phase=self.phase_mapping(p)
-                        except:
-                            pass
+                #         try:
+                #             api_phase_winding.phase=self.phase_mapping(p)
+                #         except:
+                #             pass
 
-                        api_winding.phase_windings.append(api_phase_winding)
+                #         api_winding.phase_windings.append(api_phase_winding)
 
-                    api_transformer.windings.append(api_winding)
+                #     api_transformer.windings.append(api_winding)
 
 
 
