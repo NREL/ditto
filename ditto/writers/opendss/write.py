@@ -8,6 +8,7 @@ import math
 import numpy as np
 import logging
 import pandas as pd
+from functools import reduce
 
 #DiTTo imports
 from ditto.models.node import Node
@@ -108,6 +109,7 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
+        self.files_to_redirect=[]
         #Verbose print the progress
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose = kwargs['verbose']
@@ -190,6 +192,12 @@ author: Nicolas Gensollen. October 2017.
         self.logger.info('Writting the PVs...')
         if self.verbose: print('Writting the PVs...')
         s = self.write_PVs(model)
+        if self.verbose and s != -1: print('Succesful!')
+
+        #Write the Master file
+        self.logger.info('Writting the master file...')
+        if self.verbose: print('Writting the master file...')
+        s = self.write_master_file(model)
         if self.verbose and s != -1: print('Succesful!')
 
         self.logger.info('Done.')
@@ -288,6 +296,7 @@ author: Nicolas Gensollen. October 2017.
 '''
         #Create and open the transformer DSS file
         fp = open(os.path.join(self.output_path, 'Transformers.dss'), 'w')
+        self.files_to_redirect.append('Transformers.dss')
 
         #Loop over the DiTTo objects
         for i in model.models:
@@ -569,6 +578,7 @@ author: Nicolas Gensollen. October 2017.
 
         '''
         with open(os.path.join(self.output_path,'Storages.dss'), 'w') as fp:
+            self.files_to_redirect.append('Storages.dss')
             for i in model.models:
                 if isinstance(i, Storage):
                     #Name
@@ -660,6 +670,7 @@ author: Nicolas Gensollen. October 2017.
 
         '''
         with open(os.path.join(self.output_path, 'PV_systems.dss'), 'w') as fp:
+            self.files_to_redirect.append('PV_systems.dss')
             for i in model.models:
                 if isinstance(i, PowerSource):
                     #If is_sourcebus is set to 1, then the object represents a source and not a PV system
@@ -736,6 +747,7 @@ author: Nicolas Gensollen. October 2017.
            TODO: Add daily profiles as well
         '''
         fp = open(os.path.join(self.output_path,  'Loadshapes.dss'), 'w')
+        self.files_to_redirect.append('Loadshapes.dss')
 
         all_data = set()
         for i in model.models:
@@ -796,6 +808,7 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         fp = open(os.path.join(self.output_path, 'Loads.dss'), 'w')
+        self.files_to_redirect.append('Loads.dss')
 
         for i in model.models:
             if isinstance(i, Load):
@@ -927,6 +940,7 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         fp = open(os.path.join(self.output_path, 'Regulators.dss'), 'w')
+        self.files_to_redirect.append('Regulators.dss')
 
         #It might be the case that we have to create new transformers from the regulators.
         #In this case, we build the strings and store them in a list.
@@ -1139,6 +1153,7 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         fp = open(os.path.join(self.output_path, 'Capacitors.dss'), 'w')
+        self.files_to_redirect.append('Capacitors.dss')
 
         for i in model.models:
 
@@ -1262,6 +1277,7 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         fp = open(os.path.join(self.output_path, 'Lines.dss'), 'w')
+        self.files_to_redirect.append('Lines.dss')
 
         for i in model.models:
             if isinstance(i, Line):
@@ -1423,6 +1439,7 @@ author: Nicolas Gensollen. October 2017.
                     cnt += 1
 
         fp = open(os.path.join(self.output_path, 'WireData.dss'), 'w')
+        self.files_to_redirect.append('WireData.dss')
         for wire in self.all_wires:
             fp.write('New WireData.' + self.all_wires[wire] + wire + '\n')
 
@@ -1451,6 +1468,7 @@ author: Nicolas Gensollen. October 2017.
                     self.all_geometries[ser] = name
 
         fp = open(os.path.join(self.output_path, 'LineGeometry.dss'), 'w')
+        self.files_to_redirect.append('LineGeometry.dss')
         for geometry in self.all_geometries:
             fp.write('New LineGeometry.' + self.all_geometries[geometry] + geometry + '\n')
 
@@ -1494,6 +1512,7 @@ author: Nicolas Gensollen. October 2017.
                     cnt += 1
 
         fp = open(os.path.join(self.output_path, 'Linecodes.dss'), 'w')
+        self.files_to_redirect.append('Linecodes.dss')
         for linecode, linecode_data in self.all_linecodes.items():
             fp.write('New Linecode.{linecode_data} {linecode}\n'.format(linecode=linecode, linecode_data=linecode_data))
 
@@ -1651,3 +1670,36 @@ Multiple lines can share the same parameters (like length, resistance matrix,...
         result += ' reduce=n'
 
         return result
+
+
+    def write_master_file(self,model):
+        '''Write the master.dss file.
+        '''
+        with open(os.path.join(self.output_path,'master.dss'), 'w') as fp:
+            fp.write('Clear\n\nNew Circuit.Name ')
+            for obj in model.models:
+                if isinstance(obj,PowerSource) and obj.is_sourcebus==1:
+                    fp.write('bus1={name} pu=1.0'.format(name=obj.name))
+
+                    if hasattr(obj,'nominal_voltage') and obj.nominal_voltage is not None:
+                        fp.write(' basekV={volt}'.format(volt=obj.nominal_voltage*10**-3)) #DiTTo in volts
+
+                    if hasattr(obj, 'positive_sequence_impedance') and obj.positive_sequence_impedance is not None:
+                        R1=obj.positive_sequence_impedance.real 
+                        X1=obj.positive_sequence_impedance.imag
+                        fp.write(' R1={R1} X1={X1}'.format(R1=R1,X1=X1))
+
+                    if hasattr(obj, 'zero_sequence_impedance') and obj.zero_sequence_impedance is not None:
+                        R0=obj.zero_sequence_impedance.real 
+                        X0=obj.zero_sequence_impedance.imag
+                        fp.write(' R0={R0} X0={X0}'.format(R0=R0,X0=X0))
+
+            fp.write('\n\n')
+            for file in self.files_to_redirect:
+                fp.write('Redirect {file}\n'.format(file=file))
+
+            fp.write('\nCalcvoltagebases\n\n')
+            fp.write('Buscoords buscoords.dss')
+
+
+
