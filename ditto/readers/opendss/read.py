@@ -31,6 +31,8 @@ from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
+from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
@@ -224,6 +226,8 @@ Responsible for calling the sub-parsers and logging progress.
 
         #Call parse from abstract reader class
         abstract_reader.parse(self, model, **kwargs)
+
+        self.parse_storage(model)
 
         return 1
 
@@ -1972,3 +1976,153 @@ Responsible for calling the sub-parsers and logging progress.
             self._loads.append(api_load)
 
         return 1
+
+
+    def parse_storage(self, model):
+        '''Parse the storages.
+        '''
+        storages = dss.utils.class_to_dataframe('storage')
+
+        for name, data in storages.items():
+            api_storage=Storage(model)
+
+            #Name
+            try:
+                api_storage.name=name 
+            except:
+                pass
+
+            #connecting_element
+            try:
+                api_storage.connecting_element=data['bus1']
+            except:
+                pass
+
+            #nominal_voltage
+            try:
+                api_storage.nominal_voltage=float(data['kv'])*10**3 #DiTTo in volts
+            except:
+                pass
+
+            #rated_power
+            try:
+                api_storage.rated_power=float(data['kWrated'])*10**3 #DiTTo in watts
+            except:
+                pass
+
+            #rated_kWh
+            try:
+                api_storage.rated_kWh=float(data['kWhrated'])
+            except:
+                pass
+
+            #stored_kWh
+            try:
+                api_storage.stored_kWh=float(data['kWhstored'])
+            except:
+                pass
+
+            #reserve
+            try:
+                api_storage.reserve=float(data['%reserve'])
+            except:
+                pass
+
+            #state
+            try:
+                api_storage.state=data['State']
+            except:
+                pass
+
+            #discharge_rate
+            try:
+                api_storage.discharge_rate=float(data['%Discharge'])
+            except:
+                pass
+
+            #charge_rate
+            try:
+                api_storage.charge_rate=float(data['%Charge'])
+            except:
+                pass
+
+            #charging_efficiency
+            try:
+                api_storage.charging_efficiency=float(data['%EffCharge'])
+            except:
+                pass
+
+            #discharging_efficiency
+            try:
+                api_storage.discharging_efficiency=float(data['%EffDischarge'])
+            except:
+                pass
+
+            #resistance
+            try:
+                api_storage.resistance=float(data['%R'])
+            except:
+                pass
+
+            #reactance
+            try:
+                api_storage.reactance=float(data['%X'])
+            except:
+                pass
+
+            #model_
+            try:
+                api_storage.model_=int(data['model'])
+            except:
+                pass
+
+            #yearly
+            try:
+                api_storage.yearly=data['yearly']
+            except:
+                pass
+
+            #daily
+            try:
+                api_storage.daily=data['daily']
+            except:
+                pass
+
+            #duty
+            try:
+                api_storage.duty=data['duty']
+            except:
+                pass
+
+            #discharge_trigger
+            try:
+                api_storage.discharge_trigger=float(data['DischargeTrigger'])
+            except:
+                pass
+
+            #charge_trigger
+            try:
+                api_storage.charge_trigger=float(data['ChargeTrigger'])
+            except:
+                pass
+
+            N_phases=int(data['phases'])
+
+            for phase in range(N_phases):
+                try:
+                    api_phase_storage=PhaseStorage(model)
+                except:
+                    pass
+
+                try:
+                    api_phase_storage.p=float(data['kW'])/float(N_phases)
+                except:
+                    pass
+
+                try:
+                    api_phase_storage.q=float(data['kvar'])/float(N_phases)
+                except:
+                    pass
+
+                api_storage.phase_storages.append(api_phase_storage)
+
