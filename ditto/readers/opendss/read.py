@@ -1282,10 +1282,12 @@ Responsible for calling the sub-parsers and logging progress.
                                 phase_windings[p].compensator_x = float(reg_data['X'])
 
                 #Store the phase winding objects in the winding objects
-                windings[w].phase_windings = phase_windings
+                for pw in phase_windings:
+                    windings[w].phase_windings.append(pw)
 
             #Store the winding objects in the transformer object
-            api_transformer.windings = windings
+            for ww in windings:
+                api_transformer.windings.append(ww)
             self._transformers.append(api_transformer)
 
         return 1
