@@ -14,7 +14,7 @@ from ditto.models.power_source import PowerSource
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
-from modify import Modifier
+from ditto.modify.modify import Modifier
 from ditto.network.network import Network
 
 
@@ -84,12 +84,13 @@ If this convention changes, this function might need to be updated...
 '''
         for obj in self.model.models:
             if isinstance(obj, Feeder_metadata):
-                name_cleaned = obj.name.replace('.', '').lower()
-                headnodes = self.G.digraph.successors(obj.substation)
+                headnodes = list(self.G.digraph.successors(obj.substation))
+
                 if name_cleaned in headnodes:
                     obj.headnode = name_cleaned #This should not be the case because of name conflicts
                 else:
                     cleaned_headnodes = [h.strip('_s') for h in headnodes]
+
                     if name_cleaned in cleaned_headnodes:
                         obj.headnode = headnodes[cleaned_headnodes.index(name_cleaned)]
                     else:
@@ -512,7 +513,7 @@ The purpose of this function is to find this transformer as well as all the line
             while continu:
 
                 #Get predecessor node of current node in the DAG
-                from_node = self.G.digraph.predecessors(end_node)[0]
+                from_node = next(self.G.digraph.predecessors(end_node))
 
                 #Look for the type of equipment that makes the connection between from_node and to_node
                 _type = None
