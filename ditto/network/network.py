@@ -59,7 +59,7 @@ class Network:
                     self.graph.add_node(i.from_element)
                     #graph_nodes.add(i.from_element)
 
-                self.graph.add_edge(*(i.from_element, i.to_element, {'equipment': object_type, 'equipment_name': i.name, 'length': length}))
+                self.graph.add_edge(i.from_element, i.to_element, equipment=object_type, equipment_name=i.name, length=length)
                 graph_edges.add((i.from_element, i.to_element))
 
             if hasattr(i, 'connecting_element') and i.connecting_element is not None:
