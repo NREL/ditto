@@ -733,7 +733,7 @@ If no matching feeder is found, the function returns None.
 
             #avg_nb_load_per_transformer
             if len(self.results[_feeder_ref]['nb_load_per_transformer']) > 0:
-                self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(self.results[_feeder_ref]['nb_load_per_transformer'].values())
+                self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(list(self.results[_feeder_ref]['nb_load_per_transformer'].values()))
 
             #Convert to miles
             for k in keys_to_convert_to_miles:
@@ -797,7 +797,7 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
 
             #avg_nb_load_per_transformer
             if len(self.results[_feeder_ref]['nb_load_per_transformer']) > 0:
-                self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(self.results[_feeder_ref]['nb_load_per_transformer'].values())
+                self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(list(self.results[_feeder_ref]['nb_load_per_transformer'].values()))
 
             #Convert to miles
             for k in keys_to_convert_to_miles:
@@ -844,9 +844,9 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
 
 '''
         if args:
-            return np.mean(nx.degree(args[0]).values())
+            return np.mean([x[1] for x in list(nx.degree(args[0]))])
         else:
-            return np.mean(nx.degree(self.G.graph).values())
+            return np.mean([x[1] for x in list(nx.degree(self.G.graph))])
 
     def diameter(self, *args):
         '''Returns the diameter of the network.
@@ -885,13 +885,14 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
             _net = self.G.graph
             _src = self.source
         dist = {}
+        _net=_net.copy()
         if not _net.has_node(_src):
-            _sp = nx.shortest_path(self.G.graph, _src, _net.nodes()[0])
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
             for n1, n2 in zip(_sp[:-1], _sp[1:]):
                 _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
         for node in _net.nodes():
             dist[node] = nx.shortest_path_length(_net, _src, node, weight='length')
-        return np.max(dist.values()) * 0.000621371 #Convert length to miles
+        return np.max(list(dist.values())) * 0.000621371 #Convert length to miles
 
     def furtherest_node_miles_clever(self):
         '''Returns the maximum eccentricity from the source, in miles.
@@ -905,7 +906,7 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         for node in self.G.graph.nodes():
             if nx.degree(self.G.graph, node) == 1:
                 dist[node] = nx.shortest_path_length(self.G.graph, self.source, node, weight='length')
-        return np.max(dist.values()) * 0.000621371 #Convert length to miles
+        return np.max(list(dist.values())) * 0.000621371 #Convert length to miles
 
     def lv_length_miles(self):
         '''Returns the sum of the low voltage line lengths in miles.
