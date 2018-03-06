@@ -125,7 +125,7 @@ class abstract_reader:
         if unit is None:
             return None
 
-        if not isinstance(unit, unicode):
+        if not isinstance(unit, str):
             self.logger.warning('convert_to_meters() expects a unit in string format')
             return None
 
@@ -233,7 +233,7 @@ class abstract_reader:
         if unit is None:
             return None
 
-        if not isinstance(unit, unicode):
+        if not isinstance(unit, str):
             self.logger.warning('convert_from_meters() expects a unit in string format')
             return None
 
