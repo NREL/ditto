@@ -666,7 +666,7 @@ Responsible for calling the sub-parsers and logging progress.
             #    pass
 
             #is_fuse
-            if line_name in fuses_names:
+            if line_name.replace('(','').replace(')','') in fuses_names:
                 api_line.is_fuse = 1
             #is_recloser
             elif line_name in reclosers_names or 'recloser' in line_name:
