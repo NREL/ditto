@@ -206,6 +206,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 '''
         start = time.time()
+        self.source_name='Sourcebus'
         #In order to parse, we need that opendssdirect was previously run
         if not self.is_opendssdirect_built:
             self.build_opendssdirect(self.DSS_file_names['master'])
@@ -343,6 +344,12 @@ Responsible for calling the sub-parsers and logging progress.
                     api_power_source.connecting_element = source_data['bus1'].split('.')[0]
                 else:
                     api_power_source.connecting_element = source_data['bus1']
+                self.source_name=api_power_source.connecting_element+'_src'
+                api_feeder_metadata=Feeder_metadata(model)
+                api_feeder_metadata.name=self.source_name
+                api_feeder_metadata.headnode=api_power_source.connecting_element
+                api_feeder_metadata.substation=api_power_source.connecting_element
+                api_feeder_metadata.nominal_voltage=api_power_source.nominal_voltage
             except:
                 pass
 
@@ -516,6 +523,8 @@ Responsible for calling the sub-parsers and logging progress.
             except:
                 pass
 
+            api_node.feeder_name=self.source_name
+
             try:
                 api_node.phases = list(map(lambda x: Unicode(self.phase_mapping(x)), data['phases']))
             except:
@@ -560,6 +569,7 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in lines.items():
 
             api_line = Line(model)
+            api_line.feeder_name=self.source_name
 
             #Name
             try:
@@ -1018,6 +1028,7 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in transformers.items():
 
             api_transformer = PowerTransformer(model)
+            api_transformer.feeder_name=self.source_name
 
             #Name
             try:
@@ -1242,6 +1253,8 @@ Responsible for calling the sub-parsers and logging progress.
 
             api_regulator = Regulator(model)
 
+            api_regulator.feeder_name=self.source_name
+
             #Name
             try:
                 reg_name = name.split('.')[1].lower()
@@ -1454,6 +1467,8 @@ Responsible for calling the sub-parsers and logging progress.
 
             api_capacitor = Capacitor(model)
 
+            api_capacitor.feeder_name=self.source_name
+
             #Name
             try:
                 cap_name = name.split('apacitor.')[1].lower()
@@ -1642,6 +1657,7 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in loads.items():
 
             api_load = Load(model)
+            api_load.feeder_name=self.source_name
 
             #Name
             try:
@@ -1848,6 +1864,7 @@ Responsible for calling the sub-parsers and logging progress.
 
         for name, data in storages.items():
             api_storage=Storage(model)
+            api_storage.feeder_name=self.source_name
 
             #Name
             try:
