@@ -84,6 +84,7 @@ If this convention changes, this function might need to be updated...
 '''
         for obj in self.model.models:
             if isinstance(obj, Feeder_metadata):
+                name_cleaned = obj.name.replace('.', '').lower().replace('_src','')
                 headnodes = list(self.G.digraph.successors(obj.substation))
 
                 if name_cleaned in headnodes:
