@@ -1123,7 +1123,9 @@ Responsible for calling the sub-parsers and logging progress.
             #reactances
             if 'Xscarray' in data:
                 try:
-                    api_transformer.reactances = list(map(lambda x: float(x), data['Xscarray']))
+                    eph=list(map(lambda x: float(x), data['Xscarray']))
+                    for x in eph:
+                        api_transformer.reactances.append(x)
                 except:
                     pass
 
