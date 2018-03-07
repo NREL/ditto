@@ -660,3 +660,33 @@ The purpose of this function is to find this transformer as well as all the line
         #             #Same story here, flag the wires with phases that do not match.
         #             if wire.drop==1:
         #                 self.delete_element(self.model,wire)
+
+    def open_close_switches(self,path_to_dss_file):
+        '''Since there is not way to indicate wether a switch is open or closed in OpenDSS, RNM use the following convention:
+            - If the switch has attribute R1 equals to 1e11, then the switch is open
+            - Otherwise it is closed.
+        '''
+        self.model.set_names()
+        with open(path_to_dss_file,'r') as f:
+            lines=f.readlines()
+
+        for line in lines:
+            raw=line.split(' ')
+            name=raw[1].split('.')[1].strip().lower()
+            data_line={k.strip().lower():v.strip() for k,v in zip([x.split('=')[0] for x in raw[2:]],
+                                                                  [x.split('=')[1] for x in raw[2:]])}
+            if('switch' in data_line and (data_line['switch']=='y' or
+                                          data_line['switch']=='yes' or
+                                          data_line['switch']=='true')):
+                if 'r1' in data_line and data_line['r1']=='1e11':
+                    try:
+                        for wire in self.model[name].wires:
+                            wire.is_open=1
+                    except:
+                        pass
+                else:
+                    try:
+                        for wire in self.model[name].wires:
+                            wire.is_open=0
+                    except:
+                        pass

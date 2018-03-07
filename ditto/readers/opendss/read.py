@@ -807,6 +807,10 @@ Responsible for calling the sub-parsers and logging progress.
 
                 if api_line.is_switch == 1:
                     wires[p].is_switch = 1
+                    if data['enabled']==True:
+                        wires[p].is_open=0
+                    else:
+                        wires[p].is_open=1
                 else:
                     wires[p].is_switch = 0
 
