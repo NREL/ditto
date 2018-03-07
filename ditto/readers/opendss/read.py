@@ -560,19 +560,6 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in lines.items():
 
             api_line = Line(model)
-            api_line.name = None
-            api_line.nominal_voltage = None #Not mapped
-            api_line.line_type = None #Not mapped
-            api_line.length = None
-            api_line.from_element = None
-            api_line.to_element = None
-            api_line.is_fuse = None #Not mapped
-            api_line.is_banked = None #Not mapped
-            api_line.is_switch = None
-            api_line.faultrate = None
-            api_line.positions = None #Not mapped
-            api_line.impedance_matrix = None
-            api_line.capacitance_matrix = None
 
             #Name
             try:
@@ -771,9 +758,6 @@ Responsible for calling the sub-parsers and logging progress.
                 N_phases = 3
                 pass
 
-            #if N_phases!=len(phases_bus1) or N_phases!=len(phases_bus2):
-            #    self.logger.warning('N_phases and the number of phases do not match for line {name}'.format(name=name))
-
             #Try to get the geometry code if it exists
             try:
                 line_geometry_code = data['geometry']
@@ -805,16 +789,6 @@ Responsible for calling the sub-parsers and logging progress.
             for p in range(N_phases + 1):
 
                 wires.append(Wire(model))
-                #Initialize everything to Nones and modify if possible
-                wires[p].phase = None
-                wires[p].nameclass = None
-                wires[p].X = None
-                wires[p].Y = None
-                wires[p].diameter = None
-                wires[p].gmr = None
-                wires[p].ampacity = None
-                wires[p].ampacity_emergency = None
-                wires[p].resistance = None
 
                 if name in fuses_names:
                     wires[p].is_fuse = 1
@@ -835,12 +809,6 @@ Responsible for calling the sub-parsers and logging progress.
                     wires[p].is_recloser = 1
                 else:
                     wires[p].is_recloser = 0
-
-                wires[p].is_open = None #Not mapped
-                wires[p].fuse_limit = None #Not mapped
-                wires[p].concentric_neutral_gmr = None #Not mapped
-                wires[p].concentric_neutral_resistance = None #Not mapped
-                wires[p].concentric_neutral_diameter = None #Not mapped
 
                 #phase
                 try:
@@ -1050,19 +1018,6 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in transformers.items():
 
             api_transformer = PowerTransformer(model)
-            api_transformer.name = None
-            api_transformer.rated_power = None
-
-            #emergency_power removed from powerTransformer and added to Winding by Tarek
-            #api_transformer.emergency_power=None
-
-            api_transformer.install_type = None #Not mapped
-            api_transformer.noload_loss = None
-            api_transformer.phase_shift = None #Not mapped
-            api_transformer.from_element = None
-            api_transformer.to_element = None
-            api_transformer.reactances = None
-            api_transformer.position = None #Not mapped
 
             #Name
             try:
@@ -1074,20 +1029,6 @@ Responsible for calling the sub-parsers and logging progress.
                 api_transformer.name = trans_name
             except:
                 pass
-
-            #rated power
-            #rated_power removed from powerTransformer and added to Winding by Nicolas
-            #try:
-            #    api_transformer.rated_power=sum(map(lambda x:float(x), data['kVAs']))*10**3 #DiTTo in volt ampere
-            #except:
-            #    pass
-
-            #emergency power
-            #emergency_power removed from powerTransformer and added to Winding by Tarek
-            #try:
-            #    api_transformer.emergency_power=float(data['emerghkVA'])*10**3 #DiTTo in volt ampere
-            #except:
-            #    pass
 
             #Loadloss
             try:
@@ -1202,11 +1143,6 @@ Responsible for calling the sub-parsers and logging progress.
             for w in range(N_windings):
 
                 windings.append(Winding(model))
-                windings[w].connection_type = None
-                windings[w].nominal_voltage = None
-                windings[w].voltage_limit = None #Not mapped
-                windings[w].resistance = None
-                windings[w].reverse_resistance = None #Not mapped
 
                 #connection type
                 try:
@@ -1249,10 +1185,6 @@ Responsible for calling the sub-parsers and logging progress.
                 for p in range(N_phases):
 
                     phase_windings.append(PhaseWinding(model))
-                    phase_windings[p].tap_position = None
-                    phase_windings[p].phase = None
-                    phase_windings[p].compensator_r = None
-                    phase_windings[p].compensator_x = None
 
                     #tap position
                     if 'taps' in data:
@@ -1309,26 +1241,6 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in regulators.items():
 
             api_regulator = Regulator(model)
-            #Initialize the data as Nones and update with real values if possible
-            api_regulator.name = None
-            api_regulator.delay = None
-            api_regulator.highstep = None
-            api_regulator.lowstep = None #Not mapped
-            api_regulator.pt_ratio = None
-            api_regulator.ct_ratio = None #Not mapped
-            api_regulator.phase_shift = None #Not mapped
-            api_regulator.ltc = None #Not mapped
-            api_regulator.bandwidth = None
-            api_regulator.bandcenter = None
-            api_regulator.voltage_limit = None
-            api_regulator.connected_transformer = None
-            api_regulator.from_element = None
-            api_regulator.to_element = None
-            api_regulator.reactances = None
-            api_regulator.pt_phase = None
-            api_regulator.windings = None
-            api_regulator.winding = None
-            api_regulator.noload_loss = None
 
             #Name
             try:
@@ -1541,28 +1453,6 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in capacitors.items():
 
             api_capacitor = Capacitor(model)
-            #Initialize the data as Nones and update with real values if possible
-            api_capacitor.name = None
-            api_capacitor.nominal_voltage = None
-            api_capacitor.connection_type = None
-            api_capacitor.delay = None
-            api_capacitor.mode = None
-            api_capacitor.low = None
-            api_capacitor.high = None
-            api_capacitor.resistance = None
-            api_capacitor.resistance0 = None #Not mapped
-            api_capacitor.resistance = None
-            api_capacitor.reactance0 = None #Not mapped
-            api_capacitor.susceptance = None #Not mapped
-            api_capacitor.susceptance0 = None #Not mapped
-            api_capacitor.conductance = None #Not mapped
-            api_capacitor.conductance0 = None #Not mapped
-            api_capacitor.pt_ratio = None
-            api_capacitor.ct_ratio = None
-            api_capacitor.pt_phase = None
-            api_capacitor.connecting_element = None
-            api_capacitor.positions = None #Not mapped
-            api_capacitor.phase_capacitors = None
 
             #Name
             try:
@@ -1705,11 +1595,6 @@ Responsible for calling the sub-parsers and logging progress.
                 phase_capacitors = []
                 for p, pha in enumerate(phases):
                     phase_capacitors.append(PhaseCapacitor(model))
-                    phase_capacitors[p].phase = None
-                    phase_capacitors[p].var = None
-                    phase_capacitors[p].switch = None #Not mapped
-                    phase_capacitors[p].sections = None #Not mapped
-                    phase_capacitors[p].normalsections = None #Not mapped
 
                     #phase
                     if api_capacitor.pt_phase is not None and api_capacitor.pt_phase == self.phase_mapping(pha):
@@ -1757,21 +1642,6 @@ Responsible for calling the sub-parsers and logging progress.
         for name, data in loads.items():
 
             api_load = Load(model)
-            api_load.name = None
-            api_load.nominal_voltage = None
-            api_load.connection_type = None
-            api_load.vmin = None
-            api_load.vmax = None
-            api_load.phase_loads = None
-            api_load.positions = None #Not mapped
-            api_load.connecting_element = None
-            api_load.rooftop_area = None #Not mapped
-            api_load.peak_p = None #Not mapped
-            api_load.peak_q = None #Not mapped
-            api_load.peak_coincident_p = None #Not mapped
-            api_load.peak_coincident_q = None #Not mapped
-            api_load.yearly_energy = None #Not mapped
-            api_load.num_levels = None #Not mapped
 
             #Name
             try:
@@ -1909,15 +1779,6 @@ Responsible for calling the sub-parsers and logging progress.
 
                 _phase_loads.append(PhaseLoad(model))
                 _phase_loads[i].phase = self.phase_mapping(p)
-                _phase_loads[i].p = None
-                _phase_loads[i].q = None
-                _phase_loads[i].use_zip = None
-                _phase_loads[i].ppercentcurrent = None
-                _phase_loads[i].qpercentcurrent = None
-                _phase_loads[i].ppercentpower = None
-                _phase_loads[i].qpercentpower = None
-                _phase_loads[i].ppercentimpedance = None
-                _phase_loads[i].qpercentimpedance = None
 
                 #Case one: KW and pf
                 if kW is not None and pf is not None:
