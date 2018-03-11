@@ -16,6 +16,7 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 
+logger = logging.getLogger(__name__)
 
 class writer:
 
@@ -92,63 +93,63 @@ class writer:
 
         #Write the modules
         self.logger.info("Writing the Module...")
-        if self.verbose: print("Writing the Module...")
+        if self.verbose: logger.debug("Writing the Module...")
         fp.write('module powerflow{\n    solver_method NR;\n    NR_iteration_limit 50;\n};\n\n')
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write the nodes
         self.logger.info("Writing the Nodes...")
-        if self.verbose: print("Writing the Nodes...")
+        if self.verbose: logger.debug("Writing the Nodes...")
         s = self.write_nodes(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write the capacitors
         self.logger.info("Writing the Capacitors...")
-        if self.verbose: print("Writing the Capacitors...")
+        if self.verbose: logger.debug("Writing the Capacitors...")
         s = self.write_capacitors(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write the loads
         self.logger.info("Writing the Loads...")
-        if self.verbose: print("Writing the Loads...")
+        if self.verbose: logger.debug("Writing the Loads...")
         s = self.write_loads(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write transformer configurations
         self.logger.info("Writing the Transformer Configurations...")
-        if self.verbose: print("Writing the Transformer Configurations...")
+        if self.verbose: logger.debug("Writing the Transformer Configurations...")
         s = self.write_transformer_configurations(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write transformers
         self.logger.info("Writing the Transformers...")
-        if self.verbose: print("Writing the Transformers...")
+        if self.verbose: logger.debug("Writing the Transformers...")
         s = self.write_transformers(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write regulator configurations
         self.logger.info("Writing the Regulator Configurations...")
-        if self.verbose: print("Writing the Regulator Configurations...")
+        if self.verbose: logger.debug("Writing the Regulator Configurations...")
         s = self.write_regulator_configurations(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write regulators
         self.logger.info("Writing the Regulators...")
-        if self.verbose: print("Writing the Regulators...")
+        if self.verbose: logger.debug("Writing the Regulators...")
         s = self.write_regulators(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write line configurations
         self.logger.info("Writing the Line Configurations...")
-        if self.verbose: print("Writing the Line Configurations...")
+        if self.verbose: logger.debug("Writing the Line Configurations...")
         s = self.write_line_configurations(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
         #Write lines
         self.logger.info("Writing the Lines...")
-        if self.verbose: print("Writing the Lines...")
+        if self.verbose: logger.debug("Writing the Lines...")
         s = self.write_lines(model, fp)
-        if self.verbose: print("Succesful!")
+        if self.verbose: logger.debug("Succesful!")
 
     def write_nodes(self, model, fp, sourcebus='sourcebus'):
         ''' Write the Nodes into the existing file.
@@ -221,7 +222,7 @@ class writer:
                     for j in i.phase_capacitors:
                         if hasattr(j, 'phase') and j.phase is not None:
                             phases = phases + j.phase
-                            print(j.var)
+                            logger.debug(j.var)
                             if hasattr(j, 'var') and j.var is not None:
                                 fp.write('    capacitor_{phase} {var};\n'.format(phase=j.phase, var=j.var / 1000000.0))
                             if hasattr(j, 'switch') and j.var is not None:
@@ -234,7 +235,7 @@ class writer:
                         fp.write('    phases {ps};\n'.format(ps=phases))
 
                 else:
-                    print('Warning - No phases provided for the Capacitor. No vars will be supplied')
+                    logger.debug('Warning - No phases provided for the Capacitor. No vars will be supplied')
                 fp.write('};\n\n')
 
     def write_loads(self, model, fp):
@@ -304,7 +305,7 @@ class writer:
                 if hasattr(i, 'windings') and i.windings is not None and len(i.windings) > 1:
                     winding1 = i.windings[0] #Assume winding1 is the primary and winding2 is the secondary unless otherwise stated
                     winding2 = i.windings[1]
-                    print(winding1.nominal_voltage, winding2.nominal_voltage)
+                    logger.debug(winding1.nominal_voltage, winding2.nominal_voltage)
                     if len(i.windings) == 3:
                         dic['connect_type'] = 'SINGLE_PHASE_CENTER_TAPPED'
 
@@ -347,7 +348,7 @@ class writer:
 
                     n_windings = len(i.windings)
                 else:
-                    print('Warning - No windings included in the transformer')
+                    logger.debug('Warning - No windings included in the transformer')
 
                 if hasattr(i, 'reactances') and i.reactances is not None:
                     if len(i.reactances) == 1 and n_windings == 2:
@@ -367,7 +368,7 @@ class writer:
                 dic_set = frozenset(dic_set)
 
                 if dic_set in self.transformer_configurations:
-                    print(i.name)
+                    logger.debug(i.name)
                     self.transformer_configurations_name[i.name] = self.transformer_configurations[dic_set]
                     continue
                 self.transformer_configurations[dic_set] = 'transformer_config_{num}'.format(num=configuration_count)
@@ -491,7 +492,7 @@ class writer:
                                         self.regulator_phases[dic_set]['compensator_r_setting_{phase}'.format(phase=pw.phase)] = pw.compensator_r
 
                 if dic_set in self.regulator_configurations:
-                    print(i.name)
+                    logger.debug(i.name)
                     self.regulator_configurations_name[i.name] = self.regulator_configurations[dic_set]
                     continue
                 self.regulator_configurations[dic_set] = 'regulator_config_{num}'.format(num=configuration_count)
@@ -504,7 +505,7 @@ class writer:
             for j in dic:
                 fp.write('    {key} {value};\n'.format(key=j[0], value=j[1]))
             for j in self.regulator_phases[dic]:
-                print(j)
+                logger.debug(j)
                 fp.write('    {key} {value};\n'.format(key=j, value=self.regulator_phases[dic][j]))
             fp.write('};\n\n')
 
@@ -568,14 +569,14 @@ class writer:
                     phases.sort()
                     if hasattr(i, 'impedance_matrix') and i.impedance_matrix is not None:
                         lc = i.impedance_matrix
-                        #print(i.name,i.from_element, i.to_element)
-                        #print(phases)
-                        #print(lc)
+                        #logger.debug(i.name,i.from_element, i.to_element)
+                        #logger.debug(phases)
+                        #logger.debug(lc)
                         if (len(phases) != len(lc)):
-                            print('Warning - impedance matrix size different from number of phases for line {ln}'.format(ln=i.name))
-                            print(i.name, i.from_element, i.to_element)
-                            print(phases)
-                            print(lc)
+                            logger.debug('Warning - impedance matrix size different from number of phases for line {ln}'.format(ln=i.name))
+                            logger.debug(i.name, i.from_element, i.to_element)
+                            logger.debug(phases)
+                            logger.debug(lc)
                         for j_cnt in range(len(phases)): # For 3x3 matrices or 2x2 secondary matrices
                             for k_cnt in range(len(phases)):
                                 j_val = phases[j_cnt]

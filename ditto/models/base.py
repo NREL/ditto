@@ -26,8 +26,8 @@ class DiTToHasTraits(T.HasTraits):
             name = self.name
             if name in model.model_names:
                 warnings.warn("Duplicate name %s being set. Object overwritten." % name)
-                print("Duplicate name %s being set. Object overwritten." % name)
-                print(model.model_names[name], self)
+                logger.debug("Duplicate name %s being set. Object overwritten." % name)
+                logger.debug(model.model_names[name], self)
             model.model_names[name] = self
         except AttributeError:
             pass

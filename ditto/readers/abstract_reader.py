@@ -445,42 +445,49 @@ class abstract_reader:
             self.verbose = False
 
         #Parse the nodes
-        if self.verbose: print('Parsing the nodes...')
-        self.logger.info('Parsing the nodes...')
+        if self.verbose:
+            self.logger.info('Parsing the nodes...')
         s = self.parse_nodes(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1:
+            self.logger.info('Succesful!')
 
         #Parse the lines
-        if self.verbose: print('Parsing the lines...')
-        self.logger.info('Parsing the lines...')
+        if self.verbose:
+            self.logger.info('Parsing the lines...')
         s = self.parse_lines(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1:
+            self.logger.info('Succesful!')
 
         #Parse the transformers
-        if self.verbose: print('Parsing the transformers...')
-        self.logger.info('Parsing the transformers...')
+        if self.verbose:
+            self.logger.info('Parsing the transformers...')
         s = self.parse_transformers(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1:
+            self.logger.info('Succesful!')
 
         #Parse Loads
-        if self.verbose: print('Parsing the loads...')
-        self.logger.info('Parsing the loads...')
+        if self.verbose:
+            self.logger.info('Parsing the loads...')
         s = self.parse_loads(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1:
+            self.logger.info('Succesful!')
 
         #Parse regulators
-        if self.verbose: print('Parsing the regulators...')
-        self.logger.info('Parsing the regulators...')
+        if self.verbose:
+            self.logger.info('Parsing the regulators...')
         s = self.parse_regulators(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1:
+            self.logger.info('Succesful!')
 
         #Parse capacitors
-        if self.verbose: print('Parsing the capacitors...')
-        self.logger.info('Parsing the capacitors...')
+        if self.verbose:
+            self.logger.info('Parsing the capacitors...')
         s = self.parse_capacitors(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1:
+            self.logger.info('Succesful!')
 
-        if self.verbose: print('Parsing done.')
+        if self.verbose:
+            self.logger.info('Parsing done.')
 
         return 1
 

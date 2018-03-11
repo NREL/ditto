@@ -6,6 +6,7 @@ Empty cells are left as None
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import math
 import sys
 import os
@@ -32,6 +33,8 @@ from ditto.formats.gridlabd import gridlabd
 from ditto.formats.gridlabd import base
 from ditto.models.base import Unicode
 
+logger = logging.getLogger(__name__)
+
 class reader:
     class_list = set(
         [
@@ -44,7 +47,7 @@ class reader:
         dataframe = pd.read_csv(input_file)
         for row_idx in range(dataframe.shape[0]):
             if row_idx % 100 == 0:
-                print(row_idx)
+                logger.debug(row_idx)
             # TODO add tracking for each column so that we don't have different objects being created for the same thing (which is what's happening now)
             # Iterate through all the columns first to build the required data structure to store the info. Each row should be completely different though
 

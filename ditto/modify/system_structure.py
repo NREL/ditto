@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
+
 import networkx as nx
 import numpy as np
 import copy
@@ -17,6 +19,7 @@ from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.modify.modify import Modifier
 from ditto.network.network import Network
 
+logger = logging.getLogger(__name__)
 
 class system_structure_modifier(Modifier):
     '''This class implements all methods modifying the topology of a DiTTo model.
@@ -252,7 +255,7 @@ Each object has an attribute 'substation_name' which is then set to the name of 
                     skip = False
                     for down_elt in downstream_elts:
                         if hasattr(down_elt, 'is_substation') and down_elt.is_substation == 1:
-                            print('Info: substation {a} found downstream of substation {b}'.format(b=elt.name, a=down_elt.name))
+                            logger.debug('Info: substation {a} found downstream of substation {b}'.format(b=elt.name, a=down_elt.name))
                             skip = True
                             break
                     #If no substation was found downstream, then set the substation_name and feeder_name attributes of the objects
@@ -288,11 +291,11 @@ If the cut was done properly, we shouldn't have elements in multiple feeders.
 '''
         #Number of feeders
         N_feeder = len(self._list_of_feeder_objects)
-        print('Number of feeders defined = {}'.format(N_feeder))
+        logger.debug('Number of feeders defined = {}'.format(N_feeder))
 
         #Size distribution
         feeder_sizes = list(map(len, self._list_of_feeder_objects))
-        print('Sizes of the feeders = {}'.format(feeder_sizes))
+        logger.debug('Sizes of the feeders = {}'.format(feeder_sizes))
 
         #Intersections (should be empty...)
         for i, f1 in enumerate(self._list_of_feeder_objects):
@@ -302,9 +305,9 @@ If the cut was done properly, we shouldn't have elements in multiple feeders.
                     f2_set = set(f2)
                     intersection = f1_set.intersection(f2_set)
                     if len(intersection) != 0:
-                        print('=' * 40)
-                        print('Feeder {n} and feeder {m} intersect:'.format(n=i, m=j))
-                        print(intersection)
+                        logger.debug('=' * 40)
+                        logger.debug('Feeder {n} and feeder {m} intersect:'.format(n=i, m=j))
+                        logger.debug(intersection)
 
     def set_nominal_voltages(self):
         '''This function does the exact same thing as _set_nominal_voltages.

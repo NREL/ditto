@@ -3,9 +3,12 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import numpy as np
 import pandas as pd
 import argparse
+
+logger = logging.getLogger(__name__)
 
 
 def rms(df1, df2, key):
@@ -69,11 +72,11 @@ For now, this only computes the root mean square error for each phase (in p.u).
 
     #RMS
     for p, k in zip(['A', 'B', 'C'], [' pu1', ' pu2', ' pu3']):
-        print('Phase {p} : rms={r}'.format(p=p, r=rms(df1, df2, k)))
+        logger.debug('Phase {p} : rms={r}'.format(p=p, r=rms(df1, df2, k)))
 
     #Absolute
     for p, k in zip(['A', 'B', 'C'], [' pu1', ' pu2', ' pu3']):
-        print('Phase {p} : |error|={r}'.format(p=p, r=absolute(df1, df2, k)))
+        logger.debug('Phase {p} : |error|={r}'.format(p=p, r=absolute(df1, df2, k)))
 
 
 if __name__ == '__main__':

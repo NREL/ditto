@@ -1,4 +1,5 @@
 
+import logging
 import numpy as np
 import math
 import cmath
@@ -23,6 +24,7 @@ from ditto.models.phase_winding import PhaseWinding
 
 from ditto.models.base import Unicode
 
+logger = logging.getLogger(__name__)
 
 class reader(abstract_reader):
     '''CYME-->DiTTo Reader class
@@ -700,9 +702,7 @@ The function returns a list of dictionaries, where each dictionary contains the 
             self.verbose=False
 
         if self.verbose:
-            print('*'*40)
-            print('Parsing the header...')
-        self.logger.info('Parsing the header...')
+            logger.info('Parsing the header...')
 
         self.parse_header()
 
@@ -737,22 +737,22 @@ The user is then responsible to check the differences betweeen the two versions.
                 except:
                     pass
                 if cyme_version is not None:
-                    print('---| Cyme_version={v} |---'.format(v=cyme_version))
+                    logger.info('---| Cyme_version={v} |---'.format(v=cyme_version))
                     if '.' in cyme_version:
                         try:
                             a,b=cyme_version.split('.')
                         except:
                             pass
                         if a!=8 and b!=0:
-                            print('Warning. The current CYME--->DiTTo reader was developed with documentation of CYME 8.0. Your version is {}. You might want to check the differences between the two.'.format(cyme_version))
+                            logger.warning('Warning. The current CYME--->DiTTo reader was developed with documentation of CYME 8.0. Your version is {}. You might want to check the differences between the two.'.format(cyme_version))
 
             if '[si]' in line.lower():
                 self.use_SI=True
-                print('Unit system used = S.I')
+                logger.debug('Unit system used = S.I')
 
             if '[imperial]' in line.lower():
                 self.use_SI=False
-                print('Unit system used = Imperial')
+                logger.debug('Unit system used = Imperial')
 
         self.cyme_version=cyme_version
 
@@ -762,9 +762,7 @@ The user is then responsible to check the differences betweeen the two versions.
 
 
     def parse_sources(self, model):
-        '''
 
-'''
         #Open the network file
         self.get_file_content('network')
 
@@ -1671,7 +1669,7 @@ section_1_feeder_2,node_1,node_2,ABC
 
             if line_data is None:
                 if not 'phase' in settings.keys():
-                    print('WARNING:: Skipping Line {} !'.format(sectionID))
+                    logger.warning('WARNING:: Skipping Line {} !'.format(sectionID))
                 continue
             else:
                 impedance_matrix=None
@@ -1881,7 +1879,7 @@ section_1_feeder_2,node_1,node_2,ABC
                                 pos[-1][1]=float(spacing_data['posofneutralcond_n2_y'])
                             except:
                                 pass
-                        
+
 
                         valid_cond=[]
                         ph_list=['a','b','c','n1','n2']
@@ -2973,15 +2971,8 @@ The parser should create the transformers and create separate regulator objects 
 
         return 1
 
-
-
-
-
-
     def parse_loads(self, model):
-        '''Parse the loads from CYME to DiTTo.
-
-'''
+        '''Parse the loads from CYME to DiTTo.'''
         #Instanciate the list in which we store the DiTTo load objects
         self._loads={}
 
@@ -3087,7 +3078,7 @@ The parser should create the transformers and create separate regulator objects 
                     try:
                         p,q=float(settings['value1']), float(settings['value2'])
                     except:
-                        print('WARNING:: Skipping load on section {}'.format(sectionID))
+                        logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
                         continue
                 elif value_type==1: #KVA and PF are given
                     try:
@@ -3097,7 +3088,7 @@ The parser should create the transformers and create separate regulator objects 
                         p=kva*PF
                         q=math.sqrt(kva**2-p**2)
                     except:
-                        print('WARNING:: Skipping load on section {}'.format(sectionID))
+                        logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
                         continue
                 elif value_type==2: #P and PF are given
                     #try:
@@ -3108,14 +3099,14 @@ The parser should create the transformers and create separate regulator objects 
                         PF/=100.0
                         q=p*math.sqrt((1-PF**2)/PF**2)
                     else:
-                        print('problem with PF')
-                        print(PF)
+                        logger.warning('problem with PF')
+                        logger.warning(PF)
                     #except:
-                    #print('WARNING:: Skipping load on section {}'.format(sectionID))
+                    #logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
                     #continue
                 elif value_type==3: #AMP and PF are given
                     #TODO
-                    print('WARNING:: Skipping load on section {}'.format(sectionID))
+                    logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
                     continue
 
                 if p>=0 or q>=0:
