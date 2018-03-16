@@ -154,8 +154,16 @@ class Network:
                     if (i.connecting_element, i.name) in graph_edges:
                         for attr in tuple(set(dir(i)) - set(dir(DiTToHasTraits))): #only set attributes from the subclass, not the base class
                             if attr[0] != '_':
-                                self.graph[i.connecting_element][i.name][attr] = getattr(i, attr)
-                                self.digraph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                if self.graph.has_edge(i.connecting_element,i.name):
+                                    self.graph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                else:
+                                    self.graph.add_edge(i.connecting_element,i.name,length=0)
+                                    self.graph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                if self.digraph.has_edge(i.connecting_element,i.name):
+                                    self.digraph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                else:
+                                    self.digraph.add_edge(i.connecting_element,i.name,length=0)
+                                    self.digraph[i.connecting_element][i.name][attr] = getattr(i, attr)
 
         self.attributes_set = True
 
