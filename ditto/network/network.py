@@ -17,6 +17,19 @@ class Network:
         self.is_built = False #Flag that indicates whether the Network has been built or not.
         self.attributes_set = False #Flag that indicates whether the attributes have been set or not.
 
+    def provide_graphs(self,graph,digraph):
+        '''
+            This functions sets the graph and digraph of the Network class with direct user inputs.
+            This can be useful if the user has the graphs stored and does not want to re-compute them.
+            It can also be useful when work has to be done to get connected networks. It might be easier to
+            perform the work beforehand, and create a Network instance for each connected component.
+
+            .. warning: The method does not do any safety check yet...
+        '''
+        self.graph=graph
+        self.digraph=digraph
+        self.is_built=True
+
     # Only builds connected nodes
     #
     #Nicolas modification: Added source in the args for bfs
