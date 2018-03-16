@@ -810,7 +810,7 @@ The user is then responsible to check the differences betweeen the two versions.
                 except:
                     pass
 
-                api_source.name=_from
+                api_source.name=_from+'_src'
 
                 try:
                     if 'desiredvoltage' in sdata:
@@ -1693,7 +1693,6 @@ section_1_feeder_2,node_1,node_2,ABC
                         setattr(api_line,k,v)
                     continue
 
-
             line_data=None
             #If we have a linecableid for the current section
             if 'linecableid' in settings:
@@ -1945,7 +1944,6 @@ section_1_feeder_2,node_1,node_2,ABC
                                 pos[-1][1]=float(spacing_data['posofneutralcond_n2_y'])
                             except:
                                 pass
-                        
 
                         valid_cond=[]
                         ph_list=['a','b','c','n1','n2']
