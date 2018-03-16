@@ -998,6 +998,11 @@ The user is then responsible to check the differences betweeen the two versions.
         except:
             pass
 
+        try:
+            api_wire.nameclass=conductor_data['id']
+        except:
+            pass
+
         #Set the switch and fuse flags
         api_wire.is_switch=is_switch
         api_wire.is_fuse=is_fuse
@@ -2573,10 +2578,10 @@ section_1_feeder_2,node_1,node_2,ABC
                 raise ValueError('Unable to instanciate PowerTransformer DiTTo object.')
 
             #Set the name
-            #try:
-            api_transformer.name='Trans_'+settings['sectionid']
-            #except:
-            #pass
+            try:
+                api_transformer.name='Trans_'+settings['sectionid']
+            except:
+                pass
 
             api_transformer.feeder_name=self.section_feeder_mapping[sectionID]
 
@@ -2745,10 +2750,10 @@ section_1_feeder_2,node_1,node_2,ABC
                             raise ValueError('Unable to instanciate PhaseWinding DiTTo object.')
 
                         #Set the phase
-                        #try:
-                        api_phase_winding.phase=p
-                        #except:
-                        #pass
+                        try:
+                            api_phase_winding.phase=p
+                        except:
+                            pass
 
                         #Add the phase winding object to the winding
                         api_winding.phase_windings.append(api_phase_winding)
@@ -3182,19 +3187,19 @@ The parser should create the transformers and create separate regulator objects 
                         print('WARNING:: Skipping load on section {}'.format(sectionID))
                         continue
                 elif value_type==2: #P and PF are given
-                    #try:
-                    p,PF=float(settings['value1']), float(settings['value2'])
-                    if 0<=PF<=1:
-                        q=p*math.sqrt((1-PF**2)/PF**2)
-                    elif 1<PF<=100:
-                        PF/=100.0
-                        q=p*math.sqrt((1-PF**2)/PF**2)
-                    else:
-                        print('problem with PF')
-                        print(PF)
-                    #except:
-                    #print('WARNING:: Skipping load on section {}'.format(sectionID))
-                    #continue
+                    try:
+                        p,PF=float(settings['value1']), float(settings['value2'])
+                        if 0<=PF<=1:
+                            q=p*math.sqrt((1-PF**2)/PF**2)
+                        elif 1<PF<=100:
+                            PF/=100.0
+                            q=p*math.sqrt((1-PF**2)/PF**2)
+                        else:
+                            print('problem with PF')
+                            print(PF)
+                    except:
+                        print('WARNING:: Skipping load on section {}'.format(sectionID))
+                        continue
                 elif value_type==3: #AMP and PF are given
                     #TODO
                     print('WARNING:: Skipping load on section {}'.format(sectionID))
