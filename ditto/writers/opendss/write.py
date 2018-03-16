@@ -20,11 +20,13 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.timeseries import Timeseries
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
-from ditto.models.storage import Storage 
+from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 from ditto.models.power_source import PowerSource
 
 from ditto.writers.abstract_writer import abstract_writer
+
+logger = logging.getLogger(__name__)
 
 
 class Writer(abstract_writer):
@@ -123,85 +125,85 @@ author: Nicolas Gensollen. October 2017.
 
         #Write the bus coordinates
         self.logger.info('Writing the bus coordinates...')
-        if self.verbose: print('Writing the bus coordinates...')
+        if self.verbose: logger.debug('Writing the bus coordinates...')
         s = self.write_bus_coordinates(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the transformers
         self.logger.info('Writing the transformers...')
-        if self.verbose: print('Writing the transformers...')
+        if self.verbose: logger.debug('Writing the transformers...')
         s = self.write_transformers(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the regulators
         self.logger.info('Writing the regulators...')
-        if self.verbose: print('Writing the regulators...')
+        if self.verbose: logger.debug('Writing the regulators...')
         s = self.write_regulators(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the capacitors
         self.logger.info('Writing the capacitors...')
-        if self.verbose: print('Writing the capacitors...')
+        if self.verbose: logger.debug('Writing the capacitors...')
         s = self.write_capacitors(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #write the timeseries
         self.logger.info('Writing the timeseries...')
-        if self.verbose: print('Writing the timeseries...')
+        if self.verbose: logger.debug('Writing the timeseries...')
         s = self.write_timeseries(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #write the loads
         self.logger.info('Writing the loads...')
-        if self.verbose: print('Writing the loads...')
+        if self.verbose: logger.debug('Writing the loads...')
         s = self.write_loads(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #If we decided to use linecodes, write the linecodes
         if self.linecodes_flag:
             self.logger.info('Writting the linecodes...')
-            if self.verbose: print('Writting the linecodes...')
+            if self.verbose: logger.debug('Writting the linecodes...')
             s = self.write_linecodes(model)
-            if self.verbose and s != -1: print('Succesful!')
+            if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the WireData
         self.logger.info('Writting the WireData...')
-        if self.verbose: print('Writting the WireData...')
+        if self.verbose: logger.debug('Writting the WireData...')
         s = self.write_wiredata(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the lineGeometries
         self.logger.info('Writting the linegeometries...')
-        if self.verbose: print('Writting the linegeometries...')
+        if self.verbose: logger.debug('Writting the linegeometries...')
         s = self.write_linegeometry(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the lines
         self.logger.info('Writting the lines...')
-        if self.verbose: print('Writting the lines...')
+        if self.verbose: logger.debug('Writting the lines...')
         s = self.write_lines(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the storage elements
         self.logger.info('Writting the storage devices...')
-        if self.verbose: print('Writting the storage devices...')
+        if self.verbose: logger.debug('Writting the storage devices...')
         s = self.write_storages(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the PV
         self.logger.info('Writting the PVs...')
-        if self.verbose: print('Writting the PVs...')
+        if self.verbose: logger.debug('Writting the PVs...')
         s = self.write_PVs(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the Master file
         self.logger.info('Writting the master file...')
-        if self.verbose: print('Writting the master file...')
+        if self.verbose: logger.debug('Writting the master file...')
         s = self.write_master_file(model)
-        if self.verbose and s != -1: print('Succesful!')
+        if self.verbose and s != -1: logger.debug('Succesful!')
 
         self.logger.info('Done.')
-        if self.verbose: print('Writting done.')
+        if self.verbose: logger.debug('Writting done.')
 
         return 1
 
@@ -1685,12 +1687,12 @@ Multiple lines can share the same parameters (like length, resistance matrix,...
                         fp.write(' basekV={volt}'.format(volt=obj.nominal_voltage*10**-3)) #DiTTo in volts
 
                     if hasattr(obj, 'positive_sequence_impedance') and obj.positive_sequence_impedance is not None:
-                        R1=obj.positive_sequence_impedance.real 
+                        R1=obj.positive_sequence_impedance.real
                         X1=obj.positive_sequence_impedance.imag
                         fp.write(' R1={R1} X1={X1}'.format(R1=R1,X1=X1))
 
                     if hasattr(obj, 'zero_sequence_impedance') and obj.zero_sequence_impedance is not None:
-                        R0=obj.zero_sequence_impedance.real 
+                        R0=obj.zero_sequence_impedance.real
                         X0=obj.zero_sequence_impedance.imag
                         fp.write(' R0={R0} X0={X0}'.format(R0=R0,X0=X0))
 

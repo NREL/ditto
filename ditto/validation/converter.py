@@ -4,12 +4,14 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
 #Imports
+import logging
 import importlib
 import os
 import datetime
 import traceback
 from ditto.store import Store
 
+logger = logging.getLogger(__name__)
 
 class converter:
     '''Converter class. Use to convert from one format to another through DiTTo.
@@ -230,9 +232,9 @@ If folders are missing, they are created.
         for feeder in self.feeder_list:
 
             if self.verbose:
-                print('*' * 60)
-                print(feeder)
-                print('*' * 60)
+                logger.debug('*' * 60)
+                logger.debug(feeder)
+                logger.debug('*' * 60)
 
             if feeder in os.listdir('./inputs/{format}/'.format(format=self._from)):
 
@@ -249,5 +251,5 @@ If folders are missing, they are created.
                 self.writer.write(self.m, verbose=self.verbose)
 
             else:
-                print('Input files not available for feeder {feeder} and format {format}'.format(feeder=feeder, format=self._from))
-                print('Skip...')
+                logger.debug('Input files not available for feeder {feeder} and format {format}'.format(feeder=feeder, format=self._from))
+                logger.debug('Skip...')

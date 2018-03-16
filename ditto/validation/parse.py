@@ -3,10 +3,12 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 from ditto.validation.converter import converter
 import argparse
 import traceback
 
+logger = logging.getLogger(__name__)
 
 def main():
     '''Run all requested test scripts in the validation/scripts folder.
@@ -71,31 +73,31 @@ author: Nicolas Gensollen. October 2017.
     for _from in format_from:
         for _to in format_to:
 
-            print('>>>-- FROM: {}'.format(_from))
-            print('>>>-- TO: {}'.format(_to))
+            logger.debug('>>>-- FROM: {}'.format(_from))
+            logger.debug('>>>-- TO: {}'.format(_to))
 
             _converter = converter(feeder_list, _from, _to)
 
             try:
                 _converter.convert()
-                print('SUCCESS..!!')
+                logger.debug('SUCCESS..!!')
                 success.append('{fromm}_to_{too}'.format(fromm=_from, too=_to))
             except:
-                print('FAIL..!!')
+                logger.debug('FAIL..!!')
                 failures.append('{fromm}_to_{too}'.format(fromm=_from, too=_to))
                 traceback.print_exc()
                 pass
 
     #Print summary of success and failures
-    print('=' * 60)
-    print('Success :')
+    logger.debug('=' * 60)
+    logger.debug('Success :')
     for s in success:
-        print(s)
-    print('=' * 60)
-    print('Failures :')
+        logger.debug(s)
+    logger.debug('=' * 60)
+    logger.debug('Failures :')
     for s in failures:
-        print(s)
-    print('=' * 60)
+        logger.debug(s)
+    logger.debug('=' * 60)
 
 
 if __name__ == '__main__':

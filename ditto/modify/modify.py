@@ -1,11 +1,13 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import os
 from ditto.models.base import DiTToHasTraits, Float, Complex, Unicode, Any, Int, List, observe, Instance
 
 from ditto.models.timeseries import Timeseries
 
+logger = logging.getLogger(__name__)
 
 class Modifier:
     """ Recursively delete an object from the model"""
@@ -19,7 +21,7 @@ class Modifier:
                 ) == 0 or attr == 'reactances' or attr == 'phases' or attr == 'impedance_matrix' or attr == 'capacitance_matrix': #Reactances (PowerTransformer) and phases (Node) are a special case of lists that aren't classes TODO: Add type checking rather than looking at the attributes
                     continue
                 for element in getattr(obj, attr):
-                    #print('attr',attr,element)
+                    #logger.debug('attr',attr,element)
                     self.delete_element(model, element)
         model.remove_element(obj) #TODO: Improve this so the data isn't stored in a list
         return model
@@ -148,8 +150,8 @@ class Modifier:
         for obj_name in model_2.model_names: # Iterate through all objects in model_2 which have a name
             if obj_name in model_1.model_names: # Find the corresponding object in model_1
                 if type(model_1.model_names[obj_name]) != type(model_2.model_names[obj_name]):
-                    print(type(model_1.model_names[obj_name]), type(model_2.model_names[obj_name]))
-                    print(obj_name)
+                    logger.debug(type(model_1.model_names[obj_name]), type(model_2.model_names[obj_name]))
+                    logger.debug(obj_name)
                     raise Exception("Object types do not match for models with the same object names")
 
                 obj_2 = model_2.model_names[obj_name]

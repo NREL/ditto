@@ -12,6 +12,7 @@ Developed based on EDD DEW Version V10.62.0
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import os
 import xlrd
 import math
@@ -31,6 +32,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.position import Position
 import numpy as np
 
+logger = logging.getLogger(__name__)
 
 class reader():
     def __init__(self, **kwargs):
@@ -267,7 +269,7 @@ class reader():
                                 row_wt1 = row_wt.split()
                                 try:
                                     xfrmcon = row_wt1[11][:-1]
-        #                            print(xfrmcon)
+        #                            logger.debug(xfrmcon)
                                 except AttributeError:
                                     pass
                                 try:
@@ -429,7 +431,7 @@ class reader():
                                             if ph1 == 'C':
                                                 tp = 2
                                             phase_windings[p].tap_position = float(row_pwg1[7 + tp][:-1])
-                                            #                                                print(float(row_pwg1[7+tp][:-1]))
+                                            #                                                logger.debug(float(row_pwg1[7+tp][:-1]))
                                             phase_windings[p].phase = ph1[p]
                                             phase_windings[p].compensator_r = float(row_pwg1[19][:-1])
                                             phase_windings[p].compensator_x = float(row_pwg1[20][:-1])
@@ -488,7 +490,7 @@ class reader():
                             reactance = 0.001
                         api_transformer.reactances = []
                         api_transformer.reactances.append(float(reactance)) #XHL
-        #                   print(reactance)
+        #                   logger.debug(reactance)
         #                    api_transformer.reactances.append(float(reactance*0.5))   #XLT
         #                    api_transformer.reactances.append(float(reactance*0.5))   #XHT
                     elif num_windings == 3:
@@ -690,7 +692,7 @@ class reader():
                 row_seq = all_rows[iter_seq]
                 while True:
                     iter_seq += 1
-                    #                        print(row_seq)
+                    #                        logger.debug(row_seq)
                     row_seq = all_rows[iter_seq]
                     if row_seq[:7] == '$CMPCHN':
                         row_seq = row_seq.strip()
@@ -718,7 +720,7 @@ class reader():
                             PH3 = 'C'
                         PH_SEQ = PH1 + PH2 + PH3
                         ph_w = PH_SEQ
-        #                    print(ph_w)
+        #                    logger.debug(ph_w)
                     if row_seq[:13] == '$CMP_NEWDATA1':
                         break
                 num_ph = len(ph_w)
@@ -774,7 +776,7 @@ class reader():
                                     wires[pw].nameclass = PTLINECOND_STDESC[int(row_wr1[5][:-1])]
                                     wires[pw].diameter = float(PTLINECOND_DRADCONDSUL[int(row_wr1[5][:-1])]) * 2
                                     wires[pw].gmr = float(PTLINECOND_DGMRSUL[int(row_wr1[5][:-1])])
-                                    #                                print(float(PTLINECOND_DGMRSUL[int(row_wr1[5][:-1])]))
+                                    #                                logger.debug(float(PTLINECOND_DGMRSUL[int(row_wr1[5][:-1])]))
                                     wires[pw].ampacity = float(PTLINECOND_DRATAMBTEMP1A[int(row_wr1[5][:-1])])
                                     wires[pw].ampacity_emergency = float(PTLINECOND_DRATAMBTEMP1A[int(row_wr1[5][:-1])])
                                     wires[pw].resistance = float(PTLINECOND_DROHMPRLUL[int(row_wr1[5][:-1])]) * float(row_wr1[13][:-1])
@@ -938,9 +940,9 @@ class reader():
                             row_frm3_ln = row_frm2_ln.split()
                             try:
                                 api_line.to_element = row_frm3_ln[1][1:-2]
-        #                            print('to')
-        #                            print(row_frm3_ln[1][1:-2])
-        #                            print('--------')
+        #                            logger.debug('to')
+        #                            logger.debug(row_frm3_ln[1][1:-2])
+        #                            logger.debug('--------')
                             except AttributeError:
                                 pass
                             break
@@ -1966,13 +1968,13 @@ class reader():
                     Yabc_red = Yabc
 
 
-#                    print(ph_w)
-#                    print(Yabc)
-#                    print('----------------------')
-#                    print(Yabc_red)
+#                    logger.debug(ph_w)
+#                    logger.debug(Yabc)
+#                    logger.debug('----------------------')
+#                    logger.debug(Yabc_red)
                 Yabc_red = Yabc_red * 1000 / (Cap_Freq.imag) #multiply 1000 to nF
-                #                    print('--------------')
-                #                    print(Yabc_red)
+                #                    logger.debug('--------------')
+                #                    logger.debug(Yabc_red)
                 if np.mean(Zabc_red.real) == 0.0 and np.mean(Zabc_red.imag) == 0.0 and np.mean(Yabc_red) == 0.0:
                     api_line.impedance_matrix = None
                     api_line.capacitance_matrix = None

@@ -4,6 +4,7 @@ from builtins import super, range, zip, round, map
 from datetime import datetime
 from datetime import timedelta
 from croniter import croniter
+import logging
 import numpy as np
 import math
 import sys
@@ -32,6 +33,7 @@ from ditto.formats.gridlabd import gridlabd
 from ditto.formats.gridlabd import base
 from ditto.models.base import Unicode
 
+logger = logging.getLogger(__name__)
 
 class reader:
 
@@ -86,7 +88,7 @@ class reader:
             n_entries = n_entries - 1
 
         if n_entries <= 0:
-            print("Warning: No elements included in spacing")
+            logger.debug("Warning: No elements included in spacing")
 
         if n_entries == 1:
             for w in conductors:
@@ -240,13 +242,13 @@ class reader:
                             0.00202237 * freq * (math.log(1 / wire_list[i].gmr) + 7.6786 + 0.5 * math.log(resistivity / freq))
                         )
                     else:
-                        print('Warning: resistance or GMR is missing from wire')
+                        logger.debug('Warning: resistance or GMR is missing from wire')
 
                     if wire_list[i].phase is not None:
                         index = wire_map[wire_list[i].phase]
                         matrix[index][index] = z / 1609.34
                     else:
-                        print('Warning: phase missing from wire')
+                        logger.debug('Warning: phase missing from wire')
 
                 else:
                     z = 0
@@ -261,7 +263,7 @@ class reader:
 
                     else:
                         #import pdb; pdb.set_trace()
-                        print('Warning phase missing from wire, or Insulation_thickness/diameter not set')
+                        logger.debug('Warning phase missing from wire, or Insulation_thickness/diameter not set')
 
         if kron_reduce:
             kron_matrix = [[0 for i in range(2)] for j in range(2)]
@@ -288,13 +290,13 @@ class reader:
                             0.00202237 * freq * (math.log(1 / wire_list[i].gmr) + 7.6786 + 0.5 * math.log(resistivity / freq))
                         )
                     else:
-                        print('Warning: resistance or GMR is missing from wire')
+                        logger.debug('Warning: resistance or GMR is missing from wire')
 
                     if wire_list[i].phase is not None:
                         index = wire_map[wire_list[i].phase]
                         matrix[index][index] = z
                     else:
-                        print('Warning: phase missing from wire')
+                        logger.debug('Warning: phase missing from wire')
 
                 else:
                     z = 0
@@ -306,14 +308,14 @@ class reader:
                         distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
                         z = complex(0.00158836 * freq, 0.00202237 * freq * (math.log(1 / distance) + 7.6786 + 0.5 * math.log(resistivity / freq)))
                     else:
-                        print('Warning X or Y values missing from wire')
+                        logger.debug('Warning X or Y values missing from wire')
                         #import pdb; pdb.set_trace()
                     if wire_list[i].phase is not None and wire_list[j].phase is not None:
                         index1 = wire_map[wire_list[i].phase]
                         index2 = wire_map[wire_list[j].phase]
                         matrix[index1][index2] = z # ohms per meter
                     else:
-                        print('Warning: phase missing from wire')
+                        logger.debug('Warning: phase missing from wire')
 
         if kron_reduce and has_neutral:
             kron_matrix = [[0 for i in range(3)] for j in range(3)]
@@ -409,7 +411,7 @@ class reader:
                                         self.all_gld_objects[curr_object['name']] = curr_object
 
                                     else:
-                                        print("Warning object missing a name")
+                                        logger.debug("Warning object missing a name")
                                     curr_object = None
                 if curr_schedule != None:
                     row = row.strip(';')
@@ -431,7 +433,7 @@ class reader:
                             curr_schedule = None
                             found_schedule = False
 
-        print(all_schedules)
+        logger.debug(all_schedules)
         for obj_name, obj in self.all_gld_objects.items():
             obj_type = type(obj).__name__
 
@@ -1538,7 +1540,7 @@ class reader:
                                 for j in range(i + 1, n_entries):
                                     if distances[i][j] != -1:
                                         heron_area = heron_area * (heron_s - distances[i][j])
-                            print(heron_area)
+                            logger.debug(heron_area)
                             heron_area = math.sqrt(heron_area)
                             height = heron_area * 2 / (max * 1.0)
                             for w in conductors:

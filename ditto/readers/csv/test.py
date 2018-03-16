@@ -1,20 +1,23 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 from read import Reader
 from ditto.store import Store
+
+logger = logging.getLogger(__name__)
 
 m = Store()
 reader = Reader()
 reader.parse(m, 'test_input.csv')
 for i in m.models:
-    print(i)
+    logger.debug(i)
 
 for obj_name in m.model_names:
-    print(obj_name)
+    logger.debug(obj_name)
 
 for i in m.model_names['load1'].traits():
-    #print(i,type(m.model_names['load1'].traits()[i]))
+    #logger.debug(i,type(m.model_names['load1'].traits()[i]))
     class_name = str(type(m.model_names['load1'].traits()[i])).strip("<>'").split('.')[-1]
     if class_name == 'List':
-        print(m.model_names['load1'].traits()[i]._trait.klass)
+        logger.debug(m.model_names['load1'].traits()[i]._trait.klass)

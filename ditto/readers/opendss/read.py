@@ -45,7 +45,7 @@ def timeit(method):
         result = method(*args, **kw)
         te = time.time()
 
-        print('%r (%r, %r) %2.2f sec' % \
+        logger.debug('%r (%r, %r) %2.2f sec' % \
               (method.__name__, args, kw, te-ts))
         return result
 
@@ -213,7 +213,7 @@ Responsible for calling the sub-parsers and logging progress.
             #self.logger.error('Trying to parse before building opendssdirect.')
             #return -1
         end = time.time()
-        print('Build OpenDSSdirect= {}'.format(end - start))
+        logger.debug('Build OpenDSSdirect= {}'.format(end - start))
 
         if 'feeder_file' in kwargs:
             self.feeder_file = kwargs['feeder_file']
@@ -561,7 +561,7 @@ Responsible for calling the sub-parsers and logging progress.
         lines = dss.utils.class_to_dataframe('Line')
 
         middle = time.time()
-        print('Line class to dataframe= {}'.format(middle - start))
+        logger.debug('Line class to dataframe= {}'.format(middle - start))
 
         N_lines = len(lines)
         self._lines = []
@@ -1013,19 +1013,19 @@ Responsible for calling the sub-parsers and logging progress.
             self._lines.append(api_line)
 
         end = time.time()
-        print('rest= {}'.format(end - middle))
+        logger.debug('rest= {}'.format(end - middle))
         return 1
 
     @timeit
     def parse_transformers(self, model):
         '''Transformer parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
 
-'''
         transformers = dss.utils.class_to_dataframe('transformer')
         self._transformers = []
 
@@ -1874,7 +1874,7 @@ Responsible for calling the sub-parsers and logging progress.
 
             #Name
             try:
-                api_storage.name=name 
+                api_storage.name=name
             except:
                 pass
 
