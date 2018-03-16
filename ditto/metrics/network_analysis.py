@@ -7,6 +7,7 @@ import networkx as nx
 import numpy as np
 import math
 import time
+import pandas as pd
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
