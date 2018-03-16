@@ -3,6 +3,7 @@ import numpy as np
 import math
 import cmath
 import os
+from functools import reduce
 
 #Ditto imports
 from ditto.readers.abstract_reader import abstract_reader
@@ -3032,7 +3033,8 @@ The parser should create the transformers and create separate regulator objects 
                                                  'loadphase':12,
                                                  'value1':13,
                                                  'value2':14,
-                                                 'connectedkva':15
+                                                 'connectedkva':15,
+                                                 'numberofcustomer':17
                                                  }
 
         mapp_customer_class={'id':0,
@@ -3084,7 +3086,7 @@ The parser should create the transformers and create separate regulator objects 
             #
             self.customer_loads.update( self.parser_helper(line,
                                                         ['customer_loads'],
-                                                        ['sectionid', 'devicenumber', 'loadtype', 'customernumber', 'customertype', 'loadmodelid', 'valuetype', 'loadphase', 'value1', 'value2', 'connectedkva'],
+                                                        ['sectionid', 'devicenumber', 'loadtype', 'customernumber', 'customertype', 'loadmodelid', 'valuetype', 'loadphase', 'value1', 'value2', 'connectedkva','numberofcustomer'],
                                                         mapp_customer_loads) )
 
             #########################################
@@ -3167,7 +3169,7 @@ The parser should create the transformers and create separate regulator objects 
                         if fusion:
                             api_load.name+='_'+reduce(lambda x,y:x+'_'+y, phases)
                         else:
-                            api_load.name=sectionID+'_'+reduce(lambda x,y:x+'_'+y, phases)
+                            api_load.name='Load_'+sectionID+'_'+reduce(lambda x,y:x+'_'+y, phases)
                     except:
                         pass
 
@@ -3190,6 +3192,9 @@ The parser should create the transformers and create separate regulator objects 
                         pass
 
                     api_load.feeder_name=self.section_feeder_mapping[sectionID]
+
+                    api_load.num_users=float(settings['numberofcustomer'])
+
 
                     for ph in phases:
                         try:
