@@ -70,6 +70,9 @@ class Line(DiTToHasTraits):
     #Modification: Nicolas (January 2018)
     is_breaker = Int(help='''This flag indicates whether or not the line is also a breaker''', default_value=None)
 
+    #Modification: Nicolas (March 2018)
+    is_sectionalizer = Int(help='''This flag indicates whether or not the line is also a sectionalizer''', default_value=None)
+
     def build(
         self,
         model,
