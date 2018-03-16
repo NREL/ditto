@@ -24,7 +24,7 @@ class Line(DiTToHasTraits):
     name = Unicode(help='''Name of the line object''')
     nominal_voltage = Float(help='''This parameter defines the base voltage of the wire.''', default_value=None)
     line_type = Unicode(help='''Whether the line is overhead or underground''', default_value='overhead')
-    length = Float(help='''This parameter is the length of the Line.''', default_value=None)
+    length = Float(help='''This parameter is the length of the Line.''', default_value=0)
     from_element = Any(help='''Name of the node which connects to the 'from' end of the line''', default_value=None)
     to_element = Any(help=''''Name of the node which connects to the 'to' end of the line''', default_value=None)
     is_fuse = Int(help='''This flag indicates whether or not the line is also a fuse''', default_value=None)
