@@ -184,7 +184,7 @@ Author: Nicolas Gensollen. October 2017
                                                  'unbalanced_line': '[LINE UNBALANCED]',
                                                  'spacing_table': '[SPACING TABLE FOR LINE]',
                                                  'conductor': '[CONDUCTOR]',
-                                                 'concentric_neutral_cable': '[CONCENTRIC NEUTRAL CABLE]',
+                                                 'concentric_neutral_cable': '[CABLE CONCENTRIC NEUTRAL]',
                                                  #CAPACITORS
                                                  'serie_capacitor_settings': '[SERIE CAPACITOR SETTING]',
                                                  'shunt_capacitor_settings': '[SHUNT CAPACITOR SETTING]',
