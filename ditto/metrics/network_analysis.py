@@ -105,19 +105,24 @@ class network_analyzer():
         #Store the source name as attribute
         self.source = source
 
-        #Build the Network
+        #Build the Network if required
         #
         #WARNING: Time consuming...
         #
-        self.G = Network()
-        self.G.build(self.model, source=self.source)
+        if compute_network:
+            self.G = Network()
+            self.G.build(self.model, source=self.source)
 
-        #Set the attributes in the graph
-        self.G.set_attributes(self.model)
+            #Set the attributes in the graph
+            self.G.set_attributes(self.model)
 
-        #Equipment types and names on the edges
-        self.edge_equipment = nx.get_edge_attributes(self.G.graph, 'equipment')
-        self.edge_equipment_name = nx.get_edge_attributes(self.G.graph, 'equipment_name')
+            #Equipment types and names on the edges
+            self.edge_equipment = nx.get_edge_attributes(self.G.graph, 'equipment')
+            self.edge_equipment_name = nx.get_edge_attributes(self.G.graph, 'equipment_name')
+        else:
+            self.G=None
+            self.edge_equipment=None
+            self.edge_equipment_name=None
 
         #IMPORTANT: the following two parameters define what is LV and what is MV.
         #- Object is LV if object.nominal_voltage<=LV_threshold
