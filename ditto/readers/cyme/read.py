@@ -174,6 +174,7 @@ Author: Nicolas Gensollen. October 2017
                                                  'overhead_byphase_settings': '[OVERHEAD BYPHASE SETTING]',
                                                  'underground_line_settings': '[UNDERGROUNDLINE SETTING]',
                                                  'switch_settings': '[SWITCH SETTING]',
+                                                 'sectionalizer_settings': '[SECTIONALIZER SETTING]',
                                                  'fuse_settings': '[FUSE SETTING]',
                                                  'recloser_settings': '[RECLOSER SETTING]',
                                                  'breaker_settings': '[BREAKER SETTING]',
@@ -1222,6 +1223,10 @@ section_1_feeder_2,node_1,node_2,ABC
                                  'eqid':2,
                                  'coordx':7,
                                  'coordy':8}
+        mapp_sectionalizer={'sectionid':0,
+                                 'eqid':2,
+                                 'coordx':7,
+                                 'coordy':8}
         mapp_line={'id':0,
                            'phasecondid':1,
                            'neutralcondid':2,
@@ -1383,6 +1388,18 @@ section_1_feeder_2,node_1,node_2,ABC
                                                   ['sectionid', 'coordx', 'coordy', 'eqid'],
                                                   mapp_switch,
                                                   {'type':'switch'}))
+
+            #########################################
+            #                                       #
+            #             SECTIONALIZER.            #
+            #                                       #
+            #########################################
+            #
+            self.settings=self.update_dict(self.settings, self.parser_helper(line,
+                                                  ['sectionalizer_settings'],
+                                                  ['sectionid', 'coordx', 'coordy', 'eqid'],
+                                                  mapp_sectionalizer,
+                                                  {'type':'sectionalizer'}))
 
             #########################################
             #                                       #
@@ -1578,6 +1595,8 @@ section_1_feeder_2,node_1,node_2,ABC
             new_line['is_fuse']=False
             new_line['is_recloser']=False
             new_line['is_breaker']=False
+            new_line['is_sectionalizer']=False
+
             if 'type' in settings:
 
                 #Overhead lines
@@ -1591,6 +1610,18 @@ section_1_feeder_2,node_1,node_2,ABC
                 #Switch
                 elif 'switch' in settings['type']:
                     new_line['is_switch']=True
+                    new_line['wires']=[]
+                    for p in phases+['N']:
+                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        new_line['wires'].append(api_wire)
+                    api_line=Line(model)
+                    for k,v in new_line.items():
+                        setattr(api_line,k,v)
+                    continue
+
+                #Sectionalizer
+                elif 'sectionalizer' in settings['type']:
+                    new_line['is_sectionalizer']=True
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)
