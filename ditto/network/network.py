@@ -20,6 +20,19 @@ class Network:
         self.is_built = False #Flag that indicates whether the Network has been built or not.
         self.attributes_set = False #Flag that indicates whether the attributes have been set or not.
 
+    def provide_graphs(self,graph,digraph):
+        '''
+            This functions sets the graph and digraph of the Network class with direct user inputs.
+            This can be useful if the user has the graphs stored and does not want to re-compute them.
+            It can also be useful when work has to be done to get connected networks. It might be easier to
+            perform the work beforehand, and create a Network instance for each connected component.
+
+            .. warning: The method does not do any safety check yet...
+        '''
+        self.graph=graph
+        self.digraph=digraph
+        self.is_built=True
+
     # Only builds connected nodes
     #
     #Nicolas modification: Added source in the args for bfs
@@ -144,8 +157,16 @@ class Network:
                     if (i.connecting_element, i.name) in graph_edges:
                         for attr in tuple(set(dir(i)) - set(dir(DiTToHasTraits))): #only set attributes from the subclass, not the base class
                             if attr[0] != '_':
-                                self.graph[i.connecting_element][i.name][attr] = getattr(i, attr)
-                                self.digraph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                if self.graph.has_edge(i.connecting_element,i.name):
+                                    self.graph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                else:
+                                    self.graph.add_edge(i.connecting_element,i.name,length=0)
+                                    self.graph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                if self.digraph.has_edge(i.connecting_element,i.name):
+                                    self.digraph[i.connecting_element][i.name][attr] = getattr(i, attr)
+                                else:
+                                    self.digraph.add_edge(i.connecting_element,i.name,length=0)
+                                    self.digraph[i.connecting_element][i.name][attr] = getattr(i, attr)
 
         self.attributes_set = True
 

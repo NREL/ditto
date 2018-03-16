@@ -4,6 +4,7 @@ import numpy as np
 import math
 import cmath
 import os
+from functools import reduce
 
 #Ditto imports
 from ditto.readers.abstract_reader import abstract_reader
@@ -176,6 +177,7 @@ Author: Nicolas Gensollen. October 2017
                                                  'overhead_byphase_settings': '[OVERHEAD BYPHASE SETTING]',
                                                  'underground_line_settings': '[UNDERGROUNDLINE SETTING]',
                                                  'switch_settings': '[SWITCH SETTING]',
+                                                 'sectionalizer_settings': '[SECTIONALIZER SETTING]',
                                                  'fuse_settings': '[FUSE SETTING]',
                                                  'recloser_settings': '[RECLOSER SETTING]',
                                                  'breaker_settings': '[BREAKER SETTING]',
@@ -184,7 +186,8 @@ Author: Nicolas Gensollen. October 2017
                                                  'unbalanced_line': '[LINE UNBALANCED]',
                                                  'spacing_table': '[SPACING TABLE FOR LINE]',
                                                  'conductor': '[CONDUCTOR]',
-                                                 'concentric_neutral_cable': '[CONCENTRIC NEUTRAL CABLE]',
+                                                 'cable': '[CABLE]',
+                                                 'concentric_neutral_cable': '[CABLE CONCENTRIC NEUTRAL]',
                                                  #CAPACITORS
                                                  'serie_capacitor_settings': '[SERIE CAPACITOR SETTING]',
                                                  'shunt_capacitor_settings': '[SHUNT CAPACITOR SETTING]',
@@ -805,7 +808,7 @@ The user is then responsible to check the differences betweeen the two versions.
                 except:
                     pass
 
-                api_source.name=_from
+                api_source.name=_from+'_src'
 
                 try:
                     if 'desiredvoltage' in sdata:
@@ -990,6 +993,11 @@ The user is then responsible to check the differences betweeen the two versions.
         #Set the phase of the wire
         try:
             api_wire.phase=phase
+        except:
+            pass
+
+        try:
+            api_wire.nameclass=conductor_data['id']
         except:
             pass
 
@@ -1220,6 +1228,10 @@ section_1_feeder_2,node_1,node_2,ABC
                                  'eqid':2,
                                  'coordx':7,
                                  'coordy':8}
+        mapp_sectionalizer={'sectionid':0,
+                                 'eqid':2,
+                                 'coordx':7,
+                                 'coordy':8}
         mapp_line={'id':0,
                            'phasecondid':1,
                            'neutralcondid':2,
@@ -1274,6 +1286,13 @@ section_1_feeder_2,node_1,node_2,ABC
                         'gmr':2,
                         'amps':5,
                         'withstandrating':15}
+        mapp_cable={'id':0,
+                    'r1':1,
+                    'r0':2,
+                    'x1':3,
+                    'x0':4,
+                    'amps':7,
+                    }
         mapp_concentric_neutral_cable={'id':0,
                                                                    'r1':1,
                                                                    'r0':2,
@@ -1301,6 +1320,7 @@ section_1_feeder_2,node_1,node_2,ABC
         self.spacings={}
         self.conductors={}
         self.concentric_neutral_cable={}
+        self.cables={}
 
         #Instanciate the list in which we store the DiTTo line objects
         self._lines=[]
@@ -1381,6 +1401,18 @@ section_1_feeder_2,node_1,node_2,ABC
                                                   ['sectionid', 'coordx', 'coordy', 'eqid'],
                                                   mapp_switch,
                                                   {'type':'switch'}))
+
+            #########################################
+            #                                       #
+            #             SECTIONALIZER.            #
+            #                                       #
+            #########################################
+            #
+            self.settings=self.update_dict(self.settings, self.parser_helper(line,
+                                                  ['sectionalizer_settings'],
+                                                  ['sectionid', 'coordx', 'coordy', 'eqid'],
+                                                  mapp_sectionalizer,
+                                                  {'type':'sectionalizer'}))
 
             #########################################
             #                                       #
@@ -1510,6 +1542,17 @@ section_1_feeder_2,node_1,node_2,ABC
                                                             ['id', 'r1', 'r0', 'x1', 'x0', 'amps', 'phasecondid', 'neutralcondid'],
                                                             mapp_concentric_neutral_cable))
 
+            #########################################
+            #                                       #
+            #                 CABLE                 #
+            #                                       #
+            #########################################
+            #
+            self.cables.update( self.parser_helper(line,
+                                                            ['cable'],
+                                                            ['id', 'r1', 'r0', 'x1', 'x0', 'amps'],
+                                                            mapp_concentric_neutral_cable))
+
         #####################################################
         #                                                   #
         #       JOIN LISTS AND CREATE DITTO OBJECTS         #
@@ -1576,6 +1619,8 @@ section_1_feeder_2,node_1,node_2,ABC
             new_line['is_fuse']=False
             new_line['is_recloser']=False
             new_line['is_breaker']=False
+            new_line['is_sectionalizer']=False
+
             if 'type' in settings:
 
                 #Overhead lines
@@ -1589,6 +1634,18 @@ section_1_feeder_2,node_1,node_2,ABC
                 #Switch
                 elif 'switch' in settings['type']:
                     new_line['is_switch']=True
+                    new_line['wires']=[]
+                    for p in phases+['N']:
+                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        new_line['wires'].append(api_wire)
+                    api_line=Line(model)
+                    for k,v in new_line.items():
+                        setattr(api_line,k,v)
+                    continue
+
+                #Sectionalizer
+                elif 'sectionalizer' in settings['type']:
+                    new_line['is_sectionalizer']=True
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)
@@ -1634,7 +1691,6 @@ section_1_feeder_2,node_1,node_2,ABC
                         setattr(api_line,k,v)
                     continue
 
-
             line_data=None
             #If we have a linecableid for the current section
             if 'linecableid' in settings:
@@ -1648,6 +1704,10 @@ section_1_feeder_2,node_1,node_2,ABC
                 if settings['linecableid'] in self.concentric_neutral_cable:
                     #Cache the line data
                     line_data=self.concentric_neutral_cable[settings['linecableid']]
+                    line_data['type']='balanced_line'
+                if settings['linecableid'] in self.cables:
+                    logger.debug('cables {}'.format(sectionID))
+                    line_data=self.cables[settings['linecableid']]
                     line_data['type']='balanced_line'
 
             #We might have a device number instead if we are dealing with BY PHASE settings
@@ -1722,6 +1782,9 @@ section_1_feeder_2,node_1,node_2,ABC
                         spacing_data=self.spacings[line_data['spacingid']]
                     else:
                         spacing_data={}
+
+                    if conductor_data=={} and 'linecableid' in line_data:
+                        conductor_data=self.conductors[line_data['linecableid']]
 
                     #Loop over the phases and create the wires
                     new_line['wires']=[]
@@ -1896,23 +1959,39 @@ section_1_feeder_2,node_1,node_2,ABC
                         gmr_list=[]
                         resistance_list=[]
 
+                        perform_kron_reduction=True
+
                         #Get GMR and resistance of valid conductor
                         for idx,p in enumerate(phases):
                             if 'condid_{}'.format(p.lower()) in settings and settings['condid_{}'.format(p.lower())] in self.conductors:
                                 gmr_list.append(0.0328084*float(self.conductors[settings['condid_{}'.format(p.lower())]]['gmr']))
                                 resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_{}'.format(p.lower())]]['r25']))
                             else:
-                                gmr_list.append(None)
-                                resistance_list.append(None)
+                                logger.warning('Could not find conductor {name}. Using DEFAULT...'.format(name='condid_{}'.format(p.lower())))
+                                gmr_list.append(0.0328084*float(self.conductors['DEFAULT']['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors['DEFAULT']['r25']))
+                                #gmr_list.append(None)
+                                #resistance_list.append(None)
                         if 'condid_n' in settings:
-                            gmr_list.append(0.0328084*float(self.conductors[settings['condid_n']]['gmr']))
-                            resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n']]['r25']))
+                            if settings['condid_n'] in self.conductors:
+                                gmr_list.append(0.0328084*float(self.conductors[settings['condid_n']]['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n']]['r25']))
+                            else:
+                                logger.warning('Could not find neutral conductor {name}. Using DEFAULT...'.format(name=settings['condid_n']))
+                                gmr_list.append(0.0328084*float(self.conductors['DEFAULT']['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors['DEFAULT']['r25']))
                         elif 'condid_n1' in settings and settings['condid_n1'] is not None and settings['condid_n1'].lower()!='none':
-                            gmr_list.append(0.0328084*float(self.conductors[settings['condid_n1']]['gmr']))
-                            resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n1']]['r25']))
+                            if settings['condid_n1'] in self.conductors:
+                                gmr_list.append(0.0328084*float(self.conductors[settings['condid_n1']]['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n1']]['r25']))
+                            else:
+                                logger.warning('Could not find neutral conductor {name}. Using DEFAULT...'.format(name=settings['condid_n1']))
+                                gmr_list.append(0.0328084*float(self.conductors['DEFAULT']['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors['DEFAULT']['r25']))
                         else:
                             gmr_list.append(None)
                             resistance_list.append(None)
+                            perform_kron_reduction=False
 
                         gmr_list=np.array(gmr_list)
                         resistance_list=np.array(resistance_list)
@@ -1922,7 +2001,10 @@ section_1_feeder_2,node_1,node_2,ABC
 
                         primitive_imp_matrix=self.get_primitive_impedance_matrix(distance_matrix,gmr_list,resistance_list)
 
-                        phase_imp_matrix=1.0/1609.34*self.kron_reduction(primitive_imp_matrix)
+                        if perform_kron_reduction:
+                            phase_imp_matrix=1.0/1609.34*self.kron_reduction(primitive_imp_matrix)
+                        else:
+                            phase_imp_matrix=1.0/1609.34*primitive_imp_matrix
 
                         impedance_matrix=phase_imp_matrix.tolist()
 
@@ -1944,8 +2026,10 @@ section_1_feeder_2,node_1,node_2,ABC
                         new_line['wires'].append(api_wire)
 
                     #Handle the neutral conductors
-                    if 'condid_n' in settings and settings['condid_n'] in self.conductors:
+                    if 'condid_n' in settings and settings['condid_n'] is not None and settings['condid_n']!='' and settings['condid_n']!='NONE' and settings['condid_n'] in self.conductors:
                         conductor_data=self.conductors[settings['condid_n']]
+                    elif 'condid_n1' in settings and settings['condid_n1'] is not None and settings['condid_n1']!='' and settings['condid_n1']!='NONE' and settings['condid_n1'] in self.conductors:
+                        conductor_data=self.conductors[settings['condid_n1']]
                     else:
                         conductor_data={}
 
@@ -1955,8 +2039,9 @@ section_1_feeder_2,node_1,node_2,ABC
                     else:
                         spacing_data={}
 
-                    api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
-                    new_line['wires'].append(api_wire)
+                    if len(conductor_data)!=0:
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
+                        new_line['wires'].append(api_wire)
 
                 try:
                     new_line['impedance_matrix']=impedance_matrix
@@ -2490,10 +2575,10 @@ section_1_feeder_2,node_1,node_2,ABC
                 raise ValueError('Unable to instanciate PowerTransformer DiTTo object.')
 
             #Set the name
-            #try:
-            api_transformer.name='Trans_'+settings['sectionid']
-            #except:
-            #pass
+            try:
+                api_transformer.name='Trans_'+settings['sectionid']
+            except:
+                pass
 
             api_transformer.feeder_name=self.section_feeder_mapping[sectionID]
 
@@ -2662,10 +2747,10 @@ section_1_feeder_2,node_1,node_2,ABC
                             raise ValueError('Unable to instanciate PhaseWinding DiTTo object.')
 
                         #Set the phase
-                        #try:
-                        api_phase_winding.phase=p
-                        #except:
-                        #pass
+                        try:
+                            api_phase_winding.phase=p
+                        except:
+                            pass
 
                         #Add the phase winding object to the winding
                         api_winding.phase_windings.append(api_phase_winding)
@@ -2992,7 +3077,8 @@ The parser should create the transformers and create separate regulator objects 
                                                  'loadphase':12,
                                                  'value1':13,
                                                  'value2':14,
-                                                 'connectedkva':15
+                                                 'connectedkva':15,
+                                                 'numberofcustomer':17
                                                  }
 
         mapp_customer_class={'id':0,
@@ -3044,7 +3130,7 @@ The parser should create the transformers and create separate regulator objects 
             #
             self.customer_loads.update( self.parser_helper(line,
                                                         ['customer_loads'],
-                                                        ['sectionid', 'devicenumber', 'loadtype', 'customernumber', 'customertype', 'loadmodelid', 'valuetype', 'loadphase', 'value1', 'value2', 'connectedkva'],
+                                                        ['sectionid', 'devicenumber', 'loadtype', 'customernumber', 'customertype', 'loadmodelid', 'valuetype', 'loadphase', 'value1', 'value2', 'connectedkva','numberofcustomer'],
                                                         mapp_customer_loads) )
 
             #########################################
@@ -3091,19 +3177,21 @@ The parser should create the transformers and create separate regulator objects 
                         logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
                         continue
                 elif value_type==2: #P and PF are given
-                    #try:
-                    p,PF=float(settings['value1']), float(settings['value2'])
-                    if 0<=PF<=1:
-                        q=p*math.sqrt((1-PF**2)/PF**2)
-                    elif 1<PF<=100:
-                        PF/=100.0
-                        q=p*math.sqrt((1-PF**2)/PF**2)
-                    else:
-                        logger.warning('problem with PF')
-                        logger.warning(PF)
-                    #except:
-                    #logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
-                    #continue
+
+                    try:
+                        p,PF=float(settings['value1']), float(settings['value2'])
+                        if 0<=PF<=1:
+                            q=p*math.sqrt((1-PF**2)/PF**2)
+                        elif 1<PF<=100:
+                            PF/=100.0
+                            q=p*math.sqrt((1-PF**2)/PF**2)
+                        else:
+                            logger.warning('problem with PF')
+                            logger.warning(PF)
+                    except:
+                        logger.warning('Skipping load on section {}'.format(sectionID))
+                        continue
+                        
                 elif value_type==3: #AMP and PF are given
                     #TODO
                     logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))
@@ -3127,7 +3215,7 @@ The parser should create the transformers and create separate regulator objects 
                         if fusion:
                             api_load.name+='_'+reduce(lambda x,y:x+'_'+y, phases)
                         else:
-                            api_load.name=sectionID+'_'+reduce(lambda x,y:x+'_'+y, phases)
+                            api_load.name='Load_'+sectionID+'_'+reduce(lambda x,y:x+'_'+y, phases)
                     except:
                         pass
 
@@ -3150,6 +3238,9 @@ The parser should create the transformers and create separate regulator objects 
                         pass
 
                     api_load.feeder_name=self.section_feeder_mapping[sectionID]
+
+                    api_load.num_users=float(settings['numberofcustomer'])
+
 
                     for ph in phases:
                         try:
