@@ -184,6 +184,7 @@ Author: Nicolas Gensollen. October 2017
                                                  'unbalanced_line': '[LINE UNBALANCED]',
                                                  'spacing_table': '[SPACING TABLE FOR LINE]',
                                                  'conductor': '[CONDUCTOR]',
+                                                 'cable': '[CABLE]',
                                                  'concentric_neutral_cable': '[CABLE CONCENTRIC NEUTRAL]',
                                                  #CAPACITORS
                                                  'serie_capacitor_settings': '[SERIE CAPACITOR SETTING]',
@@ -1282,6 +1283,13 @@ section_1_feeder_2,node_1,node_2,ABC
                         'gmr':2,
                         'amps':5,
                         'withstandrating':15}
+        mapp_cable={'id':0,
+                    'r1':1,
+                    'r0':2,
+                    'x1':3,
+                    'x0':4,
+                    'amps':7,
+                    }
         mapp_concentric_neutral_cable={'id':0,
                                                                    'r1':1,
                                                                    'r0':2,
@@ -1309,6 +1317,7 @@ section_1_feeder_2,node_1,node_2,ABC
         self.spacings={}
         self.conductors={}
         self.concentric_neutral_cable={}
+        self.cables={}
 
         #Instanciate the list in which we store the DiTTo line objects
         self._lines=[]
@@ -1530,6 +1539,17 @@ section_1_feeder_2,node_1,node_2,ABC
                                                             ['id', 'r1', 'r0', 'x1', 'x0', 'amps', 'phasecondid', 'neutralcondid'],
                                                             mapp_concentric_neutral_cable))
 
+            #########################################
+            #                                       #
+            #                 CABLE                 #
+            #                                       #
+            #########################################
+            #
+            self.cables.update( self.parser_helper(line,
+                                                            ['cable'],
+                                                            ['id', 'r1', 'r0', 'x1', 'x0', 'amps'],
+                                                            mapp_concentric_neutral_cable))
+
         #####################################################
         #                                                   #
         #       JOIN LISTS AND CREATE DITTO OBJECTS         #
@@ -1683,6 +1703,10 @@ section_1_feeder_2,node_1,node_2,ABC
                     #Cache the line data
                     line_data=self.concentric_neutral_cable[settings['linecableid']]
                     line_data['type']='balanced_line'
+                if settings['linecableid'] in self.cables:
+                    print('cables {}'.format(sectionID))
+                    line_data=self.cables[settings['linecableid']]
+                    line_data['type']='balanced_line'
 
             #We might have a device number instead if we are dealing with BY PHASE settings
             #
@@ -1756,6 +1780,9 @@ section_1_feeder_2,node_1,node_2,ABC
                         spacing_data=self.spacings[line_data['spacingid']]
                     else:
                         spacing_data={}
+
+                    if conductor_data=={} and 'linecableid' in line_data:
+                        conductor_data=self.conductors[line_data['linecableid']]
 
                     #Loop over the phases and create the wires
                     new_line['wires']=[]
@@ -1997,8 +2024,10 @@ section_1_feeder_2,node_1,node_2,ABC
                         new_line['wires'].append(api_wire)
 
                     #Handle the neutral conductors
-                    if 'condid_n' in settings and settings['condid_n'] in self.conductors:
+                    if 'condid_n' in settings and settings['condid_n'] is not None and settings['condid_n']!='' and settings['condid_n']!='NONE' and settings['condid_n'] in self.conductors:
                         conductor_data=self.conductors[settings['condid_n']]
+                    elif 'condid_n1' in settings and settings['condid_n1'] is not None and settings['condid_n1']!='' and settings['condid_n1']!='NONE' and settings['condid_n1'] in self.conductors:
+                        conductor_data=self.conductors[settings['condid_n1']]
                     else:
                         conductor_data={}
 
