@@ -1930,23 +1930,39 @@ section_1_feeder_2,node_1,node_2,ABC
                         gmr_list=[]
                         resistance_list=[]
 
+                        perform_kron_reduction=True
+
                         #Get GMR and resistance of valid conductor
                         for idx,p in enumerate(phases):
                             if 'condid_{}'.format(p.lower()) in settings and settings['condid_{}'.format(p.lower())] in self.conductors:
                                 gmr_list.append(0.0328084*float(self.conductors[settings['condid_{}'.format(p.lower())]]['gmr']))
                                 resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_{}'.format(p.lower())]]['r25']))
                             else:
-                                gmr_list.append(None)
-                                resistance_list.append(None)
+                                print('WARNING: Could not find conductor {name}. Using DEFAULT...'.format(name='condid_{}'.format(p.lower())))
+                                gmr_list.append(0.0328084*float(self.conductors['DEFAULT']['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors['DEFAULT']['r25']))
+                                #gmr_list.append(None)
+                                #resistance_list.append(None)
                         if 'condid_n' in settings:
-                            gmr_list.append(0.0328084*float(self.conductors[settings['condid_n']]['gmr']))
-                            resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n']]['r25']))
+                            if settings['condid_n'] in self.conductors:
+                                gmr_list.append(0.0328084*float(self.conductors[settings['condid_n']]['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n']]['r25']))
+                            else:
+                                print('WARNING: Could not find neutral conductor {name}. Using DEFAULT...'.format(name=settings['condid_n']))
+                                gmr_list.append(0.0328084*float(self.conductors['DEFAULT']['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors['DEFAULT']['r25']))
                         elif 'condid_n1' in settings and settings['condid_n1'] is not None and settings['condid_n1'].lower()!='none':
-                            gmr_list.append(0.0328084*float(self.conductors[settings['condid_n1']]['gmr']))
-                            resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n1']]['r25']))
+                            if settings['condid_n1'] in self.conductors:
+                                gmr_list.append(0.0328084*float(self.conductors[settings['condid_n1']]['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors[settings['condid_n1']]['r25']))
+                            else:
+                                print('WARNING: Could not find neutral conductor {name}. Using DEFAULT...'.format(name=settings['condid_n1']))
+                                gmr_list.append(0.0328084*float(self.conductors['DEFAULT']['gmr']))
+                                resistance_list.append(1.0/0.621371*float(self.conductors['DEFAULT']['r25']))
                         else:
                             gmr_list.append(None)
                             resistance_list.append(None)
+                            perform_kron_reduction=False
 
                         gmr_list=np.array(gmr_list)
                         resistance_list=np.array(resistance_list)
@@ -1956,7 +1972,10 @@ section_1_feeder_2,node_1,node_2,ABC
 
                         primitive_imp_matrix=self.get_primitive_impedance_matrix(distance_matrix,gmr_list,resistance_list)
 
-                        phase_imp_matrix=1.0/1609.34*self.kron_reduction(primitive_imp_matrix)
+                        if perform_kron_reduction:
+                            phase_imp_matrix=1.0/1609.34*self.kron_reduction(primitive_imp_matrix)
+                        else:
+                            phase_imp_matrix=1.0/1609.34*primitive_imp_matrix
 
                         impedance_matrix=phase_imp_matrix.tolist()
 
@@ -1989,8 +2008,9 @@ section_1_feeder_2,node_1,node_2,ABC
                     else:
                         spacing_data={}
 
-                    api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
-                    new_line['wires'].append(api_wire)
+                    if len(conductor_data)!=0:
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
+                        new_line['wires'].append(api_wire)
 
                 try:
                     new_line['impedance_matrix']=impedance_matrix
