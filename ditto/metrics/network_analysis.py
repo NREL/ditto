@@ -8,6 +8,7 @@ import numpy as np
 import math
 import time
 import pandas as pd
+from scipy.spatial import ConvexHull
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
@@ -131,6 +132,7 @@ class network_analyzer():
 
         self.feeder_networks = {}
         self.node_feeder_mapping = {}
+        self.points = {}
 
         self.__substations = [obj for obj in self.model.models if isinstance(obj, PowerTransformer) and obj.is_substation == 1]
 
@@ -416,7 +418,10 @@ class network_analyzer():
             'nb_of_breakers': 0,
             'nb_of_capacitors': 0, #Number of capacitors
             'number_of_customers': 0,
+            'number_of_links_to_adjacent_feeders': 0, #Number of links to neighboring feeders
+            'number_of_overloaded_transformer': 0, #Number of overloaded transformers
             'nb_of_distribution_transformers': 0, #Number of distribution transformers
+            'maximum_length_of_secondaries':0, #Maximum distance in the feeder between a distribution transformer and a load
             'distribution_transformer_total_capacity_MVA': 0, #Total capacity of distribution transformers (in MVA)
             'nb_1ph_Xfrm': 0, #Number of 1 phase distribution transformers
             'nb_3ph_Xfrm': 0, #Number of 3 phase distribution transformers
@@ -425,6 +430,7 @@ class network_analyzer():
             'diameter': self.diameter(_net), #Network diameter (in number of edges, NOT in distance)
             'average_path_length': self.average_path_length(_net), #Average path length (in number of edges, NOT in distance)
             'furtherest_node_miles': self.furtherest_node_miles(_net, _src),
+            'nb_loops_within_feeder': self.loops_within_feeder(_net), #Number of loops inside the feeder
             'lv_length_miles': 0, #Total length of LV lines (in miles)
             'mv_length_miles': 0, #Total length of MV lines (in miles)
             'length_mv1ph_miles': 0, #Total length of 1 phase MV lines (in miles)
@@ -451,6 +457,7 @@ class network_analyzer():
             'demand_LV_phase_B': 0, #Total LV demand on phase B
             'demand_LV_phase_C': 0, #Total LV demand on phase C
             'nb_load_per_transformer': {}, #Store the number of loads per distribution transformer
+            'wire_equipment_distribution': {}, #Store the number of each wire equipment
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'substation_name': _src,
             'Feeder_type': None,
@@ -464,9 +471,34 @@ class network_analyzer():
             This function takes as input a DiTTo object and the name of the corresponding feeder, and analyze it.
             All information needed for the metric extraction is updated here.
         '''
+        #If the object has some coordinate values
+        #then we add the points to the list of points for the feeder
+        if hasattr(obj, positions) and obj.positions is not None:
+            for position in obj.positions:
+                X=position.long
+                Y=position.lat
+                if X is not None and Y is not None:
+                    if feeder_name in self.points:
+                        self.points[feeder_name].append([X,Y])
+                    else:
+                        self.points[feeder_name]=[[X,Y]]
 
         #If we get a line
         if isinstance(obj, Line):
+
+            #Update the number of links to adjacent feeders
+            #Look at the to and from element
+            #If they have a valid feeder name attribute, simply compare the two and 
+            #update the count if needed
+            if (hasattr(obj, 'from_element') and obj.from_element is not None and
+                hasattr(obj, 'to_element') and obj.to_element is not None):
+                if obj.from_element in self.model and obj.to_element in self.model:
+                    _from=self.model[obj.from_element]
+                    _to  =self.model[obj.to_element]
+                    if (hasattr(_from, 'feeder_name') and _from.feeder_name is not None and
+                        hasattr(_to, 'feeder_name') and _to.feeder_name is not None):
+                        if _from.feeder_name!=_to.feeder_name:
+                            self.results[feeder_name]['number_of_links_to_adjacent_feeders']+=1
 
             #Update the counts
             #
@@ -486,9 +518,17 @@ class network_analyzer():
             if obj.is_breaker == 1:
                 self.results[feeder_name]['nb_of_breakers'] += 1
 
-            #Get the phases (needed later)
             if hasattr(obj, 'wires') and obj.wires is not None:
+                #Get the phases (needed later)
                 phases = [wire.phase for wire in obj.wires if wire.phase in ['A', 'B', 'C'] and wire.drop != 1]
+
+                #Get the equipment name distribution
+                equipment_names=[wire.nameclass for wire in obj.wires]
+                for eq in equipment_names:
+                    if eq in self.results[feeder_name]['wire_equipment_distribution']:
+                        self.results[feeder_name]['wire_equipment_distribution'][eq]+=1
+                    else:
+                        self.results[feeder_name]['wire_equipment_distribution'][eq]=1
 
             #If we do not have phase information, raise an error...
             else:
@@ -648,8 +688,43 @@ class network_analyzer():
         #If we get a Transformer
         if isinstance(obj, PowerTransformer):
 
-            #Update the count
-            #self.results[feeder_name]['nb_of_distribution_transformers']+=1
+            #Determine if the transformer is overloaded or not
+            #If we have the load names in the mapping for this transformer...
+            if obj.name in self.transformer_load_mapping:
+                load_names=self.transformer_load_mapping[obj.name]
+
+                #This section updates the maximum length of secondaries
+                #If the graph contains the transformer's connecting element
+                if (hasattr(obj,'to_element') and
+                    obj.to_element is not None and
+                    self.G.graph.has_node(obj.to_element)):
+                    #Compute the distance from the transformer's connecting
+                    #element to every load downstream of it
+                    for load_name in load_names:
+                        if load_name in self.model:
+                            load_obj=self.model[load_name]
+                            if hasattr(load_obj,'connecting_element') and load_obj.connecting_element is not None:
+                                if self.G.graph.has_node(load_obj.connecting_element):
+                                    length=nx.shortest_path_length(self.G.graph, obj.to_element, load_obj.connecting_element, weight='length')
+                                    if length>self.results[feeder_name]['maximum_length_of_secondaries']:
+                                        self.results[feeder_name]['maximum_length_of_secondaries']=length
+
+                #...compute the total load KVA downstream
+                total_load_kva=0
+                for load_name in load_names:
+                    if load_name in self.model:
+                        load_obj=self.model[load_name]
+                        if hasattr(load_obj,'phase_loads') and load_obj.phase_loads is not None:
+                            for pl in load_obj.phase_loads:
+                                if (hasattr(pl,'p') and pl.p is not None and
+                                    hasattr(pl,'q') and pl.q is not None):
+                                    total_load_kva+=math.sqrt(pl.p**2+pl.q**2)
+                #...compute the transformer KVA
+                if hasattr(obj,'windings') and obj.windings is not None:
+                    transformer_kva=sum([wdg.rated_power for wdg in obj.windings if wdg.rated_power is not None])
+                #...and, compare the two values
+                if total_load_kva>transformer_kva:
+                    self.results[feeder_name]['number_of_overloaded_transformer']+=1
 
             if hasattr(obj, 'windings') and obj.windings is not None and len(obj.windings) > 0:
 
@@ -690,12 +765,14 @@ class network_analyzer():
         '''
             Computes all the available metrics for each feeder.
         '''
+        self.transformer_load_mapping=self.get_transformer_load_mapping()
+        print('c bon')
         self.load_distribution = []
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
             'lv_length_miles', 'mv_length_miles', 'length_mv1ph_miles', 'length_mv2ph_miles', 'length_mv3ph_miles', 'length_lv1ph_miles',
             'length_lv2ph_miles', 'length_lv3ph_miles', 'length_OH_mv1ph_miles', 'length_OH_mv2ph_miles', 'length_OH_mv3ph_miles',
-            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles'
+            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries'
         ]
 
         #List of keys to divide by 10^3
@@ -753,6 +830,18 @@ class network_analyzer():
                 if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k] *= 10**-3
 
+            #Density metrics
+            #
+            #Get the list of points for the feeder
+            _points=np.array(self.points[_feeder_ref])
+            #Having more than 2 points to compute the convex hull surface is a good thing...
+            if len(_points)>2:
+                hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
+                hull_surf_sqmile = hull.area * 3.86102*10**-7 #Convert surface from square meters to square miles 
+                if hull_surf_sqmile!=0:
+                    self.results[_feeder_ref]['customer_density']=float(self.results[_feeder_ref]['number_of_customers'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['load_density']    =float(self.results[_feeder_ref]['total_demand'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['var_density']     =float(self.results[_feeder_ref]['total_kVar'])/float(hull_surf_sqmile)
 
     def compute_all_metrics(self):
         '''
@@ -866,7 +955,88 @@ class network_analyzer():
         else:
             return nx.diameter(self.G.graph)
 
+    def loops_within_feeder(self, *args):
+        '''
+            Returns the number of loops within a feeder.
+        '''
+        if args:
+            return len(nx.cycle_basis(args[0]))
+        else:
+            return len(nx.cycle_basis(self.G.graph))
 
+    def get_transformer_load_mapping(self):
+        '''
+            Loop over the loads and go upstream in the network until a distribution transformer is found.
+            Returns a dictionary where keys are transformer names and values are lists holding names of
+            loads downstream of the transformer.
+        '''
+        transformer_load_mapping={}
+        load_list = []
+        for _obj in self.model.models:
+            if isinstance(_obj, Load):
+                load_list.append(_obj)
+
+        #Get the connecting elements of the loads.
+        #These will be the starting points of the upstream walks in the graph
+        connecting_elements = [load.connecting_element for load in load_list]
+
+        #For each connecting element...
+        for idx, end_node in enumerate(connecting_elements):
+
+            if self.G.digraph.has_node(end_node):
+                continu = True
+            else:
+                continu = False
+
+            #Find the upstream transformer by walking the graph upstream
+            while continu:
+
+                #Get predecessor node of current node in the DAG
+                try:
+                    from_node = next(self.G.digraph.predecessors(end_node))
+                except StopIteration:
+                    continu=False
+                    continue
+
+                #Look for the type of equipment that makes the connection between from_node and to_node
+                _type = None
+                if (from_node, end_node) in self.edge_equipment:
+                    _type = self.edge_equipment[(from_node, end_node)]
+                elif (end_node, from_node) in self.edge_equipment:
+                    _type = self.edge_equipment[(end_node, from_node)]
+
+                #It could be a Line, a Transformer...
+                #If it is a transformer, then we have found the upstream transformer...
+                if _type == 'PowerTransformer':
+
+                    #...we can then stop the loop...
+                    continu = False
+
+                    #...and grab the transformer name to retrieve the data from the DiTTo object
+                    if (from_node, end_node) in self.edge_equipment_name:
+                        transformer_name=self.edge_equipment_name[(from_node, end_node)]
+                    elif (end_node, from_node) in self.edge_equipment_name:
+                        transformer_name=self.edge_equipment_name[(end_node, from_node)]
+                    #If we cannot find the object, raise an error because it sould not be the case...
+                    else:
+                        raise ValueError('Unable to find equipment between {_from} and {_to}'.format(_from=from_node, _to=end_node))
+
+                    if transformer_name in transformer_load_mapping:
+                        transformer_load_mapping[transformer_name].append(load_list[idx].name)
+                    else:
+                        transformer_load_mapping[transformer_name]=[load_list[idx].name]
+
+                #Go upstream...
+                end_node = from_node
+
+        return transformer_load_mapping
+
+
+
+    def average_path_length(self, *args):
+        '''
+            Returns the average path length of the network.
+        '''
         if args:
             try:
                 return nx.average_shortest_path_length(args[0])
