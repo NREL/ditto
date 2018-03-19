@@ -264,7 +264,7 @@ class network_analyzer():
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
-                        print('Node {name} was not found in feeder mapping'.format(name=obj.name))
+                        logger.warning('Node {name} was not found in feeder mapping'.format(name=obj.name))
                 elif hasattr(obj, 'connecting_element'):
                     if obj.connecting_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.connecting_element]
@@ -272,7 +272,7 @@ class network_analyzer():
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
-                        print(
+                        logger.warning(
                             'Object {name} connecting element {namec} was not found in feeder mapping'.format(
                                 name=obj.name, namec=obj.connecting_element
                             )
@@ -284,9 +284,9 @@ class network_analyzer():
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
-                        print('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
+                        logger.warning('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
                 else:
-                    print(obj.name, type(obj))
+                    logger.warning(obj.name, type(obj))
 
     def connect_disconnected_components(self, feeder_name):
         '''
@@ -414,6 +414,9 @@ class network_analyzer():
         #Create the results dictionary.
         #Note: All metrics relying on networkX calls are computed here.
         #
+
+        logger.info('Analyzing network {name}...'.format(name=network))
+
         results = {
             'nb_of_regulators': 0, #Number of regulators
             'Substation_Capacity_MVA': sub_MVA,
@@ -763,7 +766,7 @@ class network_analyzer():
         elif hasattr(obj, 'from_element') and obj.from_element in self.node_feeder_mapping:
             return self.node_feeder_mapping[obj.from_element]
         else:
-            print('Could not find feeder for {}'.format(obj.name))
+            logger.warning('Could not find feeder for {}'.format(obj.name))
             return None
 
     def compute_all_metrics_per_feeder(self):
@@ -771,7 +774,6 @@ class network_analyzer():
             Computes all the available metrics for each feeder.
         '''
         self.transformer_load_mapping=self.get_transformer_load_mapping()
-        print('c bon')
         self.load_distribution = []
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
