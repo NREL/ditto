@@ -481,7 +481,7 @@ class network_analyzer():
         '''
         #If the object has some coordinate values
         #then we add the points to the list of points for the feeder
-        if hasattr(obj, positions) and obj.positions is not None:
+        if hasattr(obj, 'positions') and obj.positions is not None:
             for position in obj.positions:
                 X=position.long
                 Y=position.lat
