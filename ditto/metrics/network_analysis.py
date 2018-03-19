@@ -1001,18 +1001,18 @@ class network_analyzer():
         for idx, end_node in enumerate(connecting_elements):
 
             if self.G.digraph.has_node(end_node):
-                continu = True
+                should_continue = True
             else:
-                continu = False
+                should_continue = False
 
             #Find the upstream transformer by walking the graph upstream
-            while continu:
+            while should_continue:
 
                 #Get predecessor node of current node in the DAG
                 try:
                     from_node = next(self.G.digraph.predecessors(end_node))
                 except StopIteration:
-                    continu=False
+                    should_continue=False
                     continue
 
                 #Look for the type of equipment that makes the connection between from_node and to_node
@@ -1027,7 +1027,7 @@ class network_analyzer():
                 if _type == 'PowerTransformer':
 
                     #...we can then stop the loop...
-                    continu = False
+                    should_continue = False
 
                     #...and grab the transformer name to retrieve the data from the DiTTo object
                     if (from_node, end_node) in self.edge_equipment_name:
