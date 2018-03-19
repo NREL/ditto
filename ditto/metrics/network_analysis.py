@@ -500,13 +500,16 @@ class network_analyzer():
             #update the count if needed
             if (hasattr(obj, 'from_element') and obj.from_element is not None and
                 hasattr(obj, 'to_element') and obj.to_element is not None):
-                if obj.from_element in self.model and obj.to_element in self.model:
+                try:
                     _from=self.model[obj.from_element]
                     _to  =self.model[obj.to_element]
-                    if (hasattr(_from, 'feeder_name') and _from.feeder_name is not None and
-                        hasattr(_to, 'feeder_name') and _to.feeder_name is not None):
-                        if _from.feeder_name!=_to.feeder_name:
-                            self.results[feeder_name]['number_of_links_to_adjacent_feeders']+=1
+                except KeyError:
+                    _from=None
+                    _to=None
+                if (hasattr(_from, 'feeder_name') and _from.feeder_name is not None and
+                    hasattr(_to, 'feeder_name') and _to.feeder_name is not None):
+                    if _from.feeder_name!=_to.feeder_name:
+                        self.results[feeder_name]['number_of_links_to_adjacent_feeders']+=1
 
             #Update the counts
             #
@@ -709,24 +712,28 @@ class network_analyzer():
                     #Compute the distance from the transformer's connecting
                     #element to every load downstream of it
                     for load_name in load_names:
-                        if load_name in self.model:
+                        try:
                             load_obj=self.model[load_name]
-                            if hasattr(load_obj,'connecting_element') and load_obj.connecting_element is not None:
-                                if self.G.graph.has_node(load_obj.connecting_element):
-                                    length=nx.shortest_path_length(self.G.graph, obj.to_element, load_obj.connecting_element, weight='length')
-                                    if length>self.results[feeder_name]['maximum_length_of_secondaries']:
-                                        self.results[feeder_name]['maximum_length_of_secondaries']=length
+                        except KeyError:
+                            load_obj=None
+                        if hasattr(load_obj,'connecting_element') and load_obj.connecting_element is not None:
+                            if self.G.graph.has_node(load_obj.connecting_element):
+                                length=nx.shortest_path_length(self.G.graph, obj.to_element, load_obj.connecting_element, weight='length')
+                                if length>self.results[feeder_name]['maximum_length_of_secondaries']:
+                                    self.results[feeder_name]['maximum_length_of_secondaries']=length
 
                 #...compute the total load KVA downstream
                 total_load_kva=0
                 for load_name in load_names:
-                    if load_name in self.model:
+                    try:
                         load_obj=self.model[load_name]
-                        if hasattr(load_obj,'phase_loads') and load_obj.phase_loads is not None:
-                            for pl in load_obj.phase_loads:
-                                if (hasattr(pl,'p') and pl.p is not None and
-                                    hasattr(pl,'q') and pl.q is not None):
-                                    total_load_kva+=math.sqrt(pl.p**2+pl.q**2)
+                    except KeyError:
+                        load_obj=None
+                    if hasattr(load_obj,'phase_loads') and load_obj.phase_loads is not None:
+                        for pl in load_obj.phase_loads:
+                            if (hasattr(pl,'p') and pl.p is not None and
+                                hasattr(pl,'q') and pl.q is not None):
+                                total_load_kva+=math.sqrt(pl.p**2+pl.q**2)
                 #...compute the transformer KVA
                 if hasattr(obj,'windings') and obj.windings is not None:
                     transformer_kva=sum([wdg.rated_power for wdg in obj.windings if wdg.rated_power is not None])
@@ -840,7 +847,10 @@ class network_analyzer():
             #Density metrics
             #
             #Get the list of points for the feeder
-            _points=np.array(self.points[_feeder_ref])
+            try:
+                _points=np.array(self.points[_feeder_ref])
+            except KeyError:
+                _points=[]
             #Having more than 2 points to compute the convex hull surface is a good thing...
             if len(_points)>2:
                 hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
