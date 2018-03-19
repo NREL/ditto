@@ -779,26 +779,18 @@ The user is then responsible to check the differences betweeen the two versions.
 
         for line in self.content:
             sources.update(self.parser_helper(line, ['source'], ['sourceid', 'nodeid', 'networkid', 'desiredvoltage'], mapp))
-            source_equivalents.update(self.parser_helper(line, ['source_equivalent'], ['nodeid', 'voltage', 'operatingangle1', 'operatingangle2', 'operatingangle3', 'positivesequenceresistance', 'positivesequencereactance', 'zerosequencereactance', 'zerosequenceresistance','configuration'], mapp_source_equivalent))
+            source_equivalents.update(self.parser_helper(line, ['source_equivalent'], ['nodeid', 'voltage', 'operatingangle1', 'operatingangle2', 'operatingangle3', 'positivesequenceresistance', 'positivesequencereactance', 'zerosequencereactance', 'zerosequenceresistance','configuration','basemva','loadmodelname'], mapp_source_equivalent))
 
         self.get_file_content('equipment')
 
         for line in self.content:
             subs.update(self.parser_helper(line, ['substation'], ['id', 'mva', 'kvll', 'conn'], mapp_sub))
-
-        for sid, sdata in sources.items():
-
-            source_equivalent_data=None
-
-            if 'nodeid' in sdata and sdata['nodeid'] in source_equivalents:
-                source_equivalent_data=source_equivalents[sdata['nodeid']]
-
-
-            if sid in subs:
-
-                #Find the section
+        if len(sources.items()) ==0:
+            for sid, source_equivalent_data in source_equivalents.items():
+                if source_equivalent_data['loadmodelname'].lower() !='default':
+                    continue #Want to only use the default source equivalent configuration
                 for k,v in self.section_phase_mapping.items():
-                    if v['fromnodeid']==sdata['nodeid']:
+                    if v['fromnodeid']==source_equivalent_data['nodeid']:
                         sectionID=k
                         _from=v['fromnodeid']
                         _to=v['tonodeid']
@@ -807,14 +799,11 @@ The user is then responsible to check the differences betweeen the two versions.
                     api_source=PowerSource(model)
                 except:
                     pass
-
+                    
                 api_source.name=_from+'_src'
 
                 try:
-                    if 'desiredvoltage' in sdata:
-                        api_source.nominal_voltage=float(sdata['desiredvoltage'])*10**3
-                    else:
-                        api_source.nominal_voltage=float(source_equivalent_data['voltage'])*10**3
+                    api_source.nominal_voltage=float(source_equivalent_data['voltage'])*10**3
                 except:
                     pass
 
@@ -826,7 +815,7 @@ The user is then responsible to check the differences betweeen the two versions.
                 api_source.is_sourcebus=1
 
                 try:
-                    api_source.rated_power=10**3*float(subs[sid]['mva'])
+                    api_source.rated_power=10**3*float(source_equivalent_data['mva']) #Modified from source cases where substations can be used.
                 except:
                     pass
 
@@ -851,72 +840,141 @@ The user is then responsible to check the differences betweeen the two versions.
                     api_source.connecting_element=_from
                 except:
                     pass
+                    
 
-                # try:
-                #     api_transformer=PowerTransformer(model)
-                # except:
-                #     pass
+            
+        else:
+            for sid, sdata in sources.items():
 
-                # try:
-                #     api_transformer.is_substation=1
-                # except:
-                #     pass
+                source_equivalent_data=None
 
-                # try:
-                #     api_transformer.name=sid
-                # except:
-                #     pass
+                if 'nodeid' in sdata and sdata['nodeid'] in source_equivalents:
+                    source_equivalent_data=source_equivalents[sdata['nodeid']]
 
-                # try:
-                #     api_transformer.rated_power=10**3*float(subs[sid]['mva'])
-                # except:
-                #     pass
 
-                # try:
-                #     api_transformer.from_element=_from
-                # except:
-                #     pass
+                if sid in subs:
 
-                # try:
-                #     api_transformer.to_element=_to
-                # except:
-                #     pass
+                    #Find the section
+                    for k,v in self.section_phase_mapping.items():
+                        if v['fromnodeid']==sdata['nodeid']:
+                            sectionID=k
+                            _from=v['fromnodeid']
+                            _to=v['tonodeid']
+                            phases=list(v['phase'])
+                    try:
+                        api_source=PowerSource(model)
+                    except:
+                        pass
 
-                # for w in range(2):
-                #     try:
-                #         api_winding=Winding(model)
-                #     except:
-                #         pass
+                    api_source.name=_from+'_src'
 
-                #     try:
-                #         api_winding.connection_type=self.transformer_connection_configuration_mapping(subs[sid]['conn'])
-                #     except:
-                #         pass
+                    try:
+                        if 'desiredvoltage' in sdata:
+                            api_source.nominal_voltage=float(sdata['desiredvoltage'])*10**3
+                        else:
+                            api_source.nominal_voltage=float(source_equivalent_data['voltage'])*10**3
+                    except:
+                        pass
 
-                #     try:
-                #         api_winding.nominal_voltage=10**3*float(subs[sid]['kvll'])
-                #     except:
-                #         pass
+                    try:
+                        api_source.phases=phases
+                    except:
+                        pass
 
-                #     try:
-                #         api_winding.rated_power=10**6*float(subs[sid]['mva'])
-                #     except:
-                #         pass
+                    api_source.is_sourcebus=1
 
-                #     for p in phases:
-                #         try:
-                #             api_phase_winding=PhaseWinding(model)
-                #         except:
-                #             pass
+                    try:
+                        api_source.rated_power=10**3*float(subs[sid]['mva'])
+                    except:
+                        pass
 
-                #         try:
-                #             api_phase_winding.phase=self.phase_mapping(p)
-                #         except:
-                #             pass
+                    #TODO: connection_type
 
-                #         api_winding.phase_windings.append(api_phase_winding)
+                    try:
+                        api_source.phase_angle=source_equivalent_data['operatingangle1']
+                    except:
+                        pass
 
-                #     api_transformer.windings.append(api_winding)
+                    #try:
+                    api_source.positive_sequence_impedance=complex(float(source_equivalent_data['positivesequenceresistance']),float(source_equivalent_data['positivesequencereactance']))
+                    #except:
+                    #pass
+
+                    try:
+                        api_source.zero_sequence_impedance=complex(source_equivalent_data['zerosequenceresistance'],source_equivalent_data['zerosequencereactance'])
+                    except:
+                        pass
+
+                    try:
+                        api_source.connecting_element=_from
+                    except:
+                        pass
+
+                    # try:
+                    #     api_transformer=PowerTransformer(model)
+                    # except:
+                    #     pass
+
+                    # try:
+                    #     api_transformer.is_substation=1
+                    # except:
+                    #     pass
+
+                    # try:
+                    #     api_transformer.name=sid
+                    # except:
+                    #     pass
+
+                    # try:
+                    #     api_transformer.rated_power=10**3*float(subs[sid]['mva'])
+                    # except:
+                    #     pass
+
+                    # try:
+                    #     api_transformer.from_element=_from
+                    # except:
+                    #     pass
+
+                    # try:
+                    #     api_transformer.to_element=_to
+                    # except:
+                    #     pass
+
+                    # for w in range(2):
+                    #     try:
+                    #         api_winding=Winding(model)
+                    #     except:
+                    #         pass
+
+                    #     try:
+                    #         api_winding.connection_type=self.transformer_connection_configuration_mapping(subs[sid]['conn'])
+                    #     except:
+                    #         pass
+
+                    #     try:
+                    #         api_winding.nominal_voltage=10**3*float(subs[sid]['kvll'])
+                    #     except:
+                    #         pass
+
+                    #     try:
+                    #         api_winding.rated_power=10**6*float(subs[sid]['mva'])
+                    #     except:
+                    #         pass
+
+                    #     for p in phases:
+                    #         try:
+                    #             api_phase_winding=PhaseWinding(model)
+                    #         except:
+                    #             pass
+
+                    #         try:
+                    #             api_phase_winding.phase=self.phase_mapping(p)
+                    #         except:
+                    #             pass
+
+                    #         api_winding.phase_windings.append(api_phase_winding)
+
+                    #     api_transformer.windings.append(api_winding)
 
 
 

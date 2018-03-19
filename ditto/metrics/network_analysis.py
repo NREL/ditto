@@ -9,6 +9,7 @@ import time
 
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
