@@ -28,112 +28,112 @@ from ditto.models.base import Unicode
 logger = logging.getLogger(__name__)
 
 class reader(abstract_reader):
-    '''CYME-->DiTTo Reader class
+    '''
+        CYME-->DiTTo Reader class
 
-Author: Nicolas Gensollen. October 2017
+        Author: Nicolas Gensollen. October 2017
 
-.. note::
+        .. note::
 
-    Different versions of CYME might have different header names for the same object.
-    The reader class has a mapping between the objects and the header names with the default mapping being for CYME version XXX (see table below).
-    When using another version of CYME, make sure to modify this mapping to have something consistent:
+            Different versions of CYME might have different header names for the same object.
+            The reader class has a mapping between the objects and the header names with the default mapping being for CYME version XXX (see table below).
+            When using another version of CYME, make sure to modify this mapping to have something consistent:
 
-    >>> my_reader.update_header_mapping(modifications)
+            >>> my_reader.update_header_mapping(modifications)
 
-    Here, modification is a dictionary {object: header} of updates to apply to the default mapping.
+            Here, modification is a dictionary {object: header} of updates to apply to the default mapping.
 
 
-**Default header mapping:**
+        **Default header mapping:**
 
-+-------------------------------------------+--------------------------------------------+
-|                      Object               |                      Header                |
-+===========================================+============================================+
-|                                       NODE PARSER                                      |
-+-------------------------------------------+--------------------------------------------+
-|                      'node'               |                     '[NODE]'               |
-+-------------------------------------------+--------------------------------------------+
-|                                       LINE PARSER                                      |
-+-------------------------------------------+--------------------------------------------+
-|     'overhead_unbalanced_line_settings'   |      '[OVERHEADLINEUNBALANCED SETTING]'    |
-+-------------------------------------------+--------------------------------------------+
-|            'overhead_line_settings'       |            '[OVERHEADLINE SETTING]'        |
-+-------------------------------------------+--------------------------------------------+
-|          'overhead_byphase_settings'      |            '[OVERHEAD BYPHASE SETTING]'    |
-+-------------------------------------------+--------------------------------------------+
-|          'underground_line_settings'      |          '[UNDERGROUNDLINE SETTING]'       |
-+-------------------------------------------+--------------------------------------------+
-|                'switch_settings'          |               '[SWITCH SETTING]'           |
-+-------------------------------------------+--------------------------------------------+
-|                 'fuse_settings'           |                '[FUSE SETTING]'            |
-+-------------------------------------------+--------------------------------------------+
-|               'recloser_settings'         |             '[RECLOSER SETTING]'           |
-+-------------------------------------------+--------------------------------------------+
-|                    'section'              |                    '[SECTION]'             |
-+-------------------------------------------+--------------------------------------------+
-|                     'line'                |                     '[LINE]'               |
-+-------------------------------------------+--------------------------------------------+
-|                'unbalanced_line'          |               '[LINE UNBALANCED]'          |
-+-------------------------------------------+--------------------------------------------+
-|                'spacing_table'            |           '[SPACING TABLE FOR LINE]'       |
-+-------------------------------------------+--------------------------------------------+
-|          'concentric_neutral_cable'       |         '[CONCENTRIC NEUTRAL CABLE]'       |
-+-------------------------------------------+--------------------------------------------+
-|                   'conductor'             |                  '[CONDUCTOR]'             |
-+-------------------------------------------+--------------------------------------------+
-|                                    CAPACITOR PARSER                                    |
-+-------------------------------------------+--------------------------------------------+
-|           'serie_capacitor_settings'      |          '[SERIE CAPACITOR SETTING]'       |
-+-------------------------------------------+--------------------------------------------+
-|           'shunt_capacitor_settings'      |          '[SHUNT CAPACITOR SETTING]'       |
-+-------------------------------------------+--------------------------------------------+
-|                'serie_capacitor'          |               '[SERIE CAPACITOR]'          |
-+-------------------------------------------+--------------------------------------------+
-|                'shunt_capacitor'          |               '[SHUNT CAPACITOR]'          |
-+-------------------------------------------+--------------------------------------------+
-|                                   TRANSFORMER PARSER                                   |
-+-------------------------------------------+--------------------------------------------+
-|          'auto_transformer_settings'      |           '[AUTO TRANSFORMER SETTING'      |
-+-------------------------------------------+--------------------------------------------+
-|       'grounding_transformer_settings'    |       '[GROUNDINGTRANSFORMER SETTINGS]'    |
-+-------------------------------------------+--------------------------------------------+
-| 'three_winding_auto_transformer_settings' | '[THREE WINDING AUTO TRANSFORMER SETTING]' |
-+-------------------------------------------+--------------------------------------------+
-|    'three_winding_transformer_settings'   |     '[THREE WINDING TRANSFORMER SETTING]'  |
-+-------------------------------------------+--------------------------------------------+
-|             'transformer_settings'        |              '[TRANSFORMER SETTING]'       |
-+-------------------------------------------+--------------------------------------------+
-|               'auto_transformer'          |                '[AUTO TRANSFORMER]'        |
-+-------------------------------------------+--------------------------------------------+
-|             'grounding_transformer'       |               '[GROUNDING TRANSFORMER]'    |
-+-------------------------------------------+--------------------------------------------+
-|        'three_winding_auto_transformer'   |        '[THREE WINDING AUTO TRANSFORMER]'  |
-+-------------------------------------------+--------------------------------------------+
-|           'three_winding_transformer'     |           '[THREE WINDING TRANSFORMER]'    |
-+-------------------------------------------+--------------------------------------------+
-|                 'transformer'             |                   '[TRANSFORMER]'          |
-+-------------------------------------------+--------------------------------------------+
-|           'phase_shifter_transformer'     |          '[PHASE SHIFTER TRANSFORMER]'     |
-+-------------------------------------------+--------------------------------------------+
-|                                    REGULATOR PARSER                                    |
-+-------------------------------------------+--------------------------------------------+
-|              'regulator_settings'         |                '[REGULATOR SETTING]'       |
-+-------------------------------------------+--------------------------------------------+
-|                  'regulator'              |                    '[REGULATOR]'           |
-+-------------------------------------------+--------------------------------------------+
-|                                       LOAD PARSER                                      |
-+-------------------------------------------+--------------------------------------------+
-|                'customer_loads'           |                  '[CUSTOMER LOADS]'        |
-+-------------------------------------------+--------------------------------------------+
-|                'customer_class'           |                  '[CUSTOMER CLASS]'        |
-+-------------------------------------------+--------------------------------------------+
-|                     'loads'               |                     '[LOADS]'              |
-+-------------------------------------------+--------------------------------------------+
-
-'''
+        +-------------------------------------------+--------------------------------------------+
+        |                      Object               |                      Header                |
+        +===========================================+============================================+
+        |                                       NODE PARSER                                      |
+        +-------------------------------------------+--------------------------------------------+
+        |                      'node'               |                     '[NODE]'               |
+        +-------------------------------------------+--------------------------------------------+
+        |                                       LINE PARSER                                      |
+        +-------------------------------------------+--------------------------------------------+
+        |     'overhead_unbalanced_line_settings'   |      '[OVERHEADLINEUNBALANCED SETTING]'    |
+        +-------------------------------------------+--------------------------------------------+
+        |            'overhead_line_settings'       |            '[OVERHEADLINE SETTING]'        |
+        +-------------------------------------------+--------------------------------------------+
+        |          'overhead_byphase_settings'      |            '[OVERHEAD BYPHASE SETTING]'    |
+        +-------------------------------------------+--------------------------------------------+
+        |          'underground_line_settings'      |          '[UNDERGROUNDLINE SETTING]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |                'switch_settings'          |               '[SWITCH SETTING]'           |
+        +-------------------------------------------+--------------------------------------------+
+        |                 'fuse_settings'           |                '[FUSE SETTING]'            |
+        +-------------------------------------------+--------------------------------------------+
+        |               'recloser_settings'         |             '[RECLOSER SETTING]'           |
+        +-------------------------------------------+--------------------------------------------+
+        |                    'section'              |                    '[SECTION]'             |
+        +-------------------------------------------+--------------------------------------------+
+        |                     'line'                |                     '[LINE]'               |
+        +-------------------------------------------+--------------------------------------------+
+        |                'unbalanced_line'          |               '[LINE UNBALANCED]'          |
+        +-------------------------------------------+--------------------------------------------+
+        |                'spacing_table'            |           '[SPACING TABLE FOR LINE]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |          'concentric_neutral_cable'       |         '[CONCENTRIC NEUTRAL CABLE]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |                   'conductor'             |                  '[CONDUCTOR]'             |
+        +-------------------------------------------+--------------------------------------------+
+        |                                    CAPACITOR PARSER                                    |
+        +-------------------------------------------+--------------------------------------------+
+        |           'serie_capacitor_settings'      |          '[SERIE CAPACITOR SETTING]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |           'shunt_capacitor_settings'      |          '[SHUNT CAPACITOR SETTING]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |                'serie_capacitor'          |               '[SERIE CAPACITOR]'          |
+        +-------------------------------------------+--------------------------------------------+
+        |                'shunt_capacitor'          |               '[SHUNT CAPACITOR]'          |
+        +-------------------------------------------+--------------------------------------------+
+        |                                   TRANSFORMER PARSER                                   |
+        +-------------------------------------------+--------------------------------------------+
+        |          'auto_transformer_settings'      |           '[AUTO TRANSFORMER SETTING'      |
+        +-------------------------------------------+--------------------------------------------+
+        |       'grounding_transformer_settings'    |       '[GROUNDINGTRANSFORMER SETTINGS]'    |
+        +-------------------------------------------+--------------------------------------------+
+        | 'three_winding_auto_transformer_settings' | '[THREE WINDING AUTO TRANSFORMER SETTING]' |
+        +-------------------------------------------+--------------------------------------------+
+        |    'three_winding_transformer_settings'   |     '[THREE WINDING TRANSFORMER SETTING]'  |
+        +-------------------------------------------+--------------------------------------------+
+        |             'transformer_settings'        |              '[TRANSFORMER SETTING]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |               'auto_transformer'          |                '[AUTO TRANSFORMER]'        |
+        +-------------------------------------------+--------------------------------------------+
+        |             'grounding_transformer'       |               '[GROUNDING TRANSFORMER]'    |
+        +-------------------------------------------+--------------------------------------------+
+        |        'three_winding_auto_transformer'   |        '[THREE WINDING AUTO TRANSFORMER]'  |
+        +-------------------------------------------+--------------------------------------------+
+        |           'three_winding_transformer'     |           '[THREE WINDING TRANSFORMER]'    |
+        +-------------------------------------------+--------------------------------------------+
+        |                 'transformer'             |                   '[TRANSFORMER]'          |
+        +-------------------------------------------+--------------------------------------------+
+        |           'phase_shifter_transformer'     |          '[PHASE SHIFTER TRANSFORMER]'     |
+        +-------------------------------------------+--------------------------------------------+
+        |                                    REGULATOR PARSER                                    |
+        +-------------------------------------------+--------------------------------------------+
+        |              'regulator_settings'         |                '[REGULATOR SETTING]'       |
+        +-------------------------------------------+--------------------------------------------+
+        |                  'regulator'              |                    '[REGULATOR]'           |
+        +-------------------------------------------+--------------------------------------------+
+        |                                       LOAD PARSER                                      |
+        +-------------------------------------------+--------------------------------------------+
+        |                'customer_loads'           |                  '[CUSTOMER LOADS]'        |
+        +-------------------------------------------+--------------------------------------------+
+        |                'customer_class'           |                  '[CUSTOMER CLASS]'        |
+        +-------------------------------------------+--------------------------------------------+
+        |                     'loads'               |                     '[LOADS]'              |
+        +-------------------------------------------+--------------------------------------------+
+    '''
     def __init__(self, **kwargs):
-        '''CYME-->DiTTo class constructor
-
-'''
+        '''
+            CYME-->DiTTo class constructor
+        '''
         #Call super
         abstract_reader.__init__(self, **kwargs)
 
@@ -223,21 +223,17 @@ Author: Nicolas Gensollen. October 2017
 
 
     def update_header_mapping(self, update):
-        '''This method changes the default object<->header mapping.
-This can be useful when using a different version of CYME for example.
+        '''
+            This method changes the default object<->header mapping.
+            This can be useful when using a different version of CYME for example.
 
-**Usage:**
+            **Usage:**
 
->>> my_reader.update_header_mapping(modifications)
+            >>> my_reader.update_header_mapping(modifications)
 
-:param update: New object<->header mapping
-:type update: dict
-
-**Default mapping:**
-
-COPY PASTE FROM CONSTRCTOR
-
-'''
+            :param update: New object<->header mapping
+            :type update: dict
+        '''
         #Check that the update is a Python dict
         if not isinstance(update, dict):
             raise ValueError('update_header_mapping expects a dictionary. A {type} instance was provided'.format(type(update)))
@@ -261,18 +257,15 @@ COPY PASTE FROM CONSTRCTOR
 
 
 
-
-
-
     def get_file_content(self, filename):
-        '''Open the requested file and returns the content.
-For convinience, filename can be either the full file path or:
+        '''
+            Open the requested file and returns the content.
+            For convinience, filename can be either the full file path or:
 
--'network': Will get the content of the network file given in the constructor
--'equipment': Will get the content of the equipment file given in the constructor
--'load': Will get the content of the load file given in the constructor
-
-'''
+                -'network': Will get the content of the network file given in the constructor
+                -'equipment': Will get the content of the equipment file given in the constructor
+                -'load': Will get the content of the load file given in the constructor
+        '''
         #Shortcut mapping
         if filename=='network':
             filename=os.path.join(self.data_folder_path,self.network_filename)
@@ -293,33 +286,33 @@ For convinience, filename can be either the full file path or:
 
 
     def phase_mapping(self, CYME_value):
-        '''Maps the CYME phase value format to a list of ABC phases:
+        '''
+            Maps the CYME phase value format to a list of ABC phases:
 
-+------------+--------------+
-| CYME value | Return value |
-+============+==============+
-|     0      |     [None]   |
-+------------+--------------+
-|     1      |     ['A']    |
-+------------+--------------+
-|     2      |     ['B']    |
-+------------+--------------+
-|     3      |     ['C']    |
-+------------+--------------+
-|     4      |  ['A','B']   |
-+------------+--------------+
-|     5      |  ['A','C']   |
-+------------+--------------+
-|     6      |  ['B','C']   |
-+------------+--------------+
-|     7      | ['A','B','C']|
-+------------+--------------+
+            +------------+--------------+
+            | CYME value | Return value |
+            +============+==============+
+            |     0      |     [None]   |
+            +------------+--------------+
+            |     1      |     ['A']    |
+            +------------+--------------+
+            |     2      |     ['B']    |
+            +------------+--------------+
+            |     3      |     ['C']    |
+            +------------+--------------+
+            |     4      |  ['A','B']   |
+            +------------+--------------+
+            |     5      |  ['A','C']   |
+            +------------+--------------+
+            |     6      |  ['B','C']   |
+            +------------+--------------+
+            |     7      | ['A','B','C']|
+            +------------+--------------+
 
-.. note::
+            .. note::
 
-If the value provided is not an integer in [0,7], the function assumes that it receives a string like 'ABC'. In this case, it splits the string in a list of phases ['A','B','C'].
-
-'''
+                If the value provided is not an integer in [0,7], the function assumes that it receives a string like 'ABC'. In this case, it splits the string in a list of phases ['A','B','C'].
+        '''
         if CYME_value==0: return [None]
         elif CYME_value==1: return ['A']
         elif CYME_value==2: return ['B']
@@ -335,21 +328,21 @@ If the value provided is not an integer in [0,7], the function assumes that it r
 
 
     def phase_to_num(self, phase):
-        '''Maps phase in 'A', 'B', 'C' format in 1, 2, 3 format.
+        '''
+            Maps phase in 'A', 'B', 'C' format in 1, 2, 3 format.
 
-**Mapping:**
+            **Mapping:**
 
-+--------+-------+
-| letter | digit |
-+========+=======+
-|   'A'  |   1   |
-+--------+-------+
-|   'B'  |   2   |
-+--------+-------+
-|   'C'  |   3   |
-+--------+-------+
-
-'''
+            +--------+-------+
+            | letter | digit |
+            +========+=======+
+            |   'A'  |   1   |
+            +--------+-------+
+            |   'B'  |   2   |
+            +--------+-------+
+            |   'C'  |   3   |
+            +--------+-------+
+        '''
         if phase=='A' or phase=='a': return '1'
         elif phase=='B' or phase=='b': return '2'
         elif phase=='C' or phase=='c': return '3'
@@ -357,36 +350,34 @@ If the value provided is not an integer in [0,7], the function assumes that it r
 
 
 
-
-
     def load_value_type_mapping(self, load_type, value1, value2):
-        '''CYME customer loads provide two values v1 and v2 as well as a load value type:
-This function takes these as inputs and outputs P and Q of the load.
+        '''
+            CYME customer loads provide two values v1 and v2 as well as a load value type:
+            This function takes these as inputs and outputs P and Q of the load.
 
-:param load_type: CYME load type
-:type load_type: int or str (see table below)
-:param value1: Value 1
-:type value1: float
-:param value2: Value 2
-:type value2: float
-:returns: P and Q
-:rtype: KW and KVAR
+            :param load_type: CYME load type
+            :type load_type: int or str (see table below)
+            :param value1: Value 1
+            :type value1: float
+            :param value2: Value 2
+            :type value2: float
+            :returns: P and Q
+            :rtype: KW and KVAR
 
-**Mapping:**
+            **Mapping:**
 
-+-----------+------------+-----------------+------------------------------------------+
-| type code | type value |        P        |                 Q                        |
-+===========+============+=================+==========================================+
-|    0      |  KW_KVAR   | :math:`v_1`     | :math:`v_2`                              |
-+-----------+------------+-----------------+------------------------------------------+
-|    1      |  KVA_PF    | :math:`v_1 v_2` | :math:`v_1 \\sqrt{1-v_2^2}`              |
-+-----------+------------+-----------------+------------------------------------------+
-|    2      |  KW_PF     | :math:`v_1`     | :math:`\\frac{v_1}{v_2} \\sqrt{1-v_2^2}` |
-+-----------+------------+-----------------+------------------------------------------+
-|    3      |  AMP_PF    |      ??         |                  ??                      |
-+-----------+------------+-----------------+------------------------------------------+
-
-'''
+            +-----------+------------+-----------------+------------------------------------------+
+            | type code | type value |        P        |                 Q                        |
+            +===========+============+=================+==========================================+
+            |    0      |  KW_KVAR   | :math:`v_1`     | :math:`v_2`                              |
+            +-----------+------------+-----------------+------------------------------------------+
+            |    1      |  KVA_PF    | :math:`v_1 v_2` | :math:`v_1 \\sqrt{1-v_2^2}`              |
+            +-----------+------------+-----------------+------------------------------------------+
+            |    2      |  KW_PF     | :math:`v_1`     | :math:`\\frac{v_1}{v_2} \\sqrt{1-v_2^2}` |
+            +-----------+------------+-----------------+------------------------------------------+
+            |    3      |  AMP_PF    |      ??         |                  ??                      |
+            +-----------+------------+-----------------+------------------------------------------+
+        '''
         if not isinstance(value1, float):
             try:
                 value1=float(value1)
@@ -416,29 +407,27 @@ This function takes these as inputs and outputs P and Q of the load.
 
 
 
-
-
     def capacitors_connection_mapping(self, conn):
-        '''Maps the capacitors connection in CYME (CAP_CONN) to DiTTo connection_type.
+        '''
+            Maps the capacitors connection in CYME (CAP_CONN) to DiTTo connection_type.
 
-:param conn: Connection in CYME
-:type conn: integer or string
-:returns: Connection in DiTTo
-:rtype: str
+            :param conn: Connection in CYME
+            :type conn: integer or string
+            :returns: Connection in DiTTo
+            :rtype: str
 
-**Mapping:**
+            **Mapping:**
 
-+---------------+-----------------------+
-| CYME CAP_CONN | DiTTo connection_type |
-+===============+=======================+
-|   0 or 'Y'    |           'Y'         |
-+---------------+-----------------------+
-|   1 or 'YNG'  |           'Y'         |
-+---------------+-----------------------+
-|   2 or 'D'    |           'D'         |
-+---------------+-----------------------+
-
-'''
+            +---------------+-----------------------+
+            | CYME CAP_CONN | DiTTo connection_type |
+            +===============+=======================+
+            |   0 or 'Y'    |           'Y'         |
+            +---------------+-----------------------+
+            |   1 or 'YNG'  |           'Y'         |
+            +---------------+-----------------------+
+            |   2 or 'D'    |           'D'         |
+            +---------------+-----------------------+
+        '''
         if not isinstance(conn, (str,int)):
             raise ValueError('capacitors_connection_mapping only accepts int or string. {} was provided.'.format(type(conn)))
 
@@ -452,31 +441,31 @@ This function takes these as inputs and outputs P and Q of the load.
 
 
     def connection_configuration_mapping(self, value):
-        '''Map the connection configuration from CYME to DiTTo.
+        '''
+            Map the connection configuration from CYME to DiTTo.
 
-**Mapping:**
+            **Mapping:**
 
-+----------+----------------+------------+
-|   Value  |       CYME     |  DiTTo     |
-+==========+================+============+
-| 0 or '0' |       'Yg'     |   'Y'      |
-+----------+----------------+------------+
-| 1 or '1' |       'Y'      |   'Y'      |
-+----------+----------------+------------+
-| 2 or '2' |     'Delta'    |   'D'      |
-+----------+----------------+------------+
-| 3 or '3' |  'Open Delta'  |   'D'      |
-+----------+----------------+------------+
-| 4 or '4' | 'Closed Delta' |   'D'      |
-+----------+----------------+------------+
-| 5 or '5' |      'Zg'      |   'Z'      |
-+----------+----------------+------------+
-| 6 or '6' |      'CT'      | NOT MAPPED |
-+----------+----------------+------------+
-| 7 or '7' |      'Dg'      | NOT MAPPED |
-+----------+----------------+------------+
-
-'''
+            +----------+----------------+------------+
+            |   Value  |       CYME     |  DiTTo     |
+            +==========+================+============+
+            | 0 or '0' |       'Yg'     |   'Y'      |
+            +----------+----------------+------------+
+            | 1 or '1' |       'Y'      |   'Y'      |
+            +----------+----------------+------------+
+            | 2 or '2' |     'Delta'    |   'D'      |
+            +----------+----------------+------------+
+            | 3 or '3' |  'Open Delta'  |   'D'      |
+            +----------+----------------+------------+
+            | 4 or '4' | 'Closed Delta' |   'D'      |
+            +----------+----------------+------------+
+            | 5 or '5' |      'Zg'      |   'Z'      |
+            +----------+----------------+------------+
+            | 6 or '6' |      'CT'      | NOT MAPPED |
+            +----------+----------------+------------+
+            | 7 or '7' |      'Dg'      | NOT MAPPED |
+            +----------+----------------+------------+
+        '''
         if isinstance(value, int):
             if value in [0,1]: return 'Y'
             if value in [2,3,4]: return 'D'
@@ -496,50 +485,50 @@ This function takes these as inputs and outputs P and Q of the load.
 
 
     def transformer_connection_configuration_mapping(self, value, winding):
-        '''Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
+        '''
+            Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
 
-:param value: CYME value (either string or id)
-:type value: int or str
-:param winding: Number of the winding (0 or 1)
-:type winding: int
-:returns: DiTTo connection configuration for the requested winding
-:rtype: str
+            :param value: CYME value (either string or id)
+            :type value: int or str
+            :param winding: Number of the winding (0 or 1)
+            :type winding: int
+            :returns: DiTTo connection configuration for the requested winding
+            :rtype: str
 
-**Mapping:**
+            **Mapping:**
 
-+----------+----------------+------------+
-|   Value  |       CYME     |  DiTTo     |
-+----------+----------------+-----+------+
-|          |                | 1st | 2nd  |
-+==========+================+=====+======+
-| 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
-+----------+----------------+-----+------+
-| 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
-+----------+----------------+-----+------+
-| 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
-+----------+----------------+-----+------+
-| 3 or '3' |    'YNG_YNG'   | 'Y' | 'Y'  |
-+----------+----------------+-----+------+
-| 4 or '4' |      'D_D'     | 'D' | 'D'  |
-+----------+----------------+-----+------+
-| 5 or '5' |     'DO_DO'    | 'D' | 'D'  |
-+----------+----------------+-----+------+
-| 6 or '6' |     'YO_DO'    | 'Y' | 'D'  |
-+----------+----------------+-----+------+
-| 7 or '7' |     'D_YNG'    | 'D' | 'Y'  |
-+----------+----------------+-----+------+
-| 8 or '8' |     'YNG_D'    | 'Y' | 'D'  |
-+----------+----------------+-----+------+
-| 9 or '9' |     'Y_YNG'    | 'Y' | 'Y'  |
-+----------+----------------+-----+------+
-|10 or '10'|     'YNG_Y'    | 'Y' | 'Y'  |
-+----------+----------------+-----+------+
-|11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
-+----------+----------------+-----+------+
-|12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
-+----------+----------------+-----+------+
-
-'''
+            +----------+----------------+------------+
+            |   Value  |       CYME     |  DiTTo     |
+            +----------+----------------+-----+------+
+            |          |                | 1st | 2nd  |
+            +==========+================+=====+======+
+            | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
+            +----------+----------------+-----+------+
+            | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
+            +----------+----------------+-----+------+
+            | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
+            +----------+----------------+-----+------+
+            | 3 or '3' |    'YNG_YNG'   | 'Y' | 'Y'  |
+            +----------+----------------+-----+------+
+            | 4 or '4' |      'D_D'     | 'D' | 'D'  |
+            +----------+----------------+-----+------+
+            | 5 or '5' |     'DO_DO'    | 'D' | 'D'  |
+            +----------+----------------+-----+------+
+            | 6 or '6' |     'YO_DO'    | 'Y' | 'D'  |
+            +----------+----------------+-----+------+
+            | 7 or '7' |     'D_YNG'    | 'D' | 'Y'  |
+            +----------+----------------+-----+------+
+            | 8 or '8' |     'YNG_D'    | 'Y' | 'D'  |
+            +----------+----------------+-----+------+
+            | 9 or '9' |     'Y_YNG'    | 'Y' | 'Y'  |
+            +----------+----------------+-----+------+
+            |10 or '10'|     'YNG_Y'    | 'Y' | 'Y'  |
+            +----------+----------------+-----+------+
+            |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
+            +----------+----------------+-----+------+
+            |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
+            +----------+----------------+-----+------+
+        '''
         if winding not in [0,1]:
             raise ValueError('transformer_connection_configuration_mapping expects an integer 0 or 1 for winding arg. {} was provided.'.format(winding))
 
@@ -577,16 +566,16 @@ This function takes these as inputs and outputs P and Q of the load.
 
 
     def check_object_in_line(self, line, obj):
-        '''Check if the header corresponding to object is in the given line.
+        '''
+            Check if the header corresponding to object is in the given line.
 
-:param line: Text line from CYME ASCII file
-:type line: str
-:param obj: Object of interest that exists in the mapping
-:type obj: str
-:returns: True if the header is in line. False otherwise.
-:rtype: bool
-
-'''
+            :param line: Text line from CYME ASCII file
+            :type line: str
+            :param obj: Object of interest that exists in the mapping
+            :type obj: str
+            :returns: True if the header is in line. False otherwise.
+            :rtype: bool
+        '''
         #Safety checks
         if not isinstance(line, str):
             raise ValueError('check_object_in_line expects a string for both line and object. A {type} instance was provided for line.'.format(type=type(line)))
@@ -602,17 +591,14 @@ This function takes these as inputs and outputs P and Q of the load.
 
 
 
-
-
-
     def parser_helper(self, line, obj_list, attribute_list, mapping, *args):
-        '''.. warning:: This is a helper function for the parsers. Do not use directly.
+        '''
+            .. warning:: This is a helper function for the parsers. Do not use directly.
 
-Takes as input the list of objects we want to parse as well as the list of attributes we want to extract.
-Also takes the default positions of the attributes (mapping).
-The function returns a list of dictionaries, where each dictionary contains the values of the desired attributes of a CYME object.
-
-'''
+            Takes as input the list of objects we want to parse as well as the list of attributes we want to extract.
+            Also takes the default positions of the attributes (mapping).
+            The function returns a list of dictionaries, where each dictionary contains the values of the desired attributes of a CYME object.
+        '''
         if isinstance(attribute_list, list):
             attribute_list=np.array(attribute_list)
 
@@ -691,14 +677,14 @@ The function returns a list of dictionaries, where each dictionary contains the 
 
 
     def parse(self, model, **kwargs):
-        '''Parse the CYME model to DiTTo.
+        '''
+            Parse the CYME model to DiTTo.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:param verbose: Set the verbose mode. Optional. Default=True
-:type verbose: bool
-
-'''
+            :param model: DiTTo model
+            :type model: DiTTo model
+            :param verbose: Set the verbose mode. Optional. Default=True
+            :type verbose: bool
+        '''
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose=kwargs['verbose']
         else:
@@ -721,12 +707,12 @@ The function returns a list of dictionaries, where each dictionary contains the 
 
 
     def parse_header(self):
-        '''Parse the information available in the header.
-Here, we are interested in the version of CYME used in the provided files, as well as the unit system used.
-Since the reader was developed using the documentation for CYME v.8.0, give a warning if the version if different.
-The user is then responsible to check the differences betweeen the two versions.
-
-'''
+        '''
+            Parse the information available in the header.
+            Here, we are interested in the version of CYME used in the provided files, as well as the unit system used.
+            Since the reader was developed using the documentation for CYME v.8.0, give a warning if the version if different.
+            The user is then responsible to check the differences betweeen the two versions.
+        '''
         cyme_version=None
         self.use_SI=None
 
@@ -765,6 +751,9 @@ The user is then responsible to check the differences betweeen the two versions.
 
 
     def parse_sources(self, model):
+        '''
+            Parse the sources.
+        '''
 
         #Open the network file
         self.get_file_content('network')
@@ -978,16 +967,13 @@ The user is then responsible to check the differences betweeen the two versions.
 
 
 
-
-
-
     def parse_nodes(self, model):
-        '''Parse the nodes from CYME to DiTTo.
+        '''
+            Parse the nodes from CYME to DiTTo.
 
-:param model: DiTTo model
-:type model: DiTTo model
-
-'''
+            :param model: DiTTo model
+            :type model: DiTTo model
+        '''
         self._nodes=[]
 
         #Open the network file
@@ -1042,9 +1028,9 @@ The user is then responsible to check the differences betweeen the two versions.
 
 
     def configure_wire(self, model, conductor_data, spacing_data, phase, is_switch, is_fuse):
-        '''Helper function that creates a DiTTo wire object and configures it.
-
-'''
+        '''
+            Helper function that creates a DiTTo wire object and configures it.
+        '''
         #Instanciate the wire DiTTo object
         api_wire=Wire(model)
 
@@ -1106,37 +1092,37 @@ The user is then responsible to check the differences betweeen the two versions.
 
 
     def parse_sections(self, model):
-        '''This function is responsible for parsing the sections. It is expecting the following structure:
-...
+        '''
+            This function is responsible for parsing the sections. It is expecting the following structure:
+            ...
 
-[SECTION]
-FORMAT_section=sectionid,fromnodeid,tonodeid,phase
-FORMAT_Feeder=networkid,headnodeid
-Feeder=feeder_1,head_feeder_1
-section_1_feeder_1,node_1,node_2,ABC
-...
-...
-Feeder=feeder_2,head_feeder_2
-section_1_feeder_2,node_1,node_2,ABC
-...
-...
+            [SECTION]
+            FORMAT_section=sectionid,fromnodeid,tonodeid,phase
+            FORMAT_Feeder=networkid,headnodeid
+            Feeder=feeder_1,head_feeder_1
+            section_1_feeder_1,node_1,node_2,ABC
+            ...
+            ...
+            Feeder=feeder_2,head_feeder_2
+            section_1_feeder_2,node_1,node_2,ABC
+            ...
+            ...
 
-**What is done in this function:**
+            **What is done in this function:**
 
-- We need to create a clear and fast mapping between feeders and sectionids
-- Same thing, mapping between sectionids and nodes/phases
-- Since we will be using these structures a lot in the reader, we need something fast that does not involve looping like crazy
+            - We need to create a clear and fast mapping between feeders and sectionids
+            - Same thing, mapping between sectionids and nodes/phases
+            - Since we will be using these structures a lot in the reader, we need something fast that does not involve looping like crazy
 
-**Data structures:**
+            **Data structures:**
 
-1) feeder_section_mapping: dictionary where keys are network_ids and values are lists of section id_s
-2) section_feeder_mapping: dictionary where keys are section ids and values are network_ids
-   (to perform the opposite query as 1) without having to look in every lists of section ids until we find the good one...)
-3) section_phase_mapping: dictionary where keys are section ids and values are tuples (node_1, node_2, phase)
+            1) feeder_section_mapping: dictionary where keys are network_ids and values are lists of section id_s
+            2) section_feeder_mapping: dictionary where keys are section ids and values are network_ids
+               (to perform the opposite query as 1) without having to look in every lists of section ids until we find the good one...)
+            3) section_phase_mapping: dictionary where keys are section ids and values are tuples (node_1, node_2, phase)
 
-.. warning:: This should be called prior to any other parser because the other parsers rely on these 3 data structures.
-
-'''
+            .. warning:: This should be called prior to any other parser because the other parsers rely on these 3 data structures.
+        '''
         self.feeder_section_mapping={}
         self.section_feeder_mapping={}
         self.section_phase_mapping ={}
@@ -1248,16 +1234,13 @@ section_1_feeder_2,node_1,node_2,ABC
                     line=next(self.content)
 
 
-
-
-
     def parse_lines(self, model):
-        '''Parse the lines from CYME to DiTTo.
+        '''
+            Parse the lines from CYME to DiTTo.
 
-:param model: DiTTo model
-:type model: DiTTo model
-
-'''
+            :param model: DiTTo model
+            :type model: DiTTo model
+        '''
         #Default mapp (positions if all fields are present in the format)
         #These numbers come from the CYME documentation (position of the fields)
         mapp_overhead={'sectionid':0,
@@ -2117,14 +2100,10 @@ section_1_feeder_2,node_1,node_2,ABC
 
 
 
-
-
-
     def parse_capacitors(self, model):
-        '''Parse the capacitors from CYME to DiTTo.
-
-'''
-
+        '''
+            Parse the capacitors from CYME to DiTTo.
+        '''
         #Instanciate the list in which we store the DiTTo capacitor objects
         self._capacitors=[]
 
@@ -2363,12 +2342,10 @@ section_1_feeder_2,node_1,node_2,ABC
 
 
 
-
-
     def parse_transformers(self, model):
-        '''Parse the transformers from CYME to DiTTo.
-
-'''
+        '''
+            Parse the transformers from CYME to DiTTo.
+        '''
         #Instanciate the list in which we store the DiTTo transformer objects
         self._transformers=[]
 
@@ -2883,19 +2860,16 @@ section_1_feeder_2,node_1,node_2,ABC
 
 
 
-
-
-
     def parse_regulators(self, model):
-        '''Parse the regulators from CYME to DiTTo.
+        '''
+            Parse the regulators from CYME to DiTTo.
 
-.. note::
+            .. note::
 
-In CYME a regulator does not have to be associated with a transformer (as it is the case for OpenDSS for example).
-In addition, a regulator can monitor multiple phases.
-The parser should create the transformers and create separate regulator objects for different phases.
-
-'''
+            In CYME a regulator does not have to be associated with a transformer (as it is the case for OpenDSS for example).
+            In addition, a regulator can monitor multiple phases.
+            The parser should create the transformers and create separate regulator objects for different phases.
+        '''
         #Instanciate the list in which we store the DiTTo regulator objects
         self._regulators=[]
 
@@ -3115,7 +3089,9 @@ The parser should create the transformers and create separate regulator objects 
         return 1
 
     def parse_loads(self, model):
-        '''Parse the loads from CYME to DiTTo.'''
+        '''
+            Parse the loads from CYME to DiTTo.
+        '''
         #Instanciate the list in which we store the DiTTo load objects
         self._loads={}
 
