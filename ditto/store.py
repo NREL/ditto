@@ -49,7 +49,6 @@ class Store(object):
     """
 
     __store_factory = dict
-    logger = logger
 
     def __init__(self):
 
@@ -110,11 +109,11 @@ class Store(object):
         self._network.set_attributes(self)
 
     def print_networkx(self):
-        print('Printing Nodes...')
+        logger.debug('Printing Nodes...')
         self._network.print_nodes()
-        print('Printing Edges...')
+        logger.debug('Printing Edges...')
         self._network.print_edges()
-        #print('Printing Attributes...')
+        #logger.debug('Printing Attributes...')
         #self._network.print_attrs()
 
     ''' First convert graph to directed graph (doubles the edges hence creating length 2 cycles)
@@ -126,18 +125,18 @@ class Store(object):
     def delete_cycles(self):
         for i in self._network.find_cycles():
             if len(i) > 2:
-                print('Detected cycle {cycle}'.format(cycle=i))
+                logger.debug('Detected cycle {cycle}'.format(cycle=i))
                 edge = self._network.middle_single_phase(i)
                 for j in self.models:
                     if hasattr(j, 'name') and j.name == edge:
-                        print('deleting ' + edge)
+                        logger.debug('deleting ' + edge)
                         modifier = Modifier()
                         modifier.delete_element(self, j)
         self.build_networkx()
 
     def direct_from_source(self):
         ordered_nodes = self._network.bfs_order()
-        #print(ordered_nodes)
+        #logger.debug(ordered_nodes)
         for i in self.models:
             if hasattr(i, 'from_element') and i.from_element is not None and hasattr(i, 'to_element') and i.to_element is not None:
                 original = (i.from_element, i.to_element)
@@ -152,7 +151,7 @@ class Store(object):
             if isinstance(i, Node) and hasattr(i, 'name') and i.name is not None:
                 connected_nodes = self._network.get_nodes()
                 if not i.name in connected_nodes:
-                    print('deleting ' + i.name)
+                    logger.debug('deleting ' + i.name)
                     modifier = Modifier()
                     modifier.delete_element(self, i)
 

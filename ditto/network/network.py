@@ -3,11 +3,14 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import random
-import networkx as nx
 import traceback
+
+import networkx as nx
 from ditto.models.base import DiTToHasTraits
 
+logging.getLogger(__name__)
 
 class Network:
     def __init__(self):
@@ -193,15 +196,15 @@ This might be handy when trying to find all the objects below a substation such 
         #Checking that the network is already built
         #TODO: Log instead of printing...
         if not self.is_built:
-            print('Warning. Trying to use Network model without building the network.')
-            print('Calling build() with source={}'.format(source))
+            logger.debug('Warning. Trying to use Network model without building the network.')
+            logger.debug('Calling build() with source={}'.format(source))
             self.build(model, source=source)
 
         #Checking that the attributes have been set
         #TODO: Log instead of printing...
         if not self.attributes_set:
-            print('Warning. Trying to use Network model without setting the attributes first.')
-            print('Setting the attributes...')
+            logger.debug('Warning. Trying to use Network model without setting the attributes first.')
+            logger.debug('Setting the attributes...')
             self.set_attributes(model)
 
         #Run the dfs or die trying...
@@ -246,16 +249,16 @@ This might be handy when trying to find all the objects below a substation such 
         for i in self.graph.nodes():
             try:
                 sp = nx.shortest_path(self.graph, 'sourcebus', i)
-                print(i, sp)
+                logger.debug(i, sp)
             except:
-                print('No path to ' + i)
+                logger.debug('No path to ' + i)
 
     def print_edges(self):
         for i in self.graph.edges():
-            print(i)
+            logger.debug(i)
 
     def print_attrs(self):
-        print(self.graph.nodes(data=True))
+        logger.debug(self.graph.nodes(data=True))
 
     def bfs_order(self, source='sourcebus'):
         start_node = self.graph[source]
@@ -310,8 +313,8 @@ This might be handy when trying to find all the objects below a substation such 
         pos_max_cnt = -1
         min_phase = 1000
         for i in range(len(nodes)):
-            #print('phaselen:')
-            #print(len(self.graph.node[nodes[i]]['phases']))
+            #logger.debug('phaselen:')
+            #logger.debug(len(self.graph.node[nodes[i]]['phases']))
             if (not 'phases' in self.graph.node[nodes[i]]) or self.graph.node[nodes[i]]['phases'] == None:
                 pos = rand.randint(0, len(nodes) - 2)
                 order1 = tuple([nodes[pos], nodes[pos + 1]])
@@ -322,7 +325,7 @@ This might be handy when trying to find all the objects below a substation such 
                     return (self.graph[order2[0]][order2[1]]['name'])
             if len(self.graph.node[nodes[i]]['phases']) < min_phase:
                 min_phase = len(self.graph.node[nodes[i]]['phases'])
-        #print(min_phase)
+        #logger.debug(min_phase)
         for i in range(len(nodes)):
             node = nodes[i]
             if at_1p_section and len(self.graph.node[node]['phases']) > min_phase:
@@ -342,10 +345,10 @@ This might be handy when trying to find all the objects below a substation such 
             order1 = tuple([nodes[pos_max_cnt - max_cnt / 2], nodes[pos_max_cnt - max_cnt / 2 + 1]])
             order2 = tuple([nodes[pos_max_cnt - max_cnt / 2 + 1], nodes[pos_max_cnt - max_cnt / 2]])
             if order1 in self.graph.edges():
-                print(order1)
+                logger.debug(order1)
                 return (self.graph[order1[0]][order1[1]]['name'])
             else:
-                print(order2)
+                logger.debug(order2)
                 return (self.graph[order2[0]][order2[1]]['name'])
         else:
             return ()

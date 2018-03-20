@@ -1,10 +1,12 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import os
 from glob import glob
 import argparse
 
+logger = logging.getLogger(__name__)
 
 def main():
     '''This module is designed for cleaning log files that might accumulate in the validation folder.
@@ -58,7 +60,7 @@ def remove_log_and_return_subfolders(path):
     log_files = glob(path.strip('/') + '/*.log')
     for log_file in log_files:
         os.remove(log_file)
-        print('-->cleaned:: {}'.format(log_file))
+        logger.debug('-->cleaned:: {}'.format(log_file))
 
     subfolders = [path.strip('/') + '/' + x for x in os.listdir(path) if '.' not in x]
     if len(subfolders) == 0:

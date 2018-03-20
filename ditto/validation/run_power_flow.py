@@ -3,9 +3,12 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import logging
 import os
 import argparse
 import opendssdirect as dss
+
+logger = logging.getLogger(__name__)
 
 
 def run_opendss_power_flow(path_to_master, path_to_export):
@@ -16,10 +19,10 @@ def run_opendss_power_flow(path_to_master, path_to_export):
 '''
     result = dss.dss_lib.DSSPut_Command('redirect {}master.dss'.format(path_to_master))
     if result != '':
-        print('Unable to run {}master.dss'.format(path_to_master))
+        logger.debug('Unable to run {}master.dss'.format(path_to_master))
         return
     else:
-        print('{}master.dss done.'.format(path_to_master))
+        logger.debug('{}master.dss done.'.format(path_to_master))
     dss.dss_lib.DSSPut_Command('Export voltages {}voltage_profile.csv'.format(path_to_export))
 
 

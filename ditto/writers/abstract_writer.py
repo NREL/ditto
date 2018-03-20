@@ -5,6 +5,7 @@ from builtins import super, range, zip, round, map
 import sys
 import logging
 
+LOGGER = logging.getLogger(__name__)
 
 class abstract_writer:
     '''Abstract class for DiTTo writers.
@@ -28,89 +29,71 @@ author: Nicolas Gensollen. October 2017.
             self.output_path = './'
 
         # create logger
-        self.logger = logging.getLogger('writer')
-        self.logger.setLevel(logging.INFO)
-
-        # create file handler which logs everything
-        self.fh = logging.FileHandler(log_file)
-        self.fh.setLevel(logging.INFO)
-
-        # create console handler with WARNING log level
-        self.ch = logging.StreamHandler()
-        self.ch.setLevel(logging.WARNING)
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.fh.setFormatter(formatter)
-        self.ch.setFormatter(formatter)
-
-        # add the handlers to the logger
-        self.logger.addHandler(self.fh)
-        self.logger.addHandler(self.ch)
+        self.logger = LOGGER
 
     #@abstractmethod
     def write(self, model, **kwargs):
         '''Write abstract method.
 
-.. note:: To be implemented in subclasses.
+        .. note:: To be implemented in subclasses.
 
-'''
+        '''
         pass
 
     def convert_from_meters(self, quantity, unit, **kwargs):
         '''Converts a distance in meters to a distance in given unit.
 
-:param quantity: Distance in meter to convert
-:type quantity: float
-:param unit: The unit to convert to
-:type unit: str (see below the units supported)
-:param inverse: Use inverse ration (see below)
-:type inverse: bool
-:returns: The distance in the requested unit
-:rtype: float
+        :param quantity: Distance in meter to convert
+        :type quantity: float
+        :param unit: The unit to convert to
+        :type unit: str (see below the units supported)
+        :param inverse: Use inverse ration (see below)
+        :type inverse: bool
+        :returns: The distance in the requested unit
+        :rtype: float
 
-**Units supported:**
+        **Units supported:**
 
-The units supported are the OpenDSS available units:
+        The units supported are the OpenDSS available units:
 
-        - miles ('mi')
-        - kilometers ('km')
-        - kilofeet ('kft')
-        - meters ('m')
-        - feet ('ft')
-        - inches ('in')
-        - centimeters ('cm')
+                - miles ('mi')
+                - kilometers ('km')
+                - kilofeet ('kft')
+                - meters ('m')
+                - feet ('ft')
+                - inches ('in')
+                - centimeters ('cm')
 
 
-**Ratios:**
+        **Ratios:**
 
-The ratios used are the ones provided by Google. The following table summerize the multipliers to obtain the unit:
+        The ratios used are the ones provided by Google. The following table summerize the multipliers to obtain the unit:
 
-+--------+------------+
-|  Unit  | Multiplier |
-+========+============+
-|   mi   | 0.000621371|
-+--------+------------+
-|   km   |    0.001   |
-+--------+------------+
-|   kft  | 0.00328084 |
-+--------+------------+
-|    m   |     1      |
-+--------+------------+
-|   ft   |   3.28084  |
-+--------+------------+
-|   in   |   39.3701  |
-+--------+------------+
-|   cm   |     100    |
-+--------+------------+
+        +--------+------------+
+        |  Unit  | Multiplier |
+        +========+============+
+        |   mi   | 0.000621371|
+        +--------+------------+
+        |   km   |    0.001   |
+        +--------+------------+
+        |   kft  | 0.00328084 |
+        +--------+------------+
+        |    m   |     1      |
+        +--------+------------+
+        |   ft   |   3.28084  |
+        +--------+------------+
+        |   in   |   39.3701  |
+        +--------+------------+
+        |   cm   |     100    |
+        +--------+------------+
 
-.. note:: If the unit is not one of these, the function returns None
+        .. note:: If the unit is not one of these, the function returns None
 
-.. warning:: This function is a duplicate (also exists for the OpenDSS reader). Reproduce here for convenience.
+        .. warning:: This function is a duplicate (also exists for the OpenDSS reader). Reproduce here for convenience.
 
-.. seealso:: convert_to_meters, unit_conversion
+        .. seealso:: convert_to_meters, unit_conversion
 
-'''
+        '''
         if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
             inverse = kwargs['inverse']
         else:

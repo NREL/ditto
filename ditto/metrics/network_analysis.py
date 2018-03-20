@@ -3,13 +3,16 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-import networkx as nx
-import numpy as np
+import logging
 import math
 import time
 import pandas as pd
 import logging
 from scipy.spatial import ConvexHull
+
+import networkx as nx
+import numpy as np
+import pandas as pd
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
@@ -20,7 +23,6 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.node import Node
 
 logger = logging.getLogger(__name__)
-
 
 class network_analyzer():
     '''
@@ -267,7 +269,8 @@ class network_analyzer():
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
-                        logger.warning('Node {name} was not found in feeder mapping'.format(name=obj.name))
+                        logger.debug('Node {name} was not found in feeder mapping'.format(name=obj.name))
+                        
                 elif hasattr(obj, 'connecting_element'):
                     if obj.connecting_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.connecting_element]
@@ -275,7 +278,8 @@ class network_analyzer():
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
-                        logger.warning(
+
+                        logger.debug(
                             'Object {name} connecting element {namec} was not found in feeder mapping'.format(
                                 name=obj.name, namec=obj.connecting_element
                             )
@@ -287,9 +291,10 @@ class network_analyzer():
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
-                        logger.warning('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
+
+                        logger.debug('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
                 else:
-                    logger.warning(obj.name, type(obj))
+                    logger.debug(obj.name, type(obj))
 
     def connect_disconnected_components(self, feeder_name):
         '''
@@ -776,7 +781,7 @@ class network_analyzer():
         elif hasattr(obj, 'from_element') and obj.from_element in self.node_feeder_mapping:
             return self.node_feeder_mapping[obj.from_element]
         else:
-            logger.warning('Could not find feeder for {}'.format(obj.name))
+            logger.debug('Could not find feeder for {}'.format(obj.name))
             return None
 
     def compute_all_metrics_per_feeder(self):
