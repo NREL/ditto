@@ -6,6 +6,9 @@ from builtins import super, range, zip, round, map
 import logging
 import math
 import time
+import pandas as pd
+import logging
+from scipy.spatial import ConvexHull
 
 import networkx as nx
 import numpy as np
@@ -21,107 +24,110 @@ from ditto.models.node import Node
 
 logger = logging.getLogger(__name__)
 
-
 class network_analyzer():
-    '''This class is used to compute validation metrics from the DiTTo representation itself.
+    '''
+        This class is used to compute validation metrics from the DiTTo representation itself.
 
 
-**Initialization:**
+        **Initialization:**
 
->>> analyst=network_analyzer(model, source)
+            >>> analyst=network_analyzer(model, source)
 
-Where model is the DiTTo model under consideration, and source is the source node.
-
-
-**Usage:**
-
-There are different ways to use this class:
-
-    - Compute metrics for the whole network.
-
-        - Compute a specific metric:
-
-            >>> n_regulator=analyst.number_of_regulators()
-
-            This will compute the number of regulators in the whole network.
-
-        - Compute all metrics:
-
-            >>> results=analyst.compute_all_metrics()
-
-            This will compute all the available metrics in the whole network.
-
-            .. warning:: Some metrics have N^2 complexity...
-
-    - Compute metrics for individual feeders.
-
-        - Compute a specific metric:
-
-            >>> n_regulator=analyst.number_of_regulators(feeder_1)
-
-            This will compute the number of regulators for a feeder named 'feeder_1'.
-
-            .. warning:: Currently not implemented.
-
-        - Compute all metrics for all feeders:
-
-            >>> results=analyst.compute_all_metrics_per_feeder()
-
-            This will compute all available metrics for all feeders.
-
-            .. warning:: This requires having done the feeder split of the network. (See section 'feeder split')
+            Where model is the DiTTo model under consideration, and source is the source node.
 
 
-**Feeder split:**
+        **Usage:**
 
-To compute the metrics at the feeder level, you have to provide the following:
+            There are different ways to use this class:
 
-    - feeder_names: A list of the feeder names.
-    - feeder_nodes: A list of lists which contains the nodes in each feeder. (indexing should be consistent with feeder_names)
+                - Compute metrics for the whole network.
 
-Give this information to the network_analyzer is straightforward:
+                    - Compute a specific metric:
 
-    >>> analyst.add_feeder_information(feeder_names, feeder_nodes)
+                        >>> n_regulator=analyst.number_of_regulators()
 
-The actual feeder split is done through:
+                        This will compute the number of regulators in the whole network.
 
-    >>> analyst.split_network_into_feeders()
+                    - Compute all metrics:
+
+                        >>> results=analyst.compute_all_metrics()
+
+                        This will compute all the available metrics in the whole network.
+
+                        .. warning:: Some metrics have N^2 complexity...
+
+                - Compute metrics for individual feeders.
+
+                    - Compute a specific metric:
+
+                        >>> n_regulator=analyst.number_of_regulators(feeder_1)
+
+                        This will compute the number of regulators for a feeder named 'feeder_1'.
+
+                        .. warning:: Currently not implemented.
+
+                    - Compute all metrics for all feeders:
+
+                        >>> results=analyst.compute_all_metrics_per_feeder()
+
+                        This will compute all available metrics for all feeders.
+
+                        .. warning:: This requires having done the feeder split of the network. (See section 'feeder split')
 
 
-.. note::
+        **Feeder split:**
 
-    - Using compute_all_metrics or compute_all_metrics_per_feeder only loops over the objects once in order to improve performance.
-      It is NOT a wrapper that calls the metric functions one by one.
-      Therefore, it is strongly recommanded to use one of these two methods when more than a few metrics are needed.
-    - The class constructor is building the network (using the DiTTo Network module) which can take some time...
+            To compute the metrics at the feeder level, you have to provide the following:
 
-Author: Nicolas Gensollen. December 2017
+                - feeder_names: A list of the feeder names.
+                - feeder_nodes: A list of lists which contains the nodes in each feeder. (indexing should be consistent with feeder_names)
 
-'''
+            Give this information to the network_analyzer is straightforward:
 
-    def __init__(self, model, source):
-        '''Class CONSTRUCTOR.
+                >>> analyst.add_feeder_information(feeder_names, feeder_nodes)
 
-'''
+            The actual feeder split is done through:
+
+                >>> analyst.split_network_into_feeders()
+
+        .. note::
+
+            - Using compute_all_metrics or compute_all_metrics_per_feeder only loops over the objects once in order to improve performance.
+              It is NOT a wrapper that calls the metric functions one by one.
+              Therefore, it is strongly recommanded to use one of these two methods when more than a few metrics are needed.
+            - The class constructor is building the network (using the DiTTo Network module) which can take some time...
+
+        Author: Nicolas Gensollen. December 2017
+    '''
+
+    def __init__(self, model, source, compute_network=True):
+        '''
+            Class CONSTRUCTOR.
+        '''
         #Store the model as attribute
         self.model = model
 
         #Store the source name as attribute
         self.source = source
 
-        #Build the Network
+        #Build the Network if required
         #
         #WARNING: Time consuming...
         #
-        self.G = Network()
-        self.G.build(self.model, source=self.source)
+        if compute_network:
+            self.G = Network()
+            self.G.build(self.model, source=self.source)
 
-        #Set the attributes in the graph
-        self.G.set_attributes(self.model)
+            #Set the attributes in the graph
+            self.G.set_attributes(self.model)
 
-        #Equipment types and names on the edges
-        self.edge_equipment = nx.get_edge_attributes(self.G.graph, 'equipment')
-        self.edge_equipment_name = nx.get_edge_attributes(self.G.graph, 'equipment_name')
+            #Equipment types and names on the edges
+            self.edge_equipment = nx.get_edge_attributes(self.G.graph, 'equipment')
+            self.edge_equipment_name = nx.get_edge_attributes(self.G.graph, 'equipment_name')
+        else:
+            self.G=None
+            self.edge_equipment=None
+            self.edge_equipment_name=None
 
         #IMPORTANT: the following two parameters define what is LV and what is MV.
         #- Object is LV if object.nominal_voltage<=LV_threshold
@@ -136,20 +142,33 @@ Author: Nicolas Gensollen. December 2017
 
         self.feeder_networks = {}
         self.node_feeder_mapping = {}
+        self.points = {}
 
         self.__substations = [obj for obj in self.model.models if isinstance(obj, PowerTransformer) and obj.is_substation == 1]
 
+    def provide_network(self,network):
+        '''
+            TODO
+        '''
+        if not isinstance(network, Network):
+            raise TypeError('provide_network expects a Network instance. A {t} was provided.'.format(t=type(network)))
+        self.G=network
+        self.G.set_attributes(self.model)
+        self.edge_equipment = nx.get_edge_attributes(self.G.graph, 'equipment')
+        self.edge_equipment_name = nx.get_edge_attributes(self.G.graph, 'equipment_name')
+
+
     def add_feeder_information(self, feeder_names, feeder_nodes, substations, feeder_types):
-        '''Use this function to add the feeder information if available.
+        '''
+            Use this function to add the feeder information if available.
 
-:param feeder_names: List of the feeder names
-:type feeder_names: List(str)
-:param feeder_nodes: List of lists containing feeder nodes
-:type feeder_nodes: List of Lists of strings
-:param feeder_types: List of feeder types.
-:type feeder_types: List or string if all feeders have the same type
-
-'''
+            :param feeder_names: List of the feeder names
+            :type feeder_names: List(str)
+            :param feeder_nodes: List of lists containing feeder nodes
+            :type feeder_nodes: List of Lists of strings
+            :param feeder_types: List of feeder types.
+            :type feeder_types: List or string if all feeders have the same type
+        '''
         if len(feeder_names) != len(feeder_nodes):
             raise ValueError(
                 'Number of feeder names {a} does not match number of feeder lists of nodes {b}'.format(a=len(feeder_names), b=len(feeder_nodes))
@@ -168,11 +187,11 @@ Author: Nicolas Gensollen. December 2017
         self.substations = substations
 
     def split_network_into_feeders(self):
-        '''This function splits the network into subnetworks corresponding to the feeders.
+        '''
+            This function splits the network into subnetworks corresponding to the feeders.
 
-.. note:: add_feeder_information should be called first
-
-'''
+            .. note:: add_feeder_information should be called first
+        '''
         if self.feeder_names is None or self.feeder_nodes is None:
             raise ValueError('Cannot split the network into feeders because feeders are unknown. Call add_feeder_information first.')
 
@@ -197,16 +216,12 @@ Author: Nicolas Gensollen. December 2017
                 self.node_feeder_mapping[node] = feeder_name
 
     def export(self, *args):
-        '''Export the metrics to excel report card.
+        '''
+            Export the metrics to excel report card.
 
-:param export_path: Relative path to the output file
-:type export_path: str
-
-.. TODO:: Include all required metrics in here.
-
-.. warning:: Not well tested...
-
-'''
+            :param export_path: Relative path to the output file
+            :type export_path: str
+        '''
         #TODO: Add some safety checks here...
         if args:
             export_path = args[0]
@@ -242,10 +257,9 @@ Author: Nicolas Gensollen. December 2017
         xlsx_writer.save()
 
     def tag_objects(self):
-        '''TODO...
-
-'''
-
+        '''
+            Loop over the objects and fill the feeder_name and substaation_name attributes.
+        '''
         for obj in self.model.models:
             if hasattr(obj, 'feeder_name'):
                 if isinstance(obj, Node):
@@ -256,6 +270,7 @@ Author: Nicolas Gensollen. December 2017
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
                         logger.debug('Node {name} was not found in feeder mapping'.format(name=obj.name))
+                        
                 elif hasattr(obj, 'connecting_element'):
                     if obj.connecting_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.connecting_element]
@@ -263,6 +278,7 @@ Author: Nicolas Gensollen. December 2017
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
+
                         logger.debug(
                             'Object {name} connecting element {namec} was not found in feeder mapping'.format(
                                 name=obj.name, namec=obj.connecting_element
@@ -275,16 +291,17 @@ Author: Nicolas Gensollen. December 2017
                     else:
                         obj.feeder_name = 'subtransmission'
                         obj.substation_name = self.source
+
                         logger.debug('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
                 else:
                     logger.debug(obj.name, type(obj))
 
     def connect_disconnected_components(self, feeder_name):
-        '''Helper function for split_network_into_feeders.
-This function takes the first two disconnected components in the feeder network corresponding to feeder_name, and connects them with a shortest path.
-The underlying assumption is that all nodes lying on the shortest path are actual members of this feeder.
-
-'''
+        '''
+            Helper function for split_network_into_feeders.
+            This function takes the first two disconnected components in the feeder network corresponding to feeder_name, and connects them with a shortest path.
+            The underlying assumption is that all nodes lying on the shortest path are actual members of this feeder.
+        '''
         #Get the index of feeder_name
         idx = self.feeder_names.index(feeder_name)
 
@@ -323,19 +340,19 @@ The underlying assumption is that all nodes lying on the shortest path are actua
                 self.feeder_nodes[idx].append(node)
 
     def setup_results_data_structure(self, *args):
-        '''This function creates the data structure which contains the result metrics for a SINGLE network.
+        '''
+            This function creates the data structure which contains the result metrics for a SINGLE network.
 
-**Usage:**
+            **Usage:**
 
->>> data_struct=network_analyzer.setup_results_data_structure(network)
+                >>> data_struct=network_analyzer.setup_results_data_structure(network)
 
-The network argument can be a networkx Graph or networkx DiGraph or a string representing the name of a known feeder.
+                The network argument can be a networkx Graph or networkx DiGraph or a string representing the name of a known feeder.
 
->>> data_struct=network_analyzer.setup_results_data_structure()
+                >>> data_struct=network_analyzer.setup_results_data_structure()
 
-This will create the data structure for the whole network.
-
-'''
+                This will create the data structure for the whole network.
+        '''
         #If arguments were provided
         if args:
 
@@ -405,6 +422,9 @@ This will create the data structure for the whole network.
         #Create the results dictionary.
         #Note: All metrics relying on networkX calls are computed here.
         #
+
+        logger.info('Analyzing network {name}...'.format(name=network))
+
         results = {
             'nb_of_regulators': 0, #Number of regulators
             'Substation_Capacity_MVA': sub_MVA,
@@ -414,7 +434,10 @@ This will create the data structure for the whole network.
             'nb_of_breakers': 0,
             'nb_of_capacitors': 0, #Number of capacitors
             'number_of_customers': 0,
+            'number_of_links_to_adjacent_feeders': 0, #Number of links to neighboring feeders
+            'number_of_overloaded_transformer': 0, #Number of overloaded transformers
             'nb_of_distribution_transformers': 0, #Number of distribution transformers
+            'maximum_length_of_secondaries':0, #Maximum distance in the feeder between a distribution transformer and a load
             'distribution_transformer_total_capacity_MVA': 0, #Total capacity of distribution transformers (in MVA)
             'nb_1ph_Xfrm': 0, #Number of 1 phase distribution transformers
             'nb_3ph_Xfrm': 0, #Number of 3 phase distribution transformers
@@ -423,6 +446,7 @@ This will create the data structure for the whole network.
             'diameter': self.diameter(_net), #Network diameter (in number of edges, NOT in distance)
             'average_path_length': self.average_path_length(_net), #Average path length (in number of edges, NOT in distance)
             'furtherest_node_miles': self.furtherest_node_miles(_net, _src),
+            'nb_loops_within_feeder': self.loops_within_feeder(_net), #Number of loops inside the feeder
             'lv_length_miles': 0, #Total length of LV lines (in miles)
             'mv_length_miles': 0, #Total length of MV lines (in miles)
             'length_mv1ph_miles': 0, #Total length of 1 phase MV lines (in miles)
@@ -449,6 +473,7 @@ This will create the data structure for the whole network.
             'demand_LV_phase_B': 0, #Total LV demand on phase B
             'demand_LV_phase_C': 0, #Total LV demand on phase C
             'nb_load_per_transformer': {}, #Store the number of loads per distribution transformer
+            'wire_equipment_distribution': {}, #Store the number of each wire equipment
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'substation_name': _src,
             'Feeder_type': None,
@@ -458,12 +483,41 @@ This will create the data structure for the whole network.
         return results
 
     def analyze_object(self, obj, feeder_name):
-        '''This function takes as input a DiTTo object and the name of the corresponding feeder, and analyze it.
-All information needed for the metric extraction is updated here.
+        '''
+            This function takes as input a DiTTo object and the name of the corresponding feeder, and analyze it.
+            All information needed for the metric extraction is updated here.
+        '''
+        #If the object has some coordinate values
+        #then we add the points to the list of points for the feeder
+        if hasattr(obj, 'positions') and obj.positions is not None:
+            for position in obj.positions:
+                X=position.long
+                Y=position.lat
+                if X is not None and Y is not None:
+                    if feeder_name in self.points:
+                        self.points[feeder_name].append([X,Y])
+                    else:
+                        self.points[feeder_name]=[[X,Y]]
 
-'''
         #If we get a line
         if isinstance(obj, Line):
+
+            #Update the number of links to adjacent feeders
+            #Look at the to and from element
+            #If they have a valid feeder name attribute, simply compare the two and 
+            #update the count if needed
+            if (hasattr(obj, 'from_element') and obj.from_element is not None and
+                hasattr(obj, 'to_element') and obj.to_element is not None):
+                try:
+                    _from=self.model[obj.from_element]
+                    _to  =self.model[obj.to_element]
+                except KeyError:
+                    _from=None
+                    _to=None
+                if (hasattr(_from, 'feeder_name') and _from.feeder_name is not None and
+                    hasattr(_to, 'feeder_name') and _to.feeder_name is not None):
+                    if _from.feeder_name!=_to.feeder_name:
+                        self.results[feeder_name]['number_of_links_to_adjacent_feeders']+=1
 
             #Update the counts
             #
@@ -483,9 +537,17 @@ All information needed for the metric extraction is updated here.
             if obj.is_breaker == 1:
                 self.results[feeder_name]['nb_of_breakers'] += 1
 
-            #Get the phases (needed later)
             if hasattr(obj, 'wires') and obj.wires is not None:
+                #Get the phases (needed later)
                 phases = [wire.phase for wire in obj.wires if wire.phase in ['A', 'B', 'C'] and wire.drop != 1]
+
+                #Get the equipment name distribution
+                equipment_names=[wire.nameclass for wire in obj.wires]
+                for eq in equipment_names:
+                    if eq in self.results[feeder_name]['wire_equipment_distribution']:
+                        self.results[feeder_name]['wire_equipment_distribution'][eq]+=1
+                    else:
+                        self.results[feeder_name]['wire_equipment_distribution'][eq]=1
 
             #If we do not have phase information, raise an error...
             else:
@@ -645,8 +707,47 @@ All information needed for the metric extraction is updated here.
         #If we get a Transformer
         if isinstance(obj, PowerTransformer):
 
-            #Update the count
-            #self.results[feeder_name]['nb_of_distribution_transformers']+=1
+            #Determine if the transformer is overloaded or not
+            #If we have the load names in the mapping for this transformer...
+            if obj.name in self.transformer_load_mapping:
+                load_names=self.transformer_load_mapping[obj.name]
+
+                #This section updates the maximum length of secondaries
+                #If the graph contains the transformer's connecting element
+                if (hasattr(obj,'to_element') and
+                    obj.to_element is not None and
+                    self.G.graph.has_node(obj.to_element)):
+                    #Compute the distance from the transformer's connecting
+                    #element to every load downstream of it
+                    for load_name in load_names:
+                        try:
+                            load_obj=self.model[load_name]
+                        except KeyError:
+                            load_obj=None
+                        if hasattr(load_obj,'connecting_element') and load_obj.connecting_element is not None:
+                            if self.G.graph.has_node(load_obj.connecting_element):
+                                length=nx.shortest_path_length(self.G.graph, obj.to_element, load_obj.connecting_element, weight='length')
+                                if length>self.results[feeder_name]['maximum_length_of_secondaries']:
+                                    self.results[feeder_name]['maximum_length_of_secondaries']=length
+
+                #...compute the total load KVA downstream
+                total_load_kva=0
+                for load_name in load_names:
+                    try:
+                        load_obj=self.model[load_name]
+                    except KeyError:
+                        load_obj=None
+                    if hasattr(load_obj,'phase_loads') and load_obj.phase_loads is not None:
+                        for pl in load_obj.phase_loads:
+                            if (hasattr(pl,'p') and pl.p is not None and
+                                hasattr(pl,'q') and pl.q is not None):
+                                total_load_kva+=math.sqrt(pl.p**2+pl.q**2)
+                #...compute the transformer KVA
+                if hasattr(obj,'windings') and obj.windings is not None:
+                    transformer_kva=sum([wdg.rated_power for wdg in obj.windings if wdg.rated_power is not None])
+                #...and, compare the two values
+                if total_load_kva>transformer_kva:
+                    self.results[feeder_name]['number_of_overloaded_transformer']+=1
 
             if hasattr(obj, 'windings') and obj.windings is not None and len(obj.windings) > 0:
 
@@ -669,10 +770,10 @@ All information needed for the metric extraction is updated here.
             return
 
     def get_feeder(self, obj):
-        '''Returns the name of the feeder which contains the given object.
-If no matching feeder is found, the function returns None.
-
-'''
+        '''
+            Returns the name of the feeder which contains the given object.
+            If no matching feeder is found, the function returns None.
+        '''
         if obj.name in self.node_feeder_mapping:
             return self.node_feeder_mapping[obj.name]
         elif hasattr(obj, 'connecting_element') and obj.connecting_element in self.node_feeder_mapping:
@@ -684,15 +785,16 @@ If no matching feeder is found, the function returns None.
             return None
 
     def compute_all_metrics_per_feeder(self):
-        '''Computes all the available metrics for each feeder.
-
-'''
+        '''
+            Computes all the available metrics for each feeder.
+        '''
+        self.transformer_load_mapping=self.get_transformer_load_mapping()
         self.load_distribution = []
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
             'lv_length_miles', 'mv_length_miles', 'length_mv1ph_miles', 'length_mv2ph_miles', 'length_mv3ph_miles', 'length_lv1ph_miles',
             'length_lv2ph_miles', 'length_lv3ph_miles', 'length_OH_mv1ph_miles', 'length_OH_mv2ph_miles', 'length_OH_mv3ph_miles',
-            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles'
+            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries'
         ]
 
         #List of keys to divide by 10^3
@@ -750,13 +852,29 @@ If no matching feeder is found, the function returns None.
                 if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k] *= 10**-3
 
+            #Density metrics
+            #
+            #Get the list of points for the feeder
+            try:
+                _points=np.array(self.points[_feeder_ref])
+            except KeyError:
+                _points=[]
+            #Having more than 2 points to compute the convex hull surface is a good thing...
+            if len(_points)>2:
+                hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
+                hull_surf_sqmile = hull.area * 3.86102*10**-7 #Convert surface from square meters to square miles 
+                if hull_surf_sqmile!=0:
+                    self.results[_feeder_ref]['customer_density']=float(self.results[_feeder_ref]['number_of_customers'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['load_density']    =float(self.results[_feeder_ref]['total_demand'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['var_density']     =float(self.results[_feeder_ref]['total_kVar'])/float(hull_surf_sqmile)
+
     def compute_all_metrics(self):
-        '''This function computes all the metrics for the whole network in a way that optimizes performance.
-Instead of calling all the metrics one by one, we loop over the objects only once and update the metrics.
+        '''
+            This function computes all the metrics for the whole network in a way that optimizes performance.
+            Instead of calling all the metrics one by one, we loop over the objects only once and update the metrics.
 
-.. note:: If you only need a very few metrics, it is probably better to call the functions responsible for them.
-
-'''
+            .. note:: If you only need a very few metrics, it is probably better to call the functions responsible for them.
+        '''
         self.results = {'global': self.setup_results_data_structure()}
         self.load_distribution = []
 
@@ -815,57 +933,135 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
                     self.results[_feeder_ref][k] *= 10**-3
 
     def number_of_regulators(self):
-        '''Returns the number of regulators.
-
-'''
+        '''
+            Returns the number of regulators.
+        '''
         return sum([1 for obj in self.model.models if isinstance(obj, Regulator)])
 
     def number_of_fuses(self):
-        '''Returns the number of fuses.
-
-'''
+        '''
+            Returns the number of fuses.
+        '''
         return sum([1 for obj in self.model.models if isinstance(obj, Line) and obj.is_fuse == 1])
 
     def number_of_reclosers(self):
-        '''Returns the number of reclosers.
-
-'''
+        '''
+            Returns the number of reclosers.
+        '''
         return sum([1 for obj in self.model.models if isinstance(obj, Line) and obj.is_recloser == 1])
 
     def number_of_switches(self):
-        '''Returns the number of switches.
-
-'''
+        '''
+            Returns the number of switches.
+        '''
         return sum([1 for obj in self.model.models if isinstance(obj, Line) and obj.is_switch == 1])
 
     def number_of_capacitors(self):
-        '''Returns the number of capacitors.
-
-'''
+        '''
+            Returns the number of capacitors.
+        '''
         return sum([1 for obj in self.model.models if isinstance(obj, Capacitor)])
 
     def average_degree(self, *args):
-        '''Returns the average degree of the network.
-
-'''
+        '''
+            Returns the average degree of the network.
+        '''
         if args:
             return np.mean([x[1] for x in list(nx.degree(args[0]))])
         else:
             return np.mean([x[1] for x in list(nx.degree(self.G.graph))])
 
     def diameter(self, *args):
-        '''Returns the diameter of the network.
-
-'''
+        '''
+            Returns the diameter of the network.
+        '''
         if args:
             return nx.diameter(args[0])
         else:
             return nx.diameter(self.G.graph)
 
-    def average_path_length(self, *args):
-        '''Returns the average path length of the network.
+    def loops_within_feeder(self, *args):
+        '''
+            Returns the number of loops within a feeder.
+        '''
+        if args:
+            return len(nx.cycle_basis(args[0]))
+        else:
+            return len(nx.cycle_basis(self.G.graph))
 
-'''
+    def get_transformer_load_mapping(self):
+        '''
+            Loop over the loads and go upstream in the network until a distribution transformer is found.
+            Returns a dictionary where keys are transformer names and values are lists holding names of
+            loads downstream of the transformer.
+        '''
+        transformer_load_mapping={}
+        load_list = []
+        for _obj in self.model.models:
+            if isinstance(_obj, Load):
+                load_list.append(_obj)
+
+        #Get the connecting elements of the loads.
+        #These will be the starting points of the upstream walks in the graph
+        connecting_elements = [load.connecting_element for load in load_list]
+
+        #For each connecting element...
+        for idx, end_node in enumerate(connecting_elements):
+
+            if self.G.digraph.has_node(end_node):
+                should_continue = True
+            else:
+                should_continue = False
+
+            #Find the upstream transformer by walking the graph upstream
+            while should_continue:
+
+                #Get predecessor node of current node in the DAG
+                try:
+                    from_node = next(self.G.digraph.predecessors(end_node))
+                except StopIteration:
+                    should_continue=False
+                    continue
+
+                #Look for the type of equipment that makes the connection between from_node and to_node
+                _type = None
+                if (from_node, end_node) in self.edge_equipment:
+                    _type = self.edge_equipment[(from_node, end_node)]
+                elif (end_node, from_node) in self.edge_equipment:
+                    _type = self.edge_equipment[(end_node, from_node)]
+
+                #It could be a Line, a Transformer...
+                #If it is a transformer, then we have found the upstream transformer...
+                if _type == 'PowerTransformer':
+
+                    #...we can then stop the loop...
+                    should_continue = False
+
+                    #...and grab the transformer name to retrieve the data from the DiTTo object
+                    if (from_node, end_node) in self.edge_equipment_name:
+                        transformer_name=self.edge_equipment_name[(from_node, end_node)]
+                    elif (end_node, from_node) in self.edge_equipment_name:
+                        transformer_name=self.edge_equipment_name[(end_node, from_node)]
+                    #If we cannot find the object, raise an error because it sould not be the case...
+                    else:
+                        raise ValueError('Unable to find equipment between {_from} and {_to}'.format(_from=from_node, _to=end_node))
+
+                    if transformer_name in transformer_load_mapping:
+                        transformer_load_mapping[transformer_name].append(load_list[idx].name)
+                    else:
+                        transformer_load_mapping[transformer_name]=[load_list[idx].name]
+
+                #Go upstream...
+                end_node = from_node
+
+        return transformer_load_mapping
+
+
+
+    def average_path_length(self, *args):
+        '''
+            Returns the average path length of the network.
+        '''
         if args:
             try:
                 return nx.average_shortest_path_length(args[0])
@@ -875,11 +1071,11 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
             return nx.average_shortest_path_length(self.G.graph)
 
     def furtherest_node_miles(self, *args):
-        '''Returns the maximum eccentricity from the source, in miles.
+        '''
+            Returns the maximum eccentricity from the source, in miles.
 
-.. warning:: Not working....
-
-'''
+            .. warning:: Not working....
+        '''
         if args:
             if len(args) == 1:
                 _net = args[0]
@@ -900,13 +1096,13 @@ Instead of calling all the metrics one by one, we loop over the objects only onc
         return np.max(list(dist.values())) * 0.000621371 #Convert length to miles
 
     def furtherest_node_miles_clever(self):
-        '''Returns the maximum eccentricity from the source, in miles.
+        '''
+            Returns the maximum eccentricity from the source, in miles.
 
-Relies on the assumption that the furthrest node is a leaf, which is often True in distribution systems.
+            Relies on the assumption that the furthrest node is a leaf, which is often True in distribution systems.
 
-.. warning:: Not working....
-
-'''
+            .. warning:: Not working....
+        '''
         dist = {}
         for node in self.G.graph.nodes():
             if nx.degree(self.G.graph, node) == 1:
@@ -914,9 +1110,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return np.max(list(dist.values())) * 0.000621371 #Convert length to miles
 
     def lv_length_miles(self):
-        '''Returns the sum of the low voltage line lengths in miles.
-
-'''
+        '''
+            Returns the sum of the low voltage line lengths in miles.
+        '''
         total_length = 0
         for obj in self.model.models:
             if isinstance(obj, Line):
@@ -926,9 +1122,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return total_length * 0.000621371 #Convert length to miles
 
     def mv_length_miles(self):
-        '''Returns the sum of the medium voltage line lengths in miles.
-
-'''
+        '''
+            Returns the sum of the medium voltage line lengths in miles.
+        '''
         total_length = 0
         for obj in self.model.models:
             if isinstance(obj, Line):
@@ -938,9 +1134,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return total_length * 0.000621371 #Convert length to miles
 
     def length_mvXph_miles(self, X):
-        '''Returns the sum of the medium voltage, X phase, line lengths in miles.
-
-'''
+        '''
+            Returns the sum of the medium voltage, X phase, line lengths in miles.
+        '''
         if not isinstance(X, int):
             raise ValueError('Number of phases should be an integer.')
         if not 1 <= X <= 3:
@@ -956,9 +1152,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return total_length * 0.000621371 #Convert length to miles
 
     def length_lvXph_miles(self, X):
-        '''Returns the sum of the low voltage, X phase, line lengths in miles.
-
-'''
+        '''
+            Returns the sum of the low voltage, X phase, line lengths in miles.
+        '''
         if not isinstance(X, int):
             raise ValueError('Number of phases should be an integer.')
         if not 1 <= X <= 3:
@@ -974,9 +1170,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return total_length * 0.000621371 #Convert length to miles
 
     def total_demand(self):
-        '''Returns the sum of all loads active power in kW.
-
-'''
+        '''
+            Returns the sum of all loads active power in kW.
+        '''
         tot_demand = 0
         for obj in self.model.models:
             if isinstance(obj, Load):
@@ -985,9 +1181,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return tot_demand * 10**-3 #in kW
 
     def total_reactive_power(self):
-        '''Returns the sum of all loads reactive power in kVar.
-
-'''
+        '''
+            Returns the sum of all loads reactive power in kVar.
+        '''
         tot_kVar = 0
         for obj in self.model.models:
             if isinstance(obj, Load):
@@ -996,9 +1192,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return tot_kVar * 10**-3 #in kW
 
     def number_of_loads_LV_Xph(self, X):
-        '''Returns the number of low voltage, X phase, loads.
-
-'''
+        '''
+            Returns the number of low voltage, X phase, loads.
+        '''
         if not isinstance(X, int):
             raise ValueError('Number of phases should be an integer.')
         if X not in [1, 3]:
@@ -1014,9 +1210,9 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return nb
 
     def number_of_loads_MV_3ph(self):
-        '''Returns the number of medium voltage, 3 phase, loads.
-
-'''
+        '''
+            Returns the number of medium voltage, 3 phase, loads.
+        '''
         nb = 0
         for obj in self.model.models:
             if isinstance(obj, Load):
@@ -1028,11 +1224,11 @@ Relies on the assumption that the furthrest node is a leaf, which is often True 
         return nb
 
     def percentage_load_LV_kW_phX(self, X):
-        '''Returns the percentage of low voltage phase X in kW:
+        '''
+            Returns the percentage of low voltage phase X in kW:
 
-res=(sum of active power for all phase_loads X)/(total_demand)*100
-
-'''
+            res=(sum of active power for all phase_loads X)/(total_demand)*100
+        '''
         if not isinstance(X, str):
             raise ValueError('Phase should be a string.')
         if X not in ['A', 'B', 'C']:
