@@ -510,20 +510,21 @@ The purpose of this is to merge all the single phase regulators on the same sect
                                         zero_seq_imp=i.impedance_matrix[0]
                                     except:
                                         raise ValueError('Cannot get a value from impedance matrix for line {}'.format(i.name))
-                                tt['R0']=zero_seq_imp.real
-                                tt['X0']=zero_seq_imp.imag
+                                coeff=10**3
+                                tt['R0']=zero_seq_imp.real*coeff
+                                tt['X0']=zero_seq_imp.imag*coeff
                                 try:
                                     pos_seq_imp=i.impedance_matrix[1][1]
-                                    tt['R1']=pos_seq_imp.real
-                                    tt['X1']=pos_seq_imp.imag
+                                    tt['R1']=pos_seq_imp.real*coeff
+                                    tt['X1']=pos_seq_imp.imag*coeff
                                 except:
                                     tt['R1']=tt['R0']
                                     tt['X1']=tt['X0']
                                     pass
                                 try:
                                     neg_seq_imp=i.impedance_matrix[2][2]
-                                    tt['R2']=neg_seq_imp.real
-                                    tt['X2']=neg_seq_imp.imag
+                                    tt['R2']=neg_seq_imp.real*coeff
+                                    tt['X2']=neg_seq_imp.imag*coeff
                                 except:
                                     tt['R2']=tt['R1']
                                     tt['X2']=tt['X1']
