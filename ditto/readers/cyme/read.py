@@ -1792,20 +1792,20 @@ class reader(abstract_reader):
                         #One phase line
                         if len(phases)==1:
 
-                            impedance_matrix=[[coeff*complex(float(line_data['r0']),float(line_data['x0']))]]
+                            impedance_matrix=[[1./3.0*coeff*complex(float(line_data['r0']),float(line_data['x0']))]]
 
                         #Two phase line
                         elif len(phases)==2:
 
-                            a=coeff*complex(2*float(line_data['r1'])+float(line_data['r0']), 2*float(line_data['x1'])+float(line_data['x0']))
-                            b=coeff*complex(float(line_data['r0'])-float(line_data['r1']), float(line_data['x0'])-float(line_data['x1']))
+                            a=1./3.0*coeff*complex(2*float(line_data['r1'])+float(line_data['r0']), 2*float(line_data['x1'])+float(line_data['x0']))
+                            b=1./3.0*coeff*complex(float(line_data['r0'])-float(line_data['r1']), float(line_data['x0'])-float(line_data['x1']))
                             impedance_matrix=[[a,b],[b,a]]
 
                         #Three phase line
                         else:
 
-                            a=coeff*complex(2*float(line_data['r1'])+float(line_data['r0']), 2*float(line_data['x1'])+float(line_data['x0']))
-                            b=coeff*complex(float(line_data['r0'])-float(line_data['r1']), float(line_data['x0'])-float(line_data['x1']))
+                            a=1./3.0*coeff*complex(2*float(line_data['r1'])+float(line_data['r0']), 2*float(line_data['x1'])+float(line_data['x0']))
+                            b=1./3.0*coeff*complex(float(line_data['r0'])-float(line_data['r1']), float(line_data['x0'])-float(line_data['x1']))
                             impedance_matrix=[[a,b,b],[b,a,b],[b,b,a]]
                     except:
                         pass
