@@ -8,6 +8,7 @@ import numpy as np
 import math
 import time
 import pandas as pd
+import logging
 from scipy.spatial import ConvexHull
 
 from ditto.network.network import Network
@@ -17,6 +18,8 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.load import Load
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.node import Node
+
+logger = logging.getLogger(__name__)
 
 
 class network_analyzer():
