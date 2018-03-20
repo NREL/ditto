@@ -2965,7 +2965,7 @@ class reader(abstract_reader):
             for p in phases_on:
 
                 if p not in phases:
-                    raise ValueError('Regulator {id} monitors phase {p} which is not in the section phases {pp}'.format(id=sectionID, p=p, pp=phases))
+                    logger.warning('Regulator {id} monitors phase {p} which is not in the section phases {pp}'.format(id=sectionID, p=p, pp=phases))
 
                 #Instanciate a Regulator DiTTo object
                 try:
@@ -3178,7 +3178,6 @@ class reader(abstract_reader):
                                                         ['id', 'constantpower', 'constantcurrent', 'constantimpedance', 'powerfactor','constantimpedancezp', 'constantimpedancezq', 'constantcurrentip', 'constantcurrentiq', 'constantpowerpp', 'constantpowerpq'],
                                                         mapp_customer_class) )
 
-        import math
         for sectionID, settings in self.customer_loads.items():
 
             sectionID=sectionID.strip('*').lower()
