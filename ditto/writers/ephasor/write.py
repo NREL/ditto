@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 
 # from ditto.readers.gridlabd.read import Reader
-from ditto.readers.opendss.read import reader
 from ditto.store import Store
 #DiTTo imports
 from ditto.models.node import Node
@@ -1004,8 +1003,9 @@ class Writer(abstract_writer):
 
 if __name__ == '__main__':
     # self.m = Store()
+    from ditto.readers.opendss.read import Reader
     m = Store()
-    _reader = reader()
+    _reader = Reader()
 
     # modelfile = '/Users/jsimpson/git/DiTTo/ditto/readers/gridlabd/13node_simplified.glm'
     # reader.parse(self.m, modelfile)

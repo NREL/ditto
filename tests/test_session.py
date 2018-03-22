@@ -5,13 +5,11 @@ This module contains items that pertain to the entire test session.
 import os
 import shutil
 
-import pytest
-
-from tests import clean_up, outdir
+import pytest as pt
 
 STARTUP = True
 
-@pytest.fixture(scope="session",autouse=True)
+@pt.mark.skip()
 def manage_outdir(request):
     """
     At the beginning of the session, creates the test outdir. If tests.clean_up,
