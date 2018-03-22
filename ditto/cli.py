@@ -54,7 +54,7 @@ def convert(**kwargs):
         registered_reader_class=registered_readers[from_reader_name],
         registered_writer_class=registered_writers[to_writer_name],
         input_filename=kwargs["input"],
-        output_filename=kwargs["output"],
+        output_dir=kwargs["output"],
     ).convert()
 
 
