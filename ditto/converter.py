@@ -38,7 +38,7 @@ class Converter(object):
 
         #If the file provided is a JSON file, a configuration file is assumed
         self.config={}
-        if input_path.endswith('json'):
+        if input_path.endswith(".json"):
             with open(input_path,'r') as fp:
                 self.config=json.load(fp)
 
