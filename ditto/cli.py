@@ -16,17 +16,23 @@ registered_writers = {}
 
 @click.group()
 @click.version_option(version.__version__, '--version')
-def cli():
-    pass
+@click.option('--verbose', '-v', is_flag=True)
+@click.pass_context
+def cli(ctx, verbose):
+    ctx.obj = {}
+    ctx.obj['verbose'] = verbose
 
 
 @cli.command()
 @click.option("--input", type=click.Path(exists=True), help="Path to input file")
-@click.option("--output", type=click.Path(), help="Path to output file")
+@click.option("--output", type=click.Path(exists=True), help="Path to output file")
 @click.option("--from", help="Convert from OpenDSS, Cyme, GridLAB-D")
 @click.option("--to", help="Convert to OpenDSS, Cyme, GridLAB-D")
-def convert(**kwargs):
+@click.pass_context
+def convert(ctx, **kwargs):
     """ Convert from one type to another"""
+
+    verbose = ctx.obj["verbose"]
 
     for entry_point in iter_entry_points("ditto.readers"):
         name, cls = entry_point.name, entry_point.load()
@@ -48,6 +54,9 @@ def convert(**kwargs):
     if kwargs["to"] not in registered_writers.keys():
         raise click.BadOptionUsage("Cannot write to format '{}'".format(kwargs["to"]))
 
+    if kwargs["input"] is None or kwargs["output"] is None:
+        raise click.BadOptionUsage("Both --input and --output must be provided.")
+
     from_reader_name = kwargs["from"]
     to_writer_name = kwargs["to"]
     Converter(
@@ -56,7 +65,6 @@ def convert(**kwargs):
         input_path=kwargs["input"],
         output_path=kwargs["output"],
     ).convert()
-
 
 
 if __name__ == "__main__":
