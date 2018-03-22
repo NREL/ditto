@@ -4,8 +4,14 @@ from ditto.writers.ephasor.write import Writer
 from ditto.store import Store
 import os
 
+import pytest as pt
+
+current_directory = os.path.realpath(os.path.dirname(__file__))
 ditto_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ditto')
 input_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'..','..','validation','input','opendss','ieee_13_node')
+
+
+@pt.mark.skip(msg="Skipping ephasor tests")
 def test_opendss():
     from ditto.readers.opendss.read import reader
     m = Store()
@@ -15,7 +21,6 @@ def test_opendss():
     gridlabd_models_dir = os.path.join(ditto_dir, 'readers', 'gridlabd')
 
     modelfile = os.path.join(input_path, 'master.dss')
-    print(input_path)
     modelfile = '../../validation/inputs/opendss/ieee_13_node/master.dss'
 
     _reader.build_opendssdirect(modelfile)
@@ -29,14 +34,12 @@ def test_opendss():
     writer.write(m)
 
 
+@pt.mark.skip(msg="Skipping ephasor tests")
 def test_gridlabd():
     from ditto.readers.gridlabd.read import reader
     m = Store()
-    modelfile = '../../validation/inputs/gridlabd/ieee_123_node/ieee_123_node.glm'
-    modelfile = '../../validation/inputs/gridlabd/ieee_13_node/ieee_13_node.glm'
-    modelfile = '../../validation/inputs/gridlabd/RTC-A/model.glm'
-    modelfile = '../../validation/inputs/gridlabd/RTC-A/model_raw.glm'
-    #modelfile = '../../readers/gridlabd/13node_simplified.glm'
+    # TODO: Add this file
+    modelfile = os.path.join(current_directory, './data/gridlabd/ieee_123_node/ieee_123_node.glm')
     _reader = reader(input_file=modelfile)
 
     _reader.parse(m)

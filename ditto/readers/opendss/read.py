@@ -38,6 +38,7 @@ from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.models.base import Unicode
 
+logger = logging.getLogger(__name__)
 
 def timeit(method):
     def timed(*args, **kw):
