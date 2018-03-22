@@ -29,7 +29,7 @@ class Converter(object):
     Author: Nicolas Gensollen. October 2017
     '''
 
-    def __init__(self, registered_reader_class, registered_writer_class, input_filename, output_dir, verbose=True):
+    def __init__(self, registered_reader_class, registered_writer_class, input_path, output_path, verbose=True):
         '''Converter class CONSTRUCTOR.'''
 
         self.reader_class = registered_reader_class
@@ -37,14 +37,14 @@ class Converter(object):
         self.writer_class = registered_writer_class
 
         #If the file provided is a JSON file, a configuration file is assumed
-        self.config=None
-        if input_filename.split('.')[-1]=='json':
-            with open(input_filename,'r') as fp:
+        self.config={}
+        if input_path.endswith('json'):
+            with open(input_path,'r') as fp:
                 self.config=json.load(fp)
 
-        self.feeder = input_filename
+        self.feeder = input_path
 
-        self.output_dir=output_dir
+        self.output_path=output_path
 
         # TODO: check if this is in the registered list
         self._from = registered_reader_class.format_name
@@ -60,7 +60,7 @@ class Converter(object):
     def get_inputs(self, feeder):
         '''Configure Inputs.'''
         #If we have a valid config there is nothing to do
-        if self.config is not None:
+        if len(self.config)>0:
             return self.config
         #Otherwise...
         # Inputs are different accross the format:
@@ -100,8 +100,9 @@ class Converter(object):
         #log_path+='/log_{time}.log'.format(time=self.current_time_string)
 
         #inputs.update({'log_file':log_path})
+        self.config.update(inputs)
 
-        return inputs
+        return self.config
 
 
     def build_path(self, path):
@@ -153,7 +154,7 @@ class Converter(object):
 
         self.configure_reader(inputs)
 
-        output=self.get_output(self.output_dir)
+        output=self.get_output(self.output_path)
 
         self.configure_writer(output)
 
