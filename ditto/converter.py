@@ -28,13 +28,15 @@ class Converter(object):
     Author: Nicolas Gensollen. October 2017
     '''
 
-    def __init__(self, registered_reader_class, registered_writer_class, input_filename, output_filename, verbose=True):
+    def __init__(self, registered_reader_class, registered_writer_class, input_filename, output_dir, verbose=True):
         '''Converter class CONSTRUCTOR.'''
 
         self.reader_class = registered_reader_class
 
         self.writer_class = registered_writer_class
         self.feeder = input_filename
+
+        self.output_dir=output_dir
 
         # TODO: check if this is in the registered list
         self._from = registered_reader_class.format_name
@@ -109,17 +111,12 @@ class Converter(object):
         if not os.path.exists(path):
             raise ValueError('Unable to create path {path}'.format(path=path))
 
-    def get_output(self, feeder):
+    def get_output(self, output_dir):
         '''Configure outputs.'''
 
-        output_path='./outputs/from_{format_from}/to_{format_to}/{feeder}/'.format(format_from=self._from,
-                                                                           format_to=self._to,
-                                                                           feeder=feeder)
-        # Add log information
-        log_path='./logs/writer/{format}/{feeder}/'.format(format=self._to,feeder=feeder)
-
-        # Add filename to log path\
-        log_path+='/log_{time}.log'.format(time=self.current_time_string)
+        #TODO: Should we give the user the possibility to add these in the config file??
+        output_path=output_dir
+        log_path=os.path.join(output_dir,'out.log')
 
         return {'output_path': output_path,
                 'log_file': log_path}
@@ -145,11 +142,11 @@ class Converter(object):
 
         self.configure_reader(inputs)
 
-        # output=self.get_output(self.feeder)
+        output=self.get_output(self.output_dir)
 
-        # self.configure_writer(output)
+        self.configure_writer(output)
 
         self.reader.parse(self.m)
 
-        # self.writer.write(self.m, verbose=self.verbose)
+        self.writer.write(self.m, verbose=self.verbose)
 
