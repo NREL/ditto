@@ -27,7 +27,7 @@ from ditto.models.base import Unicode
 
 logger = logging.getLogger(__name__)
 
-class reader(abstract_reader):
+class Reader(abstract_reader):
     '''
         CYME-->DiTTo Reader class
 
@@ -788,7 +788,7 @@ class reader(abstract_reader):
                     api_source=PowerSource(model)
                 except:
                     pass
-                    
+
                 api_source.name=_from+'_src'
 
                 try:
@@ -829,9 +829,9 @@ class reader(abstract_reader):
                     api_source.connecting_element=_from
                 except:
                     pass
-                    
 
-            
+
+
         else:
             for sid, sdata in sources.items():
 
@@ -3224,7 +3224,7 @@ class reader(abstract_reader):
                     except:
                         logger.warning('Skipping load on section {}'.format(sectionID))
                         continue
-                        
+
                 elif value_type==3: #AMP and PF are given
                     #TODO
                     logger.warning('WARNING:: Skipping load on section {}'.format(sectionID))

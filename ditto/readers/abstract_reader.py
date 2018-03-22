@@ -10,16 +10,24 @@ import numpy as np
 LOGGER = logging.getLogger(__name__)
 
 
-class abstract_reader:
+class abstract_reader(object):
     '''Abstract class for DiTTo readers.
     author: Nicolas Gensollen. October 2017.
     '''
+
+    register_names = []
 
     def __init__(self, **kwargs):
         '''Abstract class CONSTRUCTOR.'''
 
         # create logger
         self.logger = LOGGER
+
+    @classmethod
+    def register(cls, registration_dict):
+
+        for name in cls.register_names:
+            registration_dict[name] = cls
 
     def symmetrize(self, matrix):
         '''Symmetrize a triangular matrix in list format.

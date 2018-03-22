@@ -16,9 +16,11 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 
+from ..abstract_writer import abstract_writer
+
 logger = logging.getLogger(__name__)
 
-class writer:
+class Writer(abstract_writer):
 
     line_configurations = {}
     line_configurations_name = {}

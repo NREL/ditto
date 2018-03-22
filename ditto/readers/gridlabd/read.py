@@ -33,9 +33,13 @@ from ditto.formats.gridlabd import gridlabd
 from ditto.formats.gridlabd import base
 from ditto.models.base import Unicode
 
+from ..abstract_reader import abstract_reader
+
 logger = logging.getLogger(__name__)
 
-class reader:
+class Reader(abstract_reader):
+
+    register_names = ["glm", "gridlabd"]
 
     all_gld_objects = {}
     all_api_objects = {}
@@ -1261,13 +1265,13 @@ class reader:
                     pass
 
                 if not impedance_matrix_direct:
-                    impedance_matrix = self.compute_matrix(conductors.keys())
+                    impedance_matrix = self.compute_matrix(list(conductors.keys()))
                     for i in range(len(impedance_matrix)):
                         for j in range(len(impedance_matrix[0])):
                             impedance_matrix[i][j] = impedance_matrix[i][j] / 1609.34
 
                 api_line.impedance_matrix = impedance_matrix
-                api_line.wires = conductors.keys()
+                api_line.wires = list(conductors.keys())
                 for api_wire in conductors:
                     try:
                         if api_wire.diameter is not None:

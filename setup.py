@@ -30,7 +30,19 @@ setup(
     url='https://github.com/NREL/ditto',
     packages=find_packages(),
     package_dir={'ditto': 'ditto'},
-    entry_points={'console_scripts': ['ditto=ditto.cli:cli']},
+    entry_points={
+        "console_scripts": ["ditto=ditto.cli:cli"],
+        "ditto.readers": [
+            "gridlabd=ditto.readers.gridlabd:GridLABDReader",
+            "opendss=ditto.readers.opendss:OpenDSSReader",
+            "cyme=ditto.readers.cyme:CymeReader",
+        ],
+        "ditto.writers": [
+            "gridlabd=ditto.writers.gridlabd:GridLABDWriter",
+            "opendss=ditto.writers.opendss:OpenDSSWriter",
+            "cyme=ditto.writers.cyme:CymeWriter",
+        ],
+    },
     include_package_data=True,
     license="BSD license",
     zip_safe=False,

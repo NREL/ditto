@@ -9,15 +9,14 @@ LOGGER = logging.getLogger(__name__)
 
 class abstract_writer:
     '''Abstract class for DiTTo writers.
+    author: Nicolas Gensollen. October 2017.
+    '''
 
-author: Nicolas Gensollen. October 2017.
-
-'''
+    register_names = []
 
     def __init__(self, **kwargs):
-        '''Abstract class CONSTRUCTOR.
+        '''Abstract class CONSTRUCTOR.'''
 
-'''
         if 'log_file' in kwargs:
             log_file = kwargs['log_file']
         else:
@@ -30,6 +29,11 @@ author: Nicolas Gensollen. October 2017.
 
         # create logger
         self.logger = LOGGER
+
+    @classmethod
+    def register(cls, registration_dict):
+        for name in cls.register_names:
+            registration_dict[name] = cls
 
     #@abstractmethod
     def write(self, model, **kwargs):
