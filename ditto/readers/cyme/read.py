@@ -130,6 +130,8 @@ class Reader(abstract_reader):
         |                     'loads'               |                     '[LOADS]'              |
         +-------------------------------------------+--------------------------------------------+
     '''
+    register_names = ["cyme", "Cyme", "CYME"]
+
     def __init__(self, **kwargs):
         '''
             CYME-->DiTTo class constructor

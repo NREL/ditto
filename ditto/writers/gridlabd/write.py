@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 class Writer(abstract_writer):
 
+    register_names = ["glm", "gridlabd"]
+
     line_configurations = {}
     line_configurations_name = {}
     transformer_configurations = {}

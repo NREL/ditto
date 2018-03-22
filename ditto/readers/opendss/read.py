@@ -69,6 +69,8 @@ class Reader(abstract_reader):
     The reader uses OpenDSSDirect heavily. <https://github.com/NREL/OpenDSSDirect.py>
     For more information on this package contact Dheepak Krishnamurthy.'''
 
+    register_names = ["dss", "opendss", "OpenDSS", "DSS"]
+
 
     def __init__(self, **kwargs):
         '''Constructor for the OpenDSS reader.'''
