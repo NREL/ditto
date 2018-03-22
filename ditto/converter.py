@@ -1,6 +1,7 @@
 import os
 import datetime
 import traceback
+import json
 
 from .store import Store
 
@@ -34,6 +35,13 @@ class Converter(object):
         self.reader_class = registered_reader_class
 
         self.writer_class = registered_writer_class
+
+        #If the file provided is a JSON file, a configuration file is assumed
+        self.config=None
+        if input_filename.split('.')[-1]=='json':
+            with open(input_filename,'r') as fp:
+                self.config=json.load(fp)
+
         self.feeder = input_filename
 
         self.output_dir=output_dir
@@ -51,17 +59,20 @@ class Converter(object):
 
     def get_inputs(self, feeder):
         '''Configure Inputs.'''
+        #If we have a valid config there is nothing to do
+        if self.config is not None:
+            return self.config
+        #Otherwise...
         # Inputs are different accross the format:
         # OpenDSS
-
         if self._from == 'opendss':
-            inputs={'master_file': feeder,
+            inputs={'master_file':os.path.abspath(feeder),
                     'buscoordinates_file': os.path.join(os.path.dirname(feeder), "buscoord.dss")}
 
         #CYME
 
         elif self._from == 'cyme':
-            inputs={'data_folder_path':'./inputs/{format}/{feeder}/'.format(format=self._from, feeder=feeder),
+            inputs={'data_folder_path':os.path.abspath(feeder),
                     'network_filename':'network.txt',
                     'equipment_filename':'equipment.txt',
                     'load_filename':'loads.txt'
@@ -74,7 +85,7 @@ class Converter(object):
 
 
         #DEW
-
+        #TODO....
         elif self._from=='dew':
             inputs={'input_file_path':'./inputs/{format}/{feeder}/{feeder}.dew'.format(format=self._from, feeder=feeder),
                     'databasepath': '../readers/dew/DataBase/DataBase.xlsx'}
@@ -83,12 +94,12 @@ class Converter(object):
             raise NotImplementedError('Format {} not imlemented.'.format(self._from))
 
         # Add log information
-        log_path='./logs/reader/{format}/{feeder}/'.format(format=self._from,feeder=feeder)
+        #log_path='./logs/reader/{format}/{feeder}/'.format(format=self._from,feeder=feeder)
 
         # Add filename to the log path
-        log_path+='/log_{time}.log'.format(time=self.current_time_string)
+        #log_path+='/log_{time}.log'.format(time=self.current_time_string)
 
-        inputs.update({'log_file':log_path})
+        #inputs.update({'log_file':log_path})
 
         return inputs
 
