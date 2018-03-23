@@ -15,14 +15,14 @@ def test_cyme_to_opendss():
 
     '''
     from ditto.store import Store
-    from ditto.readers.cyme.read import reader
+    from ditto.readers.cyme.read import Reader
     from ditto.writers.opendss.write import Writer
     import opendssdirect as dss
     output_path = os.path.join(current_directory, "./")
     cyme_models=[f for f in os.listdir(os.path.join(current_directory, './data/cyme/')) if not f.startswith('.')]
     for model in cyme_models:
         m = Store()
-        r = reader(data_folder_path=os.path.join(current_directory, './data/cyme',model))
+        r = Reader(data_folder_path=os.path.join(current_directory, './data/cyme',model))
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} red...'.format(model=model))

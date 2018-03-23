@@ -73,6 +73,7 @@ Use to write a DiTTo model to OpenDSS format.
 author: Nicolas Gensollen. October 2017.
 
 '''
+    register_names = ["dss", "opendss", "OpenDSS", "DSS"]
 
     def __init__(self, **kwargs):
         '''Constructor for the OpenDSS writer.

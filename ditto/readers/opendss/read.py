@@ -53,28 +53,28 @@ def timeit(method):
     return timed
 
 
-class reader(abstract_reader):
+class Reader(abstract_reader):
     '''OpenDSS--->DiTTo reader class.
-Use to read and parse an OpenDSS circuit model to DiTTo.
+    Use to read and parse an OpenDSS circuit model to DiTTo.
 
-:param log_file: Name/path of the log file. Optional. Default='./OpenDSS_reader.log'
-:type log_file: str
+    :param log_file: Name/path of the log file. Optional. Default='./OpenDSS_reader.log'
+    :type log_file: str
 
-**Constructor:**
+    **Constructor:**
 
->>> my_reader=Reader(log_file='./logs/my_log.log')
+    >>> my_reader=Reader(log_file='./logs/my_log.log')
 
-.. warning::
+    .. warning::
 
     The reader uses OpenDSSDirect heavily. <https://github.com/NREL/OpenDSSDirect.py>
-    For more information on this package contact Dheepak Krishnamurthy.
+    For more information on this package contact Dheepak Krishnamurthy.'''
 
-'''
+    register_names = ["dss", "opendss", "OpenDSS", "DSS"]
+
 
     def __init__(self, **kwargs):
-        '''Constructor for the OpenDSS reader.
+        '''Constructor for the OpenDSS reader.'''
 
-'''
         #Call super
         abstract_reader.__init__(self, **kwargs)
 
@@ -88,7 +88,7 @@ Use to read and parse an OpenDSS circuit model to DiTTo.
         if 'buscoordinates_file' in kwargs:
             self.DSS_file_names['Nodes'] = kwargs['buscoordinates_file']
         else:
-            self.DSS_file_names['Nodes'] = './buscoords.dss'
+            self.DSS_file_names['Nodes'] = './buscoord.dss'
 
         #self.DSS_file_names={'Nodes': 'buscoords.dss',
         #                     'master': 'master.dss'}
@@ -386,6 +386,8 @@ Responsible for calling the sub-parsers and logging progress.
 
         buses = {}
         for line in coordinates:
+            if line.strip() == "":
+                continue
 
             try:
                 name, X, Y = list(map(lambda x: x.strip(), line.split(self.coordinates_delimiter)))
