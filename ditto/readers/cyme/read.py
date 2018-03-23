@@ -2040,7 +2040,14 @@ class Reader(abstract_reader):
                         resistance_list=np.array(resistance_list)
                         idx_to_remove=np.argwhere(gmr_list==None).flatten()
                         idx_to_keep=[idx for idx in range(len(distance_matrix)) if idx not in idx_to_remove]
-                        distance_matrix=distance_matrix[idx_to_keep,:]
+                        try:
+                            distance_matrix=distance_matrix[idx_to_keep,:]
+                        except IndexError:
+                            #It can happen that a one phase line is defined with a spacing table where no position are defined.
+                            #This is uncommon but raises an IndexError here.
+                            #To avoid that, use a dummy distance matrix
+                            distance_matrix=np.array([[1]])
+                            pass
 
                         primitive_imp_matrix=self.get_primitive_impedance_matrix(distance_matrix,gmr_list,resistance_list)
 
