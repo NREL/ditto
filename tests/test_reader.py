@@ -7,7 +7,7 @@ test_reader
 Tests for `ditto` module readers
 """
 import os
-
+import pytest as pt
 from ditto.store import Store
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
@@ -16,13 +16,13 @@ gridlabd_models_dir = os.path.join(current_directory, 'data', 'gridlabd')
 gridlabd_models = ['13node_simplified.glm',
                    '4node.glm']
 
+
 def test_gld_reader():
     from ditto.readers.gridlabd.read import Reader
     for modelfile in gridlabd_models:
         m = Store()
         r = Reader()
         r.parse(m, os.path.join(gridlabd_models_dir,modelfile))
-
 
 def test_cyme_reader():
     '''
@@ -38,7 +38,6 @@ def test_cyme_reader():
         #TODO: Log properly
         print('>Cyme model {model} parsed.\n'.format(model=model))
 
-
 def test_opendss_reader():
     '''
     TODO
@@ -52,7 +51,6 @@ def test_opendss_reader():
         r.parse(m)
         #TODO: Log properly
         print('>OpenDSS model {model} parsed.\n'.format(model=model))
-
 
 def test_dew_reader():
     '''

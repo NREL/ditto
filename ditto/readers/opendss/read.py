@@ -125,7 +125,7 @@ Log an error if the commanf cannot be runned.
 
 '''
         try:
-            return dss.dss_lib.DSSPut_Command(string.encode('ascii')).decode('ascii')
+            return dss.run_command(string)
         except:
             self.logger.error('Unable to execute the following command: \n' + string)
 

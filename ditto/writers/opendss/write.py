@@ -86,6 +86,10 @@ author: Nicolas Gensollen. October 2017.
         self.all_geometries = {}
         self.compensator = {}
 
+        self.files_to_redirect=[]
+
+        self.write_taps = False
+
         #Call super
         abstract_writer.__init__(self, **kwargs)
 
@@ -112,7 +116,6 @@ author: Nicolas Gensollen. October 2017.
 :rtype: int
 
 '''
-        self.files_to_redirect=[]
         #Verbose print the progress
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose = kwargs['verbose']
