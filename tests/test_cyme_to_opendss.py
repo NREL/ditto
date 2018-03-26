@@ -7,9 +7,11 @@ test_writer
 Tests for `ditto` module writers
 """
 import os
+import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
+@pt.mark.skip()
 def test_cyme_to_opendss():
     '''TODO
 

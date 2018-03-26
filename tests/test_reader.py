@@ -17,6 +17,7 @@ gridlabd_models = ['13node_simplified.glm',
                    '4node.glm']
 
 
+@pt.mark.skip()
 def test_gld_reader():
     from ditto.readers.gridlabd.read import Reader
     for modelfile in gridlabd_models:
@@ -38,6 +39,7 @@ def test_cyme_reader():
         #TODO: Log properly
         print('>Cyme model {model} parsed.\n'.format(model=model))
 
+@pt.mark.skip()
 def test_opendss_reader():
     '''
     TODO

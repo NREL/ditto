@@ -11,6 +11,7 @@ import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
+@pt.mark.skip()
 def test_opendss_to_cyme():
     from ditto.readers.opendss.read import Reader
     from ditto.store import Store
