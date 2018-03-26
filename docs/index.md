@@ -22,6 +22,7 @@ Readers and writers are then implemented to perform the translation from a given
  usage
  notes
  contributing
+ developer-guide/index
  authors
 ```
 
