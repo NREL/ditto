@@ -106,7 +106,7 @@ class abstract_writer:
         if unit is None:
             return None
 
-        if not isinstance(unit, str):
+        if not isinstance(unit, (str,unicode)):
             self.logger.warning('convert_from_meters() expects a unit in string format')
             return None
 
