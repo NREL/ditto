@@ -11,15 +11,11 @@ $ pip install git+https://github.com/NREL/ditto.git@master#egg=ditto
 
 To install the latest version of ditto from master for usage, run this command in your terminal:
 
-.. code-block:: console
-
 ```bash
 $ pip install git+https://github.nrel.gov/NREL/ditto.git@master
 ```
 
 To install a specific stable version:
-
-.. code-block:: console
 
 ```bash
 $ pip install git+https://github.com/NREL/ditto.git@1.0.1
