@@ -20,10 +20,10 @@ def test_cyme_to_gridlabd():
     from ditto.readers.cyme.read import Reader
     from ditto.writers.gridlabd.write import Writer
 
-    cyme_models=[f for f in os.listdir(os.path.join(current_directory, './data/cyme/')) if not f.startswith('.')]
+    cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/cyme/')) if not f.startswith('.')]
     for model in cyme_models:
         m = Store()
-        r = Reader(data_folder_path=os.path.join(current_directory, './data/cyme',model))
+        r = Reader(data_folder_path=os.path.join(current_directory, 'data/cyme',model))
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} red...'.format(model=model))
