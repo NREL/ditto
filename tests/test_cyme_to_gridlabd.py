@@ -4,7 +4,7 @@
 test_cyme_to_gridlabd
 ----------------------------------
 
-Test the Cyme to GridlabD conversion.
+Tests for Cyme --> Gridlabd conversion
 """
 import os
 
@@ -38,5 +38,3 @@ def test_cyme_to_gridlabd():
                 os.remove(os.path.join(os.path.join(current_directory, "./"), i))
             except:
                 pass
-
-

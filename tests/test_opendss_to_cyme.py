@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-test_writer
+test_opendss_to_cyme
 ----------------------------------
 
-Tests for `ditto` module writers
+Tests for OpenDSS --> Cyme conversion
 """
 import os
 import pytest as pt
@@ -13,6 +13,9 @@ current_directory = os.path.realpath(os.path.dirname(__file__))
 
 @pt.mark.skip()
 def test_opendss_to_cyme():
+    '''
+        Test the OpenDSS to Cyme conversion.
+    '''
     from ditto.readers.opendss.read import Reader
     from ditto.store import Store
     from ditto.writers.cyme.write import Writer
