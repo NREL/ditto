@@ -7,7 +7,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
-class abstract_writer:
+class AbstractWriter(object):
     '''Abstract class for DiTTo writers.
     author: Nicolas Gensollen. October 2017.
     '''

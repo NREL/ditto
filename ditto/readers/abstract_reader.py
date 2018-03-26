@@ -10,7 +10,7 @@ import numpy as np
 LOGGER = logging.getLogger(__name__)
 
 
-class abstract_reader(object):
+class AbstractReader(object):
     '''Abstract class for DiTTo readers.
     author: Nicolas Gensollen. October 2017.
     '''

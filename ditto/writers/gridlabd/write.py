@@ -16,11 +16,11 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 
-from ..abstract_writer import abstract_writer
+from ..abstract_writer import AbstractWriter
 
 logger = logging.getLogger(__name__)
 
-class Writer(abstract_writer):
+class Writer(AbstractWriter):
 
     register_names = ["glm", "gridlabd"]
 

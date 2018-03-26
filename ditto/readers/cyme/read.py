@@ -7,7 +7,7 @@ import os
 from functools import reduce
 
 #Ditto imports
-from ditto.readers.abstract_reader import abstract_reader
+from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.position import Position
 from ditto.models.node import Node
@@ -27,7 +27,7 @@ from ditto.models.base import Unicode
 
 logger = logging.getLogger(__name__)
 
-class Reader(abstract_reader):
+class Reader(AbstractReader):
     '''
         CYME-->DiTTo Reader class
 
@@ -136,12 +136,12 @@ class Reader(abstract_reader):
         '''
             CYME-->DiTTo class constructor
         '''
-        #Call super
-        abstract_reader.__init__(self, **kwargs)
+        # Call super
+        super(Reader, self).__init__(**kwargs)
 
-        #Setting the file names and path
+        # Setting the file names and path
         #
-        #Set the path to the CYME data files
+        # Set the path to the CYME data files
         if 'data_folder_path' in kwargs:
             self.data_folder_path = kwargs['data_folder_path']
         #Default is current directory
@@ -704,7 +704,7 @@ class Reader(abstract_reader):
         self.parse_sources(model)
 
         #Call parse method of abtract reader
-        abstract_reader.parse(self, model, **kwargs)
+        super(Reader, self).parse(model, **kwargs)
 
 
 
