@@ -363,7 +363,7 @@ class Writer(abstract_writer):
                             logger.debug("length", line.length)
                             logger.debug("R", np.real(elt))
                             logger.debug("X", np.imag(elt))
-                            logger.debug()
+                            #logger.debug()
 
                             # -6.3581 line valie
                             # -.602 siemens per mile
