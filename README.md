@@ -15,3 +15,4 @@ Readers and writers are then implemented to perform the translation from a given
 pip install git+https://github.com/NREL/ditto.git@master#egg=ditto
 ```
 
+More documentation can be found on [here](https://nrel.github.io/ditto).
