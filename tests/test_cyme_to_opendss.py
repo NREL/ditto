@@ -27,7 +27,7 @@ def test_cyme_to_opendss():
         r = Reader(data_folder_path=os.path.join(current_directory, 'data/cyme',model))
         r.parse(m)
         #TODO: Log properly
-        print('>Cyme model {model} red...'.format(model=model))
+        print('>Cyme model {model} read...'.format(model=model))
         w = Writer(output_path=output_path)
         w.write(m)
         #TODO: Log properly

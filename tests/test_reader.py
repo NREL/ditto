@@ -12,13 +12,10 @@ from ditto.store import Store
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
-gridlabd_models_dir = os.path.join(current_directory, 'data', 'gridlabd')
-gridlabd_models = ['13node_simplified.glm',
-                   '4node.glm']
-
-
-@pt.mark.skip()
 def test_gld_reader():
+    gridlabd_models_dir = os.path.join(current_directory, 'data', 'gridlabd')
+    gridlabd_models = ['123_node.glm','13node_simplified.glm',
+                   '4node.glm']
     from ditto.readers.gridlabd.read import Reader
     for modelfile in gridlabd_models:
         m = Store()
@@ -39,7 +36,7 @@ def test_cyme_reader():
         #TODO: Log properly
         print('>Cyme model {model} parsed.\n'.format(model=model))
 
-@pt.mark.skip()
+
 def test_opendss_reader():
     '''
     TODO

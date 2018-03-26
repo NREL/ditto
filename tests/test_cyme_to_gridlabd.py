@@ -26,7 +26,7 @@ def test_cyme_to_gridlabd():
         r = Reader(data_folder_path=os.path.join(current_directory, './data/cyme',model))
         r.parse(m)
         #TODO: Log properly
-        print('>Cyme model {model} red...'.format(model=model))
+        print('>Cyme model {model} read...'.format(model=model))
         w = Writer()
         w.write(m)
         #TODO: Log properly
