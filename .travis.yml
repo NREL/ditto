@@ -29,3 +29,8 @@ install:
 script:
   # Your test script goes here
   - pytest -sv
+
+notifications:
+    email: false
+
+
