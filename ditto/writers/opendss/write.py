@@ -24,12 +24,12 @@ from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 from ditto.models.power_source import PowerSource
 
-from ditto.writers.abstract_writer import abstract_writer
+from ditto.writers.abstract_writer import AbstractWriter
 
 logger = logging.getLogger(__name__)
 
 
-class Writer(abstract_writer):
+class Writer(AbstractWriter):
     '''DiTTo--->OpenDSS writer class.
 Use to write a DiTTo model to OpenDSS format.
 
@@ -91,7 +91,7 @@ author: Nicolas Gensollen. October 2017.
         self.write_taps = False
 
         #Call super
-        abstract_writer.__init__(self, **kwargs)
+        super(Writer, self).__init__(**kwargs)
 
         #Set the linecode flag
         #If True, linecodes will be used when writing the lines

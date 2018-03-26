@@ -19,11 +19,11 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 
-from ditto.writers.abstract_writer import abstract_writer
+from ditto.writers.abstract_writer import AbstractWriter
 
 logger = logging.getLogger(__name__)
 
-class Writer(abstract_writer):
+class Writer(AbstractWriter):
     """
     DiTTo--->ePHASOR writer class.
     Use to write a DiTTo model to OpenDSS format.
@@ -85,7 +85,7 @@ class Writer(abstract_writer):
         self.compensator = {}
 
         #Call super
-        abstract_writer.__init__(self, **kwargs)
+        super(Writer, self).__init__(**kwargs)
 
         log_file = 'ephasor_writer.log'
         if 'log_file' in kwargs:
