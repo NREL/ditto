@@ -33,11 +33,11 @@ from ditto.formats.gridlabd import gridlabd
 from ditto.formats.gridlabd import base
 from ditto.models.base import Unicode
 
-from ..abstract_reader import abstract_reader
+from ..abstract_reader import AbstractReader
 
 logger = logging.getLogger(__name__)
 
-class Reader(abstract_reader):
+class Reader(AbstractReader):
 
     register_names = ["glm", "gridlabd"]
 

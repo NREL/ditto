@@ -22,11 +22,11 @@ from ditto.models.power_source import PowerSource
 
 from ditto.network.network import Network
 
-from ditto.writers.abstract_writer import abstract_writer
+from ditto.writers.abstract_writer import AbstractWriter
 
 logger = logging.getLogger(__name__)
 
-class Writer(abstract_writer):
+class Writer(AbstractWriter):
     '''
         DiTTo--->CYME Writer class
 
@@ -39,7 +39,7 @@ class Writer(abstract_writer):
         '''
 
         #Call super
-        abstract_writer.__init__(self, **kwargs)
+        super(Writer, self).__init__(**kwargs)
 
 
         self.logger.info('DiTTo--->CYME writer successfuly instanciated.')

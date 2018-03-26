@@ -16,7 +16,7 @@ import time
 import opendssdirect as dss
 
 #Ditto imports
-from ditto.readers.abstract_reader import abstract_reader
+from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.node import Node
 from ditto.models.line import Line
@@ -53,7 +53,7 @@ def timeit(method):
     return timed
 
 
-class Reader(abstract_reader):
+class Reader(AbstractReader):
     '''OpenDSS--->DiTTo reader class.
     Use to read and parse an OpenDSS circuit model to DiTTo.
 
@@ -76,7 +76,7 @@ class Reader(abstract_reader):
         '''Constructor for the OpenDSS reader.'''
 
         #Call super
-        abstract_reader.__init__(self, **kwargs)
+        super(Reader, self).__init__(**kwargs)
 
         self.DSS_file_names = {}
 
@@ -227,7 +227,7 @@ Responsible for calling the sub-parsers and logging progress.
             self.parse_power_source(model) #TODO: push this to abstract reader once power source parsing is stable...
 
         #Call parse from abstract reader class
-        abstract_reader.parse(self, model, **kwargs)
+        super(Reader, self).parse(model, **kwargs)
 
         self.parse_storage(model)
 

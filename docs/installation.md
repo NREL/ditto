@@ -1,4 +1,4 @@
-# Installation
+## Installation
 
 **Stable release**
 
@@ -6,23 +6,19 @@ To install the latest version of ditto from master for development, run this com
 after changing your directory to the folder where you'd like to set up the development:
 
 ```bash
-    pip install git+https://github.com/NREL/ditto.git@master#egg=ditto
+$ pip install git+https://github.com/NREL/ditto.git@master#egg=ditto
 ```
 
 To install the latest version of ditto from master for usage, run this command in your terminal:
 
-.. code-block:: console
-
 ```bash
-    pip install git+https://github.nrel.gov/NREL/ditto.git@master
+$ pip install git+https://github.nrel.gov/NREL/ditto.git@master
 ```
 
 To install a specific stable version:
 
-.. code-block:: console
-
 ```bash
-    pip install git+https://github.com/NREL/ditto.git@1.0.1
+$ pip install git+https://github.com/NREL/ditto.git@1.0.1
 ```
 
 The above are the preferred methods to install ditto, as it will always install the most recent stable release.
