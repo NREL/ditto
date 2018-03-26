@@ -12,8 +12,6 @@ import os
 import pytest
 import pytest as pt
 
-from tests.test_session import manage_outdir
-
 logger = logging.getLogger(__name__)
 
 def test_cyme_writer():
