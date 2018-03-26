@@ -50,11 +50,8 @@ class Reader(abstract_reader):
 
     def __init__(self, **kwargs):
         '''Gridlabd class CONSTRCTOR.'''
+        pass
 
-        if "input_file" in kwargs:
-            self.input_file = kwargs['input_file']
-        else:
-            self.input_file = './input.glm'
 
     def compute_spacing(self, spacing, conductors, default_height=30):
         lookup = ['A', 'B', 'C', 'N', 'E']
@@ -140,10 +137,12 @@ class Reader(abstract_reader):
                     dist_a = distances[index][max_from]
                     dist_b = distances[index][max_to]
                     heron_p = (dist_a + dist_b + max_dist) / 2.0
-                    x = 2 * math.sqrt(heron_p * (heron_p - dist_a) * (heron_p - dist_b) *
-                                      (heron_p - max_dist)) / max_dist # May be +-x as it could be on either side of the max_dist edge
-                    y = -1 * math.sqrt(dist_a**2 - x**2)
-                    tmp_map[w.phase] = [(x, y), (-1 * x, y)]
+                    try:
+                        x = 2 * math.sqrt(heron_p * (heron_p - dist_a) * (heron_p - dist_b) *(heron_p - max_dist)) / max_dist # May be +-x as it could be on either side of the max_dist edge
+                        y = -1 * math.sqrt(dist_a**2 - x**2)
+                        tmp_map[w.phase] = [(x, y), (-1 * x, y)]
+                    except:
+                        raise ValueError("Line Geometry infeasible with distances %f %f %f"%(dist_a,dist_b,max_dist))
 
             for w in conductors:
                 final = []
@@ -336,7 +335,8 @@ class Reader(abstract_reader):
             matrix = matrix_reduced
         return matrix
 
-    def parse(self, model, origin_datetime='2017 Jun 1 2:00PM'):
+    def parse(self, model, input_file='./input.glm', origin_datetime='2017 Jun 1 2:00PM'):
+        self.input_file = input_file
         origin_datetime = datetime.strptime(origin_datetime, '%Y %b %d %I:%M%p')
         delta_datetime = timedelta(minutes=1)
         sub_datetime = origin_datetime - delta_datetime
@@ -667,7 +667,8 @@ class Reader(abstract_reader):
                                     pass
 
                             if len(reactances) > 0:
-                                api_transformer.reactances = reactances
+                                for x in reactances:
+                                    api_transformer.reactances.append(x)
 
                             try:
                                 power_rating = float(config['power_rating']) * 1000
@@ -1382,10 +1383,11 @@ class Reader(abstract_reader):
                     pass
 
                 if not impedance_matrix_direct:
-                    impedance_matrix = self.compute_secondary_matrix(conductors.keys())
+                    impedance_matrix = self.compute_secondary_matrix(list(conductors.keys()))
 
                 api_line.impedance_matrix = impedance_matrix
-                api_line.wires = conductors.keys()
+                for wire in conductors.keys():
+                    api_line.wires.append(wire)
 
             if obj_type == 'underground_line':
 
@@ -1624,13 +1626,14 @@ class Reader(abstract_reader):
                     pass
 
                 if not impedance_matrix_direct:
-                    impedance_matrix = self.compute_matrix(conductors.keys())
+                    impedance_matrix = self.compute_matrix(list(conductors.keys()))
                     for i in range(len(impedance_matrix)):
                         for j in range(len(impedance_matrix[0])):
                             impedance_matrix[i][j] = impedance_matrix[i][j] / 1609.34
 
                 api_line.impedance_matrix = impedance_matrix
-                api_line.wires = conductors.keys()
+                for wire in conductors.keys():
+                    api_line.wires.append(wire)
                 for api_wire in conductors:
                     try:
                         if api_wire.gmr is not None:
