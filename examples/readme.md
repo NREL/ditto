@@ -70,7 +70,23 @@ Finally, we need to tell ```ditto convert``` where to write the output. This is 
 ditto convert --from cyme --input ./config.json --to dss --output ./results/
 ```
 
+### Examples
 
+#### Convert the IEEE 4 node from GridlabD to OpenDSS
+
+Run the following command:
+
+```bash
+ditto convert --input ../tests/data/gridlabd/4node.glm --from glm --to dss --output ./
+```
+
+#### Convert the IEEE 13 node from OpenDSS to CYME
+
+Here, we use the configuration file: ```ditto/documentation/ieee_13node_opendss_input.json```:
+
+```bash
+ditto convert --input ./ieee_13node_opendss_input.json --from opendss --to cyme --output ./
+```
 
 ### Method 2: Writing a script
 
