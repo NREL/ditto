@@ -26,7 +26,7 @@ import types
 from functools import partial
 from .network.network import Network
 
-from .ditto import DiTToBase, DiTToTypeError
+from .core import DiTToBase, DiTToTypeError
 from .modify.modify import Modifier
 from .models.node import Node
 
