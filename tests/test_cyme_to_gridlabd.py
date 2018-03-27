@@ -4,7 +4,7 @@
 test_cyme_to_gridlabd
 ----------------------------------
 
-Test the Cyme to GridlabD conversion.
+Tests for Cyme --> Gridlabd conversion
 """
 import os
 
@@ -20,10 +20,10 @@ def test_cyme_to_gridlabd():
     from ditto.readers.cyme.read import Reader
     from ditto.writers.gridlabd.write import Writer
 
-    cyme_models=[f for f in os.listdir(os.path.join(current_directory, './data/cyme/')) if not f.startswith('.')]
+    cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/cyme/')) if not f.startswith('.')]
     for model in cyme_models:
         m = Store()
-        r = Reader(data_folder_path=os.path.join(current_directory, './data/cyme',model))
+        r = Reader(data_folder_path=os.path.join(current_directory, 'data/cyme',model))
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} read...'.format(model=model))
@@ -38,5 +38,3 @@ def test_cyme_to_gridlabd():
                 os.remove(os.path.join(os.path.join(current_directory, "./"), i))
             except:
                 pass
-
-

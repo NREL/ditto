@@ -90,6 +90,12 @@ class Reader(AbstractReader):
         else:
             self.DSS_file_names['Nodes'] = './buscoord.dss'
 
+        #Get the delimiter
+        if 'coordinates_delimiter' in kwargs and isinstance(kwargs['coordinates_delimiter'], str):
+            self.coordinates_delimiter = kwargs['coordinates_delimiter']
+        else:
+            self.coordinates_delimiter = ','
+
         #self.DSS_file_names={'Nodes': 'buscoords.dss',
         #                     'master': 'master.dss'}
 
@@ -374,12 +380,6 @@ Responsible for calling the sub-parsers and logging progress.
 '''
         #Get the coordinate file
         self.bus_coord_file = self.DSS_file_names['Nodes']
-
-        #Get the delimiter
-        if 'coordinates_delimiter' in kwargs and isinstance(kwargs['coordinates_delimiter'], str):
-            self.coordinates_delimiter = kwargs['coordinates_delimiter']
-        else:
-            self.coordinates_delimiter = ','
 
         with open(self.bus_coord_file, 'r') as g:
             coordinates = g.readlines()

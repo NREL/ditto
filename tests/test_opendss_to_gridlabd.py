@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 
 """
-test_opendss_to_cyme
+test_opendss_to_gridlabd
 ----------------------------------
 
-Tests for OpenDSS --> Cyme conversion
+Tests for OpenDSS --> GridlabD conversion
 """
 import os
 import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
-def test_opendss_to_cyme():
+def test_opendss_to_gridlabd():
     '''
-        Test the OpenDSS to Cyme conversion.
+        Test the OpenDSS to GridlabD conversion.
     '''
     from ditto.readers.opendss.read import Reader
     from ditto.store import Store
-    from ditto.writers.cyme.write import Writer
+    from ditto.writers.gridlabd.write import Writer
 
     opendss_models=[f for f in os.listdir(os.path.join(current_directory,'data/opendss/')) if not f.startswith('.')]
     for model in opendss_models:
@@ -31,7 +31,7 @@ def test_opendss_to_cyme():
         #TODO: Log properly
         print('>OpenDSS model {model} red...'.format(model=model))
         output_path = os.path.join(current_directory, "./")
-        w = Writer(output_path=output_path, log_path=output_path)
+        w = Writer()
         w.write(m)
         #TODO: Log properly
-        print('>...and written to CYME.\n')
+        print('>...and written to GridLabD.\n')
