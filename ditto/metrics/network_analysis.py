@@ -9,6 +9,7 @@ import time
 import pandas as pd
 import logging
 from scipy.spatial import ConvexHull
+from six import string_types
 
 import networkx as nx
 import numpy as np
@@ -173,7 +174,7 @@ class network_analyzer():
             raise ValueError(
                 'Number of feeder names {a} does not match number of feeder lists of nodes {b}'.format(a=len(feeder_names), b=len(feeder_nodes))
             )
-        if isinstance(feeder_types, str):
+        if isinstance(feeder_types, string_types):
             self.feeder_types = {k: feeder_types for k in feeder_names}
         elif isinstance(feeder_types, list):
             if len(feeder_names) != len(feeder_types):
@@ -364,7 +365,7 @@ class network_analyzer():
             network = args[0]
 
             #Case one: it is a string
-            if isinstance(network, str):
+            if isinstance(network, string_types):
 
                 #Check that this is the name of a feeder
                 if network in self.feeder_names:
@@ -1229,7 +1230,7 @@ class network_analyzer():
 
             res=(sum of active power for all phase_loads X)/(total_demand)*100
         '''
-        if not isinstance(X, str):
+        if not isinstance(X, string_types):
             raise ValueError('Phase should be a string.')
         if X not in ['A', 'B', 'C']:
             raise ValueError('Phase should be A, B, or C.')

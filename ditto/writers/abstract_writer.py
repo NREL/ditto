@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 import sys
 import logging
+from six import string_types
 
 LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ class AbstractWriter(object):
         if unit is None:
             return None
 
-        if not isinstance(unit, (str,unicode)):
+        if not isinstance(unit, string_types):
             self.logger.warning('convert_from_meters() expects a unit in string format')
             return None
 
