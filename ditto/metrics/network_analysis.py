@@ -476,6 +476,7 @@ class network_analyzer():
             'wire_equipment_distribution': {}, #Store the number of each wire equipment
             'transformer_kva_distribution':[], #Store the distribution of transformer KVA values
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
+            'switch_categories_distribution': {}, #Store the number of each different categories of switches
             'substation_name': _src,
             'Feeder_type': None,
         }
@@ -529,6 +530,11 @@ class network_analyzer():
             #Switches
             if obj.is_switch == 1:
                 self.results[feeder_name]['nb_of_switches'] += 1
+                if hasattr(obj, 'nameclass') and obj.nameclass is not None:
+                    if obj.nameclass in self.results[feeder_name]['switch_categories_distribution']:
+                        self.results[feeder_name]['switch_categories_distribution'][obj.nameclass]+=1
+                    else:
+                        self.results[feeder_name]['switch_categories_distribution'][obj.nameclass]=1
 
             #Reclosers
             if obj.is_recloser == 1:
