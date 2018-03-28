@@ -8,7 +8,7 @@ object overhead_line_conductor:10001 {
 object overhead_line_conductor:10009 {
     geometric_mean_radius 0.004460  ;
     resistance 1.12000;
-}   
+}
 
 //Phase Conductor for neutral: 4/0 6/1 ACSR
 object overhead_line_conductor:10002 {
@@ -17,7 +17,7 @@ object overhead_line_conductor:10002 {
 }
 
 // Phase Conductor for 12: 1/0 AA,TS
-object underground_line_conductor:10003 { 
+object underground_line_conductor:10003 {
      outer_diameter 1.060000;
      conductor_gmr 0.011100;
      conductor_diameter 0.368000;
@@ -241,7 +241,7 @@ object line_configuration:10012 {
 
 
 
-//Define line objects 
+//Define line objects
 object overhead_line:  {
      phases "BN";
      name 1-2;
@@ -259,7 +259,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 1-7;
@@ -268,7 +268,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 3-4;
@@ -277,7 +277,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 3-5;
@@ -286,7 +286,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 5-6;
@@ -295,7 +295,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 7-8;
@@ -304,7 +304,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 8-12;
@@ -313,7 +313,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 8-9;
@@ -322,7 +322,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 8-13;
@@ -331,7 +331,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 1401-14;
@@ -340,7 +340,7 @@ object overhead_line:  {
      length 425;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 13-34;
@@ -349,7 +349,7 @@ object overhead_line:  {
      length 150;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 13-18;
@@ -358,7 +358,7 @@ object overhead_line:  {
      length 825;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 14-11;
@@ -367,7 +367,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 14-10;
@@ -376,7 +376,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 15-16;
@@ -385,7 +385,7 @@ object overhead_line:  {
      length 375;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 15-17;
@@ -394,7 +394,7 @@ object overhead_line:  {
      length 350;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 18-19;
@@ -403,7 +403,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 18-21;
@@ -412,7 +412,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 19-20;
@@ -421,7 +421,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 21-22;
@@ -430,7 +430,7 @@ object overhead_line:  {
      length 525;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 21-23;
@@ -439,7 +439,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 23-24;
@@ -448,7 +448,7 @@ object overhead_line:  {
      length 550;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 23-25;
@@ -457,7 +457,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "ACN";
      name 2601-26;
@@ -466,7 +466,7 @@ object overhead_line:  {
      length 350;
      configuration line_configuration:1007;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 25-28;
@@ -475,7 +475,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "ACN";
      name 26-27;
@@ -484,7 +484,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1007;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 26-31;
@@ -493,7 +493,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 27-33;
@@ -502,7 +502,7 @@ object overhead_line:  {
      length 500;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 28-29;
@@ -511,7 +511,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 29-30;
@@ -520,7 +520,7 @@ object overhead_line:  {
      length 350;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 30-250;
@@ -529,7 +529,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1002;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 31-32;
@@ -538,7 +538,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 34-15;
@@ -547,7 +547,7 @@ object overhead_line:  {
      length 100;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABN";
      name 35-36;
@@ -556,7 +556,7 @@ object overhead_line:  {
      length 650;
      configuration line_configuration:1008;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 35-40;
@@ -565,7 +565,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 36-37;
@@ -574,7 +574,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 36-38;
@@ -583,7 +583,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 38-39;
@@ -592,7 +592,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 40-41;
@@ -601,7 +601,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 40-42;
@@ -610,7 +610,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 42-43;
@@ -619,7 +619,7 @@ object overhead_line:  {
      length 500;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 42-44;
@@ -628,7 +628,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 44-45;
@@ -637,7 +637,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 44-47;
@@ -646,7 +646,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 45-46;
@@ -655,7 +655,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 47-48;
@@ -664,7 +664,7 @@ object overhead_line:  {
      length 150;
      configuration line_configuration:1004;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 47-49;
@@ -673,7 +673,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1004;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 49-50;
@@ -682,7 +682,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1004;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 50-51;
@@ -700,7 +700,7 @@ object overhead_line:  {
      length 700;
      configuration line_configuration:1004;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 52-53;
@@ -709,7 +709,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 53-54;
@@ -718,7 +718,7 @@ object overhead_line:  {
      length 125;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 54-55;
@@ -727,7 +727,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 54-57;
@@ -736,7 +736,7 @@ object overhead_line:  {
      length 350;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 55-56;
@@ -745,7 +745,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 57-58;
@@ -754,7 +754,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 57-60;
@@ -763,7 +763,7 @@ object overhead_line:  {
      length 750;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 58-59;
@@ -772,7 +772,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 60-61;
@@ -781,7 +781,7 @@ object overhead_line:  {
      length 550;
      configuration line_configuration:1005;
 }
- 
+
 object underground_line:  {
      phases "ABC";
      name 60-62;
@@ -790,7 +790,7 @@ object underground_line:  {
      length 250;
      configuration line_configuration:10012;
 }
- 
+
 object underground_line:  {
      phases "ABC";
      name 62-63;
@@ -799,7 +799,7 @@ object underground_line:  {
      length 175;
      configuration line_configuration:10012;
 }
- 
+
 object underground_line:  {
      phases "ABC";
      name 63-64;
@@ -808,7 +808,7 @@ object underground_line:  {
      length 350;
      configuration line_configuration:10012;
 }
- 
+
 object underground_line:  {
      phases "ABC";
      name 64-65;
@@ -817,7 +817,7 @@ object underground_line:  {
      length 425;
      configuration line_configuration:10012;
 }
- 
+
 object underground_line:  {
      phases "ABC";
      name 65-66;
@@ -826,7 +826,7 @@ object underground_line:  {
      length 325;
      configuration line_configuration:10012;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 67-68;
@@ -835,7 +835,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 67-72;
@@ -844,7 +844,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 67-97;
@@ -853,7 +853,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 68-69;
@@ -862,7 +862,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 69-70;
@@ -871,7 +871,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 70-71;
@@ -880,7 +880,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 72-73;
@@ -889,7 +889,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 72-76;
@@ -898,7 +898,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 73-74;
@@ -907,7 +907,7 @@ object overhead_line:  {
      length 350;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 74-75;
@@ -916,7 +916,7 @@ object overhead_line:  {
      length 400;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 76-77;
@@ -925,7 +925,7 @@ object overhead_line:  {
      length 400;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 76-86;
@@ -934,7 +934,7 @@ object overhead_line:  {
      length 700;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 77-78;
@@ -943,7 +943,7 @@ object overhead_line:  {
      length 100;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 78-79;
@@ -952,7 +952,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 78-80;
@@ -961,7 +961,7 @@ object overhead_line:  {
      length 475;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 80-81;
@@ -970,7 +970,7 @@ object overhead_line:  {
      length 475;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 81-82;
@@ -979,7 +979,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 81-84;
@@ -988,7 +988,7 @@ object overhead_line:  {
      length 675;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 82-83;
@@ -997,7 +997,7 @@ object overhead_line:  {
      length 250;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 84-85;
@@ -1006,7 +1006,7 @@ object overhead_line:  {
      length 475;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 86-87;
@@ -1015,7 +1015,7 @@ object overhead_line:  {
      length 450;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 87-88;
@@ -1024,7 +1024,7 @@ object overhead_line:  {
      length 175;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 87-89;
@@ -1033,7 +1033,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 89-90;
@@ -1042,7 +1042,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 89-91;
@@ -1051,7 +1051,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 91-92;
@@ -1060,7 +1060,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 91-93;
@@ -1069,7 +1069,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 93-94;
@@ -1078,7 +1078,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 93-95;
@@ -1087,7 +1087,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 95-96;
@@ -1096,7 +1096,7 @@ object overhead_line:  {
      length 200;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 97-98;
@@ -1105,7 +1105,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 98-99;
@@ -1114,7 +1114,7 @@ object overhead_line:  {
      length 550;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 99-100;
@@ -1123,7 +1123,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 100-450;
@@ -1132,7 +1132,7 @@ object overhead_line:  {
      length 800;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 101-102;
@@ -1141,7 +1141,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 101-105;
@@ -1150,7 +1150,7 @@ object overhead_line:  {
      length 275;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 102-103;
@@ -1159,7 +1159,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "CN";
      name 103-104;
@@ -1168,7 +1168,7 @@ object overhead_line:  {
      length 700;
      configuration line_configuration:10011;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 105-106;
@@ -1177,7 +1177,7 @@ object overhead_line:  {
      length 225;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 105-108;
@@ -1186,7 +1186,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "BN";
      name 106-107;
@@ -1195,7 +1195,7 @@ object overhead_line:  {
      length 575;
      configuration line_configuration:10010;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 108-109;
@@ -1204,7 +1204,7 @@ object overhead_line:  {
      length 450;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 108-300;
@@ -1213,7 +1213,7 @@ object overhead_line:  {
      length 1000;
      configuration line_configuration:1003;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 109-110;
@@ -1222,7 +1222,7 @@ object overhead_line:  {
      length 300;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 110-111;
@@ -1231,7 +1231,7 @@ object overhead_line:  {
      length 575;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 110-112;
@@ -1240,7 +1240,7 @@ object overhead_line:  {
      length 125;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 112-113;
@@ -1249,7 +1249,7 @@ object overhead_line:  {
      length 525;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "AN";
      name 113-114;
@@ -1258,7 +1258,7 @@ object overhead_line:  {
      length 325;
      configuration line_configuration:1009;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 135-35;
@@ -1267,7 +1267,7 @@ object overhead_line:  {
      length 375;
      configuration line_configuration:1004;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 149-1;
@@ -1276,7 +1276,7 @@ object overhead_line:  {
      length 400;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 152-52;
@@ -1285,7 +1285,7 @@ object overhead_line:  {
      length 400;
      configuration line_configuration:1001;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 6701-67;
@@ -1294,7 +1294,7 @@ object overhead_line:  {
      length 350;
      configuration line_configuration:1006;
 }
- 
+
 object overhead_line:  {
      phases "ABCN";
      name 197-101;
@@ -1308,7 +1308,7 @@ object overhead_line:  {
 
 
 
-//Create node only objects 
+//Create node only objects
 object node:3 {
      phases "CN";
      name 3;
@@ -1317,8 +1317,8 @@ object node:3 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
- 
+
+
 object node:8 {
      phases "ABCN";
      name 8;
@@ -1327,9 +1327,9 @@ object node:8 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:13 {
      phases "ABCN";
      name 13;
@@ -1338,7 +1338,7 @@ object node:13 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:14 {
      phases "AN";
      name 14;
@@ -1356,7 +1356,7 @@ object node:1401 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:15 {
      phases "CN";
      name 15;
@@ -1365,8 +1365,8 @@ object node:15 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
- 
+
+
 object node:18 {
      phases "ABCN";
      name 18;
@@ -1375,8 +1375,8 @@ object node:18 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
- 
+
+
 object node:21 {
      phases "ABCN";
      name 21;
@@ -1385,9 +1385,9 @@ object node:21 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:23 {
      phases "ABCN";
      name 23;
@@ -1396,9 +1396,9 @@ object node:23 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:25 {
      phases "ABCN";
      name 25;
@@ -1407,7 +1407,7 @@ object node:25 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:26 {
      phases "ACN";
      name 26;
@@ -1425,7 +1425,7 @@ object node:2601 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:27 {
      phases "ACN";
      name 27;
@@ -1434,9 +1434,9 @@ object node:27 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:36 {
      phases "ABN";
      name 36;
@@ -1445,9 +1445,9 @@ object node:36 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:40 {
      phases "ABCN";
      name 40;
@@ -1456,9 +1456,9 @@ object node:40 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:44 {
      phases "ABCN";
      name 44;
@@ -1467,8 +1467,8 @@ object node:44 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
- 
+
+
 object node:54 {
      phases "ABCN";
      name 54;
@@ -1477,9 +1477,9 @@ object node:54 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:57 {
      phases "ABCN";
      name 57;
@@ -1488,8 +1488,8 @@ object node:57 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
- 
+
+
 object node:61 {
      phases "ABCN";
      name 61;
@@ -1498,9 +1498,9 @@ object node:61 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:67 {
      phases "ABCN";
      name 67;
@@ -1518,7 +1518,7 @@ object node:6701 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
-  
+
 object node:72 {
      phases "ABCN";
      name 72;
@@ -1527,9 +1527,9 @@ object node:72 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:78 {
      phases "ABCN";
      name 78;
@@ -1538,9 +1538,9 @@ object node:78 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:81 {
      phases "ABCN";
      name 81;
@@ -1549,10 +1549,10 @@ object node:81 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
 
- 
+
+
 object node:89 {
      phases "ABCN";
      name 89;
@@ -1561,9 +1561,9 @@ object node:89 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:91 {
      phases "ABCN";
      name 91;
@@ -1572,7 +1572,7 @@ object node:91 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:93 {
      phases "ABCN";
      name 93;
@@ -1581,7 +1581,7 @@ object node:93 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
-  
+
 object node:97 {
      phases "ABCN";
      name 97;
@@ -1590,7 +1590,7 @@ object node:97 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
-  
+
 object node:101 {
      phases "ABCN";
      name 101;
@@ -1599,9 +1599,9 @@ object node:101 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
 
- 
+
+
 object node:105 {
      phases "ABCN";
      name 105;
@@ -1610,7 +1610,7 @@ object node:105 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
-  
+
 object node:108 {
      phases "ABCN";
      name 108;
@@ -1619,7 +1619,7 @@ object node:108 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
-  
+
 object node:110 {
      phases "AN";
      name 110;
@@ -1628,7 +1628,7 @@ object node:110 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
-  
+
 object node:135 {
      phases "ABCN";
      name 135;
@@ -1637,7 +1637,7 @@ object node:135 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:149 {
      phases "ABCN";
      name 149;
@@ -1665,7 +1665,7 @@ object node:150 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:151 {
      phases "ABCN";
      name 151;
@@ -1683,7 +1683,7 @@ object node:152 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:160 {
      phases "ABCN";
      name 160;
@@ -1692,7 +1692,7 @@ object node:160 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:195 {
      phases "ABCN";
      name 195;
@@ -1702,7 +1702,7 @@ object node:195 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:197 {
      phases "ABCN";
      name 197;
@@ -1711,7 +1711,7 @@ object node:197 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:250 {
      phases "ABCN";
      name 250;
@@ -1720,7 +1720,7 @@ object node:250 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:251 {
      phases "ABCN";
      name 251;
@@ -1730,7 +1730,7 @@ object node:251 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:300 {
      phases "ABCN";
      name 300;
@@ -1739,7 +1739,7 @@ object node:300 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:350 {
      phases "ABCN";
      name 350;
@@ -1748,7 +1748,7 @@ object node:350 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:450 {
      phases "ABCN";
      name 450;
@@ -1757,7 +1757,7 @@ object node:450 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:451 {
      phases "ABCN";
      name 451;
@@ -1767,7 +1767,7 @@ object node:451 {
      voltage_C -1200.8886+2080.000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object node:610 {
      phases "ABCN";
      name 610;
@@ -1799,7 +1799,7 @@ object load:1 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:2 {
      name 2;
      phases "BN";
@@ -1809,7 +1809,7 @@ object load:2 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:4 {
      name 4;
      phases "CN";
@@ -1819,7 +1819,7 @@ object load:4 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:5 {
      name 5;
      phases "CN";
@@ -1829,7 +1829,7 @@ object load:5 {
      constant_current_C -0.55781+9.2933j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:6 {
      name 6;
      phases "CN";
@@ -1839,7 +1839,7 @@ object load:6 {
      constant_impedance_C 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:7 {
      name 7;
      phases "ABCN";
@@ -1849,7 +1849,7 @@ object load:7 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:9 {
      name 9;
      phases "AN";
@@ -1859,7 +1859,7 @@ object load:9 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:10 {
      name 10;
      phases "AN";
@@ -1869,7 +1869,7 @@ object load:10 {
      constant_current_A 8.3272-4.1636j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:11 {
      name 11;
      phases "AN";
@@ -1879,7 +1879,7 @@ object load:11 {
      constant_impedance_A 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:12 {
      name 12;
      phases "BN";
@@ -1889,7 +1889,7 @@ object load:12 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:16 {
      name 16;
      phases "CN";
@@ -1899,7 +1899,7 @@ object load:16 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:17 {
      name 17;
      phases "CN";
@@ -1909,7 +1909,7 @@ object load:17 {
      constant_power_C 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:19 {
      name 19;
      phases "AN";
@@ -1919,7 +1919,7 @@ object load:19 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:20 {
      name 20;
      phases "AN";
@@ -1929,7 +1929,7 @@ object load:20 {
      constant_current_A 16.6543-8.3272j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:22 {
      name 22;
      phases "BN";
@@ -1939,7 +1939,7 @@ object load:22 {
      constant_impedance_B 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:24 {
      name 24;
      phases "CN";
@@ -1949,7 +1949,7 @@ object load:24 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:28 {
      name 28;
      phases "ABCN";
@@ -1959,7 +1959,7 @@ object load:28 {
      constant_current_A 16.6543-8.3272j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:29 {
      name 29;
      phases "ABCN";
@@ -1969,7 +1969,7 @@ object load:29 {
      constant_impedance_A 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:30 {
      name 30;
      phases "ABCN";
@@ -1979,7 +1979,7 @@ object load:30 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:31 {
      name 31;
      phases "CN";
@@ -1989,7 +1989,7 @@ object load:31 {
      constant_power_C 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:32 {
      name 32;
      phases "CN";
@@ -1999,7 +1999,7 @@ object load:32 {
      constant_power_C 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:33 {
      name 33;
      phases "AN";
@@ -2009,7 +2009,7 @@ object load:33 {
      constant_current_A 16.6543-8.3272j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:34 {
      name 34;
      phases "CN";
@@ -2019,7 +2019,7 @@ object load:34 {
      constant_impedance_C 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:35 {
      name 35;
      phases "ABCD";
@@ -2029,7 +2029,7 @@ object load:35 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:37 {
      name 37;
      phases "AN";
@@ -2039,7 +2039,7 @@ object load:37 {
      constant_impedance_A 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:38 {
      name 38;
      phases "BN";
@@ -2049,7 +2049,7 @@ object load:38 {
      constant_current_B -7.7694-5.1297j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:39 {
      name 39;
      phases "BN";
@@ -2059,7 +2059,7 @@ object load:39 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:41 {
      name 41;
      phases "CN";
@@ -2069,7 +2069,7 @@ object load:41 {
      constant_power_C 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:42 {
      name 42;
      phases "ABCN";
@@ -2079,7 +2079,7 @@ object load:42 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:43 {
      name 43;
      phases "BN";
@@ -2089,7 +2089,7 @@ object load:43 {
      constant_impedance_B 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:45 {
      name 45;
      phases "AN";
@@ -2099,7 +2099,7 @@ object load:45 {
      constant_current_A 8.3272-4.1636j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:46 {
      name 46;
      phases "AN";
@@ -2109,7 +2109,7 @@ object load:46 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:47 {
      name 47;
      phases "ABCN";
@@ -2121,7 +2121,7 @@ object load:47 {
      constant_current_C 1.7282+17.8247j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:48 {
      name 48;
      phases "ABCN";
@@ -2133,7 +2133,7 @@ object load:48 {
      constant_impedance_C 54.5672+38.9766j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:49 {
      name 49;
      phases "ABCN";
@@ -2145,7 +2145,7 @@ object load:49 {
      constant_power_C 35000+25000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:50 {
      name 50;
      phases "ABCN";
@@ -2155,7 +2155,7 @@ object load:50 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:51 {
      name 51;
      phases "ABCN";
@@ -2165,7 +2165,7 @@ object load:51 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:52 {
      name 52;
      phases "ABCN";
@@ -2175,7 +2175,7 @@ object load:52 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:53 {
      name 53;
      phases "ABCN";
@@ -2185,7 +2185,7 @@ object load:53 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:55 {
      name 55;
      phases "ABCN";
@@ -2195,7 +2195,7 @@ object load:55 {
      constant_impedance_A 230.7413+115.3707j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:56 {
      name 56;
      phases "ABCN";
@@ -2205,7 +2205,7 @@ object load:56 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:58 {
      name 58;
      phases "BN";
@@ -2215,7 +2215,7 @@ object load:58 {
      constant_current_B -7.7694-5.1297j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:59 {
      name 59;
      phases "BN";
@@ -2225,7 +2225,7 @@ object load:59 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:60 {
      name 60;
      phases "ABCN";
@@ -2235,7 +2235,7 @@ object load:60 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:62 {
      name 62;
      phases "ABC";
@@ -2245,7 +2245,7 @@ object load:62 {
      constant_impedance_C 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:63 {
      name 63;
      phases "ABC";
@@ -2255,7 +2255,7 @@ object load:63 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:64 {
      name 64;
      phases "ABC";
@@ -2265,7 +2265,7 @@ object load:64 {
      constant_current_B -28.2336-19.757j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:65 {
      name 65;
      phases "ABCD";
@@ -2277,7 +2277,7 @@ object load:65 {
      constant_impedance_C 163.7016+116.9297j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:66 {
      name 66;
      phases "ABC";
@@ -2287,7 +2287,7 @@ object load:66 {
      constant_power_C 75000+35000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:68 {
      name 68;
      phases "AN";
@@ -2297,7 +2297,7 @@ object load:68 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:69 {
      name 69;
      phases "AN";
@@ -2307,7 +2307,7 @@ object load:69 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:70 {
      name 70;
      phases "AN";
@@ -2317,7 +2317,7 @@ object load:70 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:71 {
      name 71;
      phases "AN";
@@ -2327,7 +2327,7 @@ object load:71 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:73 {
      name 73;
      phases "CN";
@@ -2337,7 +2337,7 @@ object load:73 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:74 {
      name 74;
      phases "CN";
@@ -2347,7 +2347,7 @@ object load:74 {
      constant_impedance_C 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:75 {
      name 75;
      phases "CN";
@@ -2357,7 +2357,7 @@ object load:75 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:76 {
      name 76;
      phases "ABCD";
@@ -2369,7 +2369,7 @@ object load:76 {
      constant_current_C -8.5629+18.8224j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:77 {
      name 77;
      phases "ABCN";
@@ -2379,7 +2379,7 @@ object load:77 {
      constant_power_B 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:79 {
      name 79;
      phases "ABCN";
@@ -2389,7 +2389,7 @@ object load:79 {
      constant_impedance_A 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:80 {
      name 80;
      phases "ABCN";
@@ -2399,7 +2399,7 @@ object load:80 {
      constant_power_B 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:82 {
      name 82;
      phases "ABCN";
@@ -2409,7 +2409,7 @@ object load:82 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:83 {
      name 83;
      phases "ABCN";
@@ -2422,7 +2422,7 @@ object load:83 {
      constant_impedance_C 0.00-28.8427j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:84 {
      name 84;
      phases "CN";
@@ -2432,7 +2432,7 @@ object load:84 {
      constant_power_C 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:85 {
      name 85;
      phases "CN";
@@ -2442,7 +2442,7 @@ object load:85 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:86 {
      name 86;
      phases "ABCN";
@@ -2452,7 +2452,7 @@ object load:86 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:87 {
      name 87;
      phases "ABCN";
@@ -2462,7 +2462,7 @@ object load:87 {
      constant_power_B 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:88 {
      name 88;
      phases "AN";
@@ -2473,7 +2473,7 @@ object load:88 {
      constant_impedance_A 0.00-115.7067j;         //Shunt Capacitor
      nominal_voltage 2401.7771;
 }
- 
+
 object load:90 {
      name 90;
      phases "BN";
@@ -2484,7 +2484,7 @@ object load:90 {
      constant_impedance_B 0.00-115.7067j;         //Shunt Capacitor
      nominal_voltage 2401.7771;
 }
- 
+
 object load:92 {
      name 92;
      phases "CN";
@@ -2495,7 +2495,7 @@ object load:92 {
      constant_impedance_C 0.00-115.7067j;         //Shunt Capacitor
      nominal_voltage 2401.7771;
 }
- 
+
 object load:94 {
      name 94;
      phases "AN";
@@ -2505,7 +2505,7 @@ object load:94 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:95 {
      name 95;
      phases "ABCN";
@@ -2515,7 +2515,7 @@ object load:95 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:96 {
      name 96;
      phases "BN";
@@ -2525,7 +2525,7 @@ object load:96 {
      constant_power_B 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:98 {
      name 98;
      phases "ABCN";
@@ -2535,7 +2535,7 @@ object load:98 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:99 {
      name 99;
      phases "ABCN";
@@ -2545,7 +2545,7 @@ object load:99 {
      constant_power_B 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:100 {
      name 100;
      phases "ABCN";
@@ -2555,7 +2555,7 @@ object load:100 {
      constant_impedance_C 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:102 {
      name 102;
      phases "CN";
@@ -2565,7 +2565,7 @@ object load:102 {
      constant_power_C 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:103 {
      name 103;
      phases "CN";
@@ -2575,7 +2575,7 @@ object load:103 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:104 {
      name 104;
      phases "CN";
@@ -2585,7 +2585,7 @@ object load:104 {
      constant_power_C 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:106 {
      name 106;
      phases "BN";
@@ -2595,7 +2595,7 @@ object load:106 {
      constant_power_B 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:107 {
      name 107;
      phases "BN";
@@ -2605,7 +2605,7 @@ object load:107 {
      constant_power_B 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:109 {
      name 109;
      phases "AN";
@@ -2615,7 +2615,7 @@ object load:109 {
      constant_power_A 40000+20000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:111 {
      name 111;
      phases "AN";
@@ -2625,7 +2625,7 @@ object load:111 {
      constant_power_A 20000+10000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:112 {
      name 112;
      phases "AN";
@@ -2635,7 +2635,7 @@ object load:112 {
      constant_current_A 8.3272-4.1636j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:113 {
      name 113;
      phases "AN";
@@ -2645,7 +2645,7 @@ object load:113 {
      constant_impedance_A 115.3707+57.6853j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load:114 {
      name 114;
      phases "AN";
@@ -2767,16 +2767,16 @@ object switch:95195 {
 //       constant_impedance_C 0.00-28.8427j;
 //       nominal_voltage 2401.7771;
 //}
-  
-  
-   
+
+
+
 //object load:8898 {
 //       name 8898;
 //       parent 88;
 //       phases "AN";
 //       voltage_A 2401.7771;
 //       voltage_B -1200.8886-2080.000j;
-//       voltage_C -1200.8886+2080.000j;      
+//       voltage_C -1200.8886+2080.000j;
 //       constant_impedance_A 0.00-115.7067j;
 //       nominal_voltage 2401.7771;
 //}
@@ -2787,7 +2787,7 @@ object switch:95195 {
 //       phases "BN";
 //       voltage_A 2401.7771;
 //       voltage_B -1200.8886-2080.000j;
-//       voltage_C -1200.8886+2080.000j;      
+//       voltage_C -1200.8886+2080.000j;
 //       constant_impedance_B 0.00-115.7067j;
 //       nominal_voltage 2401.7771;
 //}
@@ -2798,7 +2798,7 @@ object switch:95195 {
 //       phases "CN";
 //       voltage_A 2401.7771;
 //       voltage_B -1200.8886-2080.000j;
-//       voltage_C -1200.8886+2080.000j;      
+//       voltage_C -1200.8886+2080.000j;
 //       constant_impedance_C 0.00-115.7067j;
 //       nominal_voltage 2401.7771;
 //}
@@ -2814,7 +2814,7 @@ object transformer_configuration:400 {
     resistance 0.0127;
     reactance 0.0272;
 }
-  
+
 object transformer:611610 {
     phases "ABCN";
     name 611-610;
@@ -2850,7 +2850,7 @@ object regulator_configuration:1501490 {
     tap_pos_B 7;
     tap_pos_C 7;
 }
-  
+
 object regulator:1501491 {
      phases "ABC";
      from node:150;
@@ -2880,7 +2880,7 @@ object regulator_configuration:2526010 {
     tap_pos_A 0;
     tap_pos_C -1;
 }
-  
+
 object regulator:252601 {
      phases "AC";
      from node:25;
@@ -2907,7 +2907,7 @@ object regulator_configuration:914010 {
     Type A;
     tap_pos_A -1;
 }
-  
+
 object regulator:91401 {
      phases "A";
      from load:9;
@@ -2939,11 +2939,10 @@ object regulator_configuration:16067010 {
     tap_pos_B 1;
     tap_pos_C 5;
 }
-  
+
 object regulator:1606701 {
      phases "ABC";
      from node:160;
      to node:6701;
      configuration regulator_configuration:16067010;
 }
-
