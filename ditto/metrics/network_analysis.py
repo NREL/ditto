@@ -474,6 +474,7 @@ class network_analyzer():
             'demand_LV_phase_C': 0, #Total LV demand on phase C
             'nb_load_per_transformer': {}, #Store the number of loads per distribution transformer
             'wire_equipment_distribution': {}, #Store the number of each wire equipment
+            'transformer_kva_distribution':[], #Store the distribution of transformer KVA values
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'substation_name': _src,
             'Feeder_type': None,
@@ -745,6 +746,7 @@ class network_analyzer():
                 #...compute the transformer KVA
                 if hasattr(obj,'windings') and obj.windings is not None:
                     transformer_kva=sum([wdg.rated_power for wdg in obj.windings if wdg.rated_power is not None])
+                    self.results[feeder_name]['transformer_kva_distribution'].append(transformer_kva)
                 #...and, compare the two values
                 if total_load_kva>transformer_kva:
                     self.results[feeder_name]['number_of_overloaded_transformer']+=1
