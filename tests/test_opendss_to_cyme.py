@@ -19,17 +19,17 @@ def test_opendss_to_cyme():
     from ditto.store import Store
     from ditto.writers.cyme.write import Writer
 
-    opendss_models=[f for f in os.listdir(os.path.join(current_directory,'data/opendss/')) if not f.startswith('.')]
+    opendss_models=[f for f in os.listdir(os.path.join(current_directory,'data/small_cases/opendss/')) if not f.startswith('.')]
     for model in opendss_models:
         m = Store()
         r = Reader(
-            master_file=os.path.join(current_directory, 'data/opendss/{model}/master.dss'.format(model=model)),
-            buscoordinates_file=os.path.join(current_directory, 'data/opendss/{model}/buscoord.dss'.format(model=model))
+            master_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/master.dss'.format(model=model)),
+            buscoordinates_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/buscoord.dss'.format(model=model))
         )
         r.parse(m)
         m.set_names()
         #TODO: Log properly
-        print('>OpenDSS model {model} red...'.format(model=model))
+        print('>OpenDSS model {model} read...'.format(model=model))
         output_path = os.path.join(current_directory, "./")
         w = Writer(output_path=output_path, log_path=output_path)
         w.write(m)
