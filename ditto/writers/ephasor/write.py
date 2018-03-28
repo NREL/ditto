@@ -363,7 +363,6 @@ class Writer(AbstractWriter):
                             logger.debug("length", line.length)
                             logger.debug("R", np.real(elt))
                             logger.debug("X", np.imag(elt))
-                            #logger.debug()
 
                             # -6.3581 line valie
                             # -.602 siemens per mile
@@ -688,7 +687,7 @@ class Writer(AbstractWriter):
             for key, value in obj_dict.items():
                 value.append(None)
 
-            if hasattr(i, 'connecting_element') and i.connecting_element is not None:
+            if hasattr(i, 'connecting_element') and i.connecting_element is not None and i.connecting_element in _transformer_dict:
                 transformer = _transformer_dict[i.connecting_element]
                 obj_dict['ID'][index] = i.name
                 obj_dict['Angle (deg)'][index] = i.phase_angle
