@@ -5,6 +5,7 @@ import math
 import cmath
 import os
 from functools import reduce
+from six import string_types
 
 #Ditto imports
 from ditto.readers.abstract_reader import AbstractReader
@@ -392,7 +393,7 @@ class Reader(AbstractReader):
             except:
                 raise ValueError('Value2={} could not be converted to float in load_value_type_mapping.'.format(value2))
 
-        if isinstance(load_type, str):
+        if isinstance(load_type, string_types):
             if load_type=='0' or load_type.lower()=='kw_kvar': return value1, value2
             if load_type=='1' or load_type.lower()=='kva_pf': return value1*value2, value1*np.sqrt(1-value2**2)
             if load_type=='2' or load_type.lower()=='kw_pf': return value1, value1/value2*np.sqrt(1-value2**2)
@@ -430,7 +431,7 @@ class Reader(AbstractReader):
             |   2 or 'D'    |           'D'         |
             +---------------+-----------------------+
         '''
-        if not isinstance(conn, (str,int)):
+        if not isinstance(conn, (string_types,int)):
             raise ValueError('capacitors_connection_mapping only accepts int or string. {} was provided.'.format(type(conn)))
 
         if conn==0 or conn=='0' or conn=='Y': return 'Y'
@@ -474,7 +475,7 @@ class Reader(AbstractReader):
             if value==5: return 'Z'
             if value in [6,7]: raise NotImplementedError('Connection {} not implemented.'.format(value))
 
-        elif isinstance(value, str):
+        elif isinstance(value, string_types):
             if value=='0' or value.lower()=='yg' or value=='1' or value.lower()=='y': return 'Y'
             if value=='2' or value.lower()=='delta' or value=='3' or value.lower()=='open delta' or value=='4' or value=='closed delta': return 'D'
             if value=='5' or value.lower()=='zg': return 'Z'
@@ -544,7 +545,7 @@ class Reader(AbstractReader):
             if value==11: res=('Y','Z')
             if value==12: res=('D','Z')
 
-        elif isinstance(value, str):
+        elif isinstance(value, string_types):
             if value=='0' or value.lower()=='y_y': res=('Y','Y')
             if value=='1' or value.lower()=='d_y': res=('D','Y')
             if value=='2' or value.lower()=='y_d': res=('Y','D')
@@ -579,10 +580,10 @@ class Reader(AbstractReader):
             :rtype: bool
         '''
         #Safety checks
-        if not isinstance(line, str):
+        if not isinstance(line, string_types):
             raise ValueError('check_object_in_line expects a string for both line and object. A {type} instance was provided for line.'.format(type=type(line)))
 
-        if not isinstance(obj, str):
+        if not isinstance(obj, string_types):
             raise ValueError('check_object_in_line expects a string for both line and object. A {type} instance was provided for object.'.format(type=type(obj)))
 
         if not obj in self.header_mapping:

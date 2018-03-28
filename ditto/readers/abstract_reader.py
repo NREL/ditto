@@ -6,6 +6,7 @@ from builtins import super, range, zip, round, map
 import sys
 import logging
 import numpy as np
+from six import string_types
 
 LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +134,7 @@ class AbstractReader(object):
         if unit is None:
             return None
 
-        if not isinstance(unit, (str,unicode)):
+        if not isinstance(unit, string_types):
             self.logger.warning('convert_to_meters() expects a unit in string format')
             return None
 
@@ -241,7 +242,7 @@ class AbstractReader(object):
         if unit is None:
             return None
 
-        if not isinstance(unit, str):
+        if not isinstance(unit, string_types):
             self.logger.warning('convert_from_meters() expects a unit in string format')
             return None
 

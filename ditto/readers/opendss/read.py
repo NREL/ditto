@@ -11,6 +11,7 @@ import json
 import numpy as np
 import logging
 import time
+from six import string_types
 
 #OpenDSSdirect import
 import opendssdirect as dss
@@ -91,7 +92,7 @@ class Reader(AbstractReader):
             self.DSS_file_names['Nodes'] = './buscoord.dss'
 
         #Get the delimiter
-        if 'coordinates_delimiter' in kwargs and isinstance(kwargs['coordinates_delimiter'], str):
+        if 'coordinates_delimiter' in kwargs and isinstance(kwargs['coordinates_delimiter'], string_types):
             self.coordinates_delimiter = kwargs['coordinates_delimiter']
         else:
             self.coordinates_delimiter = ','
