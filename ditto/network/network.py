@@ -173,7 +173,7 @@ class Network:
     def get_upstream_transformer(self, model, node):
 
         curr_node = node
-        curr = self.digraph.predecessors(node)
+        curr = list(self.digraph.predecessors(node))
         edge_equipment = nx.get_edge_attributes(self.digraph, 'equipment')
         edge_equipment_name = nx.get_edge_attributes(self.digraph, 'equipment_name')
         #import pdb; pdb.set_trace()
@@ -182,7 +182,7 @@ class Network:
             if edge_type == 'PowerTransformer':
                 return edge_equipment_name[(curr[0], curr_node)]
             curr_node = curr[0] # assuming that the network is a DAG
-            curr = self.digraph.predecessors(curr_node)
+            curr = list(self.digraph.predecessors(curr_node))
         return None
 
     def get_all_elements_downstream(self, model, source):
