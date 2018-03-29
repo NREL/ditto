@@ -38,7 +38,7 @@ def test_cyme_reader():
         print('>Cyme model {model} parsed.\n'.format(model=model))
 
 
-@pt.mark.skip("Segfault occurs")
+#@pt.mark.skip("Segfault occurs")
 def test_opendss_reader():
     '''
     TODO
