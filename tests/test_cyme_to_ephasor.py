@@ -12,7 +12,6 @@ import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
-@pt.mark.skip() #Currently not running...
 def test_cyme_to_ephasor():
     '''
         Test the Cyme to Ephasor conversion.
@@ -21,10 +20,10 @@ def test_cyme_to_ephasor():
     from ditto.readers.cyme.read import Reader
     from ditto.writers.ephasor.write import Writer
 
-    cyme_models=[f for f in os.listdir(os.path.join(current_directory, './data/cyme/')) if not f.startswith('.')]
+    cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/small_cases/cyme/')) if not f.startswith('.')]
     for model in cyme_models:
         m = Store()
-        r = Reader(data_folder_path=os.path.join(current_directory, './data/cyme',model))
+        r = Reader(data_folder_path=os.path.join(current_directory, 'data/small_cases/cyme',model))
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} red...'.format(model=model))

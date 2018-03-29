@@ -11,7 +11,7 @@ import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
-@pt.mark.skip()
+
 def test_cyme_to_opendss():
     '''
         Test the Cyme to OpenDSS conversion.
@@ -21,10 +21,10 @@ def test_cyme_to_opendss():
     from ditto.writers.opendss.write import Writer
     import opendssdirect as dss
     output_path = current_directory
-    cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/cyme/')) if not f.startswith('.')]
+    cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/small_cases/cyme/')) if not f.startswith('.')]
     for model in cyme_models:
         m = Store()
-        r = Reader(data_folder_path=os.path.join(current_directory, 'data/cyme',model))
+        r = Reader(data_folder_path=os.path.join(current_directory, 'data/small_cases/cyme',model))
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} read...'.format(model=model))
