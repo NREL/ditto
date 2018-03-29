@@ -73,6 +73,7 @@ setup(
         "six",
         "xlrd",
         "OpenDSSDirect.py",
+        "XlsxWriter",
     ],
     extras_require={
         "dev": [
