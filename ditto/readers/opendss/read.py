@@ -386,7 +386,7 @@ Responsible for calling the sub-parsers and logging progress.
         try:
             with open(self.bus_coord_file, 'r') as g:
                 coordinates = g.readlines()
-        except FileNotFoundError:
+        except IOError:
             skip_coordinate_parsing=True
 
         buses = {}
