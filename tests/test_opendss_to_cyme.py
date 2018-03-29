@@ -6,6 +6,13 @@ test_opendss_to_cyme
 
 Tests for OpenDSS --> Cyme conversion
 """
+import six
+
+if six.PY2:
+    from backports import tempfile
+else:
+    import tempfile
+
 import os
 import pytest as pt
 
@@ -31,8 +38,8 @@ def test_opendss_to_cyme():
         m.set_names()
         #TODO: Log properly
         print('>OpenDSS model {model} read...'.format(model=model))
-        output_path = os.path.join(current_directory, "./")
-        w = Writer(output_path=output_path, log_path=output_path)
+        output_path = tempfile.TemporaryDirectory()
+        w = Writer(output_path=output_path.name, log_path=output_path)
         w.write(m)
         #TODO: Log properly
         print('>...and written to CYME.\n')

@@ -7,7 +7,12 @@ test_opendss_to_gridlabd
 Tests for OpenDSS --> GridlabD conversion
 """
 import os
-import tempfile
+import six
+
+if six.PY2:
+    from backports import tempfile
+else:
+    import tempfile
 import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
@@ -32,7 +37,6 @@ def test_opendss_to_gridlabd():
         m.set_names()
         #TODO: Log properly
         print('>OpenDSS model {model} red...'.format(model=model))
-        output_path = os.path.join(current_directory, "./")
         t = tempfile.TemporaryDirectory()
         w = Writer(output_path=t.name)
         w.write(m)

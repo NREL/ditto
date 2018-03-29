@@ -9,7 +9,12 @@ Tests for `ditto` module writers
 import logging
 import os
 
-import tempfile
+import six
+
+if six.PY2:
+    from backports import tempfile
+else:
+    import tempfile
 import pytest
 import pytest as pt
 

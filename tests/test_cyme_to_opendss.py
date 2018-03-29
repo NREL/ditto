@@ -6,7 +6,12 @@ test_cyme_to_opendss
 
 Tests for Cyme --> OpenDSS conversion
 """
-import tempfile
+import six
+
+if six.PY2:
+    from backports import tempfile
+else:
+    import tempfile
 import os
 import pytest as pt
 

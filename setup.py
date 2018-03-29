@@ -77,6 +77,7 @@ setup(
     ],
     extras_require={
         "dev": [
+            "backports.tempfile",
             "pytest",
             "pytest-cov",
             "sphinx-rtd-theme",
