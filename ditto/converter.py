@@ -3,7 +3,11 @@ import datetime
 import traceback
 import json
 
+import logging
+
 from .store import Store
+
+logger = logging.getLogger(__name__)
 
 class Converter(object):
     '''Converter class. Use to convert from one format to another through DiTTo.
@@ -136,6 +140,7 @@ class Converter(object):
     def configure_reader(self, inputs):
         '''Configure the reader.'''
 
+        logger.debug("Using Reader {} with inputs {}".format(self.reader_class, inputs))
         self.reader = self.reader_class(**inputs)
 
     def configure_writer(self, output):
