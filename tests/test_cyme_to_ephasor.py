@@ -7,7 +7,13 @@ test_cyme_to_ephasor
 Tests for Cyme --> Ephasor conversion
 """
 import os
-import tempfile
+import six
+
+if six.PY2:
+    from backports import tempfile
+else:
+    import tempfile
+
 import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))

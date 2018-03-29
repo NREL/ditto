@@ -381,41 +381,46 @@ Responsible for calling the sub-parsers and logging progress.
 '''
         #Get the coordinate file
         self.bus_coord_file = self.DSS_file_names['Nodes']
+        skip_coordinate_parsing=False
 
-        with open(self.bus_coord_file, 'r') as g:
-            coordinates = g.readlines()
+        try:
+            with open(self.bus_coord_file, 'r') as g:
+                coordinates = g.readlines()
+        except IOError:
+            skip_coordinate_parsing=True
 
         buses = {}
-        for line in coordinates:
-            if line.strip() == "":
-                continue
+        if not skip_coordinate_parsing:
+            for line in coordinates:
+                if line.strip() == "":
+                    continue
 
-            try:
-                name, X, Y = list(map(lambda x: x.strip(), line.split(self.coordinates_delimiter)))
-                name = name.lower()
-            except:
-                self.logger.warning('Could not parse line : ' + str(line))
-                name = None
-                X = None
-                Y = None
-                pass
+                try:
+                    name, X, Y = list(map(lambda x: x.strip(), line.split(self.coordinates_delimiter)))
+                    name = name.lower()
+                except:
+                    self.logger.warning('Could not parse line : ' + str(line))
+                    name = None
+                    X = None
+                    Y = None
+                    pass
 
-            try:
-                X = float(X)
-                Y = float(Y)
-            except:
-                self.logger.warning('Could not cast coordinates {X}, {Y} for bus {name}'.format(X=X, Y=Y, name=name))
-                pass
+                try:
+                    X = float(X)
+                    Y = float(Y)
+                except:
+                    self.logger.warning('Could not cast coordinates {X}, {Y} for bus {name}'.format(X=X, Y=Y, name=name))
+                    pass
 
-            if not name in buses:
-                buses[name] = {}
-                buses[name]['positions'] = [X, Y]
-                if name not in self.all_object_names:
-                    self.all_object_names.append(name)
+                if not name in buses:
+                    buses[name] = {}
+                    buses[name]['positions'] = [X, Y]
+                    if name not in self.all_object_names:
+                        self.all_object_names.append(name)
+                    else:
+                        self.logger.warning('Duplicate object Node {name}'.format(name=name))
                 else:
-                    self.logger.warning('Duplicate object Node {name}'.format(name=name))
-            else:
-                buses[name]['positions'] = [X, Y]
+                    buses[name]['positions'] = [X, Y]
 
         #Extract the line data
         lines = dss.utils.class_to_dataframe('line')

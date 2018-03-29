@@ -6,6 +6,13 @@ test_opendss_to_ephasor
 
 Tests for OpenDSS --> Ephasor conversion
 """
+import six
+
+if six.PY2:
+    from backports import tempfile
+else:
+    import tempfile
+
 import os
 import pytest as pt
 
@@ -34,7 +41,7 @@ def test_opendss_to_ephasor():
         m.set_node_voltages()
         #TODO: Log properly
         print('>OpenDSS model {model} red...'.format(model=model))
-        output_path = os.path.join(current_directory, "./")
+        output_path = tempfile.TemporaryDirectory()
         w = Writer(output_path=output_path)
         w.write(m)
         #TODO: Log properly
