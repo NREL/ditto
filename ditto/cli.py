@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 import os
+import sys
 
 from pkg_resources import iter_entry_points
 import click
@@ -65,6 +66,8 @@ def convert(ctx, **kwargs):
         input_path=kwargs["input"],
         output_path=kwargs["output"],
     ).convert()
+
+    sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -50,7 +50,9 @@ class Reader(AbstractReader):
 
     def __init__(self, **kwargs):
         '''Gridlabd class CONSTRCTOR.'''
-        pass
+
+        self.input_file = kwargs.get("input_file", "./input.glm")
+        super(Reader, self).__init__(**kwargs)
 
 
     def compute_spacing(self, spacing, conductors, default_height=30):
@@ -335,8 +337,7 @@ class Reader(AbstractReader):
             matrix = matrix_reduced
         return matrix
 
-    def parse(self, model, input_file='./input.glm', origin_datetime='2017 Jun 1 2:00PM'):
-        self.input_file = input_file
+    def parse(self, model, origin_datetime='2017 Jun 1 2:00PM'):
         origin_datetime = datetime.strptime(origin_datetime, '%Y %b %d %I:%M%p')
         delta_datetime = timedelta(minutes=1)
         sub_datetime = origin_datetime - delta_datetime
