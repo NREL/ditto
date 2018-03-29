@@ -143,11 +143,11 @@ class Converter(object):
         logger.debug("Using Reader {} with inputs {}".format(self.reader_class, inputs))
         self.reader = self.reader_class(**inputs)
 
-    def configure_writer(self, output):
+    def configure_writer(self, outputs):
         '''Configure the writer.'''
 
         logger.debug("Using Writer {} with outputs {}".format(self.writer_class, outputs))
-        self.writer=self.writer_class(**output)
+        self.writer=self.writer_class(**outputs)
 
     def convert(self):
         '''Run the conversion: from_format--->DiTTo--->to_format on all the feeders in feeder_list.'''
