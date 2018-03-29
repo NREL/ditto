@@ -28,7 +28,7 @@ def test_cyme_to_opendss():
     from ditto.writers.opendss.write import Writer
     import opendssdirect as dss
     cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/small_cases/cyme/')) if not f.startswith('.')]
-    for model in cyme_models[1:]:
+    for model in cyme_models:
         print(model)
         m = Store()
         r = Reader(data_folder_path=os.path.join(current_directory, 'data/small_cases/cyme',model))
