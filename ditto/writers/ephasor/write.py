@@ -84,23 +84,15 @@ class Writer(AbstractWriter):
         self.all_geometries = {}
         self.compensator = {}
 
-        #Call super
-        super(Writer, self).__init__(**kwargs)
-
-        log_file = 'ephasor_writer.log'
-        if 'log_file' in kwargs:
-            log_file = kwargs['log_file']
-
         self.linecodes_flag = True
         if 'linecodes_flag' in kwargs and isinstance(kwargs['linecodes_flag'], bool):
             self.linecodes_flag = kwargs['linecodes_flag']
 
-        self.output_path = './'
-        if 'output_path' in kwargs:
-            self.output_path = kwargs['output_path']
-        self.output_name = 'ephasor_model.xlsx'
-        if 'output_name' in kwargs:
-            self.output_name = kwargs['output_name']
+        self.output_name = kwargs.get("output_name", "ephasor_model.xlsx")
+
+        # Call super
+        super(Writer, self).__init__(**kwargs)
+
 
     def write_bus_coordinates(self):
         """Write the bus coordinates to a CSV file ('buscoords.csv' by default), with the following format:
