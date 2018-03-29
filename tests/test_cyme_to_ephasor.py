@@ -7,7 +7,7 @@ test_cyme_to_ephasor
 Tests for Cyme --> Ephasor conversion
 """
 import os
-
+import tempfile
 import pytest as pt
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
@@ -27,7 +27,8 @@ def test_cyme_to_ephasor():
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} red...'.format(model=model))
-        w = Writer()
+        t = tempfile.TemporaryDirectory()
+        w = Writer(output_path=t.name)
         w.write(m)
         #TODO: Log properly
         print('>...and written to Ephasor.\n')

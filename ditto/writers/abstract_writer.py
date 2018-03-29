@@ -18,18 +18,10 @@ class AbstractWriter(object):
     def __init__(self, **kwargs):
         '''Abstract class CONSTRUCTOR.'''
 
-        if 'log_file' in kwargs:
-            log_file = kwargs['log_file']
-        else:
-            log_file = 'writer.log'
-
-        if 'output_path' in kwargs:
-            self.output_path = kwargs['output_path']
-        else:
-            self.output_path = './'
-
         # create logger
         self.logger = LOGGER
+
+        self.output_path = kwargs.get("output_path", "./")
 
     @classmethod
     def register(cls, registration_dict):

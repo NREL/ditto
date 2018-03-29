@@ -9,6 +9,7 @@ Tests for `ditto` module writers
 import logging
 import os
 
+import tempfile
 import pytest
 import pytest as pt
 
@@ -50,7 +51,8 @@ def test_cyme_writer():
     #reg1 = Regulator(m, name='t1_reg', connected_transformer='t1', connected_winding=2, pt_ratio=60, delay=2)
     #cap1 = Capacitor(m, name='cap1', connecting_element='n2', num_phases=3, nominal_voltage=7.2, var=300, connection_type='Y')
     m.set_names()
-    writer = Writer(output_path='./', log_path='./')
+    t = tempfile.TemporaryDirectory()
+    writer = Writer(output_path=t.name, log_path='./')
     writer.write(m)
 
 
@@ -102,7 +104,8 @@ def test_opendss_writer():
     PV_system = PowerSource(m, name='PV1', is_sourcebus=0, nominal_voltage=12470, phases=[Unicode('A'),Unicode('C')], rated_power=20000.0, connection_type='D',
                                cutout_percent=30.0, cutin_percent=15.3, resistance=14.0, reactance=5.2, v_max_pu=100, v_min_pu=60, power_factor=.9)
 
-    writer = Writer()
+    t = tempfile.TemporaryDirectory()
+    writer = Writer(output_path=t.name)
     writer.write_wiredata(m)
     writer.write_linegeometry(m)
     writer.write_linecodes(m)
@@ -150,7 +153,8 @@ def test_gridlabd_writer():
     #reg1 = Regulator(m, name='t1_reg', connected_transformer='t1', connected_winding=2, pt_ratio=60, delay=2)
     #cap1 = Capacitor(m, name='cap1', connecting_element='n2', num_phases=3, nominal_voltage=7.2, var=300, connection_type='Y')
     m.set_names()
-    writer = Writer(output_path='./', log_path='./')
+    t = tempfile.TemporaryDirectory()
+    writer = Writer(output_path=t.name, log_path='./')
     writer.write(m)
 
 
@@ -190,5 +194,6 @@ def test_ephasor_writer():
     #reg1 = Regulator(m, name='t1_reg', connected_transformer='t1', connected_winding=2, pt_ratio=60, delay=2)
     #cap1 = Capacitor(m, name='cap1', connecting_element='n2', num_phases=3, nominal_voltage=7.2, var=300, connection_type='Y')
     m.set_names()
-    writer = Writer(output_path='./', log_path='./')
+    t = tempfile.TemporaryDirectory()
+    writer = Writer(output_path=t.name, log_path='./')
     writer.write(m)
