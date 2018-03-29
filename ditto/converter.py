@@ -146,6 +146,7 @@ class Converter(object):
     def configure_writer(self, output):
         '''Configure the writer.'''
 
+        print(output)
         self.writer=self.writer_class(**output)
 
     def convert(self):

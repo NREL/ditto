@@ -1,0 +1,498 @@
+module powerflow{
+    solver_method NR;
+    NR_iteration_limit 50;
+};
+
+object node {
+    name nsourcebus;
+    bustype SWING;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n650;
+    nominal_voltage 12470;
+};
+
+object node {
+    name nrg60;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n646;
+    phases BCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n645;
+    phases BCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n632;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n633;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n634;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n670;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n611;
+    phases CN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n684;
+    phases ACN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n671;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n692;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n675;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n652;
+    phases AN;
+    nominal_voltage 12470;
+};
+
+object node {
+    name n680;
+    phases ABCN;
+    nominal_voltage 12470;
+};
+
+object capacitor {
+    name ncap1;
+    nominal_voltage 4160.0;
+    parent n675;
+    capacitor_A 0.2;
+    switchA CLOSED;
+    capacitor_B 0.2;
+    switchB CLOSED;
+    capacitor_C 0.2;
+    switchC CLOSED;
+    phases ABC;
+};
+
+object capacitor {
+    name ncap2;
+    nominal_voltage 2400.0;
+    parent n611;
+    capacitor_C 0.1;
+    switchC CLOSED;
+    phases C;
+};
+
+object load {
+    name nload_671;
+    nominal_voltage 4160.0;
+    parent n671;
+    constant_power_A 385000+220044.40836262004j;
+    constant_power_B 385000+220044.40836262004j;
+    constant_power_C 385000+220044.40836262004j;
+};
+
+object load {
+    name nload_634a;
+    nominal_voltage 277.0;
+    parent n634;
+    constant_power_A 160000+110017.43664233493j;
+};
+
+object load {
+    name nload_634b;
+    nominal_voltage 277.0;
+    parent n634;
+    constant_power_B 120000+89999.99999999997j;
+};
+
+object load {
+    name nload_634c;
+    nominal_voltage 277.0;
+    parent n634;
+    constant_power_C 120000+89999.99999999997j;
+};
+
+object load {
+    name nload_645;
+    nominal_voltage 2400.0;
+    parent n645;
+    constant_power_B 170000+124978.34147251215j;
+};
+
+object load {
+    name nload_646;
+    nominal_voltage 4160.0;
+    parent n646;
+    constant_power_B 230000+132008.22747689375j;
+};
+
+object load {
+    name nload_692;
+    nominal_voltage 4160.0;
+    parent n692;
+    constant_power_C 170000+150977.97953009768j;
+};
+
+object load {
+    name nload_675a;
+    nominal_voltage 2400.0;
+    parent n675;
+    constant_power_A 485000+190001.66417086322j;
+};
+
+object load {
+    name nload_675b;
+    nominal_voltage 2400.0;
+    parent n675;
+    constant_power_B 68000+60006.91989929194j;
+};
+
+object load {
+    name nload_675c;
+    nominal_voltage 2400.0;
+    parent n675;
+    constant_power_C 290000+211991.78272941848j;
+};
+
+object load {
+    name nload_611;
+    nominal_voltage 2400.0;
+    parent n611;
+    constant_power_C 170000+80009.12020458026j;
+};
+
+object load {
+    name nload_652;
+    nominal_voltage 2400.0;
+    parent n652;
+    constant_power_A 128000+86016.52290241906j;
+};
+
+object load {
+    name nload_670a;
+    nominal_voltage 2400.0;
+    parent n670;
+    constant_power_A 17000+10001.544138880405j;
+};
+
+object load {
+    name nload_670b;
+    nominal_voltage 2400.0;
+    parent n670;
+    constant_power_B 66000+38003.955105243775j;
+};
+
+object load {
+    name nload_670c;
+    nominal_voltage 2400.0;
+    parent n670;
+    constant_power_C 117000+67994.34627702486j;
+};
+
+object transformer_configuration {
+    no_load_loss 0.0;
+    connect_type DELTA_GWYE;
+    primary_voltage 115000.0;
+    secondary_voltage 4160.0;
+    power_rating 5000.0;
+    reactance 0.008;
+    resistance 0.001;
+    name transformer_config_1;
+};
+
+object transformer_configuration {
+    no_load_loss 0.0;
+    connect_type WYE_WYE;
+    primary_voltage 2400.0;
+    secondary_voltage 2400.0;
+    power_rating 1666.0;
+    reactance 0.01;
+    resistance 0.01;
+    name transformer_config_2;
+};
+
+object transformer_configuration {
+    no_load_loss 0.0;
+    connect_type WYE_WYE;
+    primary_voltage 4160.0;
+    secondary_voltage 480.0;
+    power_rating 500.0;
+    reactance 2.0;
+    resistance 1.1;
+    name transformer_config_3;
+};
+
+object transformer{
+    name nsub;
+    from nsourcebus;
+    to n650;
+    phases ABC;
+    configuration transformer_config_1;
+};
+
+object transformer{
+    name nxfm1;
+    from n633;
+    to n634;
+    phases ABC;
+    configuration transformer_config_3;
+};
+
+object regulator_configuration {
+    name regulator_config_1;
+    connect_type WYE_WYE;
+    time_delay 15.0;
+    band_center 122.0;
+    power_transducer_ratio 20.0;
+    pt_phase A;
+    lower_taps 16;
+    raise_taps 16;
+    band_width 2.0;
+    tap_pos_A 1.05625;
+    compensator_r_setting_A 3.0;
+};
+
+object regulator_configuration {
+    name regulator_config_2;
+    pt_phase B;
+    connect_type WYE_WYE;
+    time_delay 15.0;
+    band_center 122.0;
+    power_transducer_ratio 20.0;
+    lower_taps 16;
+    raise_taps 16;
+    band_width 2.0;
+    tap_pos_B 1.0375;
+    compensator_r_setting_B 3.0;
+};
+
+object regulator_configuration {
+    name regulator_config_3;
+    connect_type WYE_WYE;
+    time_delay 15.0;
+    band_center 122.0;
+    pt_phase C;
+    power_transducer_ratio 20.0;
+    lower_taps 16;
+    raise_taps 16;
+    band_width 2.0;
+    tap_pos_C 1.05625;
+    compensator_r_setting_C 3.0;
+};
+
+object regulator{
+    name nreg1;
+    from n650;
+    to nrg60;
+    configuration regulator_config_1;
+};
+
+object line_configuration {
+    z11 0.00021531099081364827+0.000632511154855643j;
+    z12 9.693654855643044e-05+0.0003117504593175853j;
+    z13 9.817933070866141e-05+0.0002632200459317585j;
+    z21 9.693654855643044e-05+0.0003117504593175853j;
+    z22 0.00020971850393700786+0.0006510905511811024j;
+    z23 9.538307086614174e-05+0.00023917230971128608j;
+    z31 9.817933070866141e-05+0.0002632200459317585j;
+    z32 9.538307086614174e-05+0.00023917230971128608j;
+    z33 0.00021214192913385826+0.000643012467191601j;
+    name line_config_1;
+};
+
+object line_configuration {
+    z11 0.00046765682414698156+0.0007341079396325459j;
+    z12 9.817933070866141e-05+0.0002632200459317585j;
+    z13 9.693654855643044e-05+0.0003117504593175853j;
+    z21 9.817933070866141e-05+0.0002632200459317585j;
+    z22 0.0004644875328083989+0.0007446095800524934j;
+    z23 9.538307086614174e-05+0.00023917230971128608j;
+    z31 9.693654855643044e-05+0.0003117504593175853j;
+    z32 9.538307086614174e-05+0.00023917230971128608j;
+    z33 0.00046206430446194224+0.0007526253280839895j;
+    name line_config_2;
+};
+
+object line_configuration {
+    z22 0.0008225938320209973+0.0008431617454068241j;
+    z23 0.0001283788057742782+0.00028527929790026245j;
+    z32 0.0001283788057742782+0.00028527929790026245j;
+    z33 0.0008260734908136483+0.0008370721784776903j;
+    name line_config_3;
+};
+
+object line_configuration {
+    z11 0.0004919662073490813+0.00027238674540682416j;
+    z12 0.00019789721128608923+1.7202385170603673e-05j;
+    z13 0.00017613248031496062-1.1446220472440945e-05j;
+    z21 0.00019789721128608923+1.7202385170603673e-05j;
+    z22 0.0004857073490813648+0.00024650282152230966j;
+    z23 0.00019789721128608923+1.7202385170603673e-05j;
+    z31 0.00017613248031496062-1.1446220472440945e-05j;
+    z32 0.00019789721128608923+1.7202385170603673e-05j;
+    z33 0.0004919662073490813+0.00027238674540682416j;
+    name line_config_4;
+};
+
+object line_configuration {
+    z11 0.0008225938320209973+0.0008431617454068241j;
+    z13 0.0001283788057742782+0.00028527929790026245j;
+    z31 0.0001283788057742782+0.00028527929790026245j;
+    z33 0.0008260734908136483+0.0008370721784776903j;
+    name line_config_5;
+};
+
+object line_configuration {
+    z33 0.0008259491469816273+0.0008373205380577427j;
+    name line_config_6;
+};
+
+object line_configuration {
+    z11 0.0008342135826771653+0.00031839931102362203j;
+    name line_config_7;
+};
+
+object underground_line{
+    length 2000.000064;
+    configuration line_config_1;
+    name n650632;
+    from nrg60;
+    to n632;
+    phases ABCN;
+};
+
+object underground_line{
+    length 667.0000213440001;
+    configuration line_config_1;
+    name n632670;
+    from n632;
+    to n670;
+    phases ABCN;
+};
+
+object underground_line{
+    length 1333.000042656;
+    configuration line_config_1;
+    name n670671;
+    from n670;
+    to n671;
+    phases ABCN;
+};
+
+object underground_line{
+    length 1000.000032;
+    configuration line_config_1;
+    name n671680;
+    from n671;
+    to n680;
+    phases ABCN;
+};
+
+object underground_line{
+    length 500.000016;
+    configuration line_config_2;
+    name n632633;
+    from n632;
+    to n633;
+    phases ABCN;
+};
+
+object underground_line{
+    length 500.000016;
+    configuration line_config_3;
+    name n632645;
+    from n632;
+    to n645;
+    phases CBN;
+};
+
+object underground_line{
+    length 300.0000096;
+    configuration line_config_3;
+    name n645646;
+    from n645;
+    to n646;
+    phases CBN;
+};
+
+object underground_line{
+    length 500.000016;
+    configuration line_config_4;
+    name n692675;
+    from n692;
+    to n675;
+    phases ABCN;
+};
+
+object underground_line{
+    length 300.0000096;
+    configuration line_config_5;
+    name n671684;
+    from n671;
+    to n684;
+    phases ACN;
+};
+
+object underground_line{
+    length 300.0000096;
+    configuration line_config_6;
+    name n684611;
+    from n684;
+    to n611;
+    phases CN;
+};
+
+object underground_line{
+    length 800.0000256;
+    configuration line_config_7;
+    name n684652;
+    from n684;
+    to n652;
+    phases AN;
+};
+
+object underground_line{
+    length 0.0010000000320000001;
+    name n671692;
+    from n671;
+    to n692;
+    phases ABCN;
+};

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import os
 import re
 import math
 import numpy as np
@@ -45,6 +46,7 @@ class Writer(AbstractWriter):
         else:
             self.output_path = './'
 
+        print(self.output_path)
         # create logger
         self.logger = logging.getLogger('GridLAB-D_writer')
         self.logger.setLevel(logging.INFO)
@@ -93,67 +95,67 @@ class Writer(AbstractWriter):
         else:
             self.write_wires = False
 
-        fp = open(self.output_path + "Model.glm", 'w')
+        with open(os.path.join(self.output_path, "Model.glm"), 'w') as fp:
 
-        #Write the modules
-        self.logger.info("Writing the Module...")
-        if self.verbose: logger.debug("Writing the Module...")
-        fp.write('module powerflow{\n    solver_method NR;\n    NR_iteration_limit 50;\n};\n\n')
-        if self.verbose: logger.debug("Succesful!")
+            #Write the modules
+            self.logger.info("Writing the Module...")
+            if self.verbose: logger.debug("Writing the Module...")
+            fp.write('module powerflow{\n    solver_method NR;\n    NR_iteration_limit 50;\n};\n\n')
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write the nodes
-        self.logger.info("Writing the Nodes...")
-        if self.verbose: logger.debug("Writing the Nodes...")
-        s = self.write_nodes(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write the nodes
+            self.logger.info("Writing the Nodes...")
+            if self.verbose: logger.debug("Writing the Nodes...")
+            s = self.write_nodes(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write the capacitors
-        self.logger.info("Writing the Capacitors...")
-        if self.verbose: logger.debug("Writing the Capacitors...")
-        s = self.write_capacitors(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write the capacitors
+            self.logger.info("Writing the Capacitors...")
+            if self.verbose: logger.debug("Writing the Capacitors...")
+            s = self.write_capacitors(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write the loads
-        self.logger.info("Writing the Loads...")
-        if self.verbose: logger.debug("Writing the Loads...")
-        s = self.write_loads(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write the loads
+            self.logger.info("Writing the Loads...")
+            if self.verbose: logger.debug("Writing the Loads...")
+            s = self.write_loads(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write transformer configurations
-        self.logger.info("Writing the Transformer Configurations...")
-        if self.verbose: logger.debug("Writing the Transformer Configurations...")
-        s = self.write_transformer_configurations(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write transformer configurations
+            self.logger.info("Writing the Transformer Configurations...")
+            if self.verbose: logger.debug("Writing the Transformer Configurations...")
+            s = self.write_transformer_configurations(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write transformers
-        self.logger.info("Writing the Transformers...")
-        if self.verbose: logger.debug("Writing the Transformers...")
-        s = self.write_transformers(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write transformers
+            self.logger.info("Writing the Transformers...")
+            if self.verbose: logger.debug("Writing the Transformers...")
+            s = self.write_transformers(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write regulator configurations
-        self.logger.info("Writing the Regulator Configurations...")
-        if self.verbose: logger.debug("Writing the Regulator Configurations...")
-        s = self.write_regulator_configurations(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write regulator configurations
+            self.logger.info("Writing the Regulator Configurations...")
+            if self.verbose: logger.debug("Writing the Regulator Configurations...")
+            s = self.write_regulator_configurations(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write regulators
-        self.logger.info("Writing the Regulators...")
-        if self.verbose: logger.debug("Writing the Regulators...")
-        s = self.write_regulators(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write regulators
+            self.logger.info("Writing the Regulators...")
+            if self.verbose: logger.debug("Writing the Regulators...")
+            s = self.write_regulators(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write line configurations
-        self.logger.info("Writing the Line Configurations...")
-        if self.verbose: logger.debug("Writing the Line Configurations...")
-        s = self.write_line_configurations(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write line configurations
+            self.logger.info("Writing the Line Configurations...")
+            if self.verbose: logger.debug("Writing the Line Configurations...")
+            s = self.write_line_configurations(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
-        #Write lines
-        self.logger.info("Writing the Lines...")
-        if self.verbose: logger.debug("Writing the Lines...")
-        s = self.write_lines(model, fp)
-        if self.verbose: logger.debug("Succesful!")
+            #Write lines
+            self.logger.info("Writing the Lines...")
+            if self.verbose: logger.debug("Writing the Lines...")
+            s = self.write_lines(model, fp)
+            if self.verbose: logger.debug("Succesful!")
 
     def write_nodes(self, model, fp, sourcebus='sourcebus'):
         ''' Write the Nodes into the existing file.
