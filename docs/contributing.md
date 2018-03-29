@@ -55,7 +55,7 @@ Ready to contribute? Here's how to set up `ditto` for local development.
 $ git clone git@github.com:your_name_here/ditto.git
 ```
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
 
 ```bash
 $ conda create -n python3-env python=3
@@ -71,7 +71,7 @@ $ git checkout -b name-of-your-bugfix-or-feature
 
 Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox:
 
 ```bash
 $ flake8 ditto tests
