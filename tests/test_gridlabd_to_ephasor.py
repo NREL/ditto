@@ -27,7 +27,7 @@ def test_gridlabd_to_ephasor():
     for model in gridlabd_models:
         m = Store()
         r = Reader()
-        r.parse(m,os.path.join(current_directory,'data/small_cases/gridlabd/',model))
+        r.parse(m)
         m.set_names()
         #TODO: Log properly
         print('>Gridlab-D model {model} read...'.format(model=model))
