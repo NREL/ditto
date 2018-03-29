@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
-
 """
 test_gridlabd_to_ephasor
 ----------------------------------
 
 Tests for GridlabD --> Ephasor conversion
 """
+
+import pytest as pt
+import os
+
+current_directory = os.path.realpath(os.path.dirname(__file__))
 
 @pt.mark.skip() #currently not running...
 def test_gridlabd_to_ephasor():
