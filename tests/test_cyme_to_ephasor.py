@@ -27,7 +27,8 @@ def test_cyme_to_ephasor():
         r.parse(m)
         #TODO: Log properly
         print('>Cyme model {model} red...'.format(model=model))
-        w = Writer(output_path=tempfile.TemporaryDirectory().name)
+        t = tempfile.TemporaryDirectory()
+        w = Writer(output_path=t.name)
         w.write(m)
         #TODO: Log properly
         print('>...and written to Ephasor.\n')
