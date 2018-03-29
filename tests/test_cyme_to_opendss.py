@@ -6,6 +6,7 @@ test_cyme_to_opendss
 
 Tests for Cyme --> OpenDSS conversion
 """
+import tempfile
 import os
 import pytest as pt
 
@@ -20,7 +21,8 @@ def test_cyme_to_opendss():
     from ditto.readers.cyme.read import Reader
     from ditto.writers.opendss.write import Writer
     import opendssdirect as dss
-    output_path = current_directory
+    t = tempfile.TemporaryDirectory()
+    output_path = t.name
     cyme_models=[f for f in os.listdir(os.path.join(current_directory, 'data/small_cases/cyme/')) if not f.startswith('.')]
     for model in cyme_models:
         m = Store()
@@ -37,9 +39,3 @@ def test_cyme_to_opendss():
         #TODO: Log properly
         print('>Circuit {model} solved.\n'.format(model=model))
 
-    for i in os.listdir(output_path):
-        if i.endswith(".dss"):
-            try:
-                os.remove(os.path.join(output_path, i))
-            except:
-                pass
