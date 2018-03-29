@@ -592,6 +592,8 @@ Responsible for calling the sub-parsers and logging progress.
             except:
                 linecode = None
 
+            api_line.nameclass = linecode
+
             #Based on naming convention.
             #TODO: Find a cleaner way to get this information
             if 'OH' in linecode:
@@ -804,6 +806,11 @@ Responsible for calling the sub-parsers and logging progress.
 
                 wires.append(Wire(model))
 
+                #Initialize the wire nameclass with the linecode name
+                #This is just a best effort to get some information
+                #when no wiredata is provided...
+                wires[p].nameclass=linecode
+
                 if name in fuses_names:
                     wires[p].is_fuse = 1
                 else:
@@ -837,12 +844,24 @@ Responsible for calling the sub-parsers and logging progress.
                         wires[p].phase = 'N'
                     pass
 
+                #normamps
+                try:
+                    wires[p].ampacity=float(data['normamps'])
+                except:
+                    pass
+
+                #emergamps
+                try:
+                    wires[p].emergency_ampacity=float(data['emergamps'])
+                except:
+                    pass
+
                 #If we have linegeometry data, we can do something
                 if this_line_geometry is not None:
 
                     #nameclass
                     try:
-                        wires[p].nameclass = this_line_geometry['cncable']
+                        wires[p].nameclass = this_line_geometry['wire']
                     except:
                         pass
 
