@@ -19,8 +19,8 @@ def test_gld_reader():
     from ditto.readers.gridlabd.read import Reader
     for modelfile in gridlabd_models:
         m = Store()
-        r = Reader()
-        r.parse(m, os.path.join(gridlabd_models_dir,modelfile))
+        r = Reader(input_file=os.path.join(gridlabd_models_dir,modelfile))
+        r.parse(m)
 
 def test_cyme_reader():
     '''
