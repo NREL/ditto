@@ -20,6 +20,7 @@ Readers and writers are then implemented to perform the translation from a given
  readme
  installation
  usage
+ cli-examples
  notes
  contributing
  developer-guide/index
