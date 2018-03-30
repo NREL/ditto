@@ -38,7 +38,7 @@ ditto convert --from dss --to glm
 
 #### Input
 
-In addition to the formats, we need to provide some input to DiTTo. The main issue here is that inputs are very different accross formats. It is common practice in OpenDSS for example to use master files to redirect all the other dss files, while a Cyme ASCII model is composed of three files: equipment, network, and loads. 
+In addition to the formats, we need to provide some input to DiTTo. The main issue here is that inputs are very different accross formats. It is common practice in OpenDSS for example to use master files to redirect all the other dss files, while a Cyme ASCII model is composed of three files: equipment, network, and loads.
 
 To be consistent, the CLI accepts only one file whatever the format. If we have a gridlabd model entirely stored in a file called ```model.glm``` we can use:
 
@@ -50,10 +50,12 @@ For formats like Cyme where we need multiple input files, we need to write a sim
 
 ```json
 !Content of config.json
-{"data_folder_path": "/home/cyme_models/ieee_13node/",
- "network_filename": "net.txt",
- "equipment_filename": "equip.txt",
- "load_filename": "loads.txt"}
+{
+    "data_folder_path": "/home/cyme_models/ieee_13node/",
+    "network_filename": "net.txt",
+    "equipment_filename": "equip.txt",
+    "load_filename": "loads.txt"
+}
 ```
 
 Which results in the following command:

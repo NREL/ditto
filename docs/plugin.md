@@ -12,7 +12,4 @@ The Model supports adding objects such as ConnectivityNodes, ACLineSegment, etc.
 These objects are stored in a dictionary
 
 
-Writer
-------------
-
 
