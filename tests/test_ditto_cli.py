@@ -19,7 +19,7 @@ def test_opendss_to_gridlabd_cli():
     p.wait()
     with open(os.path.join(output_path.name, "Model.glm")) as f:
         output = f.read().strip()
-    with open(os.path.join(current_directory, "data", "opendss2gridlabd-13node.glm")) as f:
+    with open(os.path.join(current_directory, "data", "ditto-validation", "opendss2gridlabd-13node.glm")) as f:
         compare = f.read().strip()
     if p.returncode != 0:
         raise Exception("Error with {}".format(p.returncode))
