@@ -904,6 +904,19 @@ class network_analyzer():
             else:
                 self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = np.nan
 
+            #Percent of Overhead MV Lines
+            self.results[_feeder_ref]['percentage_overhead_MV_lines'] = (self.results[_feeder_ref]['length_OH_mv1ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_mv2ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_mv3ph_miles'])/float(
+                                                                         self.results[_feeder_ref]['lv_length_miles'] +
+                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+
+            #Percent of Overhead LV Lines
+            self.results[_feeder_ref]['percentage_overhead_LV_lines'] = (self.results[_feeder_ref]['length_OH_lv1ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_lv2ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_lv3ph_miles'])/float(
+                                                                         self.results[_feeder_ref]['lv_length_miles'] +
+                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
 
             #Sectionalizers per recloser
             if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
