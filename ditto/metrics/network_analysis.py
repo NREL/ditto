@@ -487,6 +487,7 @@ class network_analyzer():
             'ratio_load_kW_to_transformer_KVA_distribution': {}, #Store the ratio of load kW to distribution transformer KVA
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'switch_categories_distribution': {}, #Store the number of each different categories of switches
+            'power_factor_distribution': [], #Store the load poser factors
             'substation_name': _src,
             'Feeder_type': None,
         }
@@ -712,6 +713,8 @@ class network_analyzer():
                 self.results[feeder_name]['total_demand'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
                 self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
                 self.results[feeder_name]['total_kVar'] += np.sum([pl.q for pl in _phase_loads_ if pl.q is not None])
+                load_power_factor = obj.phase_loads[0].p / float(math.sqrt(obj.phase_loads[0].p**2 + obj.phase_loads[0].q**2))
+                self.results[feeder_name]['power_factor_distribution'].append(load_power_factor)
                 for phase_load in obj.phase_loads:
                     if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
                         if hasattr(phase_load, 'p') and phase_load.p is not None:
@@ -894,6 +897,10 @@ class network_analyzer():
             for k in keys_to_divide_by_1000:
                 if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k] *= 10**-3
+
+
+            #Average load power factor
+            self.results[_feeder_ref]['average_load_power_factor'] = np.mean(self.results[_feeder_ref]['power_factor_distribution'])
 
             #Density metrics
             #
