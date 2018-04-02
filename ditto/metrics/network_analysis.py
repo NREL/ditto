@@ -447,6 +447,9 @@ class network_analyzer():
             'average_degree': self.average_degree(_net), #Average degree
             'diameter': self.diameter(_net), #Network diameter (in number of edges, NOT in distance)
             'average_path_length': self.average_path_length(_net), #Average path length (in number of edges, NOT in distance)
+            'average_regulator_sub_distance': self.average_regulator_sub_distance(_net, _src), #Average distance between substation and regulators (if any)
+            'average_capacitor_sub_distance': self.average_capacitor_sub_distance(_net, _src), #Average distance between substation and capacitors (if any)
+            'average_recloser_sub_distance': self.average_recloser_sub_distance(_net, _src), #Average distance between substation and reclosers (if any)
             'furtherest_node_miles': self.furtherest_node_miles(_net, _src),
             'nb_loops_within_feeder': self.loops_within_feeder(_net), #Number of loops inside the feeder
             'lv_length_miles': 0, #Total length of LV lines (in miles)
@@ -808,7 +811,8 @@ class network_analyzer():
         keys_to_convert_to_miles = [
             'lv_length_miles', 'mv_length_miles', 'length_mv1ph_miles', 'length_mv2ph_miles', 'length_mv3ph_miles', 'length_lv1ph_miles',
             'length_lv2ph_miles', 'length_lv3ph_miles', 'length_OH_mv1ph_miles', 'length_OH_mv2ph_miles', 'length_OH_mv3ph_miles',
-            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries'
+            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries',
+            'average_recloser_sub_distance', 'average_regulator_sub_distance', 'average_capacitor_sub_distance'
         ]
 
         #List of keys to divide by 10^3
@@ -1083,6 +1087,93 @@ class network_analyzer():
                 return 0
         else:
             return nx.average_shortest_path_length(self.G.graph)
+
+    def average_regulator_sub_distance(self, *args):
+        '''
+            Returns the average distance between the substation and the regulators (if any).
+        '''
+        if args:
+            if len(args) == 1:
+                _net = args[0]
+                _src = self.source
+            elif len(args) == 2:
+                _net, _src = args
+        else:
+            _net = self.G.graph
+            _src = self.source
+        _net=_net.copy()
+        if not _net.has_node(_src):
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
+            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+        L = []
+        for obj in self.model.models:
+            if isinstance(obj, Regulator):
+                if _net.has_node(obj.name):
+                    L.append(nx.shortest_path_length(_net, _src, obj.name, weight='length'))
+        if len(L)>0:
+            return np.mean(L)
+        else:
+            return np.nan
+
+
+    def average_capacitor_sub_distance(self, *args):
+        '''
+            Returns the average distance between the substation and the capacitors (if any).
+        '''
+        if args:
+            if len(args) == 1:
+                _net = args[0]
+                _src = self.source
+            elif len(args) == 2:
+                _net, _src = args
+        else:
+            _net = self.G.graph
+            _src = self.source
+        _net=_net.copy()
+        if not _net.has_node(_src):
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
+            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+        L = []
+        for obj in self.model.models:
+            if isinstance(obj, Capacitor):
+                if _net.has_node(obj.name):
+                    L.append(nx.shortest_path_length(_net, _src, obj.name, weight='length'))
+        if len(L)>0:
+            return np.mean(L)
+        else:
+            return np.nan
+
+    def average_recloser_sub_distance(self, *args):
+        '''
+            Returns the average distance between the substation and the reclosers (if any).
+        '''
+        if args:
+            if len(args) == 1:
+                _net = args[0]
+                _src = self.source
+            elif len(args) == 2:
+                _net, _src = args
+        else:
+            _net = self.G.graph
+            _src = self.source
+        _net=_net.copy()
+        if not _net.has_node(_src):
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
+            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+        L = []
+        for obj in self.model.models:
+            if isinstance(obj, Line) and obj.is_recloser == 1:
+                if hasattr(obj, 'from_element') and obj.from_element is not None:
+                    if _net.has_node(obj.from_element):
+                        L.append(nx.shortest_path_length(_net, _src, obj.from_element, weight='length'))
+        if len(L)>0:
+            return np.mean(L)
+        else:
+            return np.nan
+
 
     def furtherest_node_miles(self, *args):
         '''
