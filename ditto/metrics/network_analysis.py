@@ -435,6 +435,7 @@ class network_analyzer():
             'nb_of_breakers': 0,
             'nb_of_capacitors': 0, #Number of capacitors
             'number_of_customers': 0,
+            'nb_of_sectionalizers': 0, #Number of sectionalizers
             'number_of_links_to_adjacent_feeders': 0, #Number of links to neighboring feeders
             'number_of_overloaded_transformer': 0, #Number of overloaded transformers
             'nb_of_distribution_transformers': 0, #Number of distribution transformers
@@ -544,6 +545,10 @@ class network_analyzer():
             #Breakers
             if obj.is_breaker == 1:
                 self.results[feeder_name]['nb_of_breakers'] += 1
+
+            #Sectionalizers
+            if obj.is_sectionalizer == 1:
+                self.results[feeder_name]['nb_of_sectionalizers'] += 1
 
             if hasattr(obj, 'wires') and obj.wires is not None:
                 #Get the phases (needed later)
