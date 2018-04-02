@@ -432,10 +432,10 @@ class network_analyzer():
             'nb_of_fuses': 0, #Number of fuses
             'nb_of_switches': 0, #Number of switches
             'nb_of_reclosers': 0, #Number of reclosers
-            'nb_of_breakers': 0,
+            'nb_of_breakers': 0, #Number of breakers
             'nb_of_capacitors': 0, #Number of capacitors
-            'number_of_customers': 0,
             'nb_of_sectionalizers': 0, #Number of sectionalizers
+            'number_of_customers': 0, #Number of customers
             'number_of_links_to_adjacent_feeders': 0, #Number of links to neighboring feeders
             'number_of_overloaded_transformer': 0, #Number of overloaded transformers
             'nb_of_distribution_transformers': 0, #Number of distribution transformers
@@ -652,6 +652,7 @@ class network_analyzer():
                 self.results[feeder_name]['number_of_customers'] += obj.num_users
 
             if hasattr(obj, 'upstream_transformer_name') and obj.upstream_transformer_name is not None:
+                #Number of loads per distribution transformer
                 if obj.upstream_transformer_name in self.results[feeder_name]['nb_load_per_transformer']:
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name] += 1
                 else:
