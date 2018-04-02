@@ -504,6 +504,7 @@ class network_analyzer():
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'switch_categories_distribution': {}, #Store the number of each different categories of switches
             'power_factor_distribution': [], #Store the load poser factors
+            'nominal_voltages': [], #Store the different nominal voltage values
             'substation_name': _src,
             'Feeder_type': None,
         }
@@ -527,6 +528,11 @@ class network_analyzer():
                         self.points[feeder_name].append([X,Y])
                     else:
                         self.points[feeder_name]=[[X,Y]]
+
+        #Nominal voltage
+        if hasattr(obj, 'nominal_voltage'):
+            if obj.nominal_voltage not in self.results[feeder_name]['nominal_voltages']:
+                self.results[feeder_name]['nominal_voltages'].append(obj.nominal_voltage)
 
         #If we get a line
         if isinstance(obj, Line):
