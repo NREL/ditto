@@ -467,6 +467,9 @@ class network_analyzer():
             'length_lv3ph_miles': 0, #Total length of 3 phase LV lines (in miles)
             'length_OH_lv3ph_miles': 0, #Total length of overhead 3 phase LV lines (in miles)
             'total_demand': 0, #Total demand (active power)
+            'total_demand_phase_A': 0, #Total demand on phase A
+            'total_demand_phase_B': 0, #Total demand on phase B
+            'total_demand_phase_C': 0, #Total demand on phase C
             'total_kVar': 0, #Total demand (reactive power)
             'nb_loads_LV_1ph': 0, #Number of 1 phase LV loads
             'nb_loads_LV_3ph': 0, #Number of 3 phase LV loads
@@ -701,6 +704,15 @@ class network_analyzer():
                 self.results[feeder_name]['total_demand'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
                 self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
                 self.results[feeder_name]['total_kVar'] += np.sum([pl.q for pl in _phase_loads_ if pl.q is not None])
+                for phase_load in obj.phase_loads:
+                    if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
+                        if hasattr(phase_load, 'p') and phase_load.p is not None:
+                            if phase_load.phase == 'A':
+                                self.results[feeder_name]['total_demand_phase_A'] += phase_load.p
+                            elif phase_load.phase == 'B':
+                                self.results[feeder_name]['total_demand_phase_B'] += phase_load.p
+                            elif phase_load.phase == 'C':
+                                self.results[feeder_name]['total_demand_phase_C'] += phase_load.p
 
             return
 
