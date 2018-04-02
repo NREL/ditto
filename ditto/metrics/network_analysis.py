@@ -8,6 +8,7 @@ import math
 import time
 import pandas as pd
 import logging
+import json
 from scipy.spatial import ConvexHull
 from six import string_types
 
@@ -215,6 +216,21 @@ class network_analyzer():
             #for node in self.feeder_nodes[cpt]:
             for node in self.feeder_networks[feeder_name].nodes():
                 self.node_feeder_mapping[node] = feeder_name
+
+    def export_json(self,*args):
+        '''
+            Export the raw metrics in JSON format.
+
+            :param export_path: Relative path to the output file
+            :type export_path: str
+        '''
+        if args:
+            export_path = args[0]
+        else:
+            export_path = './output.json'
+        with open(export_path,'w') as f:
+            json.dump(self.results, f)
+
 
     def export(self, *args):
         '''
