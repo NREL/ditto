@@ -927,6 +927,14 @@ class network_analyzer():
             #Average load power factor
             self.results[_feeder_ref]['average_load_power_factor'] = np.mean(self.results[_feeder_ref]['power_factor_distribution'])
 
+            #Average imbalance of load by phase
+            #
+            #sum_i |tot_demand_phase_i - 1/3 * tot_demand|
+            third_tot_demand = self.results[_feeder_ref]['total_demand'] / 3.0
+            self.results[_feeder_ref]['average_imbalance_load_by_phase'] = (abs(self.results[_feeder_ref]['total_demand_phase_A'] - third_tot_demand)+
+                                                                            abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
+                                                                            abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand))
+
             #Density metrics
             #
             #Get the list of points for the feeder
