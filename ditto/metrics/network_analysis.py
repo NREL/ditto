@@ -481,6 +481,7 @@ class network_analyzer():
             'demand_LV_phase_B': 0, #Total LV demand on phase B
             'demand_LV_phase_C': 0, #Total LV demand on phase C
             'nb_load_per_transformer': {}, #Store the number of loads per distribution transformer
+            'nb_customer_per_transformer': {}, #Store the number of customers per distribution transformer
             'wire_equipment_distribution': {}, #Store the number of each wire equipment
             'transformer_kva_distribution':[], #Store the distribution of transformer KVA values
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
@@ -653,6 +654,12 @@ class network_analyzer():
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name] += 1
                 else:
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name] = 1
+
+                #Number of customers per distribution transformer
+                if obj.upstream_transformer_name in self.results[feeder_name]['nb_customer_per_transformer']:
+                    self.results[feeder_name]['nb_customer_per_transformer'][obj.upstream_transformer_name] += 1
+                else:
+                    self.results[feeder_name]['nb_customer_per_transformer'][obj.upstream_transformer_name] = 1
 
             #If the load is low voltage
             if hasattr(obj, 'nominal_voltage') and obj.nominal_voltage is not None:
