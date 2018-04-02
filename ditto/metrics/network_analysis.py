@@ -898,6 +898,12 @@ class network_analyzer():
                 if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k] *= 10**-3
 
+            #Ratio of MV Line Length to Number of Customers
+            if self.results[_feeder_ref]['number_of_customers']!=0:
+                self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = self.results[_feeder_ref]['mv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+            else:
+                self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = np.nan
+
 
             #Sectionalizers per recloser
             if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
