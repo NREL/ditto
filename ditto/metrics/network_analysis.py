@@ -484,6 +484,7 @@ class network_analyzer():
             'nb_customer_per_transformer': {}, #Store the number of customers per distribution transformer
             'wire_equipment_distribution': {}, #Store the number of each wire equipment
             'transformer_kva_distribution':[], #Store the distribution of transformer KVA values
+            'ratio_load_kW_to_transformer_KVA_distribution': {}, #Store the ratio of load kW to distribution transformer KVA
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'switch_categories_distribution': {}, #Store the number of each different categories of switches
             'substation_name': _src,
@@ -784,6 +785,11 @@ class network_analyzer():
                 #...and, compare the two values
                 if total_load_kva>transformer_kva:
                     self.results[feeder_name]['number_of_overloaded_transformer']+=1
+                #Store the ratio of load to transformer KVA
+                if transformer_kva != 0:
+                    self.results[feeder_name]['ratio_load_kW_to_transformer_KVA_distribution'][obj.name] = float(total_load_kva) / float(transformer_kva)
+                else:
+                    self.results[feeder_name]['ratio_load_kW_to_transformer_KVA_distribution'][obj.name] = np.nan
 
             if hasattr(obj, 'windings') and obj.windings is not None and len(obj.windings) > 0:
 
