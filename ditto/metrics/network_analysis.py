@@ -935,6 +935,12 @@ class network_analyzer():
                                                                             abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
                                                                             abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand))
 
+            #Ratio of LV line length to number of customers
+            if self.results[_feeder_ref]['number_of_customers'] != 0:
+                self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = self.results[_feeder_ref]['lv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+            else:
+                self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = np.nan
+
             #Density metrics
             #
             #Get the list of points for the feeder
