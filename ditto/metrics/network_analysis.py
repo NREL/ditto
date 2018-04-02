@@ -899,6 +899,12 @@ class network_analyzer():
                     self.results[_feeder_ref][k] *= 10**-3
 
 
+            #Sectionalizers per recloser
+            if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
+                self.results[_feeder_ref]['sectionalizers_per_recloser'] = float(self.results[_feeder_ref]['nb_of_sectionalizers']) / float(self.results[_feeder_ref]['nb_of_reclosers'])
+            else:
+                self.results[_feeder_ref]['sectionalizers_per_recloser'] = np.nan
+
             #Average load power factor
             self.results[_feeder_ref]['average_load_power_factor'] = np.mean(self.results[_feeder_ref]['power_factor_distribution'])
 
