@@ -24,6 +24,8 @@ from ditto.models.load import Load
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.node import Node
 
+from ..readers.abstract_reader import AbstractReader
+
 logger = logging.getLogger(__name__)
 
 class network_analyzer():
@@ -111,6 +113,10 @@ class network_analyzer():
 
         #Store the source name as attribute
         self.source = source
+
+        #Dirty way to access the abstract reader methods
+        #TODO: Better way?
+        self.abs_reader = AbstractReader()
 
         #Build the Network if required
         #
@@ -504,6 +510,8 @@ class network_analyzer():
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'switch_categories_distribution': {}, #Store the number of each different categories of switches
             'power_factor_distribution': [], #Store the load poser factors
+            'sub_trans_impedance_list': {}, #Store the list of line positive sequence impedances between the substation and each distribution transformer
+            'trans_cust_impedance_list': {}, #Store the list of line positive sequence impedances between each customer and its distribution transformer
             'nominal_voltages': [], #Store the different nominal voltage values
             'substation_name': _src,
             'Feeder_type': None,
@@ -517,6 +525,10 @@ class network_analyzer():
             This function takes as input a DiTTo object and the name of the corresponding feeder, and analyze it.
             All information needed for the metric extraction is updated here.
         '''
+        #Get the network and the source
+        _net = self.feeder_networks[feeder_name]
+        _src = self.substations[feeder_name]
+
         #If the object has some coordinate values
         #then we add the points to the list of points for the feeder
         if hasattr(obj, 'positions') and obj.positions is not None:
@@ -686,6 +698,18 @@ class network_analyzer():
                 else:
                     self.results[feeder_name]['nb_customer_per_transformer'][obj.upstream_transformer_name] = 1
 
+                #Line impedance list
+                #Get the secondary
+                trans_obj = self.model[obj.upstream_transformer_name]
+                if hasattr(trans_obj,'to_element') and trans_obj.to_element is not None:
+                    _net3=_net.copy()
+                    if not _net3.has_node(trans_obj.to_element):
+                        _sp = nx.shortest_path(self.G.graph, trans_obj.to_element, list(_net3.nodes())[0])
+                        for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                            _net3.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+                    self.results[feeder_name]['trans_cust_impedance_list'][obj.name] = self.get_impedance_list_between_nodes(_net3, trans_obj.to_element, obj.connecting_element)
+
+
             #If the load is low voltage
             if hasattr(obj, 'nominal_voltage') and obj.nominal_voltage is not None:
                 if obj.nominal_voltage * math.sqrt(3) <= self.LV_threshold:
@@ -774,6 +798,16 @@ class network_analyzer():
             if obj.name in self.transformer_load_mapping:
                 load_names=self.transformer_load_mapping[obj.name]
 
+                #Get the primary
+                if hasattr(obj,'from_element') and obj.from_element is not None:
+                    _net2=_net.copy()
+                    if not _net2.has_node(_src):
+                        _sp = nx.shortest_path(self.G.graph, _src, list(_net2.nodes())[0])
+                        for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                            _net2.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+
+                    self.results[feeder_name]['sub_trans_impedance_list'][obj.name] = self.get_impedance_list_between_nodes(_net2, _src, obj.from_element)
+
                 #This section updates the maximum length of secondaries
                 #If the graph contains the transformer's connecting element
                 if (hasattr(obj,'to_element') and
@@ -857,6 +891,7 @@ class network_analyzer():
             Computes all the available metrics for each feeder.
         '''
         self.transformer_load_mapping=self.get_transformer_load_mapping()
+        self.compute_node_line_mapping()
         self.load_distribution = []
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
@@ -963,6 +998,23 @@ class network_analyzer():
                 self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = self.results[_feeder_ref]['lv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
             else:
                 self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = np.nan
+
+            #Line impedances
+            #
+            #Average and Maximum MV line impedance from substation to MV side of distribution transformer
+            self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'] = {}
+            self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'] = {}
+            for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
+                self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.mean(imp_list)
+                self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.max(imp_list)
+
+
+            #Average and Maximum LV line impedance from distribution transformer to customer
+            self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'] = {}
+            self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'] = {}
+            for cust_name,imp_list in self.results[_feeder_ref]['trans_cust_impedance_list'].items():
+                self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'][cust_name] = np.mean(imp_list)
+                self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'][cust_name] = np.max(imp_list)
 
             #Density metrics
             #
@@ -1181,6 +1233,59 @@ class network_analyzer():
                 return 0
         else:
             return nx.average_shortest_path_length(self.G.graph)
+
+    def compute_node_line_mapping(self):
+        '''
+            Compute the following mapping:
+            (from_element.name,to_element.name): Line.name
+        '''
+        self.node_line_mapping={}
+        for obj in self.model.models:
+            if isinstance(obj,Line):
+                if (hasattr(obj,'from_element') and 
+                    obj.from_element is not None and 
+                    hasattr(obj,'to_element') and 
+                    obj.to_element is not None):
+                    self.node_line_mapping[(obj.from_element,obj.to_element)]=obj.name
+
+    def get_impedance_list_between_nodes(self, net, node1, node2):
+        '''
+            TODO
+        '''
+        impedance_list = []
+        line_list = self.list_lines_betweeen_nodes(net, node1, node2)
+        for line in line_list:
+            line_object = self.model[line]
+            if hasattr(line_object,'impedance_matrix') and line_object.impedance_matrix is not None:
+                Z = np.array(line_object.impedance_matrix)
+                if Z.shape==(1,1):
+                    impedance_list.append(Z[0,0])
+                #elif Z.shape==(3,3):
+                else:
+                    Z2 = self.abs_reader.get_sequence_impedance_matrix(Z)
+                    Z_plus = self.abs_reader.get_positive_sequence_impedance(Z2)
+                    impedance_list.append(Z_plus)
+        return impedance_list
+
+    def list_lines_betweeen_nodes(self, net, node1, node2):
+        '''
+            The function takes a network and two nodes as inputs.
+            It returns a list of Line names forming the shortest path between the two nodes.
+        '''
+        #Compute the shortest path as a sequence of node names
+        path = nx.shortest_path(net, node1, node2)
+        #Transform it in a sequence of edges (n0,n1),(n1,n2),(n2,n3)...
+        edge_list = [(a,b) for a,b in zip(path[:-1],path[1:])]
+        #Compute the sequence of corresponding lines
+        line_list = []
+        for edge in edge_list:
+            if edge in self.node_line_mapping:
+                line_list.append(self.node_line_mapping[edge])
+            #If the edge might is reversed
+            elif edge[::-1] in self.node_line_mapping:
+                line_list.append(self.node_line_mapping[edge[::-1]])
+        return line_list
+
 
     def average_regulator_sub_distance(self, *args):
         '''
