@@ -270,17 +270,37 @@ class network_analyzer():
             export_path = './output.xlsx'
 
         #TODO: More maintainable way for this...
-        cols = [
-            'Feeder_name', 'substation_name', 'Feeder_type', 'Substation_Capacity_MVA', 'Substation_Type',
-            'distribution_transformer_total_capacity_MVA', 'nb_of_distribution_transformers', 'number_of_customers', 'ratio_1phto3ph_Xfrm',
-            'lv_length_miles', 'mv_length_miles', 'furtherest_node_miles', 'length_mv3ph_miles', 'length_OH_mv3ph_miles', 'length_mv2ph_miles',
-            'length_OH_mv2ph_miles', 'length_mv1ph_miles', 'length_OH_mv1ph_miles', 'length_lv3ph_miles', 'length_OH_lv3ph_miles',
-            'length_lv1ph_miles', 'length_OH_lv1ph_miles', 'percentage_load_LV_kW_phA', 'percentage_load_LV_kW_phB', 'percentage_load_LV_kW_phC',
-            'total_demand', 'total_kVar', 'nb_loads_LV_1ph', 'nb_loads_LV_3ph', 'nb_loads_MV_3ph', 'avg_nb_load_per_transformer', 'nb_of_regulators',
-            'nb_of_capacitors', 'nb_of_boosters', 'nominal_voltage_HV_KV', 'nominal_voltage_MV_KV', 'nominal_voltage_LV_KV', 'nb_of_fuses',
-            'nb_of_reclosers', 'nb_of_sectionalizers', 'nb_of_switches', 'nb_of_breakers', 'nb_of_interruptors', 'average_degree',
-            'average_path_length', 'diameter'
-        ]
+        cols= ['Feeder_name', 'Feeder_type',
+               #Realistic electrical design and equipment parameters (MV)
+               'mv_length_miles', 'length_mv3ph_miles', 'length_OH_mv3ph_miles', 'length_mv2ph_miles', 
+               'length_OH_mv2ph_miles', 'length_mv1ph_miles', 'length_OH_mv1ph_miles', 'percentage_overhead_MV_lines',
+               'ratio_MV_line_length_to_nb_customer', 'furtherest_node_miles','nominal_medium_voltage_class',
+               #Realistic electrical design and equipment parameters (LV)
+               'lv_length_miles', 'length_lv3ph_miles', 'length_OH_lv3ph_miles', 'length_lv1ph_miles', 
+               'length_OH_lv1ph_miles', 'maximum_length_of_secondaries', 'length_lv2ph_miles', 'length_OH_lv2ph_miles',
+               'percentage_overhead_LV_lines', 'ratio_LV_line_length_to_nb_customer',
+               #Voltage control schemes
+               'nb_of_regulators', 'nb_of_capacitors', 'nb_of_boosters', 'average_regulator_sub_distance', 
+               'average_capacitor_sub_distance',
+               #Basic protection
+               'nb_of_fuses', 'nb_of_reclosers', 'nb_of_sectionalizers', 'sectionalizers_per_recloser', 
+               'average_recloser_sub_distance', 'nb_of_breakers',
+               #Reconfiguration Options
+               'nb_of_switches', 'nb_of_interruptors', 'number_of_links_to_adjacent_feeders', 'nb_loops_within_feeder',
+               #Transformers
+               'nb_of_distribution_transformers', 'number_of_overloaded_transformer', 'distribution_transformer_total_capacity_MVA',
+               'nb_1ph_Xfrm', 'nb_3ph_Xfrm', 'ratio_1phto3ph_Xfrm',
+               #Substations
+               'substation_name', 'Substation_Capacity_MVA',
+               #Load specification
+               'total_demand', 'total_demand_phase_A', 'total_demand_phase_B', 'total_demand_phase_C',
+               'total_kVar', 'percentage_load_LV_kW_phA', 'percentage_load_LV_kW_phB', 'percentage_load_LV_kW_phC',
+               'nb_loads_LV_1ph', 'nb_loads_LV_3ph', 'nb_loads_MV_3ph', 'avg_nb_load_per_transformer',
+               'average_load_power_factor', 'average_imbalance_load_by_phase', 'number_of_customers', 'customer_density',
+               'load_density', 'var_density',
+               #Graph Topology
+               'average_degree', 'average_path_length', 'diameter'
+               ]
 
         #Create empty DataFrame for output
         card = pd.DataFrame(columns=cols)
