@@ -9,6 +9,7 @@ import time
 import pandas as pd
 import logging
 import json
+import json_tricks
 from scipy.spatial import ConvexHull
 from six import string_types
 
@@ -230,12 +231,29 @@ class network_analyzer():
             :param export_path: Relative path to the output file
             :type export_path: str
         '''
+        try:
+            if args:
+                export_path = args[0]
+            else:
+                export_path = './output.json'
+            with open(export_path,'w') as f:
+                json.dump(self.results, f)
+        except TypeError:
+            self.export_json_tricks(*args)
+
+    def export_json_tricks(self,*args):
+        '''
+            Export the raw metrics in JSON format using the json-tricks library: http://json-tricks.readthedocs.io/en/latest/#dump.
+
+            :param export_path: Relative path to the output file
+            :type export_path: str
+        '''
         if args:
             export_path = args[0]
         else:
             export_path = './output.json'
-        with open(export_path,'w') as f:
-            json.dump(self.results, f)
+        with open(export_path,'w') as fp:
+            json_tricks.dump(self.results, fp, allow_nan=True)
 
 
     def export(self, *args):
