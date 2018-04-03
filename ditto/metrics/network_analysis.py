@@ -1016,6 +1016,8 @@ class network_analyzer():
                 self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'][cust_name] = np.mean(imp_list)
                 self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'][cust_name] = np.max(imp_list)
 
+            self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max(self.results[_feeder_ref]['nominal_voltages'])
+
             #Density metrics
             #
             #Get the list of points for the feeder
