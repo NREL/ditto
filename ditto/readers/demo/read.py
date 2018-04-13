@@ -1,4 +1,5 @@
 import logging
+import os
 
 
 from ditto.readers.abstract_reader import AbstractReader
@@ -36,40 +37,24 @@ class Reader(AbstractReader):
         
 
     '''
-
+    register_names = ["demo","Demo"]
+	
     def __init__(self, **kwargs):
         '''
             CYME-->Demo class constructor
         '''
+        self.input_file = kwargs.get("input_file", "./demo.txt")	
         # Call super
         super(Reader, self).__init__(**kwargs)
 
-        # Setting the file names and path
-        
-        # Set the path to the demo data file
-        # Default is current directory
-        if 'data_folder_path' in kwargs:
-            self.data_folder_path = kwargs['data_folder_path']
-        else:
-            self.data_folder_path ='.' 
-
-        # Set the name of the input file
-        # Default is demo.txt
-        if 'filename' in kwargs:
-            self.filename = kwargs['filename']
-        else:
-            self.filename ='demo.txt'
-
-
-
+		
     def get_file_content(self):
         '''
-            Opens the file specified by self.filename in the location self.data_folder_path
+            Opens the file specified by self.input_file 
             The content is stored in self.content
         '''
-        filename = os.path.join(self.data_folder_path,self.filename)
         try:
-            with open(filename, 'r') as f:
+            with open(self.input_file, 'r') as f:
                 content_ = f.readlines()
         except:
             raise ValueError('Unable to open file {name}'.format(name=filename))
@@ -90,19 +75,19 @@ class Reader(AbstractReader):
         else:
             self.verbose=False
 
-        #Call parse method of abtract reader
-        self.get_file_content()     
+        #Call parse method of abtract reader    
         super(Reader, self).parse(model, **kwargs)    
 
     def parse_nodes(self, model):
+        self.get_file_content() 	
         for line in self.content:
             data = line.split()
             
             # Skip lines without the right format
             if len(data) < 2:
                 if self.verbose:
-                    logger.info('Skipping line {name}'.format(name=line)
-                continue
+                    logger.info('Skipping line {name}'.format(name=line))
+                    continue
                 
             if len(data) == 2 and data[0].lower()=='node':
                 node = Node(model)
@@ -110,13 +95,13 @@ class Reader(AbstractReader):
 
 
     def parse_lines(self, model):
+        self.get_file_content() 	
         for line in self.content:
             data = line.split()
             if len(data) < 2:
                 if self.verbose:
-                    logger.info('Skipping line {name}'.format(name=line)
-                continue
-            
+                    logger.info('Skipping line {name}'.format(name=line))
+                    continue
             if len(data) == 4 and data[0].lower() == 'line':
                 line = Line(model)
                 line.name = data[1]
