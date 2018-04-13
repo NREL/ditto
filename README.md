@@ -21,4 +21,4 @@ More documentation can be found on [here](https://nrel.github.io/ditto).
 
 If you are having issues using DiTTo, feel free to open an Issue on GitHub [here](https://github.com/NREL/ditto/issues/new)
 
-All contributions are welcome. For questions about collaboration please email [Tarek Elgindy](tarek.elgindy@nrel.gov)
+All contributions are welcome. For questions about collaboration please email [Tarek Elgindy](mailto:tarek.elgindy@nrel.gov)
