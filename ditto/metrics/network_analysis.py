@@ -798,9 +798,13 @@ class network_analyzer():
                 self.results[feeder_name]['total_demand'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
                 self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
                 self.results[feeder_name]['total_kVar'] += np.sum([pl.q for pl in _phase_loads_ if pl.q is not None])
-                load_power_factor = obj.phase_loads[0].p / float(math.sqrt(obj.phase_loads[0].p**2 + obj.phase_loads[0].q**2))
-                self.results[feeder_name]['power_factor_distribution'].append(load_power_factor)
-                for phase_load in obj.phase_loads:
+                #Pass if P and Q are zero (might happen in some datasets...)
+                try:
+                    load_power_factor = obj.phase_loads[0].p / float(math.sqrt(obj.phase_loads[0].p**2 + obj.phase_loads[0].q**2))
+                    self.results[feeder_name]['power_factor_distribution'].append(load_power_factor)
+                except ZeroDivisionError:
+                    pass
+                for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
                     if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
                         if hasattr(phase_load, 'p') and phase_load.p is not None:
                             if phase_load.phase == 'A':
@@ -1001,18 +1005,24 @@ class network_analyzer():
                 self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = np.nan
 
             #Percent of Overhead MV Lines
-            self.results[_feeder_ref]['percentage_overhead_MV_lines'] = (self.results[_feeder_ref]['length_OH_mv1ph_miles'] +
-                                                                         self.results[_feeder_ref]['length_OH_mv2ph_miles'] +
-                                                                         self.results[_feeder_ref]['length_OH_mv3ph_miles'])/float(
-                                                                         self.results[_feeder_ref]['lv_length_miles'] +
-                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+            try:
+                self.results[_feeder_ref]['percentage_overhead_MV_lines'] = (self.results[_feeder_ref]['length_OH_mv1ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_mv2ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_mv3ph_miles'])/float(
+                                                                             self.results[_feeder_ref]['lv_length_miles'] +
+                                                                             self.results[_feeder_ref]['mv_length_miles'])*100
+            except ZeroDivisionError:
+                self.results[_feeder_ref]['percentage_overhead_MV_lines'] = np.nan
 
             #Percent of Overhead LV Lines
-            self.results[_feeder_ref]['percentage_overhead_LV_lines'] = (self.results[_feeder_ref]['length_OH_lv1ph_miles'] +
-                                                                         self.results[_feeder_ref]['length_OH_lv2ph_miles'] +
-                                                                         self.results[_feeder_ref]['length_OH_lv3ph_miles'])/float(
-                                                                         self.results[_feeder_ref]['lv_length_miles'] +
-                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+            try:
+                self.results[_feeder_ref]['percentage_overhead_LV_lines'] = (self.results[_feeder_ref]['length_OH_lv1ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_lv2ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_lv3ph_miles'])/float(
+                                                                             self.results[_feeder_ref]['lv_length_miles'] +
+                                                                             self.results[_feeder_ref]['mv_length_miles'])*100
+            except ZeroDivisionError:
+                self.results[_feeder_ref]['percentage_overhead_LV_lines'] = np.nan
 
             #Sectionalizers per recloser
             if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
@@ -1026,10 +1036,13 @@ class network_analyzer():
             #Average imbalance of load by phase
             #
             #sum_i |tot_demand_phase_i - 1/3 * tot_demand|
-            third_tot_demand = self.results[_feeder_ref]['total_demand'] / 3.0
-            self.results[_feeder_ref]['average_imbalance_load_by_phase'] = (abs(self.results[_feeder_ref]['total_demand_phase_A'] - third_tot_demand)+
-                                                                            abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
-                                                                            abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand))
+            if self.results[_feeder_ref]['total_demand'] != 0:
+                third_tot_demand = self.results[_feeder_ref]['total_demand'] / 3.0
+                self.results[_feeder_ref]['average_imbalance_load_by_phase'] = (abs(self.results[_feeder_ref]['total_demand_phase_A'] - third_tot_demand)+
+                                                                                abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
+                                                                                abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand)) / self.results[_feeder_ref]['total_demand']
+            else:
+                self.results[_feeder_ref]['average_imbalance_load_by_phase'] = np.nan
 
             #Ratio of LV line length to number of customers
             if self.results[_feeder_ref]['number_of_customers'] != 0:
