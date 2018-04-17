@@ -1097,69 +1097,172 @@ class network_analyzer():
                     self.results[_feeder_ref]['load_density']    =float(self.results[_feeder_ref]['total_demand'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['var_density']     =float(self.results[_feeder_ref]['total_kVar'])/float(hull_surf_sqmile)
 
-    def compute_all_metrics(self):
+
+    def compute_all_metrics(self,*args):
         '''
             This function computes all the metrics for the whole network in a way that optimizes performance.
             Instead of calling all the metrics one by one, we loop over the objects only once and update the metrics.
 
             .. note:: If you only need a very few metrics, it is probably better to call the functions responsible for them.
         '''
-        self.results = {'global': self.setup_results_data_structure()}
+        if args:
+            if len(args)==1:
+                f_name = args[0]
+        else:
+            f_name = 'global'
+        self.results = {f_name: self.setup_results_data_structure()}
+        self.transformer_load_mapping=self.get_transformer_load_mapping()
+        self.compute_node_line_mapping()
         self.load_distribution = []
-
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
             'lv_length_miles', 'mv_length_miles', 'length_mv1ph_miles', 'length_mv2ph_miles', 'length_mv3ph_miles', 'length_lv1ph_miles',
             'length_lv2ph_miles', 'length_lv3ph_miles', 'length_OH_mv1ph_miles', 'length_OH_mv2ph_miles', 'length_OH_mv3ph_miles',
-            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles'
+            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries',
+            'average_recloser_sub_distance', 'average_regulator_sub_distance', 'average_capacitor_sub_distance'
         ]
 
         #List of keys to divide by 10^3
-        keys_to_divide_by_1000 = ['total_demand', 'total_kVar']
+        keys_to_divide_by_1000 = ['total_demand', 'total_kVar','total_demand_phase_A', 'total_demand_phase_B', 'total_demand_phase_C']
 
-        #Main Loop that iterates over all the objects in the model
+        #Loop over the objects in the model and analyze them
         for obj in self.model.models:
-            self.analyze_object(obj, 'global')
+            self.analyze_object(obj, f_name)
 
         #Do some post-processing of the results before returning them
         #
         #Compute the percentages of low voltage load kW for each phase
-        for _feeder_ref in ['global']:
-            total_demand_LV = self.results[_feeder_ref]['demand_LV_phase_A'] + self.results[_feeder_ref]['demand_LV_phase_B'] + self.results[
-                _feeder_ref
-            ]['demand_LV_phase_C']
-            if total_demand_LV == 0:
-                self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = 0
-                self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = 0
-                self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = 0
-            else:
-                self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = float(self.results[_feeder_ref]['demand_LV_phase_A']
-                                                                               ) / float(total_demand_LV) * 100
-                self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = float(self.results[_feeder_ref]['demand_LV_phase_B']
-                                                                               ) / float(total_demand_LV) * 100
-                self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = float(self.results[_feeder_ref]['demand_LV_phase_C']
-                                                                               ) / float(total_demand_LV) * 100
+        _feeder_ref = f_name
+        total_demand_LV = self.results[_feeder_ref]['demand_LV_phase_A'] + self.results[_feeder_ref]['demand_LV_phase_B'] + self.results[
+            _feeder_ref
+        ]['demand_LV_phase_C']
+        if total_demand_LV != 0:
+            self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = float(self.results[_feeder_ref]['demand_LV_phase_A']
+                                                                           ) / float(total_demand_LV) * 100
+            self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = float(self.results[_feeder_ref]['demand_LV_phase_B']
+                                                                           ) / float(total_demand_LV) * 100
+            self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = float(self.results[_feeder_ref]['demand_LV_phase_C']
+                                                                           ) / float(total_demand_LV) * 100
+        else:
+            self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = 0
+            self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = 0
+            self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = 0
 
-            #ratio_1phto3ph_Xfrm
-            if self.results[_feeder_ref]['nb_3ph_Xfrm'] != 0:
-                self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = float(self.results[_feeder_ref]['nb_1ph_Xfrm']
-                                                                         ) / float(self.results[_feeder_ref]['nb_3ph_Xfrm'])
-            else:
-                self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = np.inf
+        #ratio_1phto3ph_Xfrm
+        if self.results[_feeder_ref]['nb_3ph_Xfrm'] != 0:
+            self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = float(self.results[_feeder_ref]['nb_1ph_Xfrm']
+                                                                     ) / float(self.results[_feeder_ref]['nb_3ph_Xfrm'])
+        else:
+            self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = np.inf
 
-            #avg_nb_load_per_transformer
-            if len(self.results[_feeder_ref]['nb_load_per_transformer']) > 0:
-                self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(list(self.results[_feeder_ref]['nb_load_per_transformer'].values()))
+        #avg_nb_load_per_transformer
+        if len(self.results[_feeder_ref]['nb_load_per_transformer']) > 0:
+            self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(list(self.results[_feeder_ref]['nb_load_per_transformer'].values()))
 
-            #Convert to miles
-            for k in keys_to_convert_to_miles:
-                if k in self.results[_feeder_ref]:
-                    self.results[_feeder_ref][k] *= 0.000621371
+        #Convert to miles
+        for k in keys_to_convert_to_miles:
+            if k in self.results[_feeder_ref]:
+                self.results[_feeder_ref][k] *= 0.000621371
 
-            #Divide by 10^3
-            for k in keys_to_divide_by_1000:
-                if k in self.results[_feeder_ref]:
-                    self.results[_feeder_ref][k] *= 10**-3
+        #Divide by 10^3
+        for k in keys_to_divide_by_1000:
+            if k in self.results[_feeder_ref]:
+                self.results[_feeder_ref][k] *= 10**-3
+
+        #Ratio of MV Line Length to Number of Customers
+        if self.results[_feeder_ref]['number_of_customers']!=0:
+            self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = self.results[_feeder_ref]['mv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+        else:
+            self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = np.nan
+
+        #Percent of Overhead MV Lines
+        try:
+            self.results[_feeder_ref]['percentage_overhead_MV_lines'] = (self.results[_feeder_ref]['length_OH_mv1ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_mv2ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_mv3ph_miles'])/float(
+                                                                         self.results[_feeder_ref]['lv_length_miles'] +
+                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+        except ZeroDivisionError:
+            self.results[_feeder_ref]['percentage_overhead_MV_lines'] = np.nan
+
+        #Percent of Overhead LV Lines
+        try:
+            self.results[_feeder_ref]['percentage_overhead_LV_lines'] = (self.results[_feeder_ref]['length_OH_lv1ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_lv2ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_lv3ph_miles'])/float(
+                                                                         self.results[_feeder_ref]['lv_length_miles'] +
+                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+        except ZeroDivisionError:
+            self.results[_feeder_ref]['percentage_overhead_LV_lines'] = np.nan
+
+        #Sectionalizers per recloser
+        if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
+            self.results[_feeder_ref]['sectionalizers_per_recloser'] = float(self.results[_feeder_ref]['nb_of_sectionalizers']) / float(self.results[_feeder_ref]['nb_of_reclosers'])
+        else:
+            self.results[_feeder_ref]['sectionalizers_per_recloser'] = np.nan
+
+        #Average load power factor
+        self.results[_feeder_ref]['average_load_power_factor'] = np.mean(self.results[_feeder_ref]['power_factor_distribution'])
+
+        #Average imbalance of load by phase
+        #
+        #sum_i |tot_demand_phase_i - 1/3 * tot_demand|
+        if self.results[_feeder_ref]['total_demand'] != 0:
+            third_tot_demand = self.results[_feeder_ref]['total_demand'] / 3.0
+            self.results[_feeder_ref]['average_imbalance_load_by_phase'] = (abs(self.results[_feeder_ref]['total_demand_phase_A'] - third_tot_demand)+
+                                                                            abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
+                                                                            abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand)) / self.results[_feeder_ref]['total_demand']
+        else:
+            self.results[_feeder_ref]['average_imbalance_load_by_phase'] = np.nan
+
+        #Ratio of LV line length to number of customers
+        if self.results[_feeder_ref]['number_of_customers'] != 0:
+            self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = self.results[_feeder_ref]['lv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+        else:
+            self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = np.nan
+
+        #Line impedances
+        #
+        #Average and Maximum MV line impedance from substation to MV side of distribution transformer
+        self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'] = {}
+        self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'] = {}
+        for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
+            self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.mean(imp_list)
+            self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.max(imp_list)
+
+
+        #Average and Maximum LV line impedance from distribution transformer to customer
+        self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'] = {}
+        self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'] = {}
+        for cust_name,imp_list in self.results[_feeder_ref]['trans_cust_impedance_list'].items():
+            self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'][cust_name] = np.mean(imp_list)
+            self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'][cust_name] = np.max(imp_list)
+
+        try:
+            self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max([x for x in self.results[_feeder_ref]['nominal_voltages'] if x!=None])
+        except:
+            self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.nan
+
+        #Density metrics
+        #
+        #Get the list of points for the feeder
+        self.results[_feeder_ref]['customer_density'] = np.nan
+        self.results[_feeder_ref]['load_density']     = np.nan
+        self.results[_feeder_ref]['var_density']      = np.nan
+        try:
+            _points=np.array(self.points[_feeder_ref])
+        except KeyError:
+            _points=[]
+        #Having more than 2 points to compute the convex hull surface is a good thing...
+        if len(_points)>2:
+            hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
+            hull_surf_sqmile = hull.area * 3.86102*10**-7 #Convert surface from square meters to square miles 
+            if hull_surf_sqmile!=0:
+                self.results[_feeder_ref]['customer_density']=float(self.results[_feeder_ref]['number_of_customers'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['load_density']    =float(self.results[_feeder_ref]['total_demand'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['var_density']     =float(self.results[_feeder_ref]['total_kVar'])/float(hull_surf_sqmile)
+
+
 
     def number_of_regulators(self):
         '''
