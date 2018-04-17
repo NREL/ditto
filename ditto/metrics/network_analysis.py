@@ -484,7 +484,7 @@ class network_analyzer():
         #Note: All metrics relying on networkX calls are computed here.
         #
 
-        logger.info('Analyzing network {name}...'.format(name=network))
+        #logger.info('Analyzing network {name}...'.format(name=network))
 
         results = {
             'nb_of_regulators': 0, #Number of regulators
@@ -564,8 +564,14 @@ class network_analyzer():
             All information needed for the metric extraction is updated here.
         '''
         #Get the network and the source
-        _net = self.feeder_networks[feeder_name]
-        _src = self.substations[feeder_name]
+        try:
+            _net = self.feeder_networks[feeder_name]
+        except KeyError:
+            _net = self.G.graph
+        try:
+            _src = self.substations[feeder_name]
+        except:
+            _src = self.source
 
         #If the object has some coordinate values
         #then we add the points to the list of points for the feeder
@@ -944,7 +950,7 @@ class network_analyzer():
         ]
 
         #List of keys to divide by 10^3
-        keys_to_divide_by_1000 = ['total_demand', 'total_kVar']
+        keys_to_divide_by_1000 = ['total_demand', 'total_kVar','total_demand_phase_A', 'total_demand_phase_B', 'total_demand_phase_C']
 
         #Setup the data structures for all feeders
         self.results = {k: self.setup_results_data_structure(k) for k in self.feeder_names}
@@ -1067,11 +1073,17 @@ class network_analyzer():
                 self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'][cust_name] = np.mean(imp_list)
                 self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'][cust_name] = np.max(imp_list)
 
-            self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max(self.results[_feeder_ref]['nominal_voltages'])
+            try:
+                self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max([x for x in self.results[_feeder_ref]['nominal_voltages'] if x!=None])
+            except:
+                self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.nan
 
             #Density metrics
             #
             #Get the list of points for the feeder
+            self.results[_feeder_ref]['customer_density'] = np.nan
+            self.results[_feeder_ref]['load_density']     = np.nan
+            self.results[_feeder_ref]['var_density']      = np.nan
             try:
                 _points=np.array(self.points[_feeder_ref])
             except KeyError:
@@ -1309,7 +1321,7 @@ class network_analyzer():
         line_list = self.list_lines_betweeen_nodes(net, node1, node2)
         for line in line_list:
             line_object = self.model[line]
-            if hasattr(line_object,'impedance_matrix') and line_object.impedance_matrix is not None:
+            if hasattr(line_object,'impedance_matrix') and line_object.impedance_matrix is not None and line_object.impedance_matrix!=[]:
                 Z = np.array(line_object.impedance_matrix)
                 if Z.shape==(1,1):
                     impedance_list.append(Z[0,0])
@@ -1361,8 +1373,8 @@ class network_analyzer():
         L = []
         for obj in self.model.models:
             if isinstance(obj, Regulator):
-                if _net.has_node(obj.name):
-                    L.append(nx.shortest_path_length(_net, _src, obj.name, weight='length'))
+                if _net.has_node(obj.from_element):
+                    L.append(nx.shortest_path_length(_net, _src, obj.from_element, weight='length'))
         if len(L)>0:
             return np.mean(L)
         else:
@@ -1390,8 +1402,8 @@ class network_analyzer():
         L = []
         for obj in self.model.models:
             if isinstance(obj, Capacitor):
-                if _net.has_node(obj.name):
-                    L.append(nx.shortest_path_length(_net, _src, obj.name, weight='length'))
+                if _net.has_node(obj.connecting_element):
+                    L.append(nx.shortest_path_length(_net, _src, obj.connecting_element, weight='length'))
         if len(L)>0:
             return np.mean(L)
         else:
