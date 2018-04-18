@@ -24,6 +24,7 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.load import Load
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.node import Node
+from ditto.models.power_source import PowerSource
 
 from ..readers.abstract_reader import AbstractReader
 
@@ -105,12 +106,27 @@ class network_analyzer():
         Author: Nicolas Gensollen. December 2017
     '''
 
-    def __init__(self, model, source, compute_network=True):
+    def __init__(self, model, compute_network=True, *args):
         '''
             Class CONSTRUCTOR.
         '''
         #Store the model as attribute
         self.model = model
+
+        if len(args)==1:
+            source=args[0]
+        else:
+            srcs = []
+            for obj in self.model.models:
+                if isinstance(obj, PowerSource) and obj.is_sourcebus == 1:
+                    srcs.append(obj.name)
+            srcs = np.unique(srcs)
+            if len(srcs)==0:
+                raise ValueError('No PowerSource object found in the model.')
+            elif len(srcs)>1:
+                raise ValueError('Mupltiple sourcebus found: {srcs}'.format(srcs=srcs))
+            else:
+                source = srcs[0]
 
         #Store the source name as attribute
         self.source = source
