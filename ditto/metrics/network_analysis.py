@@ -1226,8 +1226,14 @@ class network_analyzer():
         self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'] = {}
         self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'] = {}
         for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
-            self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.mean(imp_list)
-            self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.max(imp_list)
+            try:
+                self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.mean(imp_list)
+            except ValueError:
+                self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.nan
+            try:
+                self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.max(imp_list)
+            except ValueError:
+                self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.nan
 
 
         #Average and Maximum LV line impedance from distribution transformer to customer
