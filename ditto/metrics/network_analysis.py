@@ -232,12 +232,12 @@ class network_analyzer():
             :type export_path: str
         '''
         try:
-            if args:
+            if len(args) > 0:
                 export_path = args[0]
             else:
                 export_path = './output.json'
             with open(export_path,'w') as f:
-                json.dump(self.results, f)
+                f.write(json.dumps(self.results))
         except TypeError:
             self.export_json_tricks(*args)
 
@@ -253,7 +253,7 @@ class network_analyzer():
         else:
             export_path = './output.json'
         with open(export_path,'w') as fp:
-            json_tricks.dump(self.results, fp, allow_nan=True)
+            fp.write(json_tricks.dumps(self.results, allow_nan=True))
 
 
     def export(self, *args):
@@ -1105,9 +1105,8 @@ class network_analyzer():
 
             .. note:: If you only need a very few metrics, it is probably better to call the functions responsible for them.
         '''
-        if args:
-            if len(args)==1:
-                f_name = args[0]
+        if len(args)==1:
+            f_name = args[0]
         else:
             f_name = 'global'
         self.results = {f_name: self.setup_results_data_structure()}

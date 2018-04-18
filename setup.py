@@ -74,6 +74,7 @@ setup(
         "xlrd",
         "OpenDSSDirect.py",
         "XlsxWriter",
+        "json_tricks",
     ],
     extras_require={
         "dev": [
