@@ -24,8 +24,8 @@ def test_parse_wire():
     m = Store()
     wire_A = Wire(m, phase='A', nameclass='wire_test_phase', diameter=5, gmr=10, 
                   ampacity=500, emergency_ampacity=1000, resistance=5)
-    t = tempfile.TemporaryDirectory()
-    w = Writer(output_path=t.name)
+    output_path = tempfile.gettempdir()
+    w = Writer(output_path=output_path)
     parsed_wire = w.parse_wire(wire_A)
     assert parsed_wire['GMRac'] == 10
     assert parsed_wire['Diam'] == 5
@@ -57,8 +57,8 @@ def test_write_wiredata():
     '''Test the method write_wiredata().'''
     from ditto.writers.opendss.write import Writer
     line = setup_line_test()
-    t = tempfile.TemporaryDirectory()
-    w = Writer(output_path=t.name)
+    output_path = tempfile.gettempdir()
+    w = Writer(output_path=output_path)
     w.write_wiredata([line])
 
 
@@ -66,8 +66,8 @@ def test_write_linegeometry():
     '''Test the write_linegeometry() method.'''
     from ditto.writers.opendss.write import Writer
     line = setup_line_test()
-    t = tempfile.TemporaryDirectory()
-    w = Writer(output_path=t.name)
+    output_path = tempfile.gettempdir()
+    w = Writer(output_path=output_path)
     w.write_wiredata([line])
     w.write_linegeometry([line])
 
@@ -76,6 +76,6 @@ def test_write_linecodes():
     '''Test the write_linecodes() method.'''
     from ditto.writers.opendss.write import Writer
     line = setup_line_test()
-    t = tempfile.TemporaryDirectory()
-    w = Writer(output_path=t.name)
+    output_path = tempfile.gettempdir()
+    w = Writer(output_path=output_path)
     w.write_linecodes([line])
