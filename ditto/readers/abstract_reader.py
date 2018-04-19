@@ -391,6 +391,8 @@ class AbstractReader(object):
         elif phase_impedance_matrix.shape==(2,2):
             A = np.array([[1.0,1.0],[1.0,-1.0]])
             A_inv = np.array([[.5,.5],[.5,-.5]])
+        else:
+            return []
         return np.dot(A_inv, np.dot(phase_impedance_matrix, A))
 
     def kron_reduction(self, primitive_impedance_matrix):
