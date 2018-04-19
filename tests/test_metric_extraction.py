@@ -11,10 +11,7 @@ import os
 
 import six
 
-if six.PY2:
-    from backports import tempfile
-else:
-    import tempfile
+import tempfile
 import pytest
 import pytest as pt
 
