@@ -282,7 +282,9 @@ class Reader(AbstractReader):
             with open(filename, 'r') as f:
                 content_=f.readlines()
         except:
-            raise ValueError('Unable to open file {name}'.format(name=filename))
+            print('Unable to open file {name}'.format(name=filename))
+            content_=[]
+            pass
 
         self.content=iter(content_)
 
