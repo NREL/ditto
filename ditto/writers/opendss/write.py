@@ -35,8 +35,6 @@ Use to write a DiTTo model to OpenDSS format.
 
 :param log_file: Name/path of the log file. Optional. Default='./OpenDSS_writer.log'
 :type log_file: str
-:param linecodes_flag: Use OpenDSS linecodes rather than lineGeometries. Optional. Default=True
-:type linecodes_flag: bool
 :param output_path: Path to write the OpenDSS files. Optional. Default='./'
 :type output_path: str
 
@@ -92,14 +90,6 @@ author: Nicolas Gensollen. October 2017.
 
         #Call super
         super(Writer, self).__init__(**kwargs)
-
-        #Set the linecode flag
-        #If True, linecodes will be used when writing the lines
-        #If False, linegeometries and wiredata will be used when writing the lines
-        if 'linecodes_flag' in kwargs and isinstance(kwargs['linecodes_flag'], bool):
-            self.linecodes_flag = kwargs['linecodes_flag']
-        else:
-            self.linecodes_flag = True
 
         self.logger.info('DiTTo--->OpenDSS writer successfuly instanciated.')
 
