@@ -167,6 +167,9 @@ class Reader(AbstractReader):
         else:
             self.load_filename ='load.txt'
 
+        #Set the Network Type to be None. This is set in the parse_sections() function
+        self.network_type = None
+
         #Header_mapping.
         #
         #Modify this structure if the headers of your CYME version are not the default one.
@@ -218,7 +221,9 @@ class Reader(AbstractReader):
                                                  'loads': '[LOADS]',
                                                  'source': '[SOURCE]',
                                                  'source_equivalent': '[SOURCE EQUIVALENT]',
+                                                 #SUBSTATIONS
                                                  'substation': '[SUBSTATION]',
+                                                 'subnetwork_connections': '[SUBNETWORK CONNECTIONS]'
                                                  }
 
 
@@ -709,6 +714,12 @@ class Reader(AbstractReader):
         #Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
 
+        # The variable self.network_type is set in the parse_sections() function.
+        # i.e. parse_sections
+        if self.network_type == 'substation':
+            self.logger.info('Parsing the subnetwork connections...')
+            self.parse_subnetwork_connections(model)
+
 
 
     def parse_header(self):
@@ -752,6 +763,26 @@ class Reader(AbstractReader):
 
         if self.use_SI is None:
             raise ValueError('Could not find [SI] or [IMPERIAL] unit system information. Unable to parse.')
+
+
+    def parse_subnetwork_connections(self, model):
+        '''Parse the subnetwork connections.
+           These specify the interconnection points for a substation
+        '''
+        model.set_names()
+        self.get_file_content('network')
+        mapp_subnetwork_connections={'nodeid':1}
+        self.subnetwork_connections = {}
+        for line in self.content:
+            self.subnetwork_connections.update(self.parser_helper(line,['subnetwork_connections'],['nodeid'],mapp_subnetwork_connections))
+
+        for key in self.subnetwork_connections:
+            model[self.subnetwork_connections[key]['nodeid']].is_substation_connection = 1
+
+        
+
+
+
 
 
 
@@ -1164,11 +1195,15 @@ class Reader(AbstractReader):
                         format_section=list(map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(','))))
 
                     #Then, we grab the format used to define feeders
-                    elif 'format_feeder' in line.lower():
+                    elif 'format_feeder' in line.lower() or 'format_substation' in line.lower():
                         format_feeder=list(map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(','))))
 
                     #If we have a new feeder declaration
-                    elif len(line)>=7 and line[:7].lower()=='feeder=':
+                    elif len(line)>=7 and (line[:7].lower()=='feeder=' or line[:11].lower()=='substation='):
+                        if line[:7].lower() == 'feeder=':
+                            self.network_type = 'feeder'
+                        if line[:11].lower() == 'substation=':
+                            self.network_type = 'substation'
 
                         #We should have a format for sections and feeders,
                         #otherwise, raise an error...
@@ -1184,7 +1219,7 @@ class Reader(AbstractReader):
                         #Check that the data obtained have the same length as the format provided
                         #otherwise, raise an error...
                         if len(feeder_data)!=len(format_feeder):
-                            raise ValueError('Feeder data length {a} does not match feeder format length {b}.'.format(a=len(feeder_data),b=len(format_feeder)))
+                            raise ValueError('Feeder/substation data length {a} does not match feeder format length {b}.'.format(a=len(feeder_data),b=len(format_feeder)))
 
                         #Check that we have a networkid in the format
                         #otherwise, raise an error...
@@ -2356,7 +2391,8 @@ class Reader(AbstractReader):
 
     def parse_transformers(self, model):
         '''
-            Parse the transformers from CYME to DiTTo.
+            Parse the transformers from CYME to DiTTo. Since substation transformer can have LTCs attached,
+            when parsing a transformer, we may also create a regulator. LTCs are represented as regulators.
         '''
         #Instanciate the list in which we store the DiTTo transformer objects
         self._transformers=[]
@@ -2564,7 +2600,7 @@ class Reader(AbstractReader):
             #
             self.auto_transformers.update( self.parser_helper(line,
                                                           ['auto_transformer'],
-                                                          ['id', 'kva', 'connection_configuration','noloadlosses'],
+                                                          ['id', 'kva', 'connection_configuration','noloadlosses','isltc','taps','lowerbandwidth','upperbandwidth','minreg_range','maxreg_range'],
                                                           mapp_auto_transformer) )
 
             #########################################
@@ -2584,6 +2620,7 @@ class Reader(AbstractReader):
             #                                       #
             #########################################
             #
+            # LTC controls not yet supported for three-winding transformers
             self.three_winding_auto_transformers.update( self.parser_helper(line,
                                                           ['three_winding_auto_transformer'],
                                                           ['id', 'primaryratedcapacity', 'primaryvoltage', 'secondaryratedcapacity', 'secondaryvoltage', 'tertiaryratedcapacity', 'tertiaryvoltage', 'noloadlosses'],
@@ -2595,6 +2632,7 @@ class Reader(AbstractReader):
             #                                       #
             #########################################
             #
+            # LTC controls not yet supported for three-winding transformers
             self.three_winding_transformers.update( self.parser_helper(line,
                                                           ['three_winding_transformer'],
                                                           ['id', 'primaryratedcapacity', 'primaryvoltage', 'secondaryratedcapacity', 'secondaryvoltage', 'tertiaryratedcapacity', 'tertiaryvoltage', 'noloadlosses'],
@@ -2608,7 +2646,7 @@ class Reader(AbstractReader):
             #
             self.transformers.update( self.parser_helper(line,
                                                       ['transformer'],
-                                                      ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift'],
+                                                      ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift','isltc','taps','lowerbandwidth','upperbandwidth','minreg_range','maxreg_range'],
                                                       mapp_transformer) )
 
         for sectionID, settings in self.settings.items():
@@ -2743,6 +2781,48 @@ class Reader(AbstractReader):
                 Z_perc=Zabc.item((0,0))
                 R_perc=Z_perc.real / 2.0
                 xhl=Z_perc.imag
+
+                #Check if it's an LTC
+                #
+                is_ltc = transformer_data['isltc']
+                if is_ltc:
+                    #Instanciate a Regulator DiTTo object
+                    try:
+                        api_regulator=Regulator(model)
+                    except:
+                        raise ValueError('Unable to instanciate Regulator DiTTo object.')
+
+                    try:
+                        api_regulator.name = 'Reg_'+settings['sectionid']
+                    except:
+                        pass
+                    api_regulator.feeder_name=self.section_feeder_mapping[sectionID]
+
+                    try:
+                        api_regulator.connected_transformer = api_transformer.name
+                    except:
+                        raise ValueError("Unable to connect LTC to transformer")
+
+
+                    taps = float(transformer_data['taps'])
+                    lowerbandwidth = float(transformer_data['lowerbandwidth'])
+                    upperbandwidth = float(transformer_data['upperbandwidth'])
+                    minreg_range = transformer_data['minreg_range']
+                    maxreg_range = transformer_data['maxreg_range']
+                    center_bandwidth = upperbandwidth - lowerbandwidth
+
+                    api_regulator.ltc = 1
+                    api_regulator.highstep = int(math.floor(taps/2.0))
+                    api_regulator.lowstep = int(math.ceil(taps/2.0))
+                    api_regulator.center_bandwidth = center_bandwidth
+                    api_regulator.bandwidth = (upperbandwidth+lowerbandwidth)/2.0 # ie. use the average bandwidth. The upper and lower are typically the same
+                    #TODO: Add unit checking. These units are in percentages. Need to be updated to be in Volts for consistency (BUG in cyme writer too)
+                    #TODO: Decide whether or not to put parameters in for the regulator range, and what units they should be.
+
+
+                    
+
+
 
                 try:
                     api_transformer.reactances.append(xhl)
