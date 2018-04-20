@@ -242,4 +242,96 @@ Not implemented yet.
 
 #### Method 2: Using a Python script
 
-TODO
+It is also possible to extract metrics when we have a system composed of multiple feeders. In this situation, we might want to:
+
+-  compute the metrics on the whole system
+- compute the metrics for all feeders
+
+The first point is straightforward, just proceed as for the single feeder case. 
+
+##### Step 1 and 2: Read and modify as before
+
+For computing metrics per feeder, we first read the model into DiTTo and apply, if needed, modifications to it (exactly as for the single feeder case):
+
+```python
+from ditto.model.store import Store 
+from ditto.readers.opendss.read import Reader
+from ditto.modify.system_structure import system_structure_modifier
+
+model = Store() #Create a Store object
+
+#Initialize the reader with the master and coordinate files of our system
+dss_reader = Reader(master_file='./OpenDSS/master.dss', 
+                    buscoordinates_file='./OpenDSS/buscoords.dss')
+
+#Parse...
+dss_reader.parse(model)
+
+#Create a system_structure_modifier object
+#We can specify the name of the source and its voltage
+#Otherwise, the source and its voltage will be search in the model
+modifier = system_structure_modifier(model)
+
+#Set the nominal voltages of all nodes in the system
+modifier.set_nominal_voltages_recur()
+
+#Use the nodes voltages to set the nominal voltages of the lines
+modifier.set_nominal_voltages_recur_line()
+```
+
+##### Step 3: Create a network analyzer
+
+We then create a ```network_analyzer``` object as for the single feeder case:
+
+```python
+from ditto.metrics.network_analysis import network_analyzer
+
+#Instanciate the network_analyzer object
+network_analyst = network_analyzer(modifier.model)
+```
+
+##### Step 4: Provide information on the feeder compositions
+
+Now, we need to provide feeder information to the ```network_analyzer``` using the ```add_feeder_information()```method wich takes the following inputs:
+
+- ```feeder_names```: List of names for the feeders
+- ```feeder_nodes```: List of lists which contains all nodes in the feeders. Thats is, ```feeder_nodes[2]```is the full list of nodes belonging to ```feeder_names[2]```.
+- ```substations```: List of the substation names.
+- ```feeder_types```: This could be a list of strings to tag each feeder with a type (```industrial```, ```rural```,…) or a single string to tag all feeders with the same type. 
+
+Example:
+
+```python
+#Fake feeder information
+feeder_names = ['feeder_1', 'feeder_2', 'feeder_3']
+feeder_nodes = [ ['A','B','C'], ['D','E','F','G','H'], ['I','J','K','L']]
+substations = ['sub_1', 'sub2', 'sub3']
+feeder_types = ['industrial', 'rural', 'urban']
+
+#Add the feeder information to the network analyzer
+network_analyst.add_feeder_information(feeder_names, feeder_nodes, substations, feeder_types)
+```
+
+This means that you currently have to generate the 4 arguments yourself. Algorithms to automatically split a given network into multiple feeders are currently tested yet but none has been released yet.
+
+##### Step 5: Split the network and compute the metrics
+
+Once this is done, we simply have to call the following methods:
+
+```python
+#Split the network representation into multiple subnetworks
+network_analyst.split_network_into_feeders()
+
+#Loop over the DiTTo objects and set the feeder_name attribute
+network_analyst.tag_objects()
+
+#Set the names
+network_analyst.model.set_names()
+
+#Compute the metrics per feeders
+network_analyst.compute_all_metrics_per_feeder()
+```
+
+#### Step 6: Export the metrics
+
+This works exactly as for the single feeder case.
