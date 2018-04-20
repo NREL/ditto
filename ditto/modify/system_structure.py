@@ -34,7 +34,7 @@ Author: Nicolas Gensollen. December 2017.
 
 '''
 
-    def __init__(self, model, source):
+    def __init__(self, model, *args):
         '''Class CONSTRUCTOR.
 
 :param model: DiTTo model on which to perform modifications
@@ -47,6 +47,21 @@ Author: Nicolas Gensollen. December 2017.
 '''
         #Store the model as attribute
         self.model = model
+
+        if len(args)==1:
+            source=args[0]
+        else:
+            srcs = []
+            for obj in self.model.models:
+                if isinstance(obj, PowerSource) and obj.is_sourcebus == 1:
+                    srcs.append(obj.name)
+            srcs = np.unique(srcs)
+            if len(srcs)==0:
+                raise ValueError('No PowerSource object found in the model.')
+            elif len(srcs)>1:
+                raise ValueError('Mupltiple sourcebus found: {srcs}'.format(srcs=srcs))
+            else:
+                source = srcs[0]
 
         #Store the source name as attribute
         self.source = source

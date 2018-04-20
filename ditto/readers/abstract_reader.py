@@ -6,6 +6,7 @@ from builtins import super, range, zip, round, map
 import sys
 import logging
 import numpy as np
+import cmath
 from six import string_types
 
 LOGGER = logging.getLogger(__name__)
@@ -380,9 +381,18 @@ class AbstractReader(object):
     def get_sequence_impedance_matrix(self, phase_impedance_matrix):
         '''Get sequence impedance matrix from phase impedance matrix.'''
 
-        a = cmath.exp(complex(0, 2. / 3 * cmath.pi))
-        A = np.array([[complex(1.0, 0), complex(1.0, 0), complex(1.0, 0)], [complex(1.0, 0), a**2, a], [complex(1.0, 0), a, a**2]])
-        A_inv = 1. / 3.0 * np.array([[complex(1.0, 0), complex(1.0, 0), complex(1.0, 0)], [complex(1.0, 0), a, a**2], [complex(1.0, 0), a**2, a]])
+        phase_impedance_matrix = np.array(phase_impedance_matrix)
+        #If we have a 3 by 3 phase impedance matrix
+        if phase_impedance_matrix.shape==(3,3):
+            a = cmath.exp(complex(0, 2. / 3 * cmath.pi))
+            A = np.array([[complex(1.0, 0), complex(1.0, 0), complex(1.0, 0)], [complex(1.0, 0), a**2, a], [complex(1.0, 0), a, a**2]])
+            A_inv = 1. / 3.0 * np.array([[complex(1.0, 0), complex(1.0, 0), complex(1.0, 0)], [complex(1.0, 0), a, a**2], [complex(1.0, 0), a**2, a]])
+        #if we have a 2 by 2 phase impedance matrix
+        elif phase_impedance_matrix.shape==(2,2):
+            A = np.array([[1.0,1.0],[1.0,-1.0]])
+            A_inv = np.array([[.5,.5],[.5,-.5]])
+        else:
+            return []
         return np.dot(A_inv, np.dot(phase_impedance_matrix, A))
 
     def kron_reduction(self, primitive_impedance_matrix):

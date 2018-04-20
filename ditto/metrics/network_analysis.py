@@ -8,6 +8,8 @@ import math
 import time
 import pandas as pd
 import logging
+import json
+import json_tricks
 from scipy.spatial import ConvexHull
 from six import string_types
 
@@ -22,6 +24,9 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.load import Load
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.node import Node
+from ditto.models.power_source import PowerSource
+
+from ..readers.abstract_reader import AbstractReader
 
 logger = logging.getLogger(__name__)
 
@@ -101,15 +106,34 @@ class network_analyzer():
         Author: Nicolas Gensollen. December 2017
     '''
 
-    def __init__(self, model, source, compute_network=True):
+    def __init__(self, model, compute_network=True, *args):
         '''
             Class CONSTRUCTOR.
         '''
         #Store the model as attribute
         self.model = model
 
+        if len(args)==1:
+            source=args[0]
+        else:
+            srcs = []
+            for obj in self.model.models:
+                if isinstance(obj, PowerSource) and obj.is_sourcebus == 1:
+                    srcs.append(obj.name)
+            srcs = np.unique(srcs)
+            if len(srcs)==0:
+                raise ValueError('No PowerSource object found in the model.')
+            elif len(srcs)>1:
+                raise ValueError('Mupltiple sourcebus found: {srcs}'.format(srcs=srcs))
+            else:
+                source = srcs[0]
+
         #Store the source name as attribute
         self.source = source
+
+        #Dirty way to access the abstract reader methods
+        #TODO: Better way?
+        self.abs_reader = AbstractReader()
 
         #Build the Network if required
         #
@@ -216,6 +240,38 @@ class network_analyzer():
             for node in self.feeder_networks[feeder_name].nodes():
                 self.node_feeder_mapping[node] = feeder_name
 
+    def export_json(self,*args):
+        '''
+            Export the raw metrics in JSON format.
+
+            :param export_path: Relative path to the output file
+            :type export_path: str
+        '''
+        try:
+            if len(args) > 0:
+                export_path = args[0]
+            else:
+                export_path = './output.json'
+            with open(export_path,'w') as f:
+                f.write(json.dumps(self.results))
+        except TypeError:
+            self.export_json_tricks(*args)
+
+    def export_json_tricks(self,*args):
+        '''
+            Export the raw metrics in JSON format using the json-tricks library: http://json-tricks.readthedocs.io/en/latest/#dump.
+
+            :param export_path: Relative path to the output file
+            :type export_path: str
+        '''
+        if args:
+            export_path = args[0]
+        else:
+            export_path = './output.json'
+        with open(export_path,'w') as fp:
+            fp.write(json_tricks.dumps(self.results, allow_nan=True))
+
+
     def export(self, *args):
         '''
             Export the metrics to excel report card.
@@ -230,17 +286,37 @@ class network_analyzer():
             export_path = './output.xlsx'
 
         #TODO: More maintainable way for this...
-        cols = [
-            'Feeder_name', 'substation_name', 'Feeder_type', 'Substation_Capacity_MVA', 'Substation_Type',
-            'distribution_transformer_total_capacity_MVA', 'nb_of_distribution_transformers', 'number_of_customers', 'ratio_1phto3ph_Xfrm',
-            'lv_length_miles', 'mv_length_miles', 'furtherest_node_miles', 'length_mv3ph_miles', 'length_OH_mv3ph_miles', 'length_mv2ph_miles',
-            'length_OH_mv2ph_miles', 'length_mv1ph_miles', 'length_OH_mv1ph_miles', 'length_lv3ph_miles', 'length_OH_lv3ph_miles',
-            'length_lv1ph_miles', 'length_OH_lv1ph_miles', 'percentage_load_LV_kW_phA', 'percentage_load_LV_kW_phB', 'percentage_load_LV_kW_phC',
-            'total_demand', 'total_kVar', 'nb_loads_LV_1ph', 'nb_loads_LV_3ph', 'nb_loads_MV_3ph', 'avg_nb_load_per_transformer', 'nb_of_regulators',
-            'nb_of_capacitors', 'nb_of_boosters', 'nominal_voltage_HV_KV', 'nominal_voltage_MV_KV', 'nominal_voltage_LV_KV', 'nb_of_fuses',
-            'nb_of_reclosers', 'nb_of_sectionalizers', 'nb_of_switches', 'nb_of_breakers', 'nb_of_interruptors', 'average_degree',
-            'average_path_length', 'diameter'
-        ]
+        cols= ['Feeder_name', 'Feeder_type',
+               #Realistic electrical design and equipment parameters (MV)
+               'mv_length_miles', 'length_mv3ph_miles', 'length_OH_mv3ph_miles', 'length_mv2ph_miles', 
+               'length_OH_mv2ph_miles', 'length_mv1ph_miles', 'length_OH_mv1ph_miles', 'percentage_overhead_MV_lines',
+               'ratio_MV_line_length_to_nb_customer', 'furtherest_node_miles','nominal_medium_voltage_class',
+               #Realistic electrical design and equipment parameters (LV)
+               'lv_length_miles', 'length_lv3ph_miles', 'length_OH_lv3ph_miles', 'length_lv1ph_miles', 
+               'length_OH_lv1ph_miles', 'maximum_length_of_secondaries', 'length_lv2ph_miles', 'length_OH_lv2ph_miles',
+               'percentage_overhead_LV_lines', 'ratio_LV_line_length_to_nb_customer',
+               #Voltage control schemes
+               'nb_of_regulators', 'nb_of_capacitors', 'nb_of_boosters', 'average_regulator_sub_distance', 
+               'average_capacitor_sub_distance',
+               #Basic protection
+               'nb_of_fuses', 'nb_of_reclosers', 'nb_of_sectionalizers', 'sectionalizers_per_recloser', 
+               'average_recloser_sub_distance', 'nb_of_breakers',
+               #Reconfiguration Options
+               'nb_of_switches', 'nb_of_interruptors', 'number_of_links_to_adjacent_feeders', 'nb_loops_within_feeder',
+               #Transformers
+               'nb_of_distribution_transformers', 'number_of_overloaded_transformer', 'distribution_transformer_total_capacity_MVA',
+               'nb_1ph_Xfrm', 'nb_3ph_Xfrm', 'ratio_1phto3ph_Xfrm',
+               #Substations
+               'substation_name', 'Substation_Capacity_MVA',
+               #Load specification
+               'total_demand', 'total_demand_phase_A', 'total_demand_phase_B', 'total_demand_phase_C',
+               'total_kVar', 'percentage_load_LV_kW_phA', 'percentage_load_LV_kW_phB', 'percentage_load_LV_kW_phC',
+               'nb_loads_LV_1ph', 'nb_loads_LV_3ph', 'nb_loads_MV_3ph', 'avg_nb_load_per_transformer',
+               'average_load_power_factor', 'average_imbalance_load_by_phase', 'number_of_customers', 'customer_density',
+               'load_density', 'var_density',
+               #Graph Topology
+               'average_degree', 'average_path_length', 'diameter'
+               ]
 
         #Create empty DataFrame for output
         card = pd.DataFrame(columns=cols)
@@ -424,7 +500,7 @@ class network_analyzer():
         #Note: All metrics relying on networkX calls are computed here.
         #
 
-        logger.info('Analyzing network {name}...'.format(name=network))
+        #logger.info('Analyzing network {name}...'.format(name=network))
 
         results = {
             'nb_of_regulators': 0, #Number of regulators
@@ -432,9 +508,10 @@ class network_analyzer():
             'nb_of_fuses': 0, #Number of fuses
             'nb_of_switches': 0, #Number of switches
             'nb_of_reclosers': 0, #Number of reclosers
-            'nb_of_breakers': 0,
+            'nb_of_breakers': 0, #Number of breakers
             'nb_of_capacitors': 0, #Number of capacitors
-            'number_of_customers': 0,
+            'nb_of_sectionalizers': 0, #Number of sectionalizers
+            'number_of_customers': 0, #Number of customers
             'number_of_links_to_adjacent_feeders': 0, #Number of links to neighboring feeders
             'number_of_overloaded_transformer': 0, #Number of overloaded transformers
             'nb_of_distribution_transformers': 0, #Number of distribution transformers
@@ -446,6 +523,9 @@ class network_analyzer():
             'average_degree': self.average_degree(_net), #Average degree
             'diameter': self.diameter(_net), #Network diameter (in number of edges, NOT in distance)
             'average_path_length': self.average_path_length(_net), #Average path length (in number of edges, NOT in distance)
+            'average_regulator_sub_distance': self.average_regulator_sub_distance(_net, _src), #Average distance between substation and regulators (if any)
+            'average_capacitor_sub_distance': self.average_capacitor_sub_distance(_net, _src), #Average distance between substation and capacitors (if any)
+            'average_recloser_sub_distance': self.average_recloser_sub_distance(_net, _src), #Average distance between substation and reclosers (if any)
             'furtherest_node_miles': self.furtherest_node_miles(_net, _src),
             'nb_loops_within_feeder': self.loops_within_feeder(_net), #Number of loops inside the feeder
             'lv_length_miles': 0, #Total length of LV lines (in miles)
@@ -463,6 +543,9 @@ class network_analyzer():
             'length_lv3ph_miles': 0, #Total length of 3 phase LV lines (in miles)
             'length_OH_lv3ph_miles': 0, #Total length of overhead 3 phase LV lines (in miles)
             'total_demand': 0, #Total demand (active power)
+            'total_demand_phase_A': 0, #Total demand on phase A
+            'total_demand_phase_B': 0, #Total demand on phase B
+            'total_demand_phase_C': 0, #Total demand on phase C
             'total_kVar': 0, #Total demand (reactive power)
             'nb_loads_LV_1ph': 0, #Number of 1 phase LV loads
             'nb_loads_LV_3ph': 0, #Number of 3 phase LV loads
@@ -474,10 +557,16 @@ class network_analyzer():
             'demand_LV_phase_B': 0, #Total LV demand on phase B
             'demand_LV_phase_C': 0, #Total LV demand on phase C
             'nb_load_per_transformer': {}, #Store the number of loads per distribution transformer
+            'nb_customer_per_transformer': {}, #Store the number of customers per distribution transformer
             'wire_equipment_distribution': {}, #Store the number of each wire equipment
             'transformer_kva_distribution':[], #Store the distribution of transformer KVA values
+            'ratio_load_kW_to_transformer_KVA_distribution': {}, #Store the ratio of load kW to distribution transformer KVA
             'avg_nb_load_per_transformer': 0, #Average number of loads per distribution transformer
             'switch_categories_distribution': {}, #Store the number of each different categories of switches
+            'power_factor_distribution': [], #Store the load poser factors
+            'sub_trans_impedance_list': {}, #Store the list of line positive sequence impedances between the substation and each distribution transformer
+            'trans_cust_impedance_list': {}, #Store the list of line positive sequence impedances between each customer and its distribution transformer
+            'nominal_voltages': [], #Store the different nominal voltage values
             'substation_name': _src,
             'Feeder_type': None,
         }
@@ -490,6 +579,16 @@ class network_analyzer():
             This function takes as input a DiTTo object and the name of the corresponding feeder, and analyze it.
             All information needed for the metric extraction is updated here.
         '''
+        #Get the network and the source
+        try:
+            _net = self.feeder_networks[feeder_name]
+        except KeyError:
+            _net = self.G.graph
+        try:
+            _src = self.substations[feeder_name]
+        except:
+            _src = self.source
+
         #If the object has some coordinate values
         #then we add the points to the list of points for the feeder
         if hasattr(obj, 'positions') and obj.positions is not None:
@@ -501,6 +600,11 @@ class network_analyzer():
                         self.points[feeder_name].append([X,Y])
                     else:
                         self.points[feeder_name]=[[X,Y]]
+
+        #Nominal voltage
+        if hasattr(obj, 'nominal_voltage'):
+            if obj.nominal_voltage not in self.results[feeder_name]['nominal_voltages']:
+                self.results[feeder_name]['nominal_voltages'].append(obj.nominal_voltage)
 
         #If we get a line
         if isinstance(obj, Line):
@@ -544,6 +648,10 @@ class network_analyzer():
             #Breakers
             if obj.is_breaker == 1:
                 self.results[feeder_name]['nb_of_breakers'] += 1
+
+            #Sectionalizers
+            if obj.is_sectionalizer == 1:
+                self.results[feeder_name]['nb_of_sectionalizers'] += 1
 
             if hasattr(obj, 'wires') and obj.wires is not None:
                 #Get the phases (needed later)
@@ -638,10 +746,29 @@ class network_analyzer():
                 self.results[feeder_name]['number_of_customers'] += obj.num_users
 
             if hasattr(obj, 'upstream_transformer_name') and obj.upstream_transformer_name is not None:
+                #Number of loads per distribution transformer
                 if obj.upstream_transformer_name in self.results[feeder_name]['nb_load_per_transformer']:
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name] += 1
                 else:
                     self.results[feeder_name]['nb_load_per_transformer'][obj.upstream_transformer_name] = 1
+
+                #Number of customers per distribution transformer
+                if obj.upstream_transformer_name in self.results[feeder_name]['nb_customer_per_transformer']:
+                    self.results[feeder_name]['nb_customer_per_transformer'][obj.upstream_transformer_name] += 1
+                else:
+                    self.results[feeder_name]['nb_customer_per_transformer'][obj.upstream_transformer_name] = 1
+
+                #Line impedance list
+                #Get the secondary
+                trans_obj = self.model[obj.upstream_transformer_name]
+                if hasattr(trans_obj,'to_element') and trans_obj.to_element is not None:
+                    _net3=_net.copy()
+                    if not _net3.has_node(trans_obj.to_element):
+                        _sp = nx.shortest_path(self.G.graph, trans_obj.to_element, list(_net3.nodes())[0])
+                        for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                            _net3.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+                    self.results[feeder_name]['trans_cust_impedance_list'][obj.name] = self.get_impedance_list_between_nodes(_net3, trans_obj.to_element, obj.connecting_element)
+
 
             #If the load is low voltage
             if hasattr(obj, 'nominal_voltage') and obj.nominal_voltage is not None:
@@ -693,6 +820,21 @@ class network_analyzer():
                 self.results[feeder_name]['total_demand'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
                 self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
                 self.results[feeder_name]['total_kVar'] += np.sum([pl.q for pl in _phase_loads_ if pl.q is not None])
+                #Pass if P and Q are zero (might happen in some datasets...)
+                try:
+                    load_power_factor = obj.phase_loads[0].p / float(math.sqrt(obj.phase_loads[0].p**2 + obj.phase_loads[0].q**2))
+                    self.results[feeder_name]['power_factor_distribution'].append(load_power_factor)
+                except ZeroDivisionError:
+                    pass
+                for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
+                    if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
+                        if hasattr(phase_load, 'p') and phase_load.p is not None:
+                            if phase_load.phase == 'A':
+                                self.results[feeder_name]['total_demand_phase_A'] += phase_load.p
+                            elif phase_load.phase == 'B':
+                                self.results[feeder_name]['total_demand_phase_B'] += phase_load.p
+                            elif phase_load.phase == 'C':
+                                self.results[feeder_name]['total_demand_phase_C'] += phase_load.p
 
             return
 
@@ -719,6 +861,16 @@ class network_analyzer():
             #If we have the load names in the mapping for this transformer...
             if obj.name in self.transformer_load_mapping:
                 load_names=self.transformer_load_mapping[obj.name]
+
+                #Get the primary
+                if hasattr(obj,'from_element') and obj.from_element is not None:
+                    _net2=_net.copy()
+                    if not _net2.has_node(_src):
+                        _sp = nx.shortest_path(self.G.graph, _src, list(_net2.nodes())[0])
+                        for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                            _net2.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+
+                    self.results[feeder_name]['sub_trans_impedance_list'][obj.name] = self.get_impedance_list_between_nodes(_net2, _src, obj.from_element)
 
                 #This section updates the maximum length of secondaries
                 #If the graph contains the transformer's connecting element
@@ -757,6 +909,11 @@ class network_analyzer():
                 #...and, compare the two values
                 if total_load_kva>transformer_kva:
                     self.results[feeder_name]['number_of_overloaded_transformer']+=1
+                #Store the ratio of load to transformer KVA
+                if transformer_kva != 0:
+                    self.results[feeder_name]['ratio_load_kW_to_transformer_KVA_distribution'][obj.name] = float(total_load_kva) / float(transformer_kva)
+                else:
+                    self.results[feeder_name]['ratio_load_kW_to_transformer_KVA_distribution'][obj.name] = np.nan
 
             if hasattr(obj, 'windings') and obj.windings is not None and len(obj.windings) > 0:
 
@@ -798,16 +955,18 @@ class network_analyzer():
             Computes all the available metrics for each feeder.
         '''
         self.transformer_load_mapping=self.get_transformer_load_mapping()
+        self.compute_node_line_mapping()
         self.load_distribution = []
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
             'lv_length_miles', 'mv_length_miles', 'length_mv1ph_miles', 'length_mv2ph_miles', 'length_mv3ph_miles', 'length_lv1ph_miles',
             'length_lv2ph_miles', 'length_lv3ph_miles', 'length_OH_mv1ph_miles', 'length_OH_mv2ph_miles', 'length_OH_mv3ph_miles',
-            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries'
+            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries',
+            'average_recloser_sub_distance', 'average_regulator_sub_distance', 'average_capacitor_sub_distance'
         ]
 
         #List of keys to divide by 10^3
-        keys_to_divide_by_1000 = ['total_demand', 'total_kVar']
+        keys_to_divide_by_1000 = ['total_demand', 'total_kVar','total_demand_phase_A', 'total_demand_phase_B', 'total_demand_phase_C']
 
         #Setup the data structures for all feeders
         self.results = {k: self.setup_results_data_structure(k) for k in self.feeder_names}
@@ -861,9 +1020,86 @@ class network_analyzer():
                 if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k] *= 10**-3
 
+            #Ratio of MV Line Length to Number of Customers
+            if self.results[_feeder_ref]['number_of_customers']!=0:
+                self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = self.results[_feeder_ref]['mv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+            else:
+                self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = np.nan
+
+            #Percent of Overhead MV Lines
+            try:
+                self.results[_feeder_ref]['percentage_overhead_MV_lines'] = (self.results[_feeder_ref]['length_OH_mv1ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_mv2ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_mv3ph_miles'])/float(
+                                                                             self.results[_feeder_ref]['lv_length_miles'] +
+                                                                             self.results[_feeder_ref]['mv_length_miles'])*100
+            except ZeroDivisionError:
+                self.results[_feeder_ref]['percentage_overhead_MV_lines'] = np.nan
+
+            #Percent of Overhead LV Lines
+            try:
+                self.results[_feeder_ref]['percentage_overhead_LV_lines'] = (self.results[_feeder_ref]['length_OH_lv1ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_lv2ph_miles'] +
+                                                                             self.results[_feeder_ref]['length_OH_lv3ph_miles'])/float(
+                                                                             self.results[_feeder_ref]['lv_length_miles'] +
+                                                                             self.results[_feeder_ref]['mv_length_miles'])*100
+            except ZeroDivisionError:
+                self.results[_feeder_ref]['percentage_overhead_LV_lines'] = np.nan
+
+            #Sectionalizers per recloser
+            if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
+                self.results[_feeder_ref]['sectionalizers_per_recloser'] = float(self.results[_feeder_ref]['nb_of_sectionalizers']) / float(self.results[_feeder_ref]['nb_of_reclosers'])
+            else:
+                self.results[_feeder_ref]['sectionalizers_per_recloser'] = np.nan
+
+            #Average load power factor
+            self.results[_feeder_ref]['average_load_power_factor'] = np.mean(self.results[_feeder_ref]['power_factor_distribution'])
+
+            #Average imbalance of load by phase
+            #
+            #sum_i |tot_demand_phase_i - 1/3 * tot_demand|
+            if self.results[_feeder_ref]['total_demand'] != 0:
+                third_tot_demand = self.results[_feeder_ref]['total_demand'] / 3.0
+                self.results[_feeder_ref]['average_imbalance_load_by_phase'] = (abs(self.results[_feeder_ref]['total_demand_phase_A'] - third_tot_demand)+
+                                                                                abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
+                                                                                abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand)) / self.results[_feeder_ref]['total_demand']
+            else:
+                self.results[_feeder_ref]['average_imbalance_load_by_phase'] = np.nan
+
+            #Ratio of LV line length to number of customers
+            if self.results[_feeder_ref]['number_of_customers'] != 0:
+                self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = self.results[_feeder_ref]['lv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+            else:
+                self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = np.nan
+
+            #Line impedances
+            #
+            #Average and Maximum MV line impedance from substation to MV side of distribution transformer
+            self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'] = {}
+            self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'] = {}
+            for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
+                self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.mean(imp_list)
+                self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.max(imp_list)
+
+
+            #Average and Maximum LV line impedance from distribution transformer to customer
+            self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'] = {}
+            self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'] = {}
+            for cust_name,imp_list in self.results[_feeder_ref]['trans_cust_impedance_list'].items():
+                self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'][cust_name] = np.mean(imp_list)
+                self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'][cust_name] = np.max(imp_list)
+
+            try:
+                self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max([x for x in self.results[_feeder_ref]['nominal_voltages'] if x!=None])
+            except:
+                self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.nan
+
             #Density metrics
             #
             #Get the list of points for the feeder
+            self.results[_feeder_ref]['customer_density'] = np.nan
+            self.results[_feeder_ref]['load_density']     = np.nan
+            self.results[_feeder_ref]['var_density']      = np.nan
             try:
                 _points=np.array(self.points[_feeder_ref])
             except KeyError:
@@ -877,69 +1113,177 @@ class network_analyzer():
                     self.results[_feeder_ref]['load_density']    =float(self.results[_feeder_ref]['total_demand'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['var_density']     =float(self.results[_feeder_ref]['total_kVar'])/float(hull_surf_sqmile)
 
-    def compute_all_metrics(self):
+
+    def compute_all_metrics(self,*args):
         '''
             This function computes all the metrics for the whole network in a way that optimizes performance.
             Instead of calling all the metrics one by one, we loop over the objects only once and update the metrics.
 
             .. note:: If you only need a very few metrics, it is probably better to call the functions responsible for them.
         '''
-        self.results = {'global': self.setup_results_data_structure()}
+        if len(args)==1:
+            f_name = args[0]
+        else:
+            f_name = 'global'
+        self.results = {f_name: self.setup_results_data_structure()}
+        self.transformer_load_mapping=self.get_transformer_load_mapping()
+        self.compute_node_line_mapping()
         self.load_distribution = []
-
         #List of keys that will have to be converted to miles (DiTTo is in meter)
         keys_to_convert_to_miles = [
             'lv_length_miles', 'mv_length_miles', 'length_mv1ph_miles', 'length_mv2ph_miles', 'length_mv3ph_miles', 'length_lv1ph_miles',
             'length_lv2ph_miles', 'length_lv3ph_miles', 'length_OH_mv1ph_miles', 'length_OH_mv2ph_miles', 'length_OH_mv3ph_miles',
-            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles'
+            'length_OH_lv1ph_miles', 'length_OH_lv2ph_miles', 'length_OH_lv3ph_miles', 'maximum_length_of_secondaries',
+            'average_recloser_sub_distance', 'average_regulator_sub_distance', 'average_capacitor_sub_distance'
         ]
 
         #List of keys to divide by 10^3
-        keys_to_divide_by_1000 = ['total_demand', 'total_kVar']
+        keys_to_divide_by_1000 = ['total_demand', 'total_kVar','total_demand_phase_A', 'total_demand_phase_B', 'total_demand_phase_C']
 
-        #Main Loop that iterates over all the objects in the model
+        #Loop over the objects in the model and analyze them
         for obj in self.model.models:
-            self.analyze_object(obj, 'global')
+            self.analyze_object(obj, f_name)
 
         #Do some post-processing of the results before returning them
         #
         #Compute the percentages of low voltage load kW for each phase
-        for _feeder_ref in ['global']:
-            total_demand_LV = self.results[_feeder_ref]['demand_LV_phase_A'] + self.results[_feeder_ref]['demand_LV_phase_B'] + self.results[
-                _feeder_ref
-            ]['demand_LV_phase_C']
-            if total_demand_LV == 0:
-                self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = 0
-                self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = 0
-                self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = 0
-            else:
-                self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = float(self.results[_feeder_ref]['demand_LV_phase_A']
-                                                                               ) / float(total_demand_LV) * 100
-                self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = float(self.results[_feeder_ref]['demand_LV_phase_B']
-                                                                               ) / float(total_demand_LV) * 100
-                self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = float(self.results[_feeder_ref]['demand_LV_phase_C']
-                                                                               ) / float(total_demand_LV) * 100
+        _feeder_ref = f_name
+        total_demand_LV = self.results[_feeder_ref]['demand_LV_phase_A'] + self.results[_feeder_ref]['demand_LV_phase_B'] + self.results[
+            _feeder_ref
+        ]['demand_LV_phase_C']
+        if total_demand_LV != 0:
+            self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = float(self.results[_feeder_ref]['demand_LV_phase_A']
+                                                                           ) / float(total_demand_LV) * 100
+            self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = float(self.results[_feeder_ref]['demand_LV_phase_B']
+                                                                           ) / float(total_demand_LV) * 100
+            self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = float(self.results[_feeder_ref]['demand_LV_phase_C']
+                                                                           ) / float(total_demand_LV) * 100
+        else:
+            self.results[_feeder_ref]['percentage_load_LV_kW_phA'] = 0
+            self.results[_feeder_ref]['percentage_load_LV_kW_phB'] = 0
+            self.results[_feeder_ref]['percentage_load_LV_kW_phC'] = 0
 
-            #ratio_1phto3ph_Xfrm
-            if self.results[_feeder_ref]['nb_3ph_Xfrm'] != 0:
-                self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = float(self.results[_feeder_ref]['nb_1ph_Xfrm']
-                                                                         ) / float(self.results[_feeder_ref]['nb_3ph_Xfrm'])
-            else:
-                self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = np.inf
+        #ratio_1phto3ph_Xfrm
+        if self.results[_feeder_ref]['nb_3ph_Xfrm'] != 0:
+            self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = float(self.results[_feeder_ref]['nb_1ph_Xfrm']
+                                                                     ) / float(self.results[_feeder_ref]['nb_3ph_Xfrm'])
+        else:
+            self.results[_feeder_ref]['ratio_1phto3ph_Xfrm'] = np.inf
 
-            #avg_nb_load_per_transformer
-            if len(self.results[_feeder_ref]['nb_load_per_transformer']) > 0:
-                self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(list(self.results[_feeder_ref]['nb_load_per_transformer'].values()))
+        #avg_nb_load_per_transformer
+        if len(self.results[_feeder_ref]['nb_load_per_transformer']) > 0:
+            self.results[_feeder_ref]['avg_nb_load_per_transformer'] = np.mean(list(self.results[_feeder_ref]['nb_load_per_transformer'].values()))
 
-            #Convert to miles
-            for k in keys_to_convert_to_miles:
-                if k in self.results[_feeder_ref]:
-                    self.results[_feeder_ref][k] *= 0.000621371
+        #Convert to miles
+        for k in keys_to_convert_to_miles:
+            if k in self.results[_feeder_ref]:
+                self.results[_feeder_ref][k] *= 0.000621371
 
-            #Divide by 10^3
-            for k in keys_to_divide_by_1000:
-                if k in self.results[_feeder_ref]:
-                    self.results[_feeder_ref][k] *= 10**-3
+        #Divide by 10^3
+        for k in keys_to_divide_by_1000:
+            if k in self.results[_feeder_ref]:
+                self.results[_feeder_ref][k] *= 10**-3
+
+        #Ratio of MV Line Length to Number of Customers
+        if self.results[_feeder_ref]['number_of_customers']!=0:
+            self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = self.results[_feeder_ref]['mv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+        else:
+            self.results[_feeder_ref]['ratio_MV_line_length_to_nb_customer'] = np.nan
+
+        #Percent of Overhead MV Lines
+        try:
+            self.results[_feeder_ref]['percentage_overhead_MV_lines'] = (self.results[_feeder_ref]['length_OH_mv1ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_mv2ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_mv3ph_miles'])/float(
+                                                                         self.results[_feeder_ref]['lv_length_miles'] +
+                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+        except ZeroDivisionError:
+            self.results[_feeder_ref]['percentage_overhead_MV_lines'] = np.nan
+
+        #Percent of Overhead LV Lines
+        try:
+            self.results[_feeder_ref]['percentage_overhead_LV_lines'] = (self.results[_feeder_ref]['length_OH_lv1ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_lv2ph_miles'] +
+                                                                         self.results[_feeder_ref]['length_OH_lv3ph_miles'])/float(
+                                                                         self.results[_feeder_ref]['lv_length_miles'] +
+                                                                         self.results[_feeder_ref]['mv_length_miles'])*100
+        except ZeroDivisionError:
+            self.results[_feeder_ref]['percentage_overhead_LV_lines'] = np.nan
+
+        #Sectionalizers per recloser
+        if float(self.results[_feeder_ref]['nb_of_reclosers']) != 0:
+            self.results[_feeder_ref]['sectionalizers_per_recloser'] = float(self.results[_feeder_ref]['nb_of_sectionalizers']) / float(self.results[_feeder_ref]['nb_of_reclosers'])
+        else:
+            self.results[_feeder_ref]['sectionalizers_per_recloser'] = np.nan
+
+        #Average load power factor
+        self.results[_feeder_ref]['average_load_power_factor'] = np.mean(self.results[_feeder_ref]['power_factor_distribution'])
+
+        #Average imbalance of load by phase
+        #
+        #sum_i |tot_demand_phase_i - 1/3 * tot_demand|
+        if self.results[_feeder_ref]['total_demand'] != 0:
+            third_tot_demand = self.results[_feeder_ref]['total_demand'] / 3.0
+            self.results[_feeder_ref]['average_imbalance_load_by_phase'] = (abs(self.results[_feeder_ref]['total_demand_phase_A'] - third_tot_demand)+
+                                                                            abs(self.results[_feeder_ref]['total_demand_phase_B'] - third_tot_demand)+
+                                                                            abs(self.results[_feeder_ref]['total_demand_phase_C'] - third_tot_demand)) / self.results[_feeder_ref]['total_demand']
+        else:
+            self.results[_feeder_ref]['average_imbalance_load_by_phase'] = np.nan
+
+        #Ratio of LV line length to number of customers
+        if self.results[_feeder_ref]['number_of_customers'] != 0:
+            self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = self.results[_feeder_ref]['lv_length_miles'] / float(self.results[_feeder_ref]['number_of_customers'])
+        else:
+            self.results[_feeder_ref]['ratio_LV_line_length_to_nb_customer'] = np.nan
+
+        #Line impedances
+        #
+        #Average and Maximum MV line impedance from substation to MV side of distribution transformer
+        self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'] = {}
+        self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'] = {}
+        for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
+            try:
+                self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.mean(imp_list)
+            except ValueError:
+                self.results[_feeder_ref]['average_MV_line_impedance_from_sub_to_trans'][trans_name] = np.nan
+            try:
+                self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.max(imp_list)
+            except ValueError:
+                self.results[_feeder_ref]['max_MV_line_impedance_from_sub_to_trans'][trans_name] = np.nan
+
+
+        #Average and Maximum LV line impedance from distribution transformer to customer
+        self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'] = {}
+        self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'] = {}
+        for cust_name,imp_list in self.results[_feeder_ref]['trans_cust_impedance_list'].items():
+            self.results[_feeder_ref]['average_LV_line_impedance_from_trans_to_cust'][cust_name] = np.mean(imp_list)
+            self.results[_feeder_ref]['max_LV_line_impedance_from_trans_to_cust'][cust_name] = np.max(imp_list)
+
+        try:
+            self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max([x for x in self.results[_feeder_ref]['nominal_voltages'] if x!=None])
+        except:
+            self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.nan
+
+        #Density metrics
+        #
+        #Get the list of points for the feeder
+        self.results[_feeder_ref]['customer_density'] = np.nan
+        self.results[_feeder_ref]['load_density']     = np.nan
+        self.results[_feeder_ref]['var_density']      = np.nan
+        try:
+            _points=np.array(self.points[_feeder_ref])
+        except KeyError:
+            _points=[]
+        #Having more than 2 points to compute the convex hull surface is a good thing...
+        if len(_points)>2:
+            hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
+            hull_surf_sqmile = hull.area * 3.86102*10**-7 #Convert surface from square meters to square miles 
+            if hull_surf_sqmile!=0:
+                self.results[_feeder_ref]['customer_density']=float(self.results[_feeder_ref]['number_of_customers'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['load_density']    =float(self.results[_feeder_ref]['total_demand'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['var_density']     =float(self.results[_feeder_ref]['total_kVar'])/float(hull_surf_sqmile)
+
+
 
     def number_of_regulators(self):
         '''
@@ -1078,6 +1422,146 @@ class network_analyzer():
                 return 0
         else:
             return nx.average_shortest_path_length(self.G.graph)
+
+    def compute_node_line_mapping(self):
+        '''
+            Compute the following mapping:
+            (from_element.name,to_element.name): Line.name
+        '''
+        self.node_line_mapping={}
+        for obj in self.model.models:
+            if isinstance(obj,Line):
+                if (hasattr(obj,'from_element') and 
+                    obj.from_element is not None and 
+                    hasattr(obj,'to_element') and 
+                    obj.to_element is not None):
+                    self.node_line_mapping[(obj.from_element,obj.to_element)]=obj.name
+
+    def get_impedance_list_between_nodes(self, net, node1, node2):
+        '''
+            TODO
+        '''
+        impedance_list = []
+        line_list = self.list_lines_betweeen_nodes(net, node1, node2)
+        for line in line_list:
+            line_object = self.model[line]
+            if hasattr(line_object,'impedance_matrix') and line_object.impedance_matrix is not None and line_object.impedance_matrix!=[]:
+                Z = np.array(line_object.impedance_matrix)
+                if Z.shape==(1,1):
+                    impedance_list.append(Z[0,0])
+                #elif Z.shape==(3,3):
+                else:
+                    Z2 = self.abs_reader.get_sequence_impedance_matrix(Z)
+                    Z_plus = self.abs_reader.get_positive_sequence_impedance(Z2)
+                    impedance_list.append(Z_plus)
+        return impedance_list
+
+    def list_lines_betweeen_nodes(self, net, node1, node2):
+        '''
+            The function takes a network and two nodes as inputs.
+            It returns a list of Line names forming the shortest path between the two nodes.
+        '''
+        #Compute the shortest path as a sequence of node names
+        path = nx.shortest_path(net, node1, node2)
+        #Transform it in a sequence of edges (n0,n1),(n1,n2),(n2,n3)...
+        edge_list = [(a,b) for a,b in zip(path[:-1],path[1:])]
+        #Compute the sequence of corresponding lines
+        line_list = []
+        for edge in edge_list:
+            if edge in self.node_line_mapping:
+                line_list.append(self.node_line_mapping[edge])
+            #If the edge might is reversed
+            elif edge[::-1] in self.node_line_mapping:
+                line_list.append(self.node_line_mapping[edge[::-1]])
+        return line_list
+
+
+    def average_regulator_sub_distance(self, *args):
+        '''
+            Returns the average distance between the substation and the regulators (if any).
+        '''
+        if args:
+            if len(args) == 1:
+                _net = args[0]
+                _src = self.source
+            elif len(args) == 2:
+                _net, _src = args
+        else:
+            _net = self.G.graph
+            _src = self.source
+        _net=_net.copy()
+        if not _net.has_node(_src):
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
+            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+        L = []
+        for obj in self.model.models:
+            if isinstance(obj, Regulator):
+                if _net.has_node(obj.from_element):
+                    L.append(nx.shortest_path_length(_net, _src, obj.from_element, weight='length'))
+        if len(L)>0:
+            return np.mean(L)
+        else:
+            return np.nan
+
+
+    def average_capacitor_sub_distance(self, *args):
+        '''
+            Returns the average distance between the substation and the capacitors (if any).
+        '''
+        if args:
+            if len(args) == 1:
+                _net = args[0]
+                _src = self.source
+            elif len(args) == 2:
+                _net, _src = args
+        else:
+            _net = self.G.graph
+            _src = self.source
+        _net=_net.copy()
+        if not _net.has_node(_src):
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
+            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+        L = []
+        for obj in self.model.models:
+            if isinstance(obj, Capacitor):
+                if _net.has_node(obj.connecting_element):
+                    L.append(nx.shortest_path_length(_net, _src, obj.connecting_element, weight='length'))
+        if len(L)>0:
+            return np.mean(L)
+        else:
+            return np.nan
+
+    def average_recloser_sub_distance(self, *args):
+        '''
+            Returns the average distance between the substation and the reclosers (if any).
+        '''
+        if args:
+            if len(args) == 1:
+                _net = args[0]
+                _src = self.source
+            elif len(args) == 2:
+                _net, _src = args
+        else:
+            _net = self.G.graph
+            _src = self.source
+        _net=_net.copy()
+        if not _net.has_node(_src):
+            _sp = nx.shortest_path(self.G.graph, _src, list(_net.nodes())[0])
+            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                _net.add_edge(n1, n2, length=self.G.graph[n1][n2]['length'])
+        L = []
+        for obj in self.model.models:
+            if isinstance(obj, Line) and obj.is_recloser == 1:
+                if hasattr(obj, 'from_element') and obj.from_element is not None:
+                    if _net.has_node(obj.from_element):
+                        L.append(nx.shortest_path_length(_net, _src, obj.from_element, weight='length'))
+        if len(L)>0:
+            return np.mean(L)
+        else:
+            return np.nan
+
 
     def furtherest_node_miles(self, *args):
         '''

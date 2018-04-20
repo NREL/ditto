@@ -282,7 +282,9 @@ class Reader(AbstractReader):
             with open(filename, 'r') as f:
                 content_=f.readlines()
         except:
-            raise ValueError('Unable to open file {name}'.format(name=filename))
+            logger.warning('Unable to open file {name}'.format(name=filename))
+            content_=[]
+            pass
 
         self.content=iter(content_)
 
@@ -1659,11 +1661,11 @@ class Reader(AbstractReader):
                 pass
 
             #Set the line type
-            new_line['is_switch']=False
-            new_line['is_fuse']=False
-            new_line['is_recloser']=False
-            new_line['is_breaker']=False
-            new_line['is_sectionalizer']=False
+            new_line['is_switch']=0
+            new_line['is_fuse']=0
+            new_line['is_recloser']=0
+            new_line['is_breaker']=0
+            new_line['is_sectionalizer']=0
 
             if 'type' in settings:
 
@@ -1677,7 +1679,7 @@ class Reader(AbstractReader):
 
                 #Switch
                 elif 'switch' in settings['type']:
-                    new_line['is_switch']=True
+                    new_line['is_switch']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)
@@ -1689,7 +1691,7 @@ class Reader(AbstractReader):
 
                 #Sectionalizer
                 elif 'sectionalizer' in settings['type']:
-                    new_line['is_sectionalizer']=True
+                    new_line['is_sectionalizer']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)
@@ -1701,7 +1703,7 @@ class Reader(AbstractReader):
 
                 #Fuse
                 elif 'fuse' in settings['type']:
-                    new_line['is_fuse']=True
+                    new_line['is_fuse']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)
@@ -1713,7 +1715,7 @@ class Reader(AbstractReader):
 
                 #recloser
                 elif 'recloser' in settings['type']:
-                    new_line['is_recloser']=True
+                    new_line['is_recloser']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)
@@ -1725,7 +1727,7 @@ class Reader(AbstractReader):
 
                 #breaker
                 elif 'breaker' in settings['type']:
-                    new_line['is_breaker']=True
+                    new_line['is_breaker']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
                         api_wire=self.configure_wire(model, {}, {}, p, True, False)

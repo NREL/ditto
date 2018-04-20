@@ -49,11 +49,11 @@ class Load(DiTToHasTraits):
     #Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
     #I think we need both since a substation might have multiple feeders attached to it.
     #These attributes are filled once the DiTTo model has been created using the Network module
-    substation_name = Unicode(help='''The name of the substation to which the object is connected.''', default=None)
-    feeder_name = Unicode(help='''The name of the feeder the object is on.''', default=None)
+    substation_name = Unicode(help='''The name of the substation to which the object is connected.''', default_value=None)
+    feeder_name = Unicode(help='''The name of the feeder the object is on.''', default_value=None)
 
     #Modification: Nicolas (December 2017)
-    upstream_transformer_name = Unicode(help='''The name of the distribution transformer which serves this load''', default=None)
+    upstream_transformer_name = Unicode(help='''The name of the distribution transformer which serves this load''', default_value=None)
 
     def build(self, model):
         self._model = model
