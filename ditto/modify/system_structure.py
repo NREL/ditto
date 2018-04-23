@@ -7,6 +7,7 @@ import networkx as nx
 import numpy as np
 import copy
 import time
+import random
 
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.load import Load
@@ -108,15 +109,15 @@ If this convention changes, this function might need to be updated...
                 if name_cleaned in headnodes:
                     obj.headnode = name_cleaned #This should not be the case because of name conflicts
                 else:
-                    cleaned_headnodes = [h.strip('_s') for h in headnodes]
+                    cleaned_headnodes = [h.strip('%') for h in headnodes]
 
                     if name_cleaned in cleaned_headnodes:
                         obj.headnode = headnodes[cleaned_headnodes.index(name_cleaned)]
                     else:
                         reverse_headnodes = []
                         for headnode in cleaned_headnodes:
-                            if '->' in headnode:
-                                a, b = headnode.split('->')
+                            if '>' in headnode:
+                                a, b = headnode.split('>')
                                 reverse_headnodes.append(b + '->' + a)
                             else:
                                 reverse_headnodes.append(headnode)
@@ -551,10 +552,10 @@ The purpose of this function is to find this transformer as well as all the line
                     #...and grab the transformer name to retrieve the data from the DiTTo object
                     if (from_node, end_node) in self.edge_equipment_name:
                         transformer_names.append(self.edge_equipment_name[(from_node, end_node)])
-                        load_list[idx].upstream_transformer_name = self.edge_equipment_name[(from_node, end_node)]
+                        self.model[load_list[idx].name].upstream_transformer_name = self.edge_equipment_name[(from_node, end_node)]
                     elif (end_node, from_node) in self.edge_equipment_name:
                         transformer_names.append(self.edge_equipment_name[(end_node, from_node)])
-                        load_list[idx].upstream_transformer_name = self.edge_equipment_name[(end_node, from_node)]
+                        self.model[load_list[idx].name].upstream_transformer_name = self.edge_equipment_name[(end_node, from_node)]
                     #If we cannot find the object, raise an error because it sould not be the case...
                     else:
                         raise ValueError('Unable to find equipment between {_from} and {_to}'.format(_from=from_node, _to=end_node))
