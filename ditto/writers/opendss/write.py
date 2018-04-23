@@ -35,8 +35,6 @@ Use to write a DiTTo model to OpenDSS format.
 
 :param log_file: Name/path of the log file. Optional. Default='./OpenDSS_writer.log'
 :type log_file: str
-:param linecodes_flag: Use OpenDSS linecodes rather than lineGeometries. Optional. Default=True
-:type linecodes_flag: bool
 :param output_path: Path to write the OpenDSS files. Optional. Default='./'
 :type output_path: str
 
@@ -92,14 +90,6 @@ author: Nicolas Gensollen. October 2017.
 
         #Call super
         super(Writer, self).__init__(**kwargs)
-
-        #Set the linecode flag
-        #If True, linecodes will be used when writing the lines
-        #If False, linegeometries and wiredata will be used when writing the lines
-        if 'linecodes_flag' in kwargs and isinstance(kwargs['linecodes_flag'], bool):
-            self.linecodes_flag = kwargs['linecodes_flag']
-        else:
-            self.linecodes_flag = True
 
         self.logger.info('DiTTo--->OpenDSS writer successfuly instanciated.')
 
@@ -161,25 +151,6 @@ author: Nicolas Gensollen. October 2017.
         self.logger.info('Writing the loads...')
         if self.verbose: logger.debug('Writing the loads...')
         s = self.write_loads(model)
-        if self.verbose and s != -1: logger.debug('Succesful!')
-
-        #If we decided to use linecodes, write the linecodes
-        if self.linecodes_flag:
-            self.logger.info('Writting the linecodes...')
-            if self.verbose: logger.debug('Writting the linecodes...')
-            s = self.write_linecodes(model)
-            if self.verbose and s != -1: logger.debug('Succesful!')
-
-        #Write the WireData
-        self.logger.info('Writting the WireData...')
-        if self.verbose: logger.debug('Writting the WireData...')
-        s = self.write_wiredata(model)
-        if self.verbose and s != -1: logger.debug('Succesful!')
-
-        #Write the lineGeometries
-        self.logger.info('Writting the linegeometries...')
-        if self.verbose: logger.debug('Writting the linegeometries...')
-        s = self.write_linegeometry(model)
         if self.verbose and s != -1: logger.debug('Succesful!')
 
         #Write the lines
@@ -1285,6 +1256,38 @@ author: Nicolas Gensollen. October 2017.
         fp = open(os.path.join(self.output_path, 'Lines.dss'), 'w')
         self.files_to_redirect.append('Lines.dss')
 
+        #First, we have to decide if we want to output using LineGeometries and WireData or using LineCodes
+        #We divide the lines in 2 groups:
+        #- if we have enough information about the wires and the spacing, 
+        #  then the line goes to the linegeometry group
+        #- otherwise it goes to the linecode group
+        lines_to_geometrify = []
+        lines_to_linecodify = []
+        for i in model.models:
+            if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_sectionalizer == 0 and i.is_recloser == 0 and i.is_fuse == 0:
+                use_linecodes = False
+                for wire in i.wires:
+                    #If we are missing the position of at least one wire, default to linecodes
+                    if wire.X is None or wire.Y is None:
+                        use_linecodes = True
+                    #If we are missing the GMR of at least one wire, default to linecodes
+                    if wire.gmr is None:
+                        use_linecodes = True
+                    #If we are missing the diameter of at least one wire, default to linecodes
+                    if wire.diameter is None:
+                        use_linecodes = True
+                    #If we are missing the ampacity of at least one wire, default to linecodes
+                    if wire.ampacity is None:
+                        use_linecodes = True
+                if use_linecodes:
+                    lines_to_linecodify.append(i)
+                else:
+                    lines_to_geometrify.append(i)
+
+        self.write_wiredata(lines_to_geometrify)
+        self.write_linegeometry(lines_to_geometrify)
+        self.write_linecodes(lines_to_linecodify)
+
         for i in model.models:
             if isinstance(i, Line):
 
@@ -1295,6 +1298,7 @@ author: Nicolas Gensollen. October 2017.
                     continue
 
                 #Set the units in miles for comparison (IEEE 13 nodes feeder)
+                #TODO: Let the user specify the export units
                 fp.write(' Units=mi')
 
                 #Length
@@ -1321,166 +1325,150 @@ author: Nicolas Gensollen. October 2017.
                             if hasattr(wire, 'phase') and wire.phase is not None and wire.phase not in ['N', 'N1', 'N2']:
                                 fp.write('.{p}'.format(p=self.phase_mapping(wire.phase)))
 
-                #Faulrate
-                #Can also be defined through the linecodes (check linecodes_flag)
-                if hasattr(i, 'faultrate') and i.faultrate is not None and not self.linecodes_flag:
-                    fp.write(' Faultrate={fr}'.format(fr=i.faultrate))
+                #is_switch or is_breaker
+                if ((hasattr(i, 'is_switch') and i.is_switch == 1) or
+                    (hasattr(i, 'is_breaker') and i.is_breaker == 1)):
+                    fp.write(' switch=y')
+                else:
+                    fp.write(' switch=n')
 
-                #Rmatrix, Xmatrix, and Cmatrix
-                #Can also be defined through the linecodes (check linecodes_flag)
-                if (((hasattr(i, 'impedance_matrix') and i.impedance_matrix is not None) or
-                    (hasattr(i, 'capacitance_matrix') and i.capacitance_matrix is not None)) and not self.linecodes_flag):
-                    fp.write(' ' + self.serialize_line(i))
-
-                #is_fuse (Not mapped)
-
-                #is_switch
-                if hasattr(i, 'is_switch') and i.is_switch is not None:
-                    if i.is_switch == 1:
-                        fp.write(' switch=y')
-                    else:
-                        fp.write(' switch=n')
+                 #is_fuse
+                if hasattr(i, 'is_fuse') and i.is_fuse == 1:
+                    fuse_line = 'New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=yes'.format(name=i.name)
+                else:
+                    fuse_line = ''
 
                 #N_phases
                 if hasattr(i, 'wires') and i.wires is not None:
-                    fp.write(' phases=' + str(len(i.wires) - 1)) #Do not count the neutral
+                    phase_wires = [w for w in i.wires if w.phase in ['A','B','C']]
+                    fp.write(' phases=' + str(len(phase_wires)))
 
-                #is_banked (Not mapped)
-
-                #positions (Not mapped)
-
-                if self.linecodes_flag:
-                    ser = self.serialize_line(i)
-                    fp.write(' Linecode=' + self.all_linecodes[ser])
-
-                if not self.linecodes_flag and hasattr(i, 'wires') and i.wires is not None:
-                    ser = self.serialize_line_geometry(i.wires)
-                    fp.write(' geometry=' + self.all_geometries[ser])
-                '''
-                #TODO: write numbers based on phase (e.g. A/B/C = 1,2,3)
-                if i.from_element is not None:
-                    fp.write(' bus1='+i.from_element)
-                    if i.wires is None:
-                        for cnt in range(num_phases):
-                            fp.write('.'+str(cnt))
-                    else:
-                        for wire in i.wires:
-                            if wire.phase == 'A':
-                                fp.write('.1')
-                            if wire.phase == 'B':
-                                fp.write('.2')
-                            if wire.phase == 'C':
-                                fp.write('.3')
-
-
-
-                if i.to_element is not None:
-                    fp.write(' bus2='+i.to_element)
-                    if i.wires is None:
-                        for cnt in rage(1,num_phases+1):
-                            fp.write('.'+str(cnt))
-                    else:
-                        for cnt in range(1,len(i.wires)+1):
-                            fp.write('.'.str(cnt))
-
-
-
-                if not linecodes and i.wires is not None:
-                    ser = self.serialize_line_geometry(i.wires)
-                    fp.write(' geometry='+self.all_geometries[ser])
-
-                if i.length is not None:
-                    fp.write(' length='+str(i.length))
-
-                if i.num_phases is not None:
-                    fp.write(' phases='+str(i.num_phases))
-
-
-                # These are already defined in LineCodes but are also allowed to be defined here.
-    #            if i.resistance is not None:
-    #                fp.write(' r1='+str(i.resistance))
-    #
-    #            if i.reactance is not None:
-    #                fp.write(' x1='+str(i.reactance))
-    #
-    #            if i.resistance0 is not None:
-    #                fp.write(' r0='+str(i.resistance0))
-    #
-    #            if i.reactance0 is not None:
-    #                fp.write(' x0='+str(i.reactance0))
-    #
-    #            if i.ampacity is not None:
-    #                fp.write(' normamps='+str(i.ampacity))
-    #
-    #            if i.emergency_ampacity is not None:
-    #                fp.write(' emergamps='+str(i.emergency_ampacity))
-
-
-                if i.is_switch is not None:
-                    if i.is_switch == 1:
-                        fp.write(' switch=y')
-                    else:
-                        fp.write(' switch=n')
-
-                '''
+                if i in lines_to_geometrify:
+                    fp.write(' geometry={g}'.format(g=i.nameclass))
+                elif i in lines_to_linecodify:
+                    fp.write(' Linecode={c}'.format(c=i.nameclass))
 
                 fp.write('\n\n')
+                if fuse_line != '':
+                    fp.write(fuse_line)
+                    fp.write('\n\n')
         return 1
 
-    def write_wiredata(self, model):
-        '''Write the wire data to an OpenDSS file (WireData.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
 
-'''
+    def write_wiredata(self, list_of_lines):
+        '''
+            Write the wires to an OpenDSS file (WireData.dss by default).
+
+            :param model: DiTTo model
+            :type model: DiTTo model
+            :returns: 1 for success, -1 for failure
+            :rtype: int
+        '''
         cnt = 1
-        for i in model.models:
-            if isinstance(i, Wire):
-                ser = self.serialize_wire(i)
-                if not ser in self.all_wires:
-                    self.all_wires[ser] = 'Code' + str(cnt)
-                    cnt += 1
+        #Loop over the objects
+        for i in list_of_lines:
+            #If we get a line object
+            if isinstance(i, Line):
+                #Loop over the wires of this line
+                for wire in i.wires:
+                    #Parse the wire to get a dictionary with all the available attributes
+                    parsed_wire = self.parse_wire(wire)
+                    if len(parsed_wire)>0:
+                        #If we have a nameclass, then use it to ID the wire
+                        if wire.nameclass is not None:
+                            #If the nameclass is not in self.all_wires, then just add it
+                            if wire.nameclass not in self.all_wires:
+                                self.all_wires[wire.nameclass] = parsed_wire
+                            #Otherwise, there is nothing to do unless the dictionary we previously has is not
+                            #exactly the one we currently have
+                            else:
+                                if self.all_wires[wire.nameclass] != parsed_wire:
+                                    self.all_wires[wire.nameclass+'_'+str(cnt)] = parsed_wire
+                                    wire.nameclass = wire.nameclass+'_'+str(cnt)
+                                    cnt += 1
+                        #If we don't have a nameclass, we use fake names "wire_1", "wire_2"...
+                        else:
+                            wire_found = False
+                            for k,v in self.all_wires.items():
+                                if parsed_wire == v:
+                                    wire_found = True
+                                    wire.nameclass = k
+                            if not wire_found:
+                                self.all_wires['Wire_{n}'.format(n=cnt)] = parsed_wire
+                                wire.nameclass = 'Wire_{n}'.format(n=cnt)
+                                cnt += 1
 
         fp = open(os.path.join(self.output_path, 'WireData.dss'), 'w')
         self.files_to_redirect.append('WireData.dss')
-        for wire in self.all_wires:
-            fp.write('New WireData.' + self.all_wires[wire] + wire + '\n')
+        for wire_name,wire_data in self.all_wires.items():
+            fp.write('New WireData.{name}'.format(name=wire_name))
+            for key,value in wire_data.items():
+                fp.write(' {k}={v}'.format(k=key,v=value))
+            fp.write('\n\n')
 
         return 1
 
-    def write_linegeometry(self, model):
-        '''Write the Line geometries to an OpenDSS file (LineGeometry.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
 
-.. warning:: This must be called after write_wiredata()
+    def write_linegeometry(self, list_of_lines):
+        '''
+            Write the Line geometries to an OpenDSS file (LineGeometry.dss by default).
 
-'''
-        for i in model.models:
+            :param model: DiTTo model
+            :type model: DiTTo model
+            :returns: 1 for success, -1 for failure
+            :rtype: int
+
+            .. warning:: This must be called after write_wiredata()
+        '''
+        cpt = 1
+        for i in list_of_lines:
             if isinstance(i, Line):
-                if hasattr(i, 'wires') and i.wires is not None:
-                    ser = self.serialize_line_geometry(i.wires)
-                    name = str(len(i.wires) - 1) + 'PH'
-                    for wire in i.wires:
-                        seri = self.serialize_wire(wire)
-                        if seri != '':
-                            name += '_' + self.all_wires[seri]
-                    self.all_geometries[ser] = name
+                parsed_line = self.parse_line_geometry(i)
+                if len(parsed_line)>0:
+                    if i.nameclass is not None:
+                        if i.nameclass not in self.all_geometries:
+                            self.all_geometries[i.nameclass] = parsed_line
+                        else:
+                            if self.all_geometries[i.nameclass] != parsed_line:
+                                self.all_geometries[i.nameclass+'_'+str(cpt)] = parsed_line
+                                i.nameclass = i.nameclass+'_'+str(cpt)
+                                cpt += 1
+                    else:
+                        geometry_found = False
+                        for k,v in self.all_geometries.items():
+                            if parsed_line == v:
+                                geometry_found = True
+                                i.nameclass = k
+                        if not geometry_found:
+                            self.all_geometries['Geometry_{n}'.format(n=cpt)] = parsed_line
+                            i.nameclass = 'Geometry_{n}'.format(n=cpt)
+                            cpt += 1
 
         fp = open(os.path.join(self.output_path, 'LineGeometry.dss'), 'w')
         self.files_to_redirect.append('LineGeometry.dss')
-        for geometry in self.all_geometries:
-            fp.write('New LineGeometry.' + self.all_geometries[geometry] + geometry + '\n')
+        for geometry_name,geometry_data in self.all_geometries.items():
+            fp.write('New LineGeometry.{name}'.format(name=geometry_name))
+            if 'nconds' in geometry_data:
+                fp.write(' Nconds={n}'.format(n=geometry_data['nconds']))
+            if 'nphases' in geometry_data:
+                fp.write(' Nphases={n}'.format(n=geometry_data['nphases']))
+            if 'units' in geometry_data:
+                fp.write(' Units={u}'.format(u=geometry_data['units']))
+            for conductor in geometry_data['conductor_list']:
+                fp.write(' Cond={c}'.format(c=conductor['cond']))
+                for k,v in conductor.items():
+                    if k!='cond':
+                        fp.write(' {k}={v}'.format(k=k,v=v))
+            if 'reduce' in geometry_data:
+                fp.write(' Reduce={r}'.format(r=geometry_data['reduce']))
+            fp.write('\n\n') 
 
         return 1
 
-    def write_linecodes(self, model):
+
+    def write_linecodes(self, list_of_lines):
         '''Write the linecodes to an OpenDSS file (Linecodes.dss by default).
 
 :param model: DiTTo model
@@ -1495,60 +1483,72 @@ author: Nicolas Gensollen. October 2017.
 
 '''
         cnt = 0
-        for i in model.models:
-            if isinstance(i, Line):
+        for i in list_of_lines:
+            if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_recloser == 0 and i.is_sectionalizer == 0 and i.is_fuse == 0:
 
-                ser = self.serialize_line(i)
+                parsed_line = self.parse_line(i)
+                if len(parsed_line)>0:
+                    if i.nameclass is not None:
+                        if i.nameclass not in self.all_linecodes:
+                            self.all_linecodes[i.nameclass] = parsed_line
+                        else:
+                            if self.all_linecodes[i.nameclass] != parsed_line:
+                                self.all_linecodes[i.nameclass+'_'+str(cnt)] = parsed_line
+                                i.nameclass = i.nameclass+'_'+str(cnt)
+                                cnt += 1
+                    else:
+                        linecode_found = False
+                        for k,v in self.all_linecodes.items():
+                            if parsed_line == v:
+                                linecode_found = True
+                                i.nameclass = k
+                        if not linecode_found:
+                            nameclass = ''
+                            if hasattr(i, 'wires') and i.wires is not None:
+                                phase_wires = [w for w in i.wires if w.phase in ['A', 'B', 'C']]
+                                nameclass += str(len(phase_wires)) + 'P_'
 
-                if not ser in self.all_linecodes:
+                            if hasattr(i, 'line_type') and i.line_type == 'overhead':
+                                nameclass += 'OH_'
 
-                    nameclass = ''
-
-                    if hasattr(i, 'wires') and i.wires is not None:
-                        phase_wires = [w for w in i.wires if w.phase in ['A', 'B', 'C']]
-                        nameclass += str(len(phase_wires)) + 'P_'
-
-                    if hasattr(i, 'line_type') and i.line_type == 'overhead':
-                        nameclass += 'OH_'
-
-                    if hasattr(i, 'line_type') and i.line_type == 'underground':
-                        nameclass += 'UG_'
-
-                    self.all_linecodes[ser] = '{class_}Code{N}'.format(class_=nameclass, N=cnt)
-                    cnt += 1
+                            if hasattr(i, 'line_type') and i.line_type == 'underground':
+                                nameclass += 'UG_'
+                            self.all_linecodes['{class_}Code{N}'.format(class_=nameclass, N=cnt)] = parsed_line
+                            i.nameclass = '{class_}Code{N}'.format(class_=nameclass, N=cnt)
+                            cnt += 1
 
         fp = open(os.path.join(self.output_path, 'Linecodes.dss'), 'w')
         self.files_to_redirect.append('Linecodes.dss')
-        for linecode, linecode_data in self.all_linecodes.items():
-            fp.write('New Linecode.{linecode_data} {linecode}\n'.format(linecode=linecode, linecode_data=linecode_data))
+        for linecode_name, linecode_data in self.all_linecodes.items():
+            fp.write('New Linecode.{name}'.format(name=linecode_name))
+            for k,v in linecode_data.items():
+                fp.write(' {k}={v}'.format(k=k,v=v))
+            fp.write('\n\n')
 
         return 1
 
-    def serialize_line(self, line):
-        '''This function is used to associate lines to linecodes or linegeometry.
-Multiple lines can share the same parameters (like length, resistance matrix,...), such that these lines will be be associated with the same linecode.
+    def parse_line(self, line):
+        '''
+            This function is used to associate lines to linecodes or linegeometry.
+            Multiple lines can share the same parameters (like length, resistance matrix,...), such that these lines will be be associated with the same linecode.
 
-:param line: Line diTTo object
-:type line: Line diTTo object
-:returns: Line string
-:rtype: str
-
-'''
-        result = ''
-
-        if hasattr(line, 'units') and line.units is not None:
-            uni = line.units
-        else:
-            uni = u'ft'
+            :param line: Line diTTo object
+            :type line: Line diTTo object
+            :returns: result
+            :rtype: dict
+        '''
+        result = {}
+        uni = 'm'
+        result['units'] = 'm' #DiTTO is in meters
 
         #N_phases
-        if hasattr(line, 'wires') and line.wires is not None and self.linecodes_flag:
+        if hasattr(line, 'wires') and line.wires is not None:
             phase_wires = [w for w in line.wires if w.phase in ['A', 'B', 'C']]
-            result += 'nphases={N} '.format(N=len(phase_wires))
+            result['nphases'] = len(phase_wires)
 
         #faultrate
-        if hasattr(line, 'faultrate') and line.faultrate is not None and self.linecodes_flag:
-            result += 'Faultrate={f} '.format(f=line.faultrate)
+        if hasattr(line, 'faultrate') and line.faultrate is not None:
+            result['Faultrate'] = line.faultrate
 
         #If we have the impedance matrix, we need to extract both
         #the resistance and reactance matrices
@@ -1561,121 +1561,126 @@ Multiple lines can share the same parameters (like length, resistance matrix,...
             except:
                 self.logger.error('Problem with impedance matrix in line {name}'.format(name=line.name))
 
-            result += 'Rmatrix=('
+            result['Rmatrix']='('
             for row in R:
                 for elt in row:
-                    result += '{e} '.format(e=self.convert_from_meters(np.real(elt), uni, inverse=True))
-                result += '| '
-            result = result[:-2] #Remove the last "| " since we do not need it
-            result += ') '
+                    result['Rmatrix'] += '{e} '.format(e=self.convert_from_meters(np.real(elt), uni, inverse=True))
+                result['Rmatrix'] += '| '
+            result['Rmatrix'] = result['Rmatrix'][:-2] #Remove the last "| " since we do not need it
+            result['Rmatrix'] += ')'
 
-            result += 'Xmatrix=('
+            result['Xmatrix'] = '('
             for row in X:
                 for elt in row:
-                    result += '{e} '.format(e=self.convert_from_meters(np.real(elt), uni, inverse=True))
-                result += '| '
-            result = result[:-2] #Remove the last "| " since we do not need it
-            result += ') '
+                    result['Xmatrix'] += '{e} '.format(e=self.convert_from_meters(np.real(elt), uni, inverse=True))
+                result['Xmatrix'] += '| '
+            result['Xmatrix'] = result['Xmatrix'][:-2] #Remove the last "| " since we do not need it
+            result['Xmatrix'] += ')'
 
         if hasattr(line, 'capacitance_matrix') and line.capacitance_matrix is not None and line.capacitance_matrix != []:
             C = np.array(line.capacitance_matrix)
-            result += 'Cmatrix=('
+            result['Cmatrix'] = '('
             for row in C:
                 for elt in row:
-                    result += '{e} '.format(e=self.convert_from_meters(np.real(elt), uni, inverse=True))
-                result += '| '
-            result = result[:-2] #Remove the last "| " since we do not need it
-            result += ') '
+                    result['Cmatrix'] += '{e} '.format(e=self.convert_from_meters(np.real(elt), uni, inverse=True))
+                result['Cmatrix'] += '| '
+            result['Cmatrix'] = result['Cmatrix'][:-2] #Remove the last "| " since we do not need it
+            result['Cmatrix'] += ')'
 
         #Ampacity
-        if hasattr(line, 'wires') and line.wires is not None and len(line.wires) > 0 and hasattr(line.wires[0], 'ampacity'
-                                                                                                 ) and line.wires[0].ampacity is not None:
-            result += ' normamps={na}'.format(na=line.wires[0].ampacity)
+        if hasattr(line, 'wires') and line.wires is not None and len(line.wires) > 0 and hasattr(line.wires[0], 'ampacity') and line.wires[0].ampacity is not None:
+            result['normamps'] = line.wires[0].ampacity
 
         #Emergency ampacity
-        if hasattr(line, 'wires') and line.wires is not None and len(line.wires) > 0 and hasattr(line.wires[0], 'ampacity_emergency'
-                                                                                                 ) and line.wires[0].ampacity_emergency is not None:
-            result += ' emergamps={emer}'.format(emer=line.wires[0].ampacity_emergency)
+        if hasattr(line, 'wires') and line.wires is not None and len(line.wires) > 0 and hasattr(line.wires[0], 'ampacity_emergency') and line.wires[0].emergency_ampacity is not None:
+            result['emergamps'] = line.wires[0].emergency_ampacity
 
-        result += ' units={}\n'.format(uni)
         return result
 
-    def serialize_wire(self, wire):
-        '''Takes a wire diTTo object as input and outputs the OpenDSS string.
 
-:param wire: Wire diTTo object
-:type wire: Wire diTTo object
-:returns: Wire string
-:rtype: str
 
-'''
-        result = ''
+    def parse_wire(self, wire):
+        '''
+            Takes a wire diTTo object as input and outputs a dictionary with the attributes of the wire.
+
+            :param wire: Wire diTTo object
+            :type wire: Wire diTTo object
+            :returns: result
+            :rtype: dict
+        '''
+        result = {}
 
         #GMR
         if hasattr(wire, 'gmr') and wire.gmr is not None:
-            result += ' GMRac={gmr}'.format(gmr=wire.gmr)
-            result += ' GMRunits=m' #Let OpenDSS know we are in meters here
+            result['GMRac'] =  wire.gmr
+            result['GMRunits'] = 'm' #Let OpenDSS know we are in meters here
 
         #Diameter
         if hasattr(wire, 'diameter') and wire.diameter is not None:
-            result += ' Diam={d}'.format(d=wire.diameter)
-            result += ' Radunits=m' #Let OpenDSS know we are in meters here
+            result['Diam'] = wire.diameter
+            result['Radunits'] = 'm' #Let OpenDSS know we are in meters here
 
         #Ampacity
         if hasattr(wire, 'ampacity') and wire.ampacity is not None:
-            result += ' normamps={na}'.format(na=wire.ampacity)
+            result['normamps'] = wire.ampacity
 
         #Emergency ampacity
-        if hasattr(wire, 'ampacity_emergency') and wire.ampacity_emergency is not None:
-            result += ' emergamps={emer}'.format(emer=wire.ampacity_emergency)
+        if hasattr(wire, 'emergency_ampacity') and wire.emergency_ampacity is not None:
+            result['emergamps'] = wire.emergency_ampacity
 
         #Resistance
         if hasattr(wire, 'resistance') and wire.resistance is not None:
-            result += ' Rac={rac}'.format(rac=wire.resistance)
+            result['Rac'] = wire.resistance
 
         return result
 
-    def serialize_line_geometry(self, wire_list):
-        '''Takes a list of wires as input and outputs the lineGeometry string.
 
-:param wire_list: List of Wire diTTo objects
-:type wire_list: list
-:returns: LineGeometry string
-:rtype: str
 
-.. note:: This model keeps the line neutrals in and doesn't reduce them out
 
-'''
-        result = ''
+    def parse_line_geometry(self, line):
+        '''
+            Takes a Line object as input and outputs a dictionary for building a lineGeometry string.
 
-        result += ' nconds={N}'.format(N=len(wire_list))
+            :param line: Line diTTo object
+            :type line: Line
+            :returns: result
+            :rtype: dict
 
+            .. note:: This model keeps the line neutrals in and doesn't reduce them out
+        '''
+        result = {}
+        wire_list = line.wires
+        result['nconds'] =len(wire_list)
         phase_wires = [w for w in wire_list if w.phase in ['A', 'B', 'C']]
-
-        result += ' nphases={N}'.format(N=len(phase_wires))
-
-        cond = 1
-
-        for wire in wire_list:
-            #serialize the wires
-            ser = self.serialize_wire(wire)
-            #It can happen that the wire exists, but all
-            #fields handled by serialize_wires() are empty
-            if ser != '':
-                wire_name = self.all_wires[ser]
-                result += ' cond={N}'.format(N=cond)
-                cond += 1
-                result += ' wire={name}'.format(name=wire_name)
+        result['nphases'] = len(phase_wires)
+        result['units'] = 'm'
+        result['conductor_list'] = []
+        for cond,wire in enumerate(wire_list):
+            result['conductor_list'].append({})
+            cond+=1
+            result['conductor_list'][-1]['cond'] = cond
+            if wire.nameclass in self.all_wires:
+                result['conductor_list'][-1]['Wire'] = wire.nameclass
+            else:
+                raise ValueError('Wire {name} not found.'.format(name=wire.nameclass))
 
             if hasattr(wire, 'X') and wire.X is not None:
-                result += ' x={x}'.format(x=wire.X)
+                result['conductor_list'][-1]['X'] = wire.X
 
             if hasattr(wire, 'Y') and wire.Y is not None:
-                result += ' h={h}'.format(h=wire.Y)
+                result['conductor_list'][-1]['H'] = wire.Y
 
-        result += ' reduce=n'
+            if hasattr(wire, 'ampacity') and wire.ampacity is not None:
+                result['conductor_list'][-1]['Normamps'] = wire.ampacity
+
+            if hasattr(wire, 'emergency_ampacity') and wire.emergency_ampacity is not None:
+                result['conductor_list'][-1]['Emergamps'] = wire.emergency_ampacity
+
+        result['Reduce'] = 'n'
 
         return result
+
+
 
 
     def write_master_file(self,model):
