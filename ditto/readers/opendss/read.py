@@ -12,6 +12,7 @@ import numpy as np
 import logging
 import time
 from six import string_types
+from functools import reduce
 
 #OpenDSSdirect import
 import opendssdirect as dss
@@ -676,13 +677,18 @@ Responsible for calling the sub-parsers and logging progress.
             #is_fuse
             if line_name.replace('(','').replace(')','') in fuses_names:
                 api_line.is_fuse = 1
+                api_line.nameclass = line_name.split('(')[0]
             #is_recloser
             elif line_name in reclosers_names or 'recloser' in line_name:
                 api_line.is_recloser = 1
+                api_line.nameclass = line_name.split('(')[0]
             elif 'breaker' in line_name:
                 api_line.is_breaker = 1
+                api_line.nameclass = line_name.split('(')[0]
             elif 'Switch' in data and data['Switch']:
                 api_line.is_switch = 1
+                api_line.nameclass = line_name.split('(')[0]
+
 
             #faultrate
             if 'faultrate' in data:
@@ -814,7 +820,13 @@ Responsible for calling the sub-parsers and logging progress.
                 #Initialize the wire nameclass with the linecode name
                 #This is just a best effort to get some information
                 #when no wiredata is provided...
-                wires[p].nameclass=linecode
+                try:
+                    wires[p].nameclass=reduce(lambda x,y:x+'-'+y, linecode.split('_')[2:]) #RNM uses linecodes like "1P_OH_Pigeon_ACSR3/0"
+                except:
+                    try:
+                        wires[p].nameclass=api_line.nameclass
+                    except:
+                        pass
 
                 if name in fuses_names:
                     wires[p].is_fuse = 1

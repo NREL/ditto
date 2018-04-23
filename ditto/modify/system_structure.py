@@ -7,6 +7,7 @@ import networkx as nx
 import numpy as np
 import copy
 import time
+import random
 
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.load import Load
@@ -108,15 +109,15 @@ If this convention changes, this function might need to be updated...
                 if name_cleaned in headnodes:
                     obj.headnode = name_cleaned #This should not be the case because of name conflicts
                 else:
-                    cleaned_headnodes = [h.strip('_s') for h in headnodes]
+                    cleaned_headnodes = [h.strip('%') for h in headnodes]
 
                     if name_cleaned in cleaned_headnodes:
                         obj.headnode = headnodes[cleaned_headnodes.index(name_cleaned)]
                     else:
                         reverse_headnodes = []
                         for headnode in cleaned_headnodes:
-                            if '->' in headnode:
-                                a, b = headnode.split('->')
+                            if '>' in headnode:
+                                a, b = headnode.split('>')
                                 reverse_headnodes.append(b + '->' + a)
                             else:
                                 reverse_headnodes.append(headnode)
@@ -551,10 +552,10 @@ The purpose of this function is to find this transformer as well as all the line
                     #...and grab the transformer name to retrieve the data from the DiTTo object
                     if (from_node, end_node) in self.edge_equipment_name:
                         transformer_names.append(self.edge_equipment_name[(from_node, end_node)])
-                        load_list[idx].upstream_transformer_name = self.edge_equipment_name[(from_node, end_node)]
+                        self.model[load_list[idx].name].upstream_transformer_name = self.edge_equipment_name[(from_node, end_node)]
                     elif (end_node, from_node) in self.edge_equipment_name:
                         transformer_names.append(self.edge_equipment_name[(end_node, from_node)])
-                        load_list[idx].upstream_transformer_name = self.edge_equipment_name[(end_node, from_node)]
+                        self.model[load_list[idx].name].upstream_transformer_name = self.edge_equipment_name[(end_node, from_node)]
                     #If we cannot find the object, raise an error because it sould not be the case...
                     else:
                         raise ValueError('Unable to find equipment between {_from} and {_to}'.format(_from=from_node, _to=end_node))
@@ -708,3 +709,104 @@ The purpose of this function is to find this transformer as well as all the line
                             wire.is_open=0
                     except:
                         pass
+
+
+    def set_switching_devices_ampacity(self):
+        '''
+            Loop over all switching devices without valid ampacity values.
+            Look at the neighboring lines and use their ampacity as value.
+        '''
+        #Loop over the ditto objects and find the switches, breakers, sectionalizers, fuses, and reclosers
+        for obj in self.model.models:
+            if isinstance(obj,Line):
+                if obj.is_switch ==1 or obj.is_breaker == 1 or obj.is_sectionalizer ==1 or obj.is_fuse == 1 or obj.is_recloser == 1:
+
+                    #Store the ampacities of the device's wires
+                    amps = np.array([wire.ampacity for wire in obj.wires])
+
+                    #and check if there are some nan values
+                    if np.any(np.isnan(amps)):
+
+                        #2 possibilities here:
+                        #case 1: Not all ampacity ratings are nans
+                        if not np.all(np.isnan(amps)):
+
+                            #This means that at least one of the device wires has a valid rating
+                            valid_amps = amps[np.logical_not(np.isnan(amps))]
+
+                            #Find it and use it for the other wires
+                            if len(valid_amps)==1:
+                                amps_value = valid_amps[0]
+                            else:
+                                amps_value = np.max(valid_amps) #we have different ratings accross wires. Heuristic: use the maximum.
+
+                            for wire in obj.wires:
+                                wire.ampacity = amps_value
+
+                        #Case 2: All ampacity ratings are nans
+                        else:
+                            #Here we look for a neighboring line object with a valid ampacity rating
+                            if obj.from_element is not None and obj.to_element is not None:
+
+                                should_continue = True
+                                from_node = obj.from_element
+                                to_node = obj.to_element
+
+                                while should_continue:
+                                    if self.G.graph.has_node(from_node) and self.G.graph.has_node(to_node):
+
+                                        #Get the neighbors on the from side
+                                        neighbors_from = [n for n in nx.neighbors(self.G.graph, from_node) if n != to_node]
+
+                                        #Get the neighbors on the to side
+                                        neighbors_to   = [n for n in nx.neighbors(self.G.graph, to_node) if n != from_node]
+
+                                        amps_value = None
+                                        if len(neighbors_from)>0:
+
+                                            #To avoid infinite loops where we always consider the same objects, select neighbors randomly
+                                            idx=random.randint(0,min(len(neighbors_from),len(neighbors_to))-1)
+
+                                            #we only have the from and to nodes. We need to find the name of the corresponding ditto object
+                                            if (neighbors_from[idx],obj.from_element) in self.edge_equipment_name:
+
+                                                try:
+                                                    #Try to get the object with its name
+                                                    neighboring_line_obj = self.model[self.edge_equipment_name[(neighbors_from[idx],from_node)]]
+
+                                                    #If we have a valid ampacity rating, then use this value and exit the loop
+                                                    if(neighboring_line_obj.wires[0].ampacity is not None and 
+                                                        not np.isnan(neighboring_line_obj.wires[0].ampacity)):
+                                                        amps_value = neighboring_line_obj.wires[0].ampacity
+                                                        should_continue = False
+
+                                                #If we failed for some reason, try on the to side
+                                                except:
+                                                    amps_value = None 
+
+                                        #If we still haven't found a value and we have sone neighbors on the to side
+                                        if amps_value is None and len(neighbors_to)>0:
+
+                                            #Try to find the name of the object
+                                            if (to_node,neighbors_to[idx]) in self.edge_equipment_name:
+
+                                                try:
+                                                    neighboring_line_obj = self.model[self.edge_equipment_name[(to_node,neighbors_to[idx])]]
+                                                    if neighboring_line_obj.wires[0].ampacity is not None and not np.isnan(neighboring_line_obj.wires[0].ampacity):
+                                                        amps_value = neighboring_line_obj.wires[0].ampacity
+                                                        should_continue = False
+                                                except:
+                                                    amps_value = None
+
+                                        #At this point, if we still haven't found a value, update the from and to node to 
+                                        #continue the search further away from the initial object
+                                        if should_continue:
+                                            to_node = neighbors_to[idx]
+                                            from_node = to_node
+
+                                    else:
+                                        raise ValueError('Missing nodes {n1} and/or {n2} in network'.format(n1=from_node, n2=to_node))
+
+                                if amps_value is not None:
+                                    for wire in obj.wires:
+                                        wire.ampacity = amps_value
