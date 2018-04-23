@@ -222,6 +222,7 @@ class Writer(AbstractWriter):
         switch_string_list=[]
         fuse_string_list=[]
         recloser_string_list=[]
+        breaker_string_list=[]
         capacitor_string_list=[]
         two_windings_transformer_string_list=[]
         three_windings_transformer_string_list=[]
@@ -244,6 +245,7 @@ class Writer(AbstractWriter):
         self.three_windings_trans_codes={}
         ID_cond=0
         self.conductors={}
+        self.breakercodes = {}
 
         intermediate_nodes=[]
 
@@ -375,6 +377,7 @@ class Writer(AbstractWriter):
                                    'switch': switch_string_list,
                                    'fuse': fuse_string_list,
                                    'recloser': recloser_string_list,
+                                   'breaker': breaker_string_list,
                                    }
 
                     #Empty new strings for sections and overhead lines
@@ -416,6 +419,10 @@ class Writer(AbstractWriter):
 
                         elif hasattr(i, 'is_recloser') and i.is_recloser==1:
                             line_type='recloser'
+
+                        elif hasattr(i, 'is_breaker') and i.is_breaker==1:
+                            line_type = 'breaker'
+
                         #ONLY if line is not a fuse nor a recloser, but is a switch do we output a switch...
                         elif hasattr(i, 'is_switch') and i.is_switch==1:
                             line_type='switch'
@@ -623,18 +630,18 @@ class Writer(AbstractWriter):
 
                         #Length
                         if hasattr(i, 'length') and i.length is not None:
-                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser':
+                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser' and line_type!='breaker':
                                 try:
                                     new_line_string+=','+str(i.length)
                                 except:
                                     new_line_string+=','
                                     pass
                         else:
-                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser':
+                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser' and line_type!='breaker':
                                 new_line_string+=','
 
-                        if line_type=='fuse' or line_type=='recloser':
-                            new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,phases))
+                        #if line_type=='breaker':
+                        #    new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,phases))
 
                         if line_type=='switch':
                             closed_phase=np.sort([wire.phase for wire in i.wires if wire.is_open==0 and wire.phase not in ['N','N1','N2']])
@@ -1667,6 +1674,14 @@ class Writer(AbstractWriter):
                 f.write('FORMAT_RECLOSERSETTING=SectionID,EqID,Location,ClosedPhase,Locked,ConnectionStatus,DeviceNumber\n')
                 for recloser_string in recloser_string_list:
                     f.write(recloser_string+'\n')
+
+            #Breakers
+            #
+            if len(recloser_string_list)>0:
+                f.write('\n[BREAKER SETTING]\n')
+                f.write('FORMAT_BREAKERSETTING=SectionID,EqID,Location,ClosedPhase,Locked,ConnectionStatus,DeviceNumber\n')
+                for breaker_string in breaker_string_list:
+                    f.write(breaker_string+'\n')
 
             #Capacitors
             #
