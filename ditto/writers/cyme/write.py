@@ -644,20 +644,25 @@ class Writer(AbstractWriter):
                                     tt['amps']=0
                                     pass
 
-                                if len(self.cablecodes)==0:
-                                    ID_cable+=1
-                                    self.cablecodes[ID_cable]=tt
-                                    new_line_string+=',cable_'+str(ID_cable)
+                                if hasattr(i.wires[0],'nameclass') and i.wires[0].nameclass is not None:
+                                        cable_name=i.wires[0].nameclass
+                                        self.cablecodes[cable_name]=tt
+                                        new_line_string+=','+cable_name
                                 else:
-                                    found=False
-                                    for k,v in self.cablecodes.items():
-                                        if v==tt:
-                                            new_line_string+=',cable_'+str(k)
-                                            found=True
-                                    if not found:
+                                    if len(self.cablecodes)==0:
                                         ID_cable+=1
-                                        self.cablecodes[ID_cable]=tt
+                                        self.cablecodes['cable'+str(ID_cable)]=tt
                                         new_line_string+=',cable_'+str(ID_cable)
+                                    else:
+                                        found=False
+                                        for k,v in self.cablecodes.items():
+                                            if v==tt:
+                                                new_line_string+=',cable_'+str(k)
+                                                found=True
+                                        if not found:
+                                            ID_cable+=1
+                                            self.cablecodes['cable'+str(ID_cable)]=tt
+                                            new_line_string+=',cable_'+str(ID_cable)
 
                         elif hasattr(i, 'impedance_matrix') and i.impedance_matrix is not None:
                             #try:
@@ -678,6 +683,14 @@ class Writer(AbstractWriter):
                                 tt['CondID_N']=cond_id['N']
                             else:
                                 tt['CondID_N']='DEFAULT'
+                            if 'N1' in cond_id:
+                                tt['CondID_N1']=cond_id['N1']
+                            else:
+                                tt['CondID_N1']='DEFAULT'
+                            if 'N2' in cond_id:
+                                tt['CondID_N2']=cond_id['N2']
+                            else:
+                                tt['CondID_N2']='DEFAULT'
 
                             if hasattr(i, 'wires') and i.wires is not None:
                                 for wire in i.wires:
@@ -707,23 +720,28 @@ class Writer(AbstractWriter):
                                             tt['MutualResistance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].real*10**3
                                             tt['MutualReactance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].imag*10**3
 
-                            #If the linecode dictionary is empty, just add the new element
-                            if len(self.linecodes)==0:
-                                ID+=1
-                                self.linecodes[ID]=tt
-                                new_line_string+=',line_'+str(ID)
-
-                            #Otherwise, loop over the dict to find a matching linecode
+                            if hasattr(i,'nameclass') and i.nameclass is not None:
+                                line_nameclass=i.nameclass
+                                self.linecodes[line_nameclass]=tt
+                                new_line_string+=','+line_nameclass
                             else:
-                                found=False
-                                for k,v in self.linecodes.items():
-                                    if v==tt:
-                                        new_line_string+=',line_'+str(k)
-                                        found=True
-                                if not found:
+                                #If the linecode dictionary is empty, just add the new element
+                                if len(self.linecodes)==0:
                                     ID+=1
                                     self.linecodes[ID]=tt
                                     new_line_string+=',line_'+str(ID)
+
+                                #Otherwise, loop over the dict to find a matching linecode
+                                else:
+                                    found=False
+                                    for k,v in self.linecodes.items():
+                                        if v==tt:
+                                            new_line_string+=',line_'+str(k)
+                                            found=True
+                                    if not found:
+                                        ID+=1
+                                        self.linecodes['line_'+str(ID)]=tt
+                                        new_line_string+=',line_'+str(ID)
                             #except:
                             #    new_line_string+=','
                             #    pass
@@ -1961,7 +1979,7 @@ class Writer(AbstractWriter):
             f.write('FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,UserDefinedImpedances,Frequency,Temperature\n')
             f.write('DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,1,60.000000,25.000000\n')
             for ID,data in self.cablecodes.items():
-                f.write('cable_'+str(ID))
+                f.write(str(ID))
                 for key in ['R1','R0','X1','X0','B1','B0','amps']:
                     if key in data:
                         f.write(','+str(data[key]))
@@ -1973,15 +1991,15 @@ class Writer(AbstractWriter):
             #
             if len(self.linecodes)>0:
                 f.write('\n[LINE UNBALANCED]\n')
-                f.write('FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n')
+                f.write('FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n')
 
                 for ID,data in self.linecodes.items():
-                    f.write('line_'+str(ID))
-                    for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
+                    f.write(str(ID))
+                    for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','CondID_N1','CondID_N2','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
                         if key in data:
                             f.write(','+str(data[key]))
                         else:
-                            if key in ['CondID_A','CondID_B','CondID_C','SpacingID']:
+                            if key in ['CondID_A','CondID_B','CondID_C','CondID_N1','CondID_N2','SpacingID']:
                                 f.write('DEFAULT,')
                             else:
                                 f.write(',0')
