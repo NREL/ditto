@@ -222,6 +222,7 @@ class Writer(AbstractWriter):
         switch_string_list=[]
         fuse_string_list=[]
         recloser_string_list=[]
+        breaker_string_list=[]
         capacitor_string_list=[]
         two_windings_transformer_string_list=[]
         three_windings_transformer_string_list=[]
@@ -244,6 +245,10 @@ class Writer(AbstractWriter):
         self.three_windings_trans_codes={}
         ID_cond=0
         self.conductors={}
+        self.switchcodes = {}
+        self.fusecodes = {}
+        self.reclosercodes = {}
+        self.breakercodes = {}
 
         intermediate_nodes=[]
 
@@ -375,6 +380,7 @@ class Writer(AbstractWriter):
                                    'switch': switch_string_list,
                                    'fuse': fuse_string_list,
                                    'recloser': recloser_string_list,
+                                   'breaker': breaker_string_list,
                                    }
 
                     #Empty new strings for sections and overhead lines
@@ -416,6 +422,10 @@ class Writer(AbstractWriter):
 
                         elif hasattr(i, 'is_recloser') and i.is_recloser==1:
                             line_type='recloser'
+
+                        elif hasattr(i, 'is_breaker') and i.is_breaker==1:
+                            line_type = 'breaker'
+
                         #ONLY if line is not a fuse nor a recloser, but is a switch do we output a switch...
                         elif hasattr(i, 'is_switch') and i.is_switch==1:
                             line_type='switch'
@@ -448,42 +458,54 @@ class Writer(AbstractWriter):
                         if hasattr(i, 'wires') and i.wires is not None:
                             i.wires=[w for w in i.wires if w.drop!=1]
                             for wire in i.wires:
-                                new_code=''
-                                valid_code=True
+
                                 if hasattr(wire, 'phase') and wire.phase is not None:
                                     #Do not count the neutral(s)...
                                     if wire.phase in ['A','B','C']:
                                         new_section_line+=wire.phase
                                         phases.append(wire.phase)
+
+                                new_code=''
                                 if hasattr(wire, 'diameter') and wire.diameter is not None:
                                     new_code+=',{}'.format(wire.diameter)
                                 else:
-                                    valid_code=False
+                                    new_code+=','
+
                                 if hasattr(wire, 'gmr') and wire.gmr is not None:
                                     new_code+=',{}'.format(wire.gmr)
                                 else:
-                                    valid_code=False
+                                    new_code+=','
+
                                 if hasattr(wire, 'ampacity') and wire.ampacity is not None:
-                                    new_code+=',{}'.format(wire.ampacity)
-                                else:
-                                    valid_code=False
-                                if hasattr(wire, 'ampacity_emergency') and wire.ampacity_emergency is not None:
-                                    new_code+=',{}'.format(wire.ampacity_emergency)
+                                    new_code+='{},'.format(wire.ampacity)
                                 else:
                                     new_code+=','
 
-                                if valid_code:
+                                if hasattr(wire, 'emergency_ampacity') and wire.emergency_ampacity is not None:
+                                    new_code+='{}'.format(wire.emergency_ampacity)
+
+                                #if line_type=='underground':
+                                #If we have a name for the wire, we use it as the equipment id
+                                if hasattr(wire,'nameclass') and wire.nameclass is not None:
+                                    wire_name=wire.nameclass
+                                    #If not already in the conductors dictionary, add it
+                                    if wire_name not in self.conductors:
+                                        self.conductors[wire_name]=new_code
+                                    cond_id[wire.phase]=wire_name
+                                #If we do not have a name for the wire, we create one:
+                                #The IDs will be wire_1, wire_2,...
+                                else:
                                     found=False
+                                    #Try to find if we already have the conductor stored
                                     for key,value in self.conductors.items():
                                         if value==new_code:
                                             cond_id[wire.phase]=key
                                             found=True
+                                    #If not, create it
                                     if not found:
                                         ID_cond+=1
                                         self.conductors['conductor_{}'.format(ID_cond)]=new_code
                                         cond_id[wire.phase]=ID_cond
-
-
 
                         #Impedance matrix
                         #
@@ -494,11 +516,97 @@ class Writer(AbstractWriter):
                         #If we have a switch, we just use default because there is no way (to my knowledge)
                         #to provide the impedance matrix for a switch in CYME
                         if line_type=='switch':
-                            new_line_string+=',DEFAULT'
+                            if i.nameclass is not None and i.nameclass!='' and i.wires[0].ampacity is not None and i.nominal_voltage is not None:
+                                new_code2 = '{amps},{amps},{amps},{amps},{amps},{kvll},0,,,,,,,,0,0,0,0,0,'.format(amps=i.wires[0].ampacity,kvll=i.nominal_voltage*10**-3)
+
+                                if i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity)) not in self.switchcodes:
+                                    self.switchcodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                                elif self.switchcodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]!=new_code2:
+                                    found = False
+                                    for k,v in self.switchcodes.items():
+                                        if new_code2==v:
+                                            new_line_string+=','+str(k)
+                                            found = True
+                                    if not found:
+                                        self.switchcodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                        new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+                                else:
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                            else:
+                                new_line_string+=',DEFAULT'
+
                         elif line_type=='fuse':
-                            new_line_string+=',DEFAULT'
+                            if i.nameclass is not None and i.nameclass!='' and i.wires[0].ampacity is not None and i.nominal_voltage is not None:
+                                new_code2 = '{amps},{amps},{amps},{amps},{amps},{kvll},0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,,,,'.format(amps=i.wires[0].ampacity,kvll=i.nominal_voltage*10**-3)
+
+                                if i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity)) not in self.fusecodes:
+                                    self.fusecodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                                elif self.fusecodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]!=new_code2:
+                                    found = False
+                                    for k,v in self.fusecodes.items():
+                                        if new_code2==v:
+                                            new_line_string+=','+str(k)
+                                            found = True
+                                    if not found:
+                                        self.fusecodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                        new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+                                else:
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                            else:
+                                new_line_string+=',DEFAULT'
+
                         elif line_type=='recloser':
-                            new_line_string+=',DEFAULT'
+                            if i.nameclass is not None and i.nameclass!='' and i.wires[0].ampacity is not None and i.nominal_voltage is not None:
+                                new_code2 = '{amps},{amps},{amps},{amps},{amps},{kvll},0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,0,0,0,,1,,'.format(amps=i.wires[0].ampacity,kvll=i.nominal_voltage*10**-3)
+
+                                if i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity)) not in self.reclosercodes:
+                                    self.reclosercodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                                elif self.reclosercodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]!=new_code2:
+                                    found = False
+                                    for k,v in self.reclosercodes.items():
+                                        if new_code2==v:
+                                            new_line_string+=','+str(k)
+                                            found = True
+                                    if not found:
+                                        self.reclosercodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                        new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+                                else:
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                            else:
+                                new_line_string+=',DEFAULT'
+
+                        elif line_type=='breaker':
+                            if i.nameclass is not None and i.nameclass!='' and i.wires[0].ampacity is not None and i.nominal_voltage is not None:
+                                new_code2 = '{amps},{amps},{amps},{amps},{amps},{kvll},0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,0,0,0,'.format(amps=i.wires[0].ampacity,kvll=i.nominal_voltage*10**-3)
+
+                                if i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity)) not in self.breakercodes:
+                                    self.breakercodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                                elif self.breakercodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]!=new_code2:
+                                    found = False
+                                    for k,v in self.breakercodes.items():
+                                        if new_code2==v:
+                                            new_line_string+=','+str(k)
+                                            found = True
+                                    if not found:
+                                        self.breakercodes[i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))]=new_code2
+                                        new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+                                else:
+                                    new_line_string+=','+i.nameclass+'_'+str(int(i.nominal_voltage))+'_'+str(int(i.wires[0].ampacity))
+
+                            else:
+                                new_line_string+=',DEFAULT'
+
                         elif line_type=='underground':
                             tt={}
                             if hasattr(i, 'impedance_matrix') and i.impedance_matrix is not None:
@@ -536,20 +644,25 @@ class Writer(AbstractWriter):
                                     tt['amps']=0
                                     pass
 
-                                if len(self.cablecodes)==0:
-                                    ID_cable+=1
-                                    self.cablecodes[ID_cable]=tt
-                                    new_line_string+=',cable_'+str(ID_cable)
+                                if hasattr(i.wires[0],'nameclass') and i.wires[0].nameclass is not None:
+                                        cable_name=i.wires[0].nameclass
+                                        self.cablecodes[cable_name]=tt
+                                        new_line_string+=','+cable_name
                                 else:
-                                    found=False
-                                    for k,v in self.cablecodes.items():
-                                        if v==tt:
-                                            new_line_string+=',cable_'+str(k)
-                                            found=True
-                                    if not found:
+                                    if len(self.cablecodes)==0:
                                         ID_cable+=1
-                                        self.cablecodes[ID_cable]=tt
+                                        self.cablecodes['cable'+str(ID_cable)]=tt
                                         new_line_string+=',cable_'+str(ID_cable)
+                                    else:
+                                        found=False
+                                        for k,v in self.cablecodes.items():
+                                            if v==tt:
+                                                new_line_string+=',cable_'+str(k)
+                                                found=True
+                                        if not found:
+                                            ID_cable+=1
+                                            self.cablecodes['cable'+str(ID_cable)]=tt
+                                            new_line_string+=',cable_'+str(ID_cable)
 
                         elif hasattr(i, 'impedance_matrix') and i.impedance_matrix is not None:
                             #try:
@@ -570,6 +683,14 @@ class Writer(AbstractWriter):
                                 tt['CondID_N']=cond_id['N']
                             else:
                                 tt['CondID_N']='DEFAULT'
+                            if 'N1' in cond_id:
+                                tt['CondID_N1']=cond_id['N1']
+                            else:
+                                tt['CondID_N1']='DEFAULT'
+                            if 'N2' in cond_id:
+                                tt['CondID_N2']=cond_id['N2']
+                            else:
+                                tt['CondID_N2']='DEFAULT'
 
                             if hasattr(i, 'wires') and i.wires is not None:
                                 for wire in i.wires:
@@ -599,23 +720,28 @@ class Writer(AbstractWriter):
                                             tt['MutualResistance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].real*10**3
                                             tt['MutualReactance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].imag*10**3
 
-                            #If the linecode dictionary is empty, just add the new element
-                            if len(self.linecodes)==0:
-                                ID+=1
-                                self.linecodes[ID]=tt
-                                new_line_string+=',line_'+str(ID)
-
-                            #Otherwise, loop over the dict to find a matching linecode
+                            if hasattr(i,'nameclass') and i.nameclass is not None:
+                                line_nameclass=i.nameclass
+                                self.linecodes[line_nameclass]=tt
+                                new_line_string+=','+line_nameclass
                             else:
-                                found=False
-                                for k,v in self.linecodes.items():
-                                    if v==tt:
-                                        new_line_string+=',line_'+str(k)
-                                        found=True
-                                if not found:
+                                #If the linecode dictionary is empty, just add the new element
+                                if len(self.linecodes)==0:
                                     ID+=1
                                     self.linecodes[ID]=tt
                                     new_line_string+=',line_'+str(ID)
+
+                                #Otherwise, loop over the dict to find a matching linecode
+                                else:
+                                    found=False
+                                    for k,v in self.linecodes.items():
+                                        if v==tt:
+                                            new_line_string+=',line_'+str(k)
+                                            found=True
+                                    if not found:
+                                        ID+=1
+                                        self.linecodes['line_'+str(ID)]=tt
+                                        new_line_string+=',line_'+str(ID)
                             #except:
                             #    new_line_string+=','
                             #    pass
@@ -623,18 +749,18 @@ class Writer(AbstractWriter):
 
                         #Length
                         if hasattr(i, 'length') and i.length is not None:
-                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser':
+                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser' and line_type!='breaker':
                                 try:
                                     new_line_string+=','+str(i.length)
                                 except:
                                     new_line_string+=','
                                     pass
                         else:
-                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser':
+                            if line_type!='switch' and line_type!='fuse' and line_type!='recloser' and line_type!='breaker':
                                 new_line_string+=','
 
-                        if line_type=='fuse' or line_type=='recloser':
-                            new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,phases))
+                        #if line_type=='breaker':
+                        #    new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,phases))
 
                         if line_type=='switch':
                             closed_phase=np.sort([wire.phase for wire in i.wires if wire.is_open==0 and wire.phase not in ['N','N1','N2']])
@@ -643,12 +769,16 @@ class Writer(AbstractWriter):
                             else:
                                 new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,closed_phase))
 
+                        if line_type=='fuse' or line_type=='recloser' or line_type=='breaker':
+                            closed_phase=np.sort([wire.phase for wire in i.wires if wire.phase not in ['N','N1','N2']])
+                            new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,closed_phase))
+
 
                         #ConnectionStatus
                         new_line_string+=',0' #Assumes the line is connected because there is no connected field in DiTTo
 
                         #DeviceNumber
-                        if line_type=='switch' or line_type=='fuse' or line_type=='recloser':
+                        if line_type=='switch' or line_type=='fuse' or line_type=='recloser' or line_type=='breaker':
                             new_line_string+=','+new_sectionID
 
                         if line_type=='underground':
@@ -1668,6 +1798,14 @@ class Writer(AbstractWriter):
                 for recloser_string in recloser_string_list:
                     f.write(recloser_string+'\n')
 
+            #Breakers
+            #
+            if len(recloser_string_list)>0:
+                f.write('\n[BREAKER SETTING]\n')
+                f.write('FORMAT_BREAKERSETTING=SectionID,EqID,Location,ClosedPhase,Locked,ConnectionStatus,DeviceNumber\n')
+                for breaker_string in breaker_string_list:
+                    f.write(breaker_string+'\n')
+
             #Capacitors
             #
             if len(capacitor_string_list)>0:
@@ -1794,6 +1932,10 @@ class Writer(AbstractWriter):
             f.write('\n[SWITCH]\n')
             f.write('FORMAT_SWITCH=ID,Amps,Amps_1,Amps_2,Amps_3,Amps_4,KVLL,Reversible,FailRate,TmpFailRate,MajorRepairTime,MinorRepairTime,MajorFailureProportion,StuckProbability,SwitchTime,SymbolOpenID,SymbolCloseID,SinglePhaseLocking,RemoteControlled,Automated,Comments\n')
             f.write('DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,0,,,,,,,,0,0,0,0,0,\n')
+            for ID,data in self.switchcodes.items():
+                f.write(str(ID)+',')
+                f.write(data)
+                f.write('\n')
 
             #Fuses
             #
@@ -1802,6 +1944,10 @@ class Writer(AbstractWriter):
             f.write('\n[FUSE]\n')
             f.write('FORMAT_FUSE=ID,Amps,Amps_1,Amps_2,Amps_3,Amps_4,KVLL,Reversible,InterruptingRating,FailRate,TmpFailRate,MajorRepairTime,MinorRepairTime,MajorFailureProportion,StuckProbability,SwitchTime,SymbolOpenID,SymbolCloseID,SinglePhaseLocking,Comments,Manufacturer,Model,TCCRating\n')
             f.write('DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,,,,\n')
+            for ID,data in self.fusecodes.items():
+                f.write(str(ID)+',')
+                f.write(data)
+                f.write('\n')
 
             #Reclosers
             #
@@ -1810,6 +1956,22 @@ class Writer(AbstractWriter):
             f.write('\n[RECLOSER]\n')
             f.write('FORMAT_RECLOSER=ID,Amps,Amps_1,Amps_2,Amps_3,Amps_4,KVLL,Reversible,InterruptingRating,FailRate,TmpFailRate,MajorRepairTime,MinorRepairTime,MajorFailureProportion,StuckProbability,SwitchTime,SymbolOpenID,SymbolCloseID,SinglePhaseLocking,SinglePhaseTripping,RemoteControlled,Automated,Comments,RecloserType,ControlType,Model\n')
             f.write('DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,0,0,0,,1,,\n')
+            for ID,data in self.reclosercodes.items():
+                f.write(str(ID)+',')
+                f.write(data)
+                f.write('\n')
+
+            #Breakers
+            #
+            #Writing default values for breakers
+            #
+            f.write('\n[BREAKER]\n')
+            f.write('FORMAT_BREAKER=ID,Amps,Amps_1,Amps_2,Amps_3,Amps_4,KVLL,Reversible,InterruptingRating,FailRate,TmpFailRate,MajorRepairTime,MinorRepairTime,MajorFailureProportion,StuckProbability,SwitchTime,SymbolOpenID,SymbolCloseID,SinglePhaseLocking,SinglePhaseTripping,RemoteControlled,Automated,Comments\n')
+            f.write('DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,0,0,0,\n')
+            for ID,data in self.breakercodes.items():
+                f.write(str(ID)+',')
+                f.write(data)
+                f.write('\n')
 
             #Cables
             #
@@ -1817,7 +1979,7 @@ class Writer(AbstractWriter):
             f.write('FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,UserDefinedImpedances,Frequency,Temperature\n')
             f.write('DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,1,60.000000,25.000000\n')
             for ID,data in self.cablecodes.items():
-                f.write('cable_'+str(ID))
+                f.write(str(ID))
                 for key in ['R1','R0','X1','X0','B1','B0','amps']:
                     if key in data:
                         f.write(','+str(data[key]))
@@ -1829,15 +1991,15 @@ class Writer(AbstractWriter):
             #
             if len(self.linecodes)>0:
                 f.write('\n[LINE UNBALANCED]\n')
-                f.write('FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n')
+                f.write('FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n')
 
                 for ID,data in self.linecodes.items():
-                    f.write('line_'+str(ID))
-                    for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
+                    f.write(str(ID))
+                    for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','CondID_N1','CondID_N2','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
                         if key in data:
                             f.write(','+str(data[key]))
                         else:
-                            if key in ['CondID_A','CondID_B','CondID_C','SpacingID']:
+                            if key in ['CondID_A','CondID_B','CondID_C','CondID_N1','CondID_N2','SpacingID']:
                                 f.write('DEFAULT,')
                             else:
                                 f.write(',0')
