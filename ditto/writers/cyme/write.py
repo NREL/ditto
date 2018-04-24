@@ -1003,7 +1003,7 @@ class Writer(AbstractWriter):
                                     #CoordX and CoordY
                                     if hasattr(i, 'positions') and i.positions is not None:
                                         try:
-                                            new_transformer_line+=','+str(i.positions[0].lon)
+                                            new_transformer_line+=','+str(i.positions[0].long)
                                             new_transformer_line+=','+str(i.positions[0].lat)
                                         except:
                                             new_transformer_line+=',,'
@@ -1301,7 +1301,7 @@ class Writer(AbstractWriter):
                             #CoordX and CoordY
                             if hasattr(i, 'positions') and i.positions is not None:
                                 try:
-                                    new_transformer_line+=','+str(i.positions[0].lon)
+                                    new_transformer_line+=','+str(i.positions[0].long)
                                     new_transformer_line+=','+str(i.positions[0].lat)
                                 except:
                                     new_transformer_line+=',,'
@@ -1492,7 +1492,7 @@ class Writer(AbstractWriter):
                             #CoordX and CoordY
                             if hasattr(i, 'positions') and i.positions is not None:
                                 try:
-                                    new_transformer_line+=','+str(i.positions[0].lon)
+                                    new_transformer_line+=','+str(i.positions[0].long)
                                     new_transformer_line+=','+str(i.positions[0].lat)
                                 except:
                                     new_transformer_line+=',,'
