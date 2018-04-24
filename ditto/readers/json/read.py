@@ -22,7 +22,7 @@ from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.base import Unicode
 
 
-class reader:
+class Reader:
     '''JSON-->DiTTo Reader class
 
 The reader expects the following format:

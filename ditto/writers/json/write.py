@@ -14,7 +14,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.phase_capacitor import PhaseCapacitor
 
 
-class writer:
+class Writer:
     '''DiTTo--->JSON Writer class
 
 The writer produce a file with the following format:
