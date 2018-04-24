@@ -20,6 +20,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.capacitor import Capacitor
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.base import Unicode
+from ditto.models.feeder_metadata import Feeder_metadata
 
 
 class Reader:
@@ -96,7 +97,7 @@ Author: Nicolas Gensollen. January 2018
 
         ditto_klasses = [
             'PowerSource', 'Node', 'Line', 'Winding', 'PowerTransformer', 'Position', 'Wire', 'PhaseWinding', 'Load', 'PhaseLoad', 'Capacitor',
-            'PhaseCapacitor'
+            'PhaseCapacitor', 'Feeder_metadata'
         ]
 
         #Create a new empty model
