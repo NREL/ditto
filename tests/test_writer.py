@@ -111,9 +111,9 @@ def test_opendss_writer():
 
     t = tempfile.TemporaryDirectory()
     writer = Writer(output_path=t.name)
-    writer.write_wiredata(m)
-    writer.write_linegeometry(m)
-    writer.write_linecodes(m)
+    #writer.write_wiredata(m)
+    #writer.write_linegeometry(m)
+    #writer.write_linecodes(m)
     writer.write_storages(m)
     writer.write_PVs(m)
     writer.write_lines(m)
