@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import super, range, zip, round, map
 
 import types
-from fuzzywuzzy import process
 
 
 class DiTToBase(object):
@@ -22,7 +21,7 @@ class DiTToBase(object):
             if self._is_property(k):
                 setattr(self, k, v)
             else:
-                raise AttributeError('Unable to set "{}" on class {}. Did you mean one of the following: {}?'.format(k, self.__class__.__name__, ', '.join(self._fuzzy_match(k))))
+                raise AttributeError('Unable to set "{}" on class {}.'.format(k, self.__class__.__name__, ))
 
         try:
             self._callback_init(**kwargs)
@@ -37,10 +36,6 @@ class DiTToBase(object):
         for p in dir(self.__class__):
             if self._is_property(p):
                 yield p, getattr(self, p)
-
-    def _fuzzy_match(self, attribute):
-        attributes = [n for n, v in self.iter_properties()]
-        return [name for name, percent in process.extract(attribute, attributes)]
 
     def _register_callbacks(self, c_init=None, c_get=None, c_set=None, c_del=None):
 
