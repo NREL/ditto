@@ -104,8 +104,11 @@ class Store(object):
         for m in self.models:
             m.set_name(self)
 
-    def build_networkx(self):
-        self._network.build(self)
+    def build_networkx(self,source=None):
+        if source is not None:
+            self._network.build(self,source)
+        else:
+            self._network.build(self)
         self._network.set_attributes(self)
 
     def print_networkx(self):
