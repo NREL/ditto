@@ -1303,7 +1303,7 @@ Responsible for calling the sub-parsers and logging progress.
 
             #Name
             try:
-                reg_name = name.split('.')[1].lower()
+                reg_name = 'regulator_'+name.split('.')[1].lower()
                 if reg_name not in self.all_object_names:
                     self.all_object_names.append(reg_name)
                 else:
