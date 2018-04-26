@@ -707,10 +707,10 @@ class Reader(AbstractReader):
 
         self.parse_header()
 
-        self.logger.info('Parsing the sections...')
+        logger.info('Parsing the sections...')
         self.parse_sections(model)
 
-        self.logger.info('Parsing the sources...')
+        logger.info('Parsing the sources...')
         self.parse_sources(model)
 
         
@@ -721,10 +721,10 @@ class Reader(AbstractReader):
         # The variable self.network_type is set in the parse_sections() function.
         # i.e. parse_sections
         if self.network_type == 'substation':
-            self.logger.info('Parsing the subnetwork connections...')
+            logger.info('Parsing the subnetwork connections...')
             self.parse_subnetwork_connections(model)
         else:
-            self.logger.info('Parsing the Headnodes...')
+            logger.info('Parsing the Headnodes...')
             self.parse_head_nodes(model)
 
 
