@@ -19,6 +19,7 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 from ditto.models.power_source import PowerSource
+from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.network.network import Network
 
@@ -942,171 +943,196 @@ class Writer(AbstractWriter):
                     #If we have a regulator with two windings that have different
                     #voltages, we create a new section and a new transformer connected to it
                     #in order to have the voltage change
-                    if hasattr(i, 'windings') and i.windings is not None:
+                    winding1 = None
+                    winding2 = None
+                    from_element = None
+                    to_element = None
+                    windings_local = []
+                    if (hasattr(i,'connected_transformer') and
+                        hasattr(model[i.connected_transformer],'windings') and
+                        len(model[i.connected_transformer].windings)>=2 and
+                        hasattr(model[i.connected_transformer].windings[0],'nominal_voltage') and
+                        hasattr(model[i.connected_transformer].windings[1],'nominal_voltage') and
+                        model[i.connected_transformer].windings[0].nominal_voltage is not None and
+                        model[i.connected_transformer].windings[1].nominal_voltage is not None):
+                        
+                        winding1 = model[i.connected_transformer].windings[0]
+                        winding2 = model[i.connected_transformer].windings[1]
+                        if hasattr(model[i.connected_transformer],'from_element') and model[i.connected_transformer].from_element is not None and hasattr(model[i.connected_transformer],'to_element') and model[i.connected_transformer].to_element is not None:
+                            from_element = model[i.connected_transformer].from_element
+                            to_element = model[i.connected_transformer].to_element
+                    elif hasattr(i, 'windings') and i.windings is not None:
                         if (len(i.windings)>=2 and
                             hasattr(i.windings[0], 'nominal_voltage') and
                             hasattr(i.windings[1], 'nominal_voltage') and
                             i.windings[0].nominal_voltage is not None and
                             i.windings[1].nominal_voltage is not None):
-                                if i.windings[0].nominal_voltage!=i.windings[1].nominal_voltage:
-                                    new_trans_sectionID='{f}_{t}'.format(f=i.from_element, t=i.to_element+'_reg')
-                                    new_trans_section='{f}_{t},{f},{t},'.format(f=i.from_element, t=i.to_element+'_reg')
-                                    new_section='{f}_{t},{f},{t},'.format(f=i.to_element+'_reg',t=i.to_element)
-                                    new_section_ID='{f}_{t}'.format(f=i.to_element+'_reg',t=i.to_element)
-                                    if hasattr(i, 'feeder_name') and i.feeder_name is not None:
-                                        if i.feeder_name in self.section_feeder_mapping:
-                                            self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
+                                winding1 = i.windings[0]
+                                winding2 = i.windings[1]
+                                if hasattr(i,'from_element') and i.from_element is not None and hasattr(i,'to_element') and i.to_element is not none:
+                                    from_element = i.from_element
+                                    to_element = i.to_element
+                    if winding1 is not None and winding2 is not None:
+                        windings_local=[winding1,winding2]
+                        if winding1.nominal_voltage!=winding2.nominal_voltage:
+                            new_trans_sectionID='{f}_{t}'.format(f=from_element, t=to_element+'_reg')
+                            new_trans_section='{f}_{t},{f},{t},'.format(f=from_element, t=to_element+'_reg')
+                            new_section='{f}_{t},{f},{t},'.format(f=to_element+'_reg',t=to_element)
+                            new_section_ID='{f}_{t}'.format(f=to_element+'_reg',t=to_element)
+                            if hasattr(i, 'feeder_name') and i.feeder_name is not None:
+                                if i.feeder_name in self.section_feeder_mapping:
+                                    self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
+                                else:
+                                    self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
+                                if hasattr(i, 'substation_name') and i.substation_name is not None:
+                                    self.section_headnode_mapping[i.feeder_name]=i.substation_name
+                            self.nodeID_list.append(to_element+'_reg')
+                            self.node_string_list.append('{},0,0'.format(to_element+'_reg'))
+                            new_transformer_line=''
+                            new_transformer_object_line=''
+                            phase_on=''
+                            if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
+                                    for phase_winding in winding1.phase_windings:
+                                        if new_trans_section is not None:
+                                            if hasattr(phase_winding, 'phase') and phase_winding.phase is not None:
+                                                new_trans_section+=str(phase_winding.phase)
+                                                phase_on+=str(phase_winding.phase)
+
+                            if new_trans_section is not None and new_trans_section not in self.section_line_list:
+                                    self.section_line_list.append(new_trans_section)
+                                    if hasattr(i,'feeder_name') and i.feeder_name is not None:
+                                        if i.feeder_name in self.section_line_feeder_mapping:
+                                            self.section_line_feeder_mapping[i.feeder_name].append(new_trans_section)
                                         else:
-                                            self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
-                                        if hasattr(i, 'substation_name') and i.substation_name is not None:
-                                            self.section_headnode_mapping[i.feeder_name]=i.substation_name
-                                    self.nodeID_list.append(i.to_element+'_reg')
-                                    self.node_string_list.append('{},0,0'.format(i.to_element+'_reg'))
-                                    new_transformer_line=''
-                                    new_transformer_object_line=''
-                                    phase_on=''
-                                    if hasattr(i.windings[0],'phase_windings') and i.windings[0].phase_windings is not None:
-                                            for phase_winding in i.windings[0].phase_windings:
-                                                if new_trans_section is not None:
-                                                    if hasattr(phase_winding, 'phase') and phase_winding.phase is not None:
-                                                        new_trans_section+=str(phase_winding.phase)
-                                                        phase_on+=str(phase_winding.phase)
-
-                                    if new_trans_section is not None and new_trans_section not in self.section_line_list:
-                                            self.section_line_list.append(new_trans_section)
-                                            if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                                                if i.feeder_name in self.section_line_feeder_mapping:
-                                                    self.section_line_feeder_mapping[i.feeder_name].append(new_trans_section)
-                                                else:
-                                                    self.section_line_feeder_mapping[i.feeder_name]=[new_trans_section]
+                                            self.section_line_feeder_mapping[i.feeder_name]=[new_trans_section]
 
 
-                                    if hasattr(i.windings[0],'phase_windings') and i.windings[0].phase_windings is not None:
-                                        try:
-                                            if len(i.windings[0].phase_windings)==1:
-                                                TYPE=1
-                                            elif len(i.windings[0].phase_windings)==3:
-                                                TYPE=2
-                                            else:
-                                                TYPE=3
-                                        except:
-                                            TYPE=3
-                                            pass
+                            if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
+                                try:
+                                    if len(winding1.phase_windings)==1:
+                                        TYPE=1
+                                    elif len(winding1.phase_windings)==3:
+                                        TYPE=2
                                     else:
                                         TYPE=3
+                                except:
+                                    TYPE=3
+                                    pass
+                            else:
+                                TYPE=3
 
+                            try:
+                                new_transformer_line+=new_trans_sectionID
+                            except:
+                                pass
+
+                            #CoordX and CoordY
+                            if hasattr(i, 'positions') and i.positions is not None:
+                                try:
+                                    new_transformer_line+=','+str(i.positions[0].long)
+                                    new_transformer_line+=','+str(i.positions[0].lat)
+                                except:
+                                    new_transformer_line+=',,'
+                                    pass
+
+                            CONN=''
+                            try:
+                                new_transformer_line+=','+self.transformer_connection_configuration_mapping(winding1.connection_type,winding2.connection_type)
+                                CONN=self.transformer_connection_configuration_mapping(winding1.connection_type,winding2.connection_type)
+                            except:
+                                new_transformer_line+=','
+                                pass
+
+                            phase_shift=0
+                            if CONN=='0' or CONN=='4':
+                                phase_shift=0
+                            if CONN=='1' or CONN=='2':
+                                phase_shift=1
+
+                            try:
+                                new_transformer_line+=','+phase_on
+                            except:
+                                new_transformer_line+=','
+                                pass
+
+                            if(hasattr(winding1,'resistance') and
+                               hasattr(winding2,'resistance') and
+                               winding1.resistance is not None and
+                               winding2.resistance is not None):
+                               #Resistance is given as a percentage of the KVA of the corresponding winding
+                               try:
+                                   RH=winding1.resistance*10**-2*winding1.rated_power*10**-3
+                                   RL=winding2.resistance*10**-2*winding2.rated_power*10**-3
+                               except:
+                                   RH=0
+                                   RL=0
+                                   pass
+
+                            #We have ZHL=(RH+RL)+XHLj
+                            #
+                            #Compute the X over R ratio
+                            try:
+                                XR=(XHL)/(RH+RL)
+                                XR0=XR
+                            except:
+                                XR=0
+                                XR0=0
+                                pass
+                            #
+                            #|ZHL|=sqrt((RH+RL)^2 + XHL^2)
+                            try:
+                                _ZHL_=math.sqrt((RH+RL)**2 + XHL**2)
+                            except:
+                                _ZHL_=0
+                                pass
+
+                            #
+                            #Expressed in percentage of the KVA base
+                            try:
+                                Z1=_ZHL_*100.0/(winding1.rated_power*10**-3)
+                            except:
+                                Z1=0
+                                pass
+                            Z0=Z1
+
+
+                            #Total kva
+                            KVA=0
+                            for w,winding in enumerate(windings_local):
+                                try:
+                                    KVA+=winding.rated_power*10**-3
+                                except:
+                                    pass
+
+                                if hasattr(winding, 'nominal_voltage'):
                                     try:
-                                        new_transformer_line+=new_trans_sectionID
+                                        if w==0:
+                                            KVLLprim=winding.nominal_voltage*10**-3
+                                        elif w==1:
+                                            KVLLsec=winding.nominal_voltage*10**-3
                                     except:
                                         pass
 
-                                    #CoordX and CoordY
-                                    if hasattr(i, 'positions') and i.positions is not None:
-                                        try:
-                                            new_transformer_line+=','+str(i.positions[0].long)
-                                            new_transformer_line+=','+str(i.positions[0].lat)
-                                        except:
-                                            new_transformer_line+=',,'
-                                            pass
+                            new_transformer_object_line+='{type},{kva},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType}'.format(type=TYPE,kva=KVA,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2)
 
-                                    CONN=''
-                                    try:
-                                        new_transformer_line+=','+self.transformer_connection_configuration_mapping(i.windings[0].connection_type,i.windings[1].connection_type)
-                                        CONN=self.transformer_connection_configuration_mapping(i.windings[0].connection_type,i.windings[1].connection_type)
-                                    except:
-                                        new_transformer_line+=','
-                                        pass
+                            found=False
+                            for k,d in self.two_windings_trans_codes.items():
+                                if d==new_transformer_object_line:
+                                    new_transformer_line+=',transformer_'+str(k)+',transformer_'+str(k)
+                                    found=True
+                            if not found:
+                                ID_trans+=1
+                                self.two_windings_trans_codes[ID_trans]=new_transformer_object_line
+                                new_transformer_line+=',transformer_'+str(ID_trans)+',transformer_'+str(ID_trans)
 
-                                    phase_shift=0
-                                    if CONN=='0' or CONN=='4':
-                                        phase_shift=0
-                                    if CONN=='1' or CONN=='2':
-                                        phase_shift=1
+                            new_transformer_line+=',{PhaseShiftType},M,100,100,None,0'.format(PhaseShiftType=phase_shift)#Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
 
-                                    try:
-                                        new_transformer_line+=','+phase_on
-                                    except:
-                                        new_transformer_line+=','
-                                        pass
-
-                                    if(hasattr(i.windings[0],'resistance') and
-                                       hasattr(i.windings[1],'resistance') and
-                                       i.windings[0].resistance is not None and
-                                       i.windings[1].resistance is not None):
-                                       #Resistance is given as a percentage of the KVA of the corresponding winding
-                                       try:
-                                           RH=i.windings[0].resistance*10**-2*i.windings[0].rated_power*10**-3
-                                           RL=i.windings[1].resistance*10**-2*i.windings[1].rated_power*10**-3
-                                       except:
-                                           RH=0
-                                           RL=0
-                                           pass
-
-                                    #We have ZHL=(RH+RL)+XHLj
-                                    #
-                                    #Compute the X over R ratio
-                                    try:
-                                        XR=(XHL)/(RH+RL)
-                                        XR0=XR
-                                    except:
-                                        XR=0
-                                        XR0=0
-                                        pass
-                                    #
-                                    #|ZHL|=sqrt((RH+RL)^2 + XHL^2)
-                                    try:
-                                        _ZHL_=math.sqrt((RH+RL)**2 + XHL**2)
-                                    except:
-                                        _ZHL_=0
-                                        pass
-
-                                    #
-                                    #Expressed in percentage of the KVA base
-                                    try:
-                                        Z1=_ZHL_*100.0/(i.windings[0].rated_power*10**-3)
-                                    except:
-                                        Z1=0
-                                        pass
-                                    Z0=Z1
+                            if new_transformer_line!='':
+                                two_windings_transformer_string_list.append(new_transformer_line)
 
 
-                                    #Total kva
-                                    KVA=0
-                                    for w,winding in enumerate(i.windings):
-                                        try:
-                                            KVA+=winding.rated_power*10**-3
-                                        except:
-                                            pass
-
-                                        if hasattr(winding, 'nominal_voltage'):
-                                            try:
-                                                if w==0:
-                                                    KVLLprim=winding.nominal_voltage*10**-3
-                                                elif w==1:
-                                                    KVLLsec=winding.nominal_voltage*10**-3
-                                            except:
-                                                pass
-
-                                    new_transformer_object_line+='{type},{kva},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType}'.format(type=TYPE,kva=KVA,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2)
-
-                                    found=False
-                                    for k,d in self.two_windings_trans_codes.items():
-                                        if d==new_transformer_object_line:
-                                            new_transformer_line+=',transformer_'+str(k)+',transformer_'+str(k)
-                                            found=True
-                                    if not found:
-                                        ID_trans+=1
-                                        self.two_windings_trans_codes[ID_trans]=new_transformer_object_line
-                                        new_transformer_line+=',transformer_'+str(ID_trans)+',transformer_'+str(ID_trans)
-
-                                    new_transformer_line+=',{PhaseShiftType},M,100,100,None,0'.format(PhaseShiftType=phase_shift)#Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
-
-                                    if new_transformer_line!='':
-                                        two_windings_transformer_string_list.append(new_transformer_line)
-
-
-                        if hasattr(i.windings[0], 'phase_windings'):
-                            for phase_winding in i.windings[0].phase_windings:
+                        if hasattr(winding1, 'phase_windings'):
+                            for phase_winding in winding1.phase_windings:
                                 try:
                                     new_section+=str(phase_winding.phase)
                                 except:
@@ -1115,6 +1141,7 @@ class Writer(AbstractWriter):
                     if new_section is not None and new_section not in self.section_line_list:
                         self.section_line_list.append(new_section)
                         if hasattr(i,'feeder_name') and i.feeder_name is not None:
+
                             if i.feeder_name in self.section_line_feeder_mapping:
                                 self.section_line_feeder_mapping[i.feeder_name].append(new_section)
                             else:
@@ -1149,16 +1176,16 @@ class Writer(AbstractWriter):
                     _KVLN=0
                     _Rset={'A':0,'B':0,'C':0}
                     _Xset={'A':0,'B':0,'C':0}
-                    if hasattr(i,'windings') and i.windings is not None:
-                        for winding in i.windings:
+                    if len(windings_local) >=2:
+                        for winding in windings_local:
                             try:
                                 _KVA+=winding.rated_power*10**-3
                             except:
                                 pass
                         _KVLN=winding.nominal_voltage*10**-3
 
-                        if hasattr(i.windings[0], 'phase_windings') and i.windings[0].phase_windings is not None:
-                            for phase_winding in i.windings[0].phase_windings:
+                        if hasattr(winding1, 'phase_windings') and winding1.phase_windings is not None:
+                            for phase_winding in winding1.phase_windings:
                                 try:
                                     _Rset[phase_winding.phase]=phase_winding.compensator_r
                                     _Xset[phase_winding.phase]=phase_winding.compensator_x
@@ -1265,6 +1292,7 @@ class Writer(AbstractWriter):
                         if new_section is not None and new_section not in self.section_line_list:
                                 self.section_line_list.append(new_section)
                                 if hasattr(i,'feeder_name') and i.feeder_name is not None:
+
                                     if i.feeder_name in self.section_line_feeder_mapping:
                                         self.section_line_feeder_mapping[i.feeder_name].append(new_section)
                                     else:
