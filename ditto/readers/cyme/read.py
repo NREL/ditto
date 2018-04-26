@@ -23,6 +23,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
+from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.models.base import Unicode
 
@@ -220,6 +221,7 @@ class Reader(AbstractReader):
                                                  'customer_class': '[CUSTOMER CLASS]',
                                                  'loads': '[LOADS]',
                                                  'source': '[SOURCE]',
+                                                 'headnodes': '[HEADNODES]',
                                                  'source_equivalent': '[SOURCE EQUIVALENT]',
                                                  #SUBSTATIONS
                                                  'substation': '[SUBSTATION]',
@@ -594,7 +596,7 @@ class Reader(AbstractReader):
             raise ValueError('check_object_in_line expects a string for both line and object. A {type} instance was provided for object.'.format(type=type(obj)))
 
         if not obj in self.header_mapping:
-            raise ValueError('{obj} is not a valid object name for the object<->header mapping.'.format(obj=obj))
+            raise ValueError('{obj} is not a valid object name for the object<->header mapping.{mapp}'.format(obj=obj,mapp=self.header_mapping))
 
         return self.header_mapping[obj] in line
 
@@ -711,6 +713,8 @@ class Reader(AbstractReader):
         self.logger.info('Parsing the sources...')
         self.parse_sources(model)
 
+        
+
         #Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
 
@@ -719,6 +723,9 @@ class Reader(AbstractReader):
         if self.network_type == 'substation':
             self.logger.info('Parsing the subnetwork connections...')
             self.parse_subnetwork_connections(model)
+        else:
+            self.logger.info('Parsing the Headnodes...')
+            self.parse_head_nodes(model)
 
 
 
@@ -782,6 +789,21 @@ class Reader(AbstractReader):
         
 
 
+    def parse_head_nodes(self, model):
+        ''' This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects
+            which define the feeder names and feeder headnodes
+         '''
+        #Open the network file
+        self.get_file_content('network')
+        mapp = {'nodeid':0,'networkid':1}  #These correspond to the head node name and the feeder name
+        headnodes = {}
+        for line in self.content:
+            headnodes.update(self.parser_helper(line,['headnodes'],['nodeid','networkid'],mapp))
+        
+        for sid, headnode in headnodes.items():
+            feeder_metadata = Feeder_metadata(model)
+            feeder_metadata.name = headnode['networkid'].strip().lower()
+            feeder_metadata.headnode = headnode['nodeid'].strip().lower()
 
 
 
@@ -2408,6 +2430,12 @@ class Reader(AbstractReader):
                                                    'kva':3,
                                                    'connection_configuration':18,
                                                    'noloadlosses':32,
+                                                   'isltc':21,
+                                                   'taps':22,
+                                                   'lowerbandwidth':23,
+                                                   'upperbandwidth':24,
+                                                   'minreg_range':25,
+                                                   'maxreg_range':26,
                                                    }
         mapp_grounding_transformer_settings={'sectionid':0,
                                                                    'equipmentid':6,
@@ -2481,6 +2509,12 @@ class Reader(AbstractReader):
                                           'xr0':13,
                                           'conn':18,
                                           'noloadlosses':34,
+                                          'isltc':23,
+                                          'taps':24,
+                                          'lowerbandwidth':25,
+                                          'upperbandwidth':26,
+                                          'minreg_range':27,
+                                          'maxreg_range':28,
                                           'phaseshift':41,
                                         }
         mapp_phase_shifter_transformer_settings={'sectionid':0,
@@ -2784,8 +2818,7 @@ class Reader(AbstractReader):
 
                 #Check if it's an LTC
                 #
-                is_ltc = transformer_data['isltc']
-                if is_ltc:
+                if 'isltc' in transformer_data and transformer_data['isltc']:
                     #Instanciate a Regulator DiTTo object
                     try:
                         api_regulator=Regulator(model)
