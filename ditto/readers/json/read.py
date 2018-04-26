@@ -12,6 +12,7 @@ from ditto.models.node import Node
 from ditto.models.line import Line
 from ditto.models.winding import Winding
 from ditto.models.powertransformer import PowerTransformer
+from ditto.models.regulator import Regulator
 from ditto.models.position import Position
 from ditto.models.wire import Wire
 from ditto.models.phase_winding import PhaseWinding
@@ -97,7 +98,7 @@ Author: Nicolas Gensollen. January 2018
 
         ditto_klasses = [
             'PowerSource', 'Node', 'Line', 'Winding', 'PowerTransformer', 'Position', 'Wire', 'PhaseWinding', 'Load', 'PhaseLoad', 'Capacitor',
-            'PhaseCapacitor', 'Feeder_metadata'
+            'PhaseCapacitor', 'Feeder_metadata', 'Regulator'
         ]
 
         #Create a new empty model
