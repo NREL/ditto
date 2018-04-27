@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
 import json
+import json_tricks
 
 from ditto.models.position import Position
 from ditto.models.base import Unicode
@@ -167,4 +168,7 @@ The output file is configured in the constructor.
                 _model[-1][key] = {'klass': str(type(value)).split("'")[1], 'value': value}
 
         with open(self.output_path, 'w') as f:
-            json.dump(_model, f)
+            try:
+                json.dump(_model, f)
+            except:
+                json_tricks.dump(_model,f,allow_nan=True)
