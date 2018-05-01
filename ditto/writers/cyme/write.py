@@ -917,7 +917,7 @@ class Writer(AbstractWriter):
 
                 #If we get a Regulator
                 #
-                if isinstance(i, Regulator):
+                if isinstance(i, Regulator) and not (hasattr(i,'ltc') and i.ltc is not None and i.ltc):
 
                     new_regulator_string=''
                     new_regulator_object_line=''
@@ -1108,12 +1108,21 @@ class Writer(AbstractWriter):
                                     try:
                                         if w==0:
                                             KVLLprim=winding.nominal_voltage*10**-3
+                                            VoltageUnit=1 #Voltage declared in KV, not in KVLL
                                         elif w==1:
                                             KVLLsec=winding.nominal_voltage*10**-3
+                                            VoltageUnit=1 #Voltage declared in KV, not in KVLL
                                     except:
                                         pass
+                                #NoLoadLosses
+                                if hasattr(i, 'noload_loss') and i.noload_loss is not None:
+                                    #TODO: Make sure noloadlosses is in % in DiTTo, or change what is next.
+                                    NoLoadLosses=i.noload_loss/100.0*KVA
+                                else:
+                                    NoLoadLosses=''
 
-                            new_transformer_object_line+='{type},{kva},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType}'.format(type=TYPE,kva=KVA,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2)
+
+                            new_transformer_object_line+='{type},{kva},{voltageunit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift}'.format(type=TYPE,kva=KVA,voltageunit=VoltageUnit,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2,noloadloss=NoLoadLosses,phaseshift=phase_shift)
 
                             found=False
                             for k,d in self.two_windings_trans_codes.items():
@@ -1259,15 +1268,37 @@ class Writer(AbstractWriter):
 
                 #If we get a Transformer object
                 #
-                if isinstance(i, PowerTransformer) and i.name not in self.transformers_to_ignore:
+                if (isinstance(i, PowerTransformer) and (i.name not in self.transformers_to_ignore)) or (isinstance(i,Regulator) and (hasattr(i,'ltc') and i.ltc is not None and i.ltc==1)):
+
+                    transformer_object = i
+
+                    # These are only set if it's an LTC
+                    Setpoint = ''
+                    ControlType = ''
+                    LowerBandwidth = ''
+                    UpperBandwidth = ''
+                    MaxBoost = ''
+                    MaxBuck = ''
+                    is_ltc = 0
+                    if isinstance(i,Regulator) :
+                        is_ltc = 1
+                        if hasattr(i,'connected_transformer'):
+                            transformer_object = model[i.connected_transformer]
+                            Setpoint = '105'
+                            ControlType = '0'
+                        else:
+                            raise ValueError("An LTC regulator needs a connecting transformer")
+
+
 
                     #We need to get bus1 and bus2 to create the section bus1_bus2
                     new_section=None
                     new_section_ID=None
-                    if hasattr(i, 'from_element') and i.from_element is not None and hasattr(i, 'to_element') and i.to_element is not None:
+                    if hasattr(transformer_object, 'from_element') and transformer_object.from_element is not None and hasattr(transformer_object, 'to_element') and transformer_object.to_element is not None:
                         try:
-                            new_section='{f}_{t},{f},{t},'.format(f=i.from_element,t=i.to_element)
-                            new_section_ID='{f}_{t}'.format(f=i.from_element,t=i.to_element)
+                            new_section='{f}_{t},{f},{t},'.format(f=transformer_object.from_element,t=transformer_object.to_element)
+                            new_section_ID='{f}_{t}'.format(f=transformer_object.from_element,t=transformer_object.to_element)
+                            # If it's a regulator, use the regulator object to find the feeder and substation if they're set
                             if hasattr(i, 'feeder_name') and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(new_sectionID)
@@ -1278,12 +1309,30 @@ class Writer(AbstractWriter):
                         except:
                             pass
 
+
+
+                    # Set Regulator attributes if its an LTC
+
+                    if hasattr(i,'bandwidth') and i.bandwidth is not None:
+                        bandcenter = 0
+                        if hasattr(i,'bandcenter') and i.bandcenter is not None:
+                            bandcenter = i.bandcenter
+                        LowerBandwidth = str(abs(bandcenter - i.bandwidth/2.0 ))
+                        UpperBandwidth = str(abs(bandcenter + i.bandwidth/2.0))
+
+                    if hasattr(i,'highstep') and i.highstep is not None:
+                        MaxBoost = str(i.highstep)
+
+                    if hasattr(i,'highstep') and i.highstep is not None:
+                        MaxBuck = str(i.lowstep)
+                        
+
                     #Find out if we have a two or three windings transformer
-                    if hasattr(i, 'windings') and i.windings is not None:
+                    if hasattr(transformer_object, 'windings') and transformer_object.windings is not None:
 
                         phase_on=''
-                        if hasattr(i.windings[0],'phase_windings') and i.windings[0].phase_windings is not None:
-                                for phase_winding in i.windings[0].phase_windings:
+                        if hasattr(transformer_object.windings[0],'phase_windings') and transformer_object.windings[0].phase_windings is not None:
+                                for phase_winding in transformer_object.windings[0].phase_windings:
                                     if new_section is not None:
                                         if hasattr(phase_winding, 'phase') and phase_winding.phase is not None:
                                             new_section+=str(phase_winding.phase)
@@ -1291,27 +1340,27 @@ class Writer(AbstractWriter):
 
                         if new_section is not None and new_section not in self.section_line_list:
                                 self.section_line_list.append(new_section)
-                                if hasattr(i,'feeder_name') and i.feeder_name is not None:
+                                if hasattr(transformer_object,'feeder_name') and transformer_object.feeder_name is not None:
 
-                                    if i.feeder_name in self.section_line_feeder_mapping:
-                                        self.section_line_feeder_mapping[i.feeder_name].append(new_section)
+                                    if transformer_object.feeder_name in self.section_line_feeder_mapping:
+                                        self.section_line_feeder_mapping[transformer_object.feeder_name].append(new_section)
                                     else:
-                                        self.section_line_feeder_mapping[i.feeder_name]=[new_section]
+                                        self.section_line_feeder_mapping[transformer_object.feeder_name]=[new_section]
 
                         #Case 1: Two Windings
                         #
-                        if len(i.windings)==2 or i.is_center_tap==1:
+                        if len(transformer_object.windings)==2 or transformer_object.is_center_tap==1:
                             #Empty new transformer string
                             new_transformer_line=''
                             new_transformer_object_line=''
 
-                            if hasattr(i.windings[0],'phase_windings') and i.windings[0].phase_windings is not None:
+                            if hasattr(transformer_object.windings[0],'phase_windings') and transformer_object.windings[0].phase_windings is not None:
                                 try:
-                                    if i.is_center_tap==1 and len(i.windings[0].phase_windings)==1:
+                                    if transformer_object.is_center_tap==1 and len(transformer_object.windings[0].phase_windings)==1:
                                         TYPE=4
-                                    elif len(i.windings[0].phase_windings)==1:
+                                    elif len(transformer_object.windings[0].phase_windings)==1:
                                         TYPE=1
-                                    elif len(i.windings[0].phase_windings)==3:
+                                    elif len(transformer_object.windings[0].phase_windings)==3:
                                         TYPE=2
                                     else:
                                         TYPE=3
@@ -1327,10 +1376,10 @@ class Writer(AbstractWriter):
                                 pass
 
                             #CoordX and CoordY
-                            if hasattr(i, 'positions') and i.positions is not None:
+                            if hasattr(transformer_object, 'positions') and transformer_object.positions is not None:
                                 try:
-                                    new_transformer_line+=','+str(i.positions[0].long)
-                                    new_transformer_line+=','+str(i.positions[0].lat)
+                                    new_transformer_line+=','+str(transformer_object.positions[0].long)
+                                    new_transformer_line+=','+str(transformer_object.positions[0].lat)
                                 except:
                                     new_transformer_line+=',,'
                                     pass
@@ -1341,8 +1390,8 @@ class Writer(AbstractWriter):
                                     CONN='15' #Yg_CT
                                     new_transformer_line+=',15'
                                 else:
-                                    new_transformer_line+=','+self.transformer_connection_configuration_mapping(i.windings[0].connection_type,i.windings[1].connection_type)
-                                    CONN=self.transformer_connection_configuration_mapping(i.windings[0].connection_type,i.windings[1].connection_type)
+                                    new_transformer_line+=','+self.transformer_connection_configuration_mapping(transformer_object.windings[0].connection_type,transformer_object.windings[1].connection_type)
+                                    CONN=self.transformer_connection_configuration_mapping(transformer_object.windings[0].connection_type,transformer_object.windings[1].connection_type)
                             except:
                                 new_transformer_line+=','
                                 pass
@@ -1362,38 +1411,38 @@ class Writer(AbstractWriter):
                             #Compute the impedances of center tap transformers. These should be three windings, one phase transformers in DiTTo
                             #with the is_center_tap flag set to 1
                             if TYPE==4:
-                                if hasattr(i,'reactances') and i.reactances is not None and len(i.reactances)==3:
-                                    XHL,XHT,XLT=i.reactances
-                                    if(hasattr(i.windings[0],'resistance') and
-                                       hasattr(i.windings[1],'resistance') and
-                                       hasattr(i.windings[2],'resistance') and
-                                       i.windings[0].resistance is not None and
-                                       i.windings[1].resistance is not None and
-                                       i.windings[2].resistance is not None):
-                                       R0,R1,R2=[w.resistance for w in i.windings]
-                                       KVA_BASE=i.windings[0].rated_power*10**-3
+                                if hasattr(transformer_object,'reactances') and transformer_object.reactances is not None and len(i.reactances)==3:
+                                    XHL,XHT,XLT=transformer_object.reactances
+                                    if(hasattr(transformer_object.windings[0],'resistance') and
+                                       hasattr(transformer_object.windings[1],'resistance') and
+                                       hasattr(transformer_object.windings[2],'resistance') and
+                                       transformer_object.windings[0].resistance is not None and
+                                       transformer_object.windings[1].resistance is not None and
+                                       transformer_object.windings[2].resistance is not None):
+                                       R0,R1,R2=[w.resistance for w in transformer_object.windings]
+                                       KVA_BASE=transformer_object.windings[0].rated_power*10**-3
                                        XR,Z1=self.get_center_tap_impedances(R0,R1,R2,XHL,XHT,XLT,KVA_BASE)
                                        XR0=XR
                                        Z0=Z1
 
                             else:
-                                if hasattr(i,'reactances') and i.reactances is not None and len(i.reactances)==1:
-                                    XHL_perct=i.reactances[0]
+                                if hasattr(transformer_object,'reactances') and transformer_object.reactances is not None and len(transformer_object.reactances)==1:
+                                    XHL_perct=transformer_object.reactances[0]
                                     #XHL is in percentage of the KVA of the FIRST winding
                                     try:
-                                        XHL=XHL_perct*10**-2*i.windings[0].rated_power*10**-3
+                                        XHL=XHL_perct*10**-2*transformer_object.windings[0].rated_power*10**-3
                                     except:
                                         XHL=0
                                         pass
 
-                                if(hasattr(i.windings[0],'resistance') and
-                                   hasattr(i.windings[1],'resistance') and
-                                   i.windings[0].resistance is not None and
-                                   i.windings[1].resistance is not None):
+                                if(hasattr(transformer_object.windings[0],'resistance') and
+                                   hasattr(transformer_object.windings[1],'resistance') and
+                                   transformer_object.windings[0].resistance is not None and
+                                   transformer_object.windings[1].resistance is not None):
                                    #Resistance is given as a percentage of the KVA of the corresponding winding
                                    try:
-                                       RH=i.windings[0].resistance*10**-2*i.windings[0].rated_power*10**-3
-                                       RL=i.windings[1].resistance*10**-2*i.windings[1].rated_power*10**-3
+                                       RH=transformer_object.windings[0].resistance*10**-2*transformer_object.windings[0].rated_power*10**-3
+                                       RL=transformer_object.windings[1].resistance*10**-2*transformer_object.windings[1].rated_power*10**-3
                                    except:
                                        RH=0
                                        RL=0
@@ -1420,7 +1469,7 @@ class Writer(AbstractWriter):
                                 #
                                 #Expressed in percentage of the KVA base
                                 try:
-                                    Z1=_ZHL_*100.0/(i.windings[0].rated_power*10**-3)
+                                    Z1=_ZHL_*100.0/(transformer_object.windings[0].rated_power*10**-3)
                                 except:
                                     Z1=0
                                     pass
@@ -1429,12 +1478,12 @@ class Writer(AbstractWriter):
 
                             #Total kva
                             try:
-                                KVA=i.windings[0].rated_power*10**-3
+                                KVA=transformer_object.windings[0].rated_power*10**-3
                             except:
                                 KVA='DEFAULT'
                                 pass
 
-                            for w,winding in enumerate(i.windings):
+                            for w,winding in enumerate(transformer_object.windings):
                                 #try:
                                 #    KVA+=winding.rated_power*10**-3
                                 #except:
@@ -1443,7 +1492,7 @@ class Writer(AbstractWriter):
                                 if hasattr(winding, 'nominal_voltage'):
                                     #If we have a one phase transformer, we specify voltage in KV, not in KVLL
                                     #This is done by setting the voltageUnit keyword to 1
-                                    if len(i.windings[0].phase_windings)==1:
+                                    if len(transformer_object.windings[0].phase_windings)==1:
                                         if w==0:
                                             KVLLprim=winding.nominal_voltage*10**-3
                                             voltageUnit=1 #Voltage declared in KV, not in KVLL
@@ -1451,7 +1500,7 @@ class Writer(AbstractWriter):
                                             #In addition, if we have a center tap, we need to add the secondary and tertiary voltages here
                                             if TYPE==4:
                                                 try:
-                                                    KVLLsec=winding.nominal_voltage*10**-3+i.windings[2].nominal_voltage*10**-3
+                                                    KVLLsec=winding.nominal_voltage*10**-3+transformer_object.windings[2].nominal_voltage*10**-3
                                                     voltageUnit=1 #Voltage declared in KV, not in KVLL
                                                 except:
                                                     KVLLsec='DEFAULT'
@@ -1462,7 +1511,7 @@ class Writer(AbstractWriter):
                                     #If we have a three phase transformer, we need to specify the voltage in KVLL.
                                     #This is done by setting the voltageUnit to 0, and multiplying the voltage by sqrt(3)
                                     #Note: If we have three phases, the transformer shouln't be a center tap
-                                    elif len(i.windings[0].phase_windings)==3:
+                                    elif len(transformer_object.windings[0].phase_windings)==3:
                                         if w==0:
                                             KVLLprim=winding.nominal_voltage*10**-3#*math.sqrt(3)
                                             voltageUnit=0
@@ -1472,13 +1521,13 @@ class Writer(AbstractWriter):
 
 
                             #NoLoadLosses
-                            if hasattr(i, 'noload_loss') and i.noload_loss is not None:
+                            if hasattr(transformer_object, 'noload_loss') and transformer_object.noload_loss is not None:
                                 #TODO: Make sure noloadlosses is in % in DiTTo, or change what is next.
-                                NOLOADLOSS=i.noload_loss/100.0*KVA
+                                NOLOADLOSS=transformer_object.noload_loss/100.0*KVA
                             else:
                                 NOLOADLOSS=''
 
-                            new_transformer_object_line+='{type},{kva},{voltageUnit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift}'.format(phaseshift=phase_shift,type=TYPE,kva=KVA,voltageUnit=voltageUnit,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2,noloadloss=NOLOADLOSS)
+                            new_transformer_object_line+='{type},{kva},{voltageUnit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift},{isltc}'.format(phaseshift=phase_shift,type=TYPE,kva=KVA,voltageUnit=voltageUnit,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2,noloadloss=NOLOADLOSS,isltc=is_ltc)
 
                             found=False
                             for k,d in self.two_windings_trans_codes.items():
@@ -1493,11 +1542,16 @@ class Writer(AbstractWriter):
                             new_transformer_line+=',M,100,100,None,0'#.format(PhaseShiftType=phase_shift)#Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
 
                             try:
-                                TAP=1.0/float(i.windings[1].phase_windings[0].tap_position)
+                                TAP=1.0/float(transformer_object.windings[1].phase_windings[0].tap_position)
                                 new_transformer_line+=',{}'.format(TAP)
                             except:
                                 new_transformer_line+=','
                                 pass
+
+
+
+                            # Apply the LTC settings. These are empty if it's just a transformer
+                            new_transformer_line+=',{setpoint},{controltype},{lowerbandwidth},{upperbandwidth},{maxbuck},{maxboost}'.format(setpoint=Setpoint,controltype=ControlType,lowerbandwidth=LowerBandwidth,upperbandwidth=UpperBandwidth,maxbuck=MaxBuck,maxboost=MaxBoost)
 
                             if new_transformer_line!='':
                                 two_windings_transformer_string_list.append(new_transformer_line)
@@ -1505,23 +1559,23 @@ class Writer(AbstractWriter):
 
                         #Case 2: Three Windings
                         #
-                        elif len(i.windings)==3:
+                        elif len(transformer_object.windings)==3:
                             #Empty new transformer string
                             new_transformer_line=''
                             new_transformer_object_line=''
 
                             #Name
-                            if hasattr(i, 'name') and i.name is not None:
+                            if hasattr(transformer_object, 'name') and transformer_object.name is not None:
                                 try:
                                     new_transformer_line+=new_section_ID
                                 except:
                                     pass
 
                             #CoordX and CoordY
-                            if hasattr(i, 'positions') and i.positions is not None:
+                            if hasattr(transformer_object, 'positions') and transformer_object.positions is not None:
                                 try:
-                                    new_transformer_line+=','+str(i.positions[0].long)
-                                    new_transformer_line+=','+str(i.positions[0].lat)
+                                    new_transformer_line+=','+str(transformer_object.positions[0].long)
+                                    new_transformer_line+=','+str(transformer_object.positions[0].lat)
                                 except:
                                     new_transformer_line+=',,'
                                     pass
@@ -1537,7 +1591,7 @@ class Writer(AbstractWriter):
                             _tertiary_connection=None
                             R={}
                             XHL_perct,XLT_perct,XHT_perct=None,None,None
-                            for w,winding in enumerate(i.windings):
+                            for w,winding in enumerate(transformer_object.windings):
                                 if hasattr(winding, 'rated_power') and winding.rated_power is not None:
                                     if w==0: _primary_rated_capacity  =str(winding.rated_power*10**-3)
                                     if w==1: _secondary_rated_capacity=str(winding.rated_power*10**-3)
@@ -1568,7 +1622,7 @@ class Writer(AbstractWriter):
                                         R[w]=None
                                         pass
 
-                            if hasattr(i, 'reactances') and i.reactances is not None:
+                            if hasattr(transformer_object, 'reactances') and i.reactances is not None:
                                 try:
                                     XHL_perct,XLT_perct,XHT_perct=i.reactances
                                 except:
@@ -1576,19 +1630,19 @@ class Writer(AbstractWriter):
 
                             if XHL_perct is not None:
                                 try:
-                                    XHL=XHL_perct*10**-2*i.windings[0].rated_power*10**-3
+                                    XHL=XHL_perct*10**-2*transformer_object.windings[0].rated_power*10**-3
                                 except:
                                     XHL=None
                                     pass
                             if XLT_perct is not None:
                                 try:
-                                    XLT=XLT_perct*10**-2*i.windings[0].rated_power*10**-3
+                                    XLT=XLT_perct*10**-2*transformer_object.windings[0].rated_power*10**-3
                                 except:
                                     XLT=None
                                     pass
                             if XHT_perct is not None:
                                 try:
-                                    XHT=XHT_perct*10**-2*i.windings[0].rated_power*10**-3
+                                    XHT=XHT_perct*10**-2*transformer_object.windings[0].rated_power*10**-3
                                 except:
                                     XHT=None
                                     pass
@@ -1607,19 +1661,19 @@ class Writer(AbstractWriter):
                                 _SecondaryToTertiaryXR1=ZLT.imag/ZLT.real
                                 _SecondaryToTertiaryXR0=_SecondaryToTertiaryXR1
 
-                                _PrimaryToSecondaryZ1=math.sqrt(ZHL.real**2+ZHL.imag**2)*100.0/(i.windings[0].rated_power*10**-3)
+                                _PrimaryToSecondaryZ1=math.sqrt(ZHL.real**2+ZHL.imag**2)*100.0/(transformer_object.windings[0].rated_power*10**-3)
                                 _PrimaryToSecondaryZ0=_PrimaryToSecondaryZ1
 
-                                _PrimaryToTertiaryZ1=math.sqrt(ZHT.real**2+ZHT.imag**2)*100.0/(i.windings[0].rated_power*10**-3)
+                                _PrimaryToTertiaryZ1=math.sqrt(ZHT.real**2+ZHT.imag**2)*100.0/(transformer_object.windings[0].rated_power*10**-3)
                                 _PrimaryToTertiaryZ0=_PrimaryToTertiaryZ1
 
-                                _SecondaryToTertiaryZ1=math.sqrt(ZLT.real**2+ZLT.imag**2)*100.0/(i.windings[0].rated_power*10**-3)
+                                _SecondaryToTertiaryZ1=math.sqrt(ZLT.real**2+ZLT.imag**2)*100.0/(transformer_object.windings[0].rated_power*10**-3)
                                 _SecondaryToTertiaryZ0=_SecondaryToTertiaryZ1
 
                             #NoLoadLosses
-                            if hasattr(i, 'noload_loss') and i.noload_loss is not None:
+                            if hasattr(transformer_object, 'noload_loss') and transformer_object.noload_loss is not None:
                                 #TODO: Make sure noloadlosses is in % in DiTTo, or change what is next.
-                                NOLOADLOSS=i.noload_loss/100.0*KVA
+                                NOLOADLOSS=transformer_object.noload_loss/100.0*KVA
                             else:
                                 NOLOADLOSS=''
 
@@ -1667,7 +1721,7 @@ class Writer(AbstractWriter):
                             new_transformer_line+=',{Location},{tertiarynodeID},{PrimaryFixedTapSetting},{SecondaryFixedTapSetting},{ConnectionStatus}'.format(Location='M',tertiarynodeID=0,PrimaryFixedTapSetting=0,SecondaryFixedTapSetting=0,ConnectionStatus=0)
 
                             try:
-                                TAP=1.0/float(i.windings[1].phase_windings[0].tap_position)
+                                TAP=1.0/float(transformer_object.windings[1].phase_windings[0].tap_position)
                                 new_transformer_line+=',{}'.format(TAP)
                             except:
                                 new_transformer_line+=','
@@ -1738,6 +1792,10 @@ class Writer(AbstractWriter):
             #    nodeID=source_string.split(',')[0]
             #    f.write('{nodeID},{NetID}\n'.format(nodeID=nodeID, NetID=k))
             for f_name,section_l in self.section_line_feeder_mapping.items():
+#                for kk in model.models:
+#                   if isinstance(kk,Feeder_metadata):
+#                       print(kk.name, kk.headnode)
+#import pdb;pdb.set_trace()
                 head=model[f_name].headnode#self.section_headnode_mapping[f_name]
                 f.write('{nodeID},{NetID}\n'.format(nodeID=head, NetID=f_name))
 
@@ -1848,7 +1906,7 @@ class Writer(AbstractWriter):
             #
             if len(two_windings_transformer_string_list)>0:
                 f.write('\n[TRANSFORMER SETTING]\n')
-                f.write('FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap\n')
+                f.write('FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n')
                 for transformer_string in two_windings_transformer_string_list:
                     f.write(transformer_string+'\n')
 
@@ -2062,7 +2120,7 @@ class Writer(AbstractWriter):
             #
             if len(self.two_windings_trans_codes)>0:
                 f.write('\n[TRANSFORMER]\n')
-                f.write('FORMAT_TRANSFORMER=ID,Type,KVA,VoltageUnit,KVLLprim,KVLLsec,Z1,Z0,XR,XR0,Conn,WindingType,NoLoadLosses,PhaseShift\n')
+                f.write('FORMAT_TRANSFORMER=ID,Type,KVA,VoltageUnit,KVLLprim,KVLLsec,Z1,Z0,XR,XR0,Conn,WindingType,NoLoadLosses,PhaseShift,IsLTC\n')
 
                 for ID,data in self.two_windings_trans_codes.items():
                     f.write('transformer_'+str(ID)+',')

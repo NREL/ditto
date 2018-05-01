@@ -84,6 +84,7 @@ Author: Nicolas Gensollen. December 2017.
         self.G = Network()
         self.G.build(self.model, source=self.source)
 
+        self.model.set_names()
         #Set the attributes in the graph
         self.G.set_attributes(self.model)
 
