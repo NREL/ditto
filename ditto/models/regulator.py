@@ -60,5 +60,9 @@ class Regulator(DiTToHasTraits):
     substation_name = Unicode(help='''The name of the substation to which the object is connected.''', default=None)
     feeder_name = Unicode(help='''The name of the feeder the object is on.''', default=None)
 
+    #Modification: Tarek (April 2018)
+    setpoint = Float(help='''The percentage p.u. voltage setpoint of the regulator''', default_value=None)
+
+
     def build(self, model):
         self._model = model
