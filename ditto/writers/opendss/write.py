@@ -1690,7 +1690,11 @@ author: Nicolas Gensollen. October 2017.
             fp.write('Clear\n\nNew Circuit.Name ')
             for obj in model.models:
                 if isinstance(obj,PowerSource) and obj.is_sourcebus==1:
-                    fp.write('bus1={name} pu=1.0'.format(name=obj.name))
+                    if '_src' in obj.name:
+                        cleaned_name = obj.name[:-4]
+                    else:
+                        cleaned_name = obj.name
+                    fp.write('bus1={name} pu=1.0'.format(name=cleaned_name))
 
                     if hasattr(obj,'nominal_voltage') and obj.nominal_voltage is not None:
                         fp.write(' basekV={volt}'.format(volt=obj.nominal_voltage*10**-3)) #DiTTo in volts
