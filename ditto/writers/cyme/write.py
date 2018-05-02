@@ -1282,9 +1282,9 @@ class Writer(AbstractWriter):
                     is_ltc = 0
                     if isinstance(i,Regulator) :
                         is_ltc = 1
+                        Setpoint = i.setpoint
                         if hasattr(i,'connected_transformer'):
                             transformer_object = model[i.connected_transformer]
-                            Setpoint = '105'
                             ControlType = '0'
                         else:
                             raise ValueError("An LTC regulator needs a connecting transformer")
