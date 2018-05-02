@@ -37,12 +37,7 @@ class Modifier:
                     getattr(obj, attr)
                 ) == 0 or attr == 'reactances' or attr == 'phases' or attr == 'impedance_matrix' or attr == 'capacitance_matrix': #Reactances (PowerTransformer) and phases (Node) are a special case of lists that aren't classes
                     new_attr = getattr(obj, attr)
-                    if type(new_attr).__name__ == 'list':
-                        setattr(new_obj,attr,[])
-                        for value in new_attr:
-                            getattr(new_obj,attr).append(value)
-                    else:
-                        setattr(new_obj, attr, new_attr)
+                    setattr(new_obj, attr, new_attr)
                     continue
                 for list_obj in getattr(obj, attr):
                     new_list_obj = self.copy(model, list_obj)
