@@ -1770,8 +1770,9 @@ class Reader(AbstractReader):
                 if settings['devicenumber'] in self.concentric_neutral_cable:
                     line_data=self.concentric_neutral_cable[settings['devicenumber']]
                     line_data['type']='balanced_line'
-                elif 'condid_a' in settings and 'condid_b' in settings and 'condid_c' in settings and 'condid_n1' in settings and 'spacingid' in settings:
-                    line_data={'type':'unbalanced_spacing_conf'}
+                elif 'condid_a' in settings and 'condid_b' in settings and 'condid_c' in settings and 'spacingid' in settings:
+                    if 'condid_n' in settings or 'condid_n1' in settings:
+                        line_data={'type':'unbalanced_spacing_conf'}
 
             if line_data is None:
                 if not 'phase' in settings.keys():
