@@ -26,4 +26,4 @@ Set voltagebases=[115, 12.47,  0.48, 0.208]
 Calcvoltagebases     ! This also establishes the bus list
 
 ! Load in bus coordintes now that bus list is established
-Buscoords  Buscoords.dss
+Buscoords  buscoord.dss
