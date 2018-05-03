@@ -12,3 +12,15 @@ To run this example, open a terminal and run:
 $ python ieee_8500_opendss_to_cyme.py
 ```
 
+
+
+### Example 2: EPRI J1 Feeder
+
+#### OpenDSS —> Cyme
+
+To run this example, open a terminal and run:
+
+```bash
+$ python epri_j1_opendss_to_cyme.py
+```
+
