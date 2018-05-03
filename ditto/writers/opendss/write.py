@@ -47,25 +47,31 @@ Use to write a DiTTo model to OpenDSS format.
 +-----------------+--------------------+
 |     Object      |    File name       |
 +=================+====================+
-|      Buses      |   buscoords.dss    |
+|      buses      |   Buscoords.dss    |
 +-----------------+--------------------+
-|  Transformers   |   Transformers.dss |
+|  transformers   |   Transformers.dss |
 +-----------------+--------------------+
-|      Loads      |      Loads.dss     |
+|      loads      |      Loads.dss     |
 +-----------------+--------------------+
-|   Regulators    |   Regulators.dss   |
+|   regulators    |   Regulators.dss   |
 +-----------------+--------------------+
-|   Capacitors    |   Capacitors.dss   |
+|   capacitors    |   Capacitors.dss   |
 +-----------------+--------------------+
-|     Lines       |      Lines.dss     |
+|     lines       |      Lines.dss     |
 +-----------------+--------------------+
-|     Wires       |    WireData.dss    |
+|    wiredata     |    WireData.dss    |
 +-----------------+--------------------+
-| Line Geometries |  LineGeometry.dss  |
+|   linegeometry  |  LineGeometry.dss  |
 +-----------------+--------------------+
-|    Line Codes   |    Linecodes.dss   |
+|     linecodes   |    LineCodes.dss   |
 +-----------------+--------------------+
-|    Load Shapes  |    Loadshapes.dss  |
+|     loadshapes  |    LoadShapes.dss  |
++-----------------+--------------------+
+|     storages    |     Storages.dss   |
++-----------------+--------------------+
+|    PVSystems    |     PVSystems.dss  |
++-----------------+--------------------+
+|      master     |      Master.dss    |
 +-----------------+--------------------+
 
 author: Nicolas Gensollen. October 2017.
@@ -87,6 +93,22 @@ author: Nicolas Gensollen. October 2017.
         self.files_to_redirect=[]
 
         self.write_taps = False
+
+        self.output_filenames = {'buses': 'Buscoords.dss',
+                                 'transformers': 'Transformers.dss',
+                                 'loads': 'Loads.dss',
+                                 'regulators': 'Regulators.dss',
+                                 'capacitors': 'Capacitors.dss',
+                                 'capcontrols': 'CapControls.dss',
+                                 'lines': 'Lines.dss',
+                                 'linecodes': 'LineCodes.dss',
+                                 'linegeometry': 'LineGeometry.dss',
+                                 'wiredata': 'WireData.dss',
+                                 'loadshapes': 'LoadShapes.dss',
+                                 'storages': 'Storages.dss',
+                                 'PVSystems': 'PVSystems.dss',
+                                 'master': 'Master.dss'
+                                 }
 
         #Call super
         super(Writer, self).__init__(**kwargs)
@@ -255,9 +277,9 @@ author: Nicolas Gensollen. October 2017.
                     txt += '{name} {X} {Y}\n'.format(name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long)
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'buscoords.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['buses']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('buscoords.dss')
+            self.files_to_redirect.append(self.output_filenames['buses'])
 
         return 1
 
@@ -547,9 +569,9 @@ author: Nicolas Gensollen. October 2017.
                 txt += '\n\n'
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'Transformers.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['transformers']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Transformers.dss')
+            self.files_to_redirect.append(self.output_filenames['transformers'])
 
         return 1
 
@@ -652,9 +674,9 @@ author: Nicolas Gensollen. October 2017.
                 txt += '\n'
 
         if txt != '':
-            with open(os.path.join(self.output_path,'Storages.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['storages']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Storages.dss')
+            self.files_to_redirect.append(self.output_filenames['storages'])
 
 
     def write_PVs(self, model):
@@ -725,9 +747,9 @@ author: Nicolas Gensollen. October 2017.
                     txt += '\n'
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'PV_systems.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['PVSystems']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('PV_systems.dss')
+            self.files_to_redirect.append(self.output_filenames['PVSystems'])
 
 
 
@@ -785,9 +807,9 @@ author: Nicolas Gensollen. October 2017.
                     #pass #TODO: write the timeseries data if it's in memory
 
         if txt != '':
-            with open(os.path.join(self.output_path,  'Loadshapes.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['loadshapes']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Loadshapes.dss')
+            self.files_to_redirect.append(self.output_filenames['loadshapes'])
 
 
     def write_loads(self, model):
@@ -917,9 +939,9 @@ author: Nicolas Gensollen. October 2017.
                 txt += '\n\n'
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'Loads.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['loads']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Loads.dss')
+            self.files_to_redirect.append(self.output_filenames['loads'])
 
         return 1
 
@@ -1129,15 +1151,15 @@ author: Nicolas Gensollen. October 2017.
 
         #If we have new transformers to add...
         if len(transfo_creation_string_list) > 0:
-            with open(os.path.join(self.output_path, 'Transformers.dss'), 'a') as f:
+            with open(os.path.join(self.output_path, self.output_filenames['transformers']), 'a') as f:
                 for trans_string in transfo_creation_string_list:
                     f.write(trans_string)
                     f.write('\n\n')
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'Regulators.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['regulators']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Regulators.dss')
+            self.files_to_redirect.append(self.output_filenames['regulators'])
 
         return 1
 
@@ -1263,9 +1285,9 @@ author: Nicolas Gensollen. October 2017.
                 txt += '\n\n'
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'Capacitors.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['capacitors']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Capacitors.dss')
+            self.files_to_redirect.append(self.output_filenames['capacitors'])
 
         return 1
 
@@ -1378,9 +1400,9 @@ author: Nicolas Gensollen. October 2017.
                     txt += '\n\n'
 
         if txt != '':
-            with open(os.path.join(self.output_path, 'Lines.dss'), 'w') as fp:
+            with open(os.path.join(self.output_path, self.output_filenames['lines']), 'w') as fp:
                 fp.write(txt)
-            self.files_to_redirect.append('Lines.dss')
+            self.files_to_redirect.append(self.output_filenames['lines'])
     
         return 1
 
@@ -1430,8 +1452,8 @@ author: Nicolas Gensollen. October 2017.
                                 cnt += 1
 
         if len(self.all_wires)>0:
-            fp = open(os.path.join(self.output_path, 'WireData.dss'), 'w')
-            self.files_to_redirect.append('WireData.dss')
+            fp = open(os.path.join(self.output_path, self.output_filenames['wiredata']), 'w')
+            self.files_to_redirect.append(self.output_filenames['wiredata'])
             for wire_name,wire_data in self.all_wires.items():
                 fp.write('New WireData.{name}'.format(name=wire_name))
                 for key,value in wire_data.items():
@@ -1478,8 +1500,8 @@ author: Nicolas Gensollen. October 2017.
                             cpt += 1
 
         if len(self.all_geometries)>0:
-            fp = open(os.path.join(self.output_path, 'LineGeometry.dss'), 'w')
-            self.files_to_redirect.append('LineGeometry.dss')
+            fp = open(os.path.join(self.output_path, self.output_filenames['linegeometry']), 'w')
+            self.files_to_redirect.append(self.output_filenames['linegeometry'])
             for geometry_name,geometry_data in self.all_geometries.items():
                 fp.write('New LineGeometry.{name}'.format(name=geometry_name))
                 if 'nconds' in geometry_data:
@@ -1550,8 +1572,8 @@ author: Nicolas Gensollen. October 2017.
                             cnt += 1
 
         if len(self.all_linecodes)>0:
-            fp = open(os.path.join(self.output_path, 'Linecodes.dss'), 'w')
-            self.files_to_redirect.append('Linecodes.dss')
+            fp = open(os.path.join(self.output_path, self.output_filenames['linecodes']), 'w')
+            self.files_to_redirect.append(self.output_filenames['linecodes'])
             for linecode_name, linecode_data in self.all_linecodes.items():
                 fp.write('New Linecode.{name}'.format(name=linecode_name))
                 for k,v in linecode_data.items():
@@ -1719,7 +1741,7 @@ author: Nicolas Gensollen. October 2017.
     def write_master_file(self,model):
         '''Write the master.dss file.
         '''
-        with open(os.path.join(self.output_path,'master.dss'), 'w') as fp:
+        with open(os.path.join(self.output_path,self.output_filenames['master']), 'w') as fp:
             fp.write('Clear\n\nNew Circuit.Name ')
             for obj in model.models:
                 if isinstance(obj,PowerSource) and obj.is_sourcebus==1:
@@ -1745,24 +1767,24 @@ author: Nicolas Gensollen. October 2017.
             fp.write('\n\n')
 
             #Write WireData.dss first if it exists
-            if 'WireData.dss' in self.files_to_redirect:
-                fp.write('Redirect WireData.dss\n')
-                self.files_to_redirect.remove('WireData.dss')
+            if self.output_filenames['wiredata'] in self.files_to_redirect:
+                fp.write('Redirect {f}\n'.format(f=self.output_filenames['wiredata']))
+                self.files_to_redirect.remove(self.output_filenames['wiredata'])
 
             #Write LineGeometry.dss then if it exists
-            if 'LineGeometry.dss' in self.files_to_redirect:
-                fp.write('Redirect LineGeometry.dss\n')
-                self.files_to_redirect.remove('LineGeometry.dss')
+            if self.output_filenames['linegeometry'] in self.files_to_redirect:
+                fp.write('Redirect {f}\n'.format(f=self.output_filenames['linegeometry']))
+                self.files_to_redirect.remove(self.output_filenames['linegeometry'])
 
             #Then, redirect the rest (the order should not matter anymore)
             for file in self.files_to_redirect:
-                if file != 'buscoords.dss':
+                if file != self.output_filenames['buses']:
                     fp.write('Redirect {file}\n'.format(file=file))
 
             fp.write('\nCalcvoltagebases\n\n')
 
-            if 'buscoords.dss' in self.files_to_redirect:
-                fp.write('Buscoords buscoords.dss\n')
+            if self.output_filenames['buses'] in self.files_to_redirect:
+                fp.write('Buscoords {f}\n'.format(f=self.output_filenames['buses']))
 
             fp.write('\nSolve')
 
