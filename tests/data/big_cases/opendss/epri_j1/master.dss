@@ -1,0 +1,30 @@
+!EPRI Feeder J1, OpenDSS
+! This Circuit model is provided to the public by EPRI (Electric Power Research Institute) as part of the Distributed Renewables Research Program (P174).
+! Please feel free to use this circuit model for further research/study.
+! For reference purposes, please use: EPRI Feeder J1, Distributed PV (DPV) Monitoring and Feeder Analysis, dpv.epri.com, 2013
+Clear
+
+Redirect LoadShapes_mod.dss
+Redirect substation.dss
+Redirect lineCodes.dss
+Redirect lines.dss
+Redirect transformers.dss
+Redirect LoadsInd.dss
+Redirect services.dss
+Redirect capacitors.dss
+Redirect regulators.dss
+! Redirect ExistingPV.dss
+
+Buscoords buscoords.dss
+
+New EnergyMeter.Main Line.temp_sub 1
+
+set maxiter=100
+set maxcontroliter=100
+
+Set voltagebases=[69, 12.47, 7.2, 0.480, 0.416]
+Calcv
+Solve
+
+redirect monitors.dss
+

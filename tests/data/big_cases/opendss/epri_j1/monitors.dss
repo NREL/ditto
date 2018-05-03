@@ -1,0 +1,50 @@
+!- Define Energy Meter @ Sub
+New EnergyMeter.J1 element=Line.OH_5964927408 terminal=1 !peakcurrent=[393, 393, 393]
+
+! - Define all monitors
+
+New monitor.subVI element=Transformer.SubXfmr terminal=2 mode=0
+New monitor.subPQ element=Transformer.SubXfmr terminal=1 mode=65 PPolar=No
+New monitor.feederPQ element=Line.OH_5964927408 terminal=1 mode=65 PPolar=No
+
+!Sub
+New monitor.Tap9 element=Transformer.SubXfmr terminal=2 mode=2
+
+! 1st regulator
+New monitor.Tap5 element=Transformer.regxfmr_B4874 terminal=2 mode=2
+New monitor.Tap7 element=Transformer.regxfmr_B4872 terminal=2 mode=2
+New monitor.Tap8 element=Transformer.regxfmr_B4868 terminal=2 mode=2
+
+!Middle Regulator - just downstraam
+New monitor.Tap1 element=Transformer.regxfmr_B18865 terminal=2 mode=2
+New monitor.Tap3 element=Transformer.regxfmr_B18863 terminal=2 mode=2
+New monitor.Tap6 element=Transformer.regxfmr_B18864 terminal=2 mode=2
+
+!2Phase regs
+New monitor.Tap2 element=Transformer.regxfmr_B19008 terminal=2 mode=2
+New monitor.Tap4 element=Transformer.regxfmr_B19010 terminal=2 mode=2
+
+!close to head of feeder
+New monitor.Cap3 element=Capacitor.B4862-1 mode=33
+New monitor.Cap4 element=Capacitor.B4829-1 mode=33
+New monitor.Cap5 element=Capacitor.B4877-1 mode=33
+!Mid
+New monitor.Cap1 element=Capacitor.B4909-1 mode=33
+!end
+New monitor.Cap2 element=Capacitor.B18944 mode=33
+
+
+New monitor.VoltageTap1 element=Transformer.regxfmr_B18865 terminal=2 mode=0
+New monitor.VoltageTap2 element=Transformer.regxfmr_B19008 terminal=2 mode=0
+New monitor.VoltageTap3 element=Transformer.regxfmr_B18863 terminal=2 mode=0
+New monitor.VoltageTap4 element=Transformer.regxfmr_B19010 terminal=2 mode=0
+New monitor.VoltageTap5 element=Transformer.regxfmr_B4874 terminal=2 mode=0
+New monitor.VoltageTap6 element=Transformer.regxfmr_B18864 terminal=2 mode=0
+New monitor.VoltageTap7 element=Transformer.regxfmr_B4872 terminal=2 mode=0
+New monitor.VoltageTap8 element=Transformer.regxfmr_B4868 terminal=2 mode=0
+New monitor.VoltageCap1 element=Capacitor.B4909-1 mode=0
+New monitor.VoltageCap2 element=Capacitor.B18944 mode=0
+New monitor.VoltageCap3 element=Capacitor.B4862-1 mode=0
+New monitor.VoltageCap4 element=Capacitor.B4829-1 mode=0
+New monitor.VoltageCap5 element=Capacitor.B4877-1 mode=0
+New monitor.HighestImpedanceBus element=LINE.OH_5962929303 terminal=2 mode=0

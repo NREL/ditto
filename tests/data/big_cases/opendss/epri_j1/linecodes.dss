@@ -1,0 +1,78 @@
+! Overhead line codes
+New Linecode.OH-3X_477AAC_477AACN nphases=3 r1=0.12241009 x1=0.39494091 r0=0.25708354 x0=1.1976615 c1=11.1973 c0=4.8372 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-3V_477AAC_4/0AAACN nphases=3 r1=0.12241009 x1=0.38976119 r0=0.3361412 x0=1.2772468 c1=11.3545 c0=4.7672 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-1X_1/0ACSR_1/0ACSRN nphases=3 r1=0.52729604 x1=0.559132 r0=0.84236156 x0=1.395562 c1=9.1185 c0=5.1312 units=km baseFreq=60 normamps=269 emergamps=319
+New Linecode.OH-1X_4/0AAAC_4/0AAACN nphases=3 r1=0.27278188 x1=0.51301758 r0=0.4924676 x0=1.255797 c1=9.6689 c0=5.3444 units=km baseFreq=60 normamps=451 emergamps=537
+New Linecode.OH-3X_1/0AAAC_1/0AAACN nphases=3 r1=0.54556375 x1=0.52589424 r0=0.8534158 x0=1.4977962 c1=9.8297 c0=4.5149 units=km baseFreq=60 normamps=264 emergamps=314
+New Linecode.OH-3X_477AAC_1/0AAACN nphases=3 r1=0.12241009 x1=0.39494091 r0=0.43025964 x0=1.3668422 c1=11.1973 c0=4.7832 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-1X_1/0AAAC_1/0AAACN nphases=3 r1=0.54556375 x1=0.559132 r0=0.86629684 x0=1.4014526 c1=9.1185 c0=5.1312 units=km baseFreq=60 normamps=264 emergamps=314
+New Linecode.OH-1X_2AAAC_4/0AAACN nphases=3 r1=0.86867666 x1=0.56322436 r0=1.0883623 x0=1.3060038 c1=8.7858 c0=5.0631 units=km baseFreq=60 normamps=155 emergamps=183
+New Linecode.OH-1X_2AAAC_2AAACN nphases=3 r1=0.86867666 x1=0.56322436 r0=1.2522863 x0=1.5109443 c1=8.7858 c0=5.0003 units=km baseFreq=60 normamps=155 emergamps=183
+New Linecode.OH-1X_2AL_2ALN nphases=3 r1=0.87116211 x1=0.50694117 r0=1.2729157 x0=1.4495467 c1=8.6774 c0=4.9573 units=km baseFreq=60 normamps=161 emergamps=212
+New Linecode.OH-3X_2AL_2ALN nphases=3 r1=0.871162 x1=0.47370315 r0=1.0834169 x0=1.3530371 c1=9.3191 c0=4.4259 units=km baseFreq=60 normamps=161 emergamps=212
+New Linecode.OH-3X_477AAC_4CUN nphases=3 r1=0.12241009 x1=0.39494091 r0=0.49884719 x0=1.4570715 c1=11.1973 c0=4.74 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-3V_477AAC_477AACN nphases=3 r1=0.12241009 x1=0.38976119 r0=0.25767385 x0=1.1994821 c1=11.3545 c0=4.7952 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-1X_2/0CU_2/0CUN nphases=3 r1=0.27340324 x1=0.480692 r0=0.50136809 x0=1.2055467 c1=9.1779 c0=5.1544 units=km baseFreq=60 normamps=374 emergamps=459
+New Linecode.OH-3X_4CU_4/0AAACN nphases=3 r1=0.85376372 x1=0.49484991 r0=1.0660179 x0=1.3741868 c1=8.7903 c0=4.3029 units=km baseFreq=60 normamps=142 emergamps=142
+New Linecode.OH-3X_2AAAC_2AAACN nphases=3 r1=0.86867666 x1=0.5299866 r0=1.2363605 x0=1.6002603 c1=9.4442 c0=4.4182 units=km baseFreq=60 normamps=155 emergamps=183
+New Linecode.OH-3X_1/0AAAC_4CUN nphases=3 r1=0.54556375 x1=0.52589424 r0=0.92200269 x0=1.5880255 c1=9.8297 c0=4.4764 units=km baseFreq=60 normamps=264 emergamps=314
+New Linecode.OH-3X_1/0CU_1CUN nphases=3 r1=0.34486091 x1=0.4559583 r0=0.6339227 x0=1.371602 c1=9.6953 c0=4.4774 units=km baseFreq=60 normamps=323 emergamps=396
+New Linecode.OH-1X_477AAC_4/0AAACN nphases=3 r1=0.12241009 x1=0.42817866 r0=0.35578771 x0=1.1431984 c1=10.2836 c0=5.5164 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-2X_477AAC_4/0AAACN nphases=3 r1=0.12241009 x1=0.42797363 r0=0.33495999 x0=1.2067273 c1=10.2888 c0=5.2422 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-3X_477AAC_4/0AAACN nphases=3 r1=0.12241009 x1=0.39494091 r0=0.33466485 x0=1.2742766 c1=11.1973 c0=4.8089 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-3X_2CU_4CUN nphases=3 r1=0.54419673 x1=0.47441863 r0=0.92063567 x0=1.5365511 c1=9.3084 c0=4.365 units=km baseFreq=60 normamps=188 emergamps=188
+New Linecode.OH-2X_2CU_4CUN nphases=3 r1=0.54419673 x1=0.50745072 r0=0.92130055 x0=1.4695486 c1=8.6718 c0=4.7202 units=km baseFreq=60 normamps=188 emergamps=188
+New Linecode.OH-1X_2CU_4CUN nphases=3 r1=0.54419673 x1=0.50765639 r0=0.9372077 x0=1.4467817 c1=8.6681 c0=4.9212 units=km baseFreq=60 normamps=188 emergamps=188
+New Linecode.OH-3X_4CU_4CUN nphases=3 r1=0.85376372 x1=0.49484991 r0=1.2302027 x0=1.5569817 c1=8.7903 c0=4.2476 units=km baseFreq=60 normamps=142 emergamps=142
+New Linecode.OH-2X_4CU_4CUN nphases=3 r1=0.85376372 x1=0.52788263 r0=1.2308676 x0=1.4899794 c1=8.2205 c0=4.5833 units=km baseFreq=60 normamps=142 emergamps=142
+New Linecode.OH-1X_4CU_4CUN nphases=3 r1=0.85376372 x1=0.52808766 r0=1.2467747 x0=1.4672122 c1=8.2172 c0=4.7725 units=km baseFreq=60 normamps=142 emergamps=142
+New Linecode.OH-3X_4CU_2ALN nphases=3 r1=0.85376372 x1=0.49484991 r0=1.2384297 x0=1.5601756 c1=8.7903 c0=4.2655 units=km baseFreq=60 normamps=142 emergamps=142
+New Linecode.OH-3X_477AAC_4/0AAN nphases=3 r1=0.12241009 x1=0.39494091 r0=0.33466485 x0=1.2742766 c1=11.1973 c0=4.8089 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-3V_477AAC_1/0AAACN nphases=3 r1=0.12241009 x1=0.38976119 r0=0.43283087 x0=1.3712104 c1=11.3545 c0=4.7417 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-1X_2AAAC_DEFAULT nphases=3 r1=0.86867666 x1=0.56322436 r0=1.2522863 x0=1.5109443 c1=8.7858 c0=5.0003 units=km baseFreq=60 normamps=155 emergamps=183
+New Linecode.OH-1X_477AAC_477AACN nphases=3 r1=0.12241009 x1=0.42817866 r0=0.26010404 x0=1.0885861 c1=10.2836 c0=5.578 units=km baseFreq=60 normamps=732 emergamps=871
+ 
+! Cable line codes
+New Linecode.UG-1C1/0ALAER_15 nphases=3 r1=0.640012 x1=0.161557 r0=1.50745 x0=1.75537 c1=194.4921 c0=11.1946 units=km baseFreq=60 normamps=225 emergamps=225
+New Linecode.UG-1C1/0ALURD_15 nphases=3 r1=0.571599 x1=0.394881 r0=1.10175 x0=0.422781 c1=389.1497 c0=36.0472 units=km baseFreq=60 normamps=170 emergamps=180
+New Linecode.UG-3C1/0ALURD_15 nphases=3 r1=0.571599 x1=0.394881 r0=1.10175 x0=0.422781 c1=389.1497 c0=22.3987 units=km baseFreq=60 normamps=175 emergamps=185
+
+!Services
+New Linecode.1/0A nphases=3 rmatrix=[0.201761667 0.018049545 0.018049545 | 0.018049545 0.201761667 0.018049545 | 0.018049545 0.018049545 0.201761667] 
+!ohms per 1000 ft
+~ xmatrix=[ 0.285770602	0.254451335 0.246486562 | 0.254451335 0.285770602 0.254451335 |  0.246486562 0.254451335 0.285770602]
+~ cmatrix=[15 | -12 15 | -12 -12 15]
+~ Normamps=202  {202 1.25 *}
+~ Neutral=2 Kron=yes    ! eliminate the neutral conductor
+~ Neutral=2 Kron=yes    ! eliminate the neutral conductor
+New Linecode.1/0A3 nphases=3 rmatrix=[0.201761667 0.018049545 0.018049545 | 0.018049545 0.201761667 0.018049545 | 0.018049545 0.018049545 0.201761667] 
+!ohms per 1000 ft
+~ xmatrix=[ 0.285770602	0.254451335 0.246486562 | 0.254451335 0.285770602 0.254451335 |  0.246486562 0.254451335 0.285770602]
+~ cmatrix=[15 | -12 15 | -12 -12 15]
+~ Normamps=202  {202 1.25 *}
+New Linecode.3/0 nphases=3 rmatrix=[ 0.133769242 0.018049545 0.018049545 | 0.018049545 0.133769242 0.018049545 | 0.018049545 0.018049545 0.133769242] 
+!ohms per 1000 ft
+~ xmatrix=[ 0.28043632 0.249124191 0.241159418 | 0.249124191 0.28043632 0.249124191 | 0.241159418 0.249124191 0.28043632]
+~ cmatrix=[15 | -12 15 | -12 -12 15]
+~ Normamps=263  {263 1.25 *}
+New Linecode.750A  nphases=3
+~ rmatrix=[0.044375303 0.018049545 0.018049545 | 0.018049545 0.044375303 0.018049545 | 0.018049545 0.018049545 0.044375303]  
+! ohms per 1000 ft
+~ xmatrix=[ 0.261509955 0.248345084 0.240380311 | 0.248345084 0.261509955 0.248345084| 0.240380311 0.248345084 0.261509955]
+~ cmatrix=[15 | -12 15 | -12 -12 15]
+~ NormAmps=580 {580 1.25 *}  
+New Linecode.3/0A nphases=3 rmatrix=[ 0.133769242 0.018049545 0.018049545 | 0.018049545 0.133769242 0.018049545 | 0.018049545 0.018049545 0.133769242] 
+!ohms per 1000 ft
+~ xmatrix=[ 0.28043632 0.249124191 0.241159418 | 0.249124191 0.28043632 0.249124191 | 0.241159418 0.249124191 0.28043632]
+~ cmatrix=[15 | -12 15 | -12 -12 15]
+~ Normamps=263  {263 1.25 *}
+~ Neutral=2 Kron=yes    ! eliminate the neutral conductor
+~ Neutral=2 Kron=yes    ! eliminate the neutral conductor
+New Linecode.750A1  nphases=3
+~ rmatrix=[0.044375303 0.018049545 0.018049545 | 0.018049545 0.044375303 0.018049545 | 0.018049545 0.018049545 0.044375303]  
+! ohms per 1000 ft
+~ xmatrix=[ 0.261509955 0.248345084 0.240380311 | 0.248345084 0.261509955 0.248345084| 0.240380311 0.248345084 0.261509955]
+~ cmatrix=[15 | -12 15 | -12 -12 15]
+~ NormAmps=580 {580 1.25 *}  
+~ Neutral=2 Kron=yes    ! eliminate the neutral conductor
+~ Neutral=2 Kron=yes    ! eliminate the neutral conductor
