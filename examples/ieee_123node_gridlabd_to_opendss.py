@@ -23,9 +23,9 @@ def main():
     #Change this if you wish to use another system
     path = '../tests/data/big_cases/gridlabd/ieee_123node'
 
-    ###############################
-    #  STEP 1: READ FROM OPENDSS  #
-    ###############################
+    #################################
+    #  STEP 1: READ FROM GRIDLAB-D  #
+    #################################
     #
     #Create a Store object
     print('>>> Creating empty model...')

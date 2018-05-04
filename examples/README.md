@@ -51,3 +51,17 @@ Alternatively, you can use the CLI:
 ditto convert --from glm --input ../tests/data/big_cases/gridlabd/ieee_123node/123_node.glm --to dss --output .
 ```
 
+#### CYME —> OpenDSS
+
+To run this example, open a terminal and run:
+
+```bash
+$ python ieee_123node_cyme_to_opendss.py
+```
+
+Alternatively, you can use the CLI and the configuration file ```ieee_123node_cyme_to_opendss.json```. Open a terminal and run:
+
+```bash
+$ ditto convert --from cyme --input ieee_123node_cyme_to_opendss.json --to dss --output .
+```
+
