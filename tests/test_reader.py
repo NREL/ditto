@@ -14,8 +14,7 @@ current_directory = os.path.realpath(os.path.dirname(__file__))
 
 def test_gld_reader():
     gridlabd_models_dir = os.path.join(current_directory, 'data', 'small_cases','gridlabd')
-    gridlabd_models = ['123_node.glm','13node_simplified.glm',
-                   '4node.glm']
+    gridlabd_models=[f for f in os.listdir(gridlabd_models_dir) if not f.startswith('.')]
     from ditto.readers.gridlabd.read import Reader
     for modelfile in gridlabd_models:
         m = Store()
