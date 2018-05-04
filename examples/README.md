@@ -35,4 +35,19 @@ Alternatively, you can use the CLI and the configuration file ```epri_j1_opendss
 ditto convert --from dss --input epri_j1_opendss_to_cyme.json --to cyme --output .
 ```
 
+### Example 3: IEEE 123
+
+#### Gridlab-D —> OpenDSS
+
+To run this example, open a terminal and run:
+
+```bash
+$ python ieee_123node_gridlabd_to_opendss.py
+```
+
+Alternatively, you can use the CLI:
+
+```bash
+ditto convert --from glm --input ../tests/data/big_cases/gridlabd/ieee_123node/123_node.glm --to dss --output .
+```
 
