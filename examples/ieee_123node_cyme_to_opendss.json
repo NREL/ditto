@@ -1,0 +1,5 @@
+{"data_folder_path": "../tests/data/big_cases/cyme/ieee_123node",
+ "network_filename": "network.txt",
+ "equipment_filename": "equipment.txt",
+ "load_filename": "load.txt"
+}
