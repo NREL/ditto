@@ -1122,7 +1122,7 @@ class Writer(AbstractWriter):
                                     NoLoadLosses=''
 
 
-                            new_transformer_object_line+='{type},{kva},{voltageunit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift}'.format(type=TYPE,kva=KVA,voltageunit=VoltageUnit,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=2,noloadloss=NoLoadLosses,phaseshift=phase_shift)
+                            new_transformer_object_line+='{type},{kva},{voltageunit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift}'.format(type=TYPE,kva=KVA,voltageunit=VoltageUnit,kvllprim=KVLLprim,kvllsec=KVLLsec,Conn=CONN,Z1=Z1,Z0=Z0,XR=XR,XR0=XR0,WindingType=1,noloadloss=NoLoadLosses,phaseshift=phase_shift)
 
                             found=False
                             for k,d in self.two_windings_trans_codes.items():
