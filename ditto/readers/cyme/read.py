@@ -23,6 +23,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
+from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.models.base import Unicode
 
@@ -167,6 +168,9 @@ class Reader(AbstractReader):
         else:
             self.load_filename ='load.txt'
 
+        #Set the Network Type to be None. This is set in the parse_sections() function
+        self.network_type = None
+
         #Header_mapping.
         #
         #Modify this structure if the headers of your CYME version are not the default one.
@@ -217,8 +221,11 @@ class Reader(AbstractReader):
                                                  'customer_class': '[CUSTOMER CLASS]',
                                                  'loads': '[LOADS]',
                                                  'source': '[SOURCE]',
+                                                 'headnodes': '[HEADNODES]',
                                                  'source_equivalent': '[SOURCE EQUIVALENT]',
+                                                 #SUBSTATIONS
                                                  'substation': '[SUBSTATION]',
+                                                 'subnetwork_connections': '[SUBNETWORK CONNECTIONS]'
                                                  }
 
 
@@ -589,7 +596,7 @@ class Reader(AbstractReader):
             raise ValueError('check_object_in_line expects a string for both line and object. A {type} instance was provided for object.'.format(type=type(obj)))
 
         if not obj in self.header_mapping:
-            raise ValueError('{obj} is not a valid object name for the object<->header mapping.'.format(obj=obj))
+            raise ValueError('{obj} is not a valid object name for the object<->header mapping.{mapp}'.format(obj=obj,mapp=self.header_mapping))
 
         return self.header_mapping[obj] in line
 
@@ -700,14 +707,25 @@ class Reader(AbstractReader):
 
         self.parse_header()
 
-        self.logger.info('Parsing the sections...')
+        logger.info('Parsing the sections...')
         self.parse_sections(model)
 
-        self.logger.info('Parsing the sources...')
+        logger.info('Parsing the sources...')
         self.parse_sources(model)
+
+        
 
         #Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
+
+        # The variable self.network_type is set in the parse_sections() function.
+        # i.e. parse_sections
+        if self.network_type == 'substation':
+            logger.info('Parsing the subnetwork connections...')
+            self.parse_subnetwork_connections(model)
+        else:
+            logger.info('Parsing the Headnodes...')
+            self.parse_head_nodes(model)
 
 
 
@@ -752,6 +770,41 @@ class Reader(AbstractReader):
 
         if self.use_SI is None:
             raise ValueError('Could not find [SI] or [IMPERIAL] unit system information. Unable to parse.')
+
+
+    def parse_subnetwork_connections(self, model):
+        '''Parse the subnetwork connections.
+           These specify the interconnection points for a substation
+        '''
+        model.set_names()
+        self.get_file_content('network')
+        mapp_subnetwork_connections={'nodeid':1}
+        self.subnetwork_connections = {}
+        for line in self.content:
+            self.subnetwork_connections.update(self.parser_helper(line,['subnetwork_connections'],['nodeid'],mapp_subnetwork_connections))
+
+        for key in self.subnetwork_connections:
+            model[self.subnetwork_connections[key]['nodeid']].is_substation_connection = 1
+
+        
+
+
+    def parse_head_nodes(self, model):
+        ''' This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects
+            which define the feeder names and feeder headnodes
+         '''
+        #Open the network file
+        self.get_file_content('network')
+        mapp = {'nodeid':0,'networkid':1}  #These correspond to the head node name and the feeder name
+        headnodes = {}
+        for line in self.content:
+            headnodes.update(self.parser_helper(line,['headnodes'],['nodeid','networkid'],mapp))
+        
+        for sid, headnode in headnodes.items():
+            feeder_metadata = Feeder_metadata(model)
+            feeder_metadata.name = headnode['networkid'].strip().lower()
+            feeder_metadata.headnode = headnode['nodeid'].strip().lower()
+
 
 
 
@@ -1032,7 +1085,7 @@ class Reader(AbstractReader):
 
 
 
-    def configure_wire(self, model, conductor_data, spacing_data, phase, is_switch, is_fuse):
+    def configure_wire(self, model, conductor_data, spacing_data, phase, is_switch, is_fuse, is_open):
         '''
             Helper function that creates a DiTTo wire object and configures it.
         '''
@@ -1052,6 +1105,7 @@ class Reader(AbstractReader):
 
         #Set the switch and fuse flags
         api_wire.is_switch=is_switch
+        api_wire.is_open = is_open
         api_wire.is_fuse=is_fuse
 
         #Set the diameter of the wire
@@ -1164,11 +1218,15 @@ class Reader(AbstractReader):
                         format_section=list(map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(','))))
 
                     #Then, we grab the format used to define feeders
-                    elif 'format_feeder' in line.lower():
+                    elif 'format_feeder' in line.lower() or 'format_substation' in line.lower():
                         format_feeder=list(map(lambda x:x.strip(), map(lambda x:x.lower(), line.split('=')[1].split(','))))
 
                     #If we have a new feeder declaration
-                    elif len(line)>=7 and line[:7].lower()=='feeder=':
+                    elif len(line)>=7 and (line[:7].lower()=='feeder=' or line[:11].lower()=='substation='):
+                        if line[:7].lower() == 'feeder=':
+                            self.network_type = 'feeder'
+                        if line[:11].lower() == 'substation=':
+                            self.network_type = 'substation'
 
                         #We should have a format for sections and feeders,
                         #otherwise, raise an error...
@@ -1184,7 +1242,7 @@ class Reader(AbstractReader):
                         #Check that the data obtained have the same length as the format provided
                         #otherwise, raise an error...
                         if len(feeder_data)!=len(format_feeder):
-                            raise ValueError('Feeder data length {a} does not match feeder format length {b}.'.format(a=len(feeder_data),b=len(format_feeder)))
+                            raise ValueError('Feeder/substation data length {a} does not match feeder format length {b}.'.format(a=len(feeder_data),b=len(format_feeder)))
 
                         #Check that we have a networkid in the format
                         #otherwise, raise an error...
@@ -1273,7 +1331,8 @@ class Reader(AbstractReader):
         mapp_switch={'sectionid':0,
                                  'eqid':2,
                                  'coordx':7,
-                                 'coordy':8}
+                                 'coordy':8,
+                                 'closedphase':9}
         mapp_sectionalizer={'sectionid':0,
                                  'eqid':2,
                                  'coordx':7,
@@ -1444,7 +1503,7 @@ class Reader(AbstractReader):
             #
             self.settings=self.update_dict(self.settings, self.parser_helper(line,
                                                   ['switch_settings'],
-                                                  ['sectionid', 'coordx', 'coordy', 'eqid'],
+                                                  ['sectionid', 'coordx', 'coordy', 'eqid','closedphase'],
                                                   mapp_switch,
                                                   {'type':'switch'}))
 
@@ -1493,7 +1552,7 @@ class Reader(AbstractReader):
             #
             self.settings=self.update_dict(self.settings, self.parser_helper(line,
                                                   ['breaker_settings'],
-                                                  ['sectionid', 'coordx', 'coordy', 'eqid'],
+                                                  ['sectionid', 'coordx', 'coordy', 'eqid','closedphase'],
                                                   mapp_switch, #Same as switches
                                                   {'type':'breaker'}))
 
@@ -1666,6 +1725,7 @@ class Reader(AbstractReader):
             new_line['is_recloser']=0
             new_line['is_breaker']=0
             new_line['is_sectionalizer']=0
+            
 
             if 'type' in settings:
 
@@ -1681,8 +1741,16 @@ class Reader(AbstractReader):
                 elif 'switch' in settings['type']:
                     new_line['is_switch']=1
                     new_line['wires']=[]
+                    total_closed = 0
                     for p in phases+['N']:
-                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        if p in settings['closedphase']:
+                            api_wire=self.configure_wire(model, {}, {}, p, True, False, False) # Assume a closed switch as default
+                            total_closed+=1
+                        elif p == 'N' and total_closed >= 1:
+                            api_wire=self.configure_wire(model, {}, {}, p, True, False, False) # Assume a closed switch as default
+
+                        else:
+                            api_wire=self.configure_wire(model, {}, {}, p, True, True, True) # Assume a closed switch as default
                         new_line['wires'].append(api_wire)
                     api_line=Line(model)
                     for k,v in new_line.items():
@@ -1694,7 +1762,7 @@ class Reader(AbstractReader):
                     new_line['is_sectionalizer']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
-                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        api_wire=self.configure_wire(model, {}, {}, p, False, False, False)
                         new_line['wires'].append(api_wire)
                     api_line=Line(model)
                     for k,v in new_line.items():
@@ -1706,7 +1774,7 @@ class Reader(AbstractReader):
                     new_line['is_fuse']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
-                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        api_wire=self.configure_wire(model, {}, {}, p, False, True, False)
                         new_line['wires'].append(api_wire)
                     api_line=Line(model)
                     for k,v in new_line.items():
@@ -1718,7 +1786,7 @@ class Reader(AbstractReader):
                     new_line['is_recloser']=1
                     new_line['wires']=[]
                     for p in phases+['N']:
-                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        api_wire=self.configure_wire(model, {}, {}, p, False, False, False)
                         new_line['wires'].append(api_wire)
                     api_line=Line(model)
                     for k,v in new_line.items():
@@ -1729,8 +1797,14 @@ class Reader(AbstractReader):
                 elif 'breaker' in settings['type']:
                     new_line['is_breaker']=1
                     new_line['wires']=[]
+                    total_closed = 0
                     for p in phases+['N']:
-                        api_wire=self.configure_wire(model, {}, {}, p, True, False)
+                        if p in settings['closedphase']:
+                            api_wire=self.configure_wire(model, {}, {}, p, False, False, False)
+                        elif p == 'N' and total_closed >= 1:
+                            api_wire=self.configure_wire(model, {}, {}, p, False, False, False) # Assume a closed switch as default
+                        else:
+                            api_wire=self.configure_wire(model, {}, {}, p, False, False, True) # Assume a closed switch as default
                         new_line['wires'].append(api_wire)
                     api_line=Line(model)
                     for k,v in new_line.items():
@@ -1836,7 +1910,7 @@ class Reader(AbstractReader):
                     #Loop over the phases and create the wires
                     new_line['wires']=[]
                     for phase in phases:
-                        api_wire=self.configure_wire(model, conductor_data, spacing_data, phase, False, False)
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, phase, False, False, False)
                         new_line['wires'].append(api_wire)
 
                     #Handle the neutral conductor
@@ -1851,7 +1925,7 @@ class Reader(AbstractReader):
                     else:
                         spacing_data={}
 
-                    api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
+                    api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False, False)
                     new_line['wires'].append(api_wire)
 
 
@@ -1910,7 +1984,7 @@ class Reader(AbstractReader):
                         else:
                             spacing_data={}
 
-                        api_wire=self.configure_wire(model, conductor_data, spacing_data, phase, False, False)
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, phase, False, False, False)
                         new_line['wires'].append(api_wire)
 
                     #Handle the neutral conductors
@@ -1936,20 +2010,20 @@ class Reader(AbstractReader):
                         conductor_n1_data=self.conductors[line_data['condid_n1']]
                         conductor_n2_data=self.conductors[line_data['condid_n2']]
 
-                        api_wire_n1=self.configure_wire(model, conductor_n1_data, spacing_data, 'N1', False, False)
-                        api_wire_n2=self.configure_wire(model, conductor_n2_data, spacing_data, 'N2', False, False)
+                        api_wire_n1=self.configure_wire(model, conductor_n1_data, spacing_data, 'N1', False, False, False)
+                        api_wire_n2=self.configure_wire(model, conductor_n2_data, spacing_data, 'N2', False, False, False)
                         new_line['wires'].append(api_wire_n1)
                         new_line['wires'].append(api_wire_n2)
 
                     elif 'condid_n' in line_data and line_data['condid_n'].lower()!='none' and line_data['condid_n'] in self.conductors:
                         conductor_data=self.conductors[line_data['condid_n']]
-                        api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False, False)
                         new_line['wires'].append(api_wire)
 
                     else:
                         if('condid_n1' in line_data and line_data['condid_n1'].lower()!='none' and line_data['condid_n1'] in self.conductors):
                             conductor_data=self.conductors[line_data['condid_n1']]
-                            api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
+                            api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False, False)
                             new_line['wires'].append(api_wire)
 
 
@@ -2076,7 +2150,7 @@ class Reader(AbstractReader):
                         else:
                             spacing_data={}
 
-                        api_wire=self.configure_wire(model, conductor_data, spacing_data, phase, False, False)
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, phase, False, False, False)
                         new_line['wires'].append(api_wire)
 
                     #Handle the neutral conductors
@@ -2094,7 +2168,7 @@ class Reader(AbstractReader):
                         spacing_data={}
 
                     if len(conductor_data)!=0:
-                        api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False)
+                        api_wire=self.configure_wire(model, conductor_data, spacing_data, 'N', False, False, False)
                         new_line['wires'].append(api_wire)
 
                 try:
@@ -2357,7 +2431,8 @@ class Reader(AbstractReader):
 
     def parse_transformers(self, model):
         '''
-            Parse the transformers from CYME to DiTTo.
+            Parse the transformers from CYME to DiTTo. Since substation transformer can have LTCs attached,
+            when parsing a transformer, we may also create a regulator. LTCs are represented as regulators.
         '''
         #Instanciate the list in which we store the DiTTo transformer objects
         self._transformers=[]
@@ -2373,6 +2448,12 @@ class Reader(AbstractReader):
                                                    'kva':3,
                                                    'connection_configuration':18,
                                                    'noloadlosses':32,
+                                                   'isltc':21,
+                                                   'taps':22,
+                                                   'lowerbandwidth':23,
+                                                   'upperbandwidth':24,
+                                                   'minreg_range':25,
+                                                   'maxreg_range':26,
                                                    }
         mapp_grounding_transformer_settings={'sectionid':0,
                                                                    'equipmentid':6,
@@ -2446,6 +2527,12 @@ class Reader(AbstractReader):
                                           'xr0':13,
                                           'conn':18,
                                           'noloadlosses':34,
+                                          'isltc':23,
+                                          'taps':24,
+                                          'lowerbandwidth':25,
+                                          'upperbandwidth':26,
+                                          'minreg_range':27,
+                                          'maxreg_range':28,
                                           'phaseshift':41,
                                         }
         mapp_phase_shifter_transformer_settings={'sectionid':0,
@@ -2565,7 +2652,7 @@ class Reader(AbstractReader):
             #
             self.auto_transformers.update( self.parser_helper(line,
                                                           ['auto_transformer'],
-                                                          ['id', 'kva', 'connection_configuration','noloadlosses'],
+                                                          ['id', 'kva', 'connection_configuration','noloadlosses','isltc','taps','lowerbandwidth','upperbandwidth','minreg_range','maxreg_range'],
                                                           mapp_auto_transformer) )
 
             #########################################
@@ -2585,6 +2672,7 @@ class Reader(AbstractReader):
             #                                       #
             #########################################
             #
+            # LTC controls not yet supported for three-winding transformers
             self.three_winding_auto_transformers.update( self.parser_helper(line,
                                                           ['three_winding_auto_transformer'],
                                                           ['id', 'primaryratedcapacity', 'primaryvoltage', 'secondaryratedcapacity', 'secondaryvoltage', 'tertiaryratedcapacity', 'tertiaryvoltage', 'noloadlosses'],
@@ -2596,6 +2684,7 @@ class Reader(AbstractReader):
             #                                       #
             #########################################
             #
+            # LTC controls not yet supported for three-winding transformers
             self.three_winding_transformers.update( self.parser_helper(line,
                                                           ['three_winding_transformer'],
                                                           ['id', 'primaryratedcapacity', 'primaryvoltage', 'secondaryratedcapacity', 'secondaryvoltage', 'tertiaryratedcapacity', 'tertiaryvoltage', 'noloadlosses'],
@@ -2609,7 +2698,7 @@ class Reader(AbstractReader):
             #
             self.transformers.update( self.parser_helper(line,
                                                       ['transformer'],
-                                                      ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift'],
+                                                      ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift','isltc','taps','lowerbandwidth','upperbandwidth','minreg_range','maxreg_range'],
                                                       mapp_transformer) )
 
         for sectionID, settings in self.settings.items():
@@ -2745,8 +2834,49 @@ class Reader(AbstractReader):
                 R_perc=Z_perc.real / 2.0
                 xhl=Z_perc.imag
 
+                #Check if it's an LTC
+                #
+                if 'isltc' in transformer_data and transformer_data['isltc']:
+                    #Instanciate a Regulator DiTTo object
+                    try:
+                        api_regulator=Regulator(model)
+                    except:
+                        raise ValueError('Unable to instanciate Regulator DiTTo object.')
+
+                    try:
+                        api_regulator.name = 'Reg_'+settings['sectionid']
+                    except:
+                        pass
+                    api_regulator.feeder_name=self.section_feeder_mapping[sectionID]
+
+                    try:
+                        api_regulator.connected_transformer = api_transformer.name
+                    except:
+                        raise ValueError("Unable to connect LTC to transformer")
+
+
+                    taps = float(transformer_data['taps'])
+                    lowerbandwidth = float(transformer_data['lowerbandwidth'])
+                    upperbandwidth = float(transformer_data['upperbandwidth'])
+                    minreg_range = transformer_data['minreg_range']
+                    maxreg_range = transformer_data['maxreg_range']
+                    center_bandwidth = upperbandwidth - lowerbandwidth
+
+                    api_regulator.ltc = 1
+                    api_regulator.highstep = int(math.floor(taps/2.0))
+                    api_regulator.lowstep = int(math.ceil(taps/2.0))
+                    api_regulator.center_bandwidth = center_bandwidth
+                    api_regulator.bandwidth = (upperbandwidth+lowerbandwidth) # ie. use the average bandwidth. The upper and lower are typically the same
+                    #TODO: Add unit checking. These units are in percentages. Need to be updated to be in Volts for consistency (BUG in cyme writer too)
+                    #TODO: Decide whether or not to put parameters in for the regulator range, and what units they should be.
+
+
+                    
+
+
+
                 try:
-                    api_transformer.reactances.append(xhl)
+                    api_transformer.reactances = [float(xhl)]
                 except:
                     pass
 

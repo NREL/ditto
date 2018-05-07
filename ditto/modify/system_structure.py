@@ -13,6 +13,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.load import Load
 from ditto.models.node import Node
 from ditto.models.line import Line
+from ditto.models.position import Position
 from ditto.models.power_source import PowerSource
 
 from ditto.models.feeder_metadata import Feeder_metadata
@@ -83,6 +84,7 @@ Author: Nicolas Gensollen. December 2017.
         self.G = Network()
         self.G.build(self.model, source=self.source)
 
+        self.model.set_names()
         #Set the attributes in the graph
         self.G.set_attributes(self.model)
 
@@ -91,6 +93,65 @@ Author: Nicolas Gensollen. December 2017.
         #Equipment types and names on the edges
         self.edge_equipment = nx.get_edge_attributes(self.G.graph, 'equipment')
         self.edge_equipment_name = nx.get_edge_attributes(self.G.graph, 'equipment_name')
+
+       
+    def set_missing_coords_recur(self):
+        ''' Identify nodes that don't have coordinates set and set them to be the
+            average of the existing position values of the neighboring nodes. 
+            If no adjacent nodes have positional values continue to compute recursively (via while loop)
+        '''
+        recur_nodes = []
+        for i in self.model.models:
+            if hasattr(i,'positions') and (i.positions is None or len(i.positions) == 0 or i.positions[0].lat ==0 or i.positions[0].long ==0) and (hasattr(i,'name') and i.name is not None):
+                if i.name in self.G.graph.nodes(): # Only find coords of missing nodes - not edges
+                    recur_nodes.append(i.name) # Should be passing the reference to the node
+
+        while(len(recur_nodes)>0):
+            next_recur = []
+            for i in recur_nodes:
+                adj_lats_longs = []
+                for j_name in self.G.graph.neighbors(i):
+                    j = self.model[j_name]
+                    if hasattr(j,'positions') and j.positions is not None and len(j.positions) != 0 and j.positions[0].lat !=0 and j.positions[0].long !=0:
+                        adj_lats_longs.append((j.positions[0].lat,j.positions[0].long))
+    
+                if len(adj_lats_longs) == 0:
+                    next_recur.append(i)
+                else:
+                    av_lat = 0
+                    av_long = 0
+                    num = 0
+                    for element in adj_lats_longs:
+                        av_lat += element[0]
+                        av_long += element[1]
+                        num +=1
+                    av_lat = av_lat/float(num)
+                    av_long = av_long/float(num)
+                    computed_pos = Position(self.model)
+                    computed_pos.lat = av_lat
+                    computed_pos.long = av_long
+                    self.model[i].positions = [computed_pos]
+            if len(next_recur) == len(recur_nodes):
+                for i in recur_nodes:
+                    logger.warning('Unable to compute coordinates for {}'.format(i))
+                    print('Unable to compute coordinates for {}'.format(i))
+                return
+            recur_nodes = next_recur
+                    
+
+            
+    def set_feeder_metadata(self, feeder_name=None, substation=None, transformer=None):
+        ''' This function sets the feeder metada and adds it to the model
+            This can be used when parsing a file with feeder information to 
+            Add feeder data to the model
+        '''
+        feeder_metadata = Feeder_metadata(self.model)
+        feeder_metadata.name = feeder_name
+        feeder_metadata.transformer = transformer
+        feeder_metadata.substation = substation
+
+
+
 
     def set_feeder_headnodes(self):
         '''This function sets the headnode for the feeder_metadata.
