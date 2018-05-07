@@ -2832,8 +2832,6 @@ class Reader(AbstractReader):
                 Z_perc=Zabc.item((0,0))
                 R_perc=Z_perc.real / 2.0
                 xhl=Z_perc.imag
-                reactances = []
-                reactances.append(xhl)
 
                 #Check if it's an LTC
                 #
@@ -2877,7 +2875,7 @@ class Reader(AbstractReader):
 
 
                 try:
-                    api_transformer.reactances = reactances
+                    api_transformer.reactances = [float(xhl)]
                 except:
                     pass
 
