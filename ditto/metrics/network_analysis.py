@@ -1088,8 +1088,12 @@ class network_analyzer():
             self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'] = {}
 
             for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
-                self.results[_feeder_ref]['avg_mv_line_impedance_sub_transformers'][trans_name] = np.mean(imp_list)
-                self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'][trans_name] = np.max(imp_list)
+                if len(imp_list)>0:
+                    self.results[_feeder_ref]['avg_mv_line_impedance_sub_transformers'][trans_name] = np.mean(imp_list)
+                    self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'][trans_name] = np.max(imp_list)
+                else:
+                    self.results[_feeder_ref]['avg_mv_line_impedance_sub_transformers'][trans_name] = None
+                    self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'][trans_name] = None
 
 
             #Average and Maximum LV line impedance from distribution transformer to customer
@@ -1097,9 +1101,13 @@ class network_analyzer():
             self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'] = {}
 
             for cust_name,imp_list in self.results[_feeder_ref]['trans_cust_impedance_list'].items():
-                self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'][cust_name] = np.mean(imp_list)
-                self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'][cust_name] = np.max(imp_list)
-
+                if len(imp_list)>0:
+                    self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'][cust_name] = np.mean(imp_list)
+                    self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'][cust_name] = np.max(imp_list)
+                else:
+                    self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'][cust_name] = None
+                    self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'][cust_name] = None
+           
             try:
                 self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max([x for x in self.results[_feeder_ref]['nominal_voltages'] if x!=None])
             except:
@@ -1253,17 +1261,24 @@ class network_analyzer():
         self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'] = {}
 
         for trans_name,imp_list in self.results[_feeder_ref]['sub_trans_impedance_list'].items():
-            self.results[_feeder_ref]['avg_mv_line_impedance_sub_transformers'][trans_name] = np.mean(imp_list)
-            self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'][trans_name] = np.max(imp_list)
-
+            if len(imp_list)>0:
+                self.results[_feeder_ref]['avg_mv_line_impedance_sub_transformers'][trans_name] = np.mean(imp_list)
+                self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'][trans_name] = np.max(imp_list)
+            else:
+                self.results[_feeder_ref]['avg_mv_line_impedance_sub_transformers'][trans_name] = None
+                self.results[_feeder_ref]['max_mv_line_impedance_sub_transformers'][trans_name] = None
 
         #Average and Maximum LV line impedance from distribution transformer to customer
         self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'] = {}
         self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'] = {}
 
         for cust_name,imp_list in self.results[_feeder_ref]['trans_cust_impedance_list'].items():
-            self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'][cust_name] = np.mean(imp_list)
-            self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'][cust_name] = np.max(imp_list)
+            if len(imp_list)>0:
+                self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'][cust_name] = np.mean(imp_list)
+                self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'][cust_name] = np.max(imp_list)
+            else:
+                self.results[_feeder_ref]['avg_lv_line_impedance_transformer_cust'][cust_name] = None
+                self.results[_feeder_ref]['max_lv_line_impedance_transformer_cust'][cust_name] = None
 
         try:
             self.results[_feeder_ref]['nominal_medium_voltage_class'] = np.max([x for x in self.results[_feeder_ref]['nominal_voltages'] if x!=None])
