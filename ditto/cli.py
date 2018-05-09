@@ -27,8 +27,8 @@ def cli(ctx, verbose):
 @cli.command()
 @click.option("--input", type=click.Path(exists=True), help="Path to input file")
 @click.option("--output", type=click.Path(exists=True), help="Path to output file")
-@click.option("--from", help="Convert from OpenDSS, Cyme, GridLAB-D")
-@click.option("--to", help="Convert to OpenDSS, Cyme, GridLAB-D")
+@click.option("--from", help="Convert from OpenDSS, Cyme, GridLAB-D, Demo")
+@click.option("--to", help="Convert to OpenDSS, Cyme, GridLAB-D, Demo")
 @click.pass_context
 def convert(ctx, **kwargs):
     """ Convert from one type to another"""

@@ -87,6 +87,9 @@ class Converter(object):
         elif self._from == 'gridlabd':
             inputs = {'input_file': os.path.abspath(feeder)}
 
+        # Demo Case
+        elif self._from == 'demo':
+            inputs = {'input_file': os.path.abspath(feeder)}
 
         #DEW
         #TODO....
