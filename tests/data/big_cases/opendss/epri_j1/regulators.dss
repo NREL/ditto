@@ -1,0 +1,37 @@
+New Transformer.regxfmr_B18865 phases=1 windings=2 buses=(B18865.3, B18865reg.3) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 enabled=True
+New line.temp1 bus1=B18865.1 bus2=B18865reg.1 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New line.temp2 bus1=B18865.2 bus2=B18865reg.2 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B18865_ctrl transformer=regxfmr_B18865 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=45
+
+New Transformer.regxfmr_B19008 phases=1 windings=2 buses=(B19007.2, B19007reg.2) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 enabled=True
+New line.temp3 bus1=B19007.1 bus2=B19007reg.1 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B19008_ctrl transformer=regxfmr_B19008 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=46
+
+New Transformer.regxfmr_B18863 phases=1 windings=2 buses=(B18862.1, B18862reg.1) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 enabled=True
+New line.temp5 bus1=B18862.2 bus2=B18862reg.2 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New line.temp6 bus1=B18862.3 bus2=B18862reg.3 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B18863_ctrl transformer=regxfmr_B18863 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=47
+
+New Transformer.regxfmr_B19010 phases=1 windings=2 buses=(B19009.1, B19009reg.1) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 enabled=True
+New line.temp8 bus1=B19009.2 bus2=B19009reg.2 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B19010_ctrl transformer=regxfmr_B19010 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=48
+
+New Transformer.regxfmr_B4874 phases=1 windings=2 buses=(B4877.1, B4877reg.1) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.05 Mintap=0.95 enabled=True
+New line.temp9 bus1=B4877.2 bus2=B4877reg.2 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New line.temp10 bus1=B4877.3 bus2=B4877reg.3 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B4874_ctrl transformer=regxfmr_B4874 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=49
+
+New Transformer.regxfmr_B18864 phases=1 windings=2 buses=(B18864.2, B18864reg.2) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 enabled=True
+New line.temp11 bus1=B18864.1 bus2=B18864reg.1 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New line.temp12 bus1=B18864.3 bus2=B18864reg.3 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B18864_ctrl transformer=regxfmr_B18864 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=50
+
+New Transformer.regxfmr_B4872 phases=1 windings=2 buses=(B4872.3, B4872reg.3) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.05 Mintap=0.95 enabled=True
+New line.temp13 bus1=B4872.1 bus2=B4872reg.1 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New line.temp14 bus1=B4872.2 bus2=B4872reg.2 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B4872_ctrl transformer=regxfmr_B4872 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=51
+
+New Transformer.regxfmr_B4868 phases=1 windings=2 buses=(B4870.2, B4870reg.2) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.05 Mintap=0.95 enabled=True
+New line.temp15 bus1=B4870.1 bus2=B4870reg.1 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New line.temp16 bus1=B4870.3 bus2=B4870reg.3 switch=yes enabled=yes phases=1 normamps=99999 emergamps=99999
+New RegControl.regxfmr_B4868_ctrl transformer=regxfmr_B4868 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=52

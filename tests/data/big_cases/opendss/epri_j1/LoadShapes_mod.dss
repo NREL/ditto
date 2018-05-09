@@ -1,0 +1,3 @@
+new loadshape.Commercial  npts=1, sinterval=1, mult=(1)
+new loadshape.Other  npts=1, sinterval=1, mult=(1)
+new loadshape.AggLoadProfile  npts=1, sinterval=1, mult=(1)

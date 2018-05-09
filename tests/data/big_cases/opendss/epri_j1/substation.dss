@@ -1,0 +1,12 @@
+New Circuit.J1  pu=0.97 r1=1.376 x1=14.257 r0=0.001 x0=8.203 bus1=S basekv=69
+
+New Transformer.SubXfmr phases=3 windings=2 buses=(S,LS_Bus) conns=(wye,wye)
+~ kvs=(68.8,13.09) kvas=(16000,16000) numtaps=16
+~ xhl=11.63 wdg=1 %r=0.596 wdg=2 %r=0.596
+~ ppm_antifloat=5
+
+New regcontrol.SubXfmr transformer=SubXfmr vreg=124 winding=2 band=2 PTratio=60 Delay=90 tapdelay=30 enabled=True
+
+New line.temp_sub bus1=LS_Bus bus2=FeederHead switch=yes enabled=yes phases=3 normamps=99999 emergamps=99999
+
+New Load.Aggregate_Load phases=3 bus=LS_Bus.1.2.3 kV=12.47 kW=5000 pf=-0.98 status=variable mode=4 CVRwatts=0.8 CVRvars=3 class=1 numcust=1 yearly=AggLoadProfile

@@ -1,0 +1,3 @@
+{"master_file": "../tests/data/big_cases/opendss/ieee_8500node/Master-unbal.dss",
+ "buscoordinates_file": "../tests/data/big_cases/opendss/ieee_8500node/buscoord.dss"
+}

@@ -1,0 +1,16 @@
+New Capacitor.B4909-1 bus=B4909 kV=12.47 kvar=900 conn=wye
+New Capacitor.B18944 bus=B18941 kV=12.47 kvar=1200 conn=wye
+New Capacitor.B4862-1 bus=B4862 kV=12.47 kvar=600 conn=wye
+New Capacitor.B4829-1 bus=B4829 kV=12.47 kvar=600 conn=wye
+New Capacitor.B4877-1 bus=B4877 kV=12.47 kvar=600 conn=wye
+
+New Capcontrol.B4909-1 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
+~ type=volt ON=120.5 OFF=125 PTphase=2 PTratio=60
+New Capcontrol.B18944 Capacitor=B18944 element=Line.OH_B18944 terminal=1 Delay=31
+~ type=volt ON=118 OFF=124 PTphase=1 PTratio=60
+!New Capcontrol.B4862-1 Capacitor=B4862-1 element=Line.OH_B4861 terminal=1 Delay=17
+!~ type=volt ON=120.9 OFF=123.5 PTphase=2 PTratio=63.5
+!New Capcontrol.B4829-1 Capacitor=B4829-1 element=Line.OH_B4832 terminal=1 Delay=18
+!~ type=volt ON=120.9 OFF=123.5 PTphase=2 PTratio=63.5
+New Capcontrol.B4877-1 Capacitor=B4877-1 element=Line.OH_B4873 terminal=1 Delay=32
+~ type=volt ON=121 OFF=125 PTphase=2 PTratio=60
