@@ -12,111 +12,111 @@ Here is the list of implemented metrics with their description. The list is orga
 
 |              Metric name              | Type  | Unit  |                      Metric description                      |                   Comments                   |
 | :-----------------------------------: | :---: | :---: | :----------------------------------------------------------: | :------------------------------------------: |
-|           *mv_length_miles*           | Float | miles |          The total length of medium voltage lines.           |          Needs the nominal voltages          |
-|         *Length_mv3ph_miles*          | Float | miles |      The total length of medium voltage, 3 phase lines.      |          Needs the nominal voltages          |
-|        *Length_OH_mv3ph_miles*        | Float | miles | The total length of medium voltage, overhead, 3 phase lines. |  Needs the nominal voltages and line_type.   |
-|         *Length_mv2ph_miles*          | Float | miles |      The total length of medium voltage, 2 phase lines.      |          Needs the nominal voltages          |
-|        *Length_OH_mv2ph_miles*        | Float | miles | The total length of medium voltage, overhead, 2 phase lines. |  Needs the nominal voltages and line_type.   |
-|         *Length_mv1ph_miles*          | Float | miles |      The total length of medium voltage, 1 phase lines.      |          Needs the nominal voltages          |
-|        *Length_OH_mv1ph_miles*        | Float | miles | The total length of medium voltage, overhead, 1 phase lines. |  Needs the nominal voltages and line_type.   |
-|    *percentage_overhead_MV_lines*     | Float |   -   |       Percentage of MV lines that are overhead lines.        |  Needs the nominal voltages and line_type.   |
-| *ratio_MV_line_length_to_nb_customer* | Float | miles |     mv_length_miles devided by the number of customers.      | Needs nominal voltages and load information. |
-|        *furtherest_node_miles*        | Float | miles | Maximum distance between the substation and any node of the network. |                                              |
+|           *mv_len_mi*           | Float | miles |          The total length of medium voltage lines.           |          Needs the nominal voltages          |
+|         *mv_3ph_len_mi*          | Float | miles |      The total length of medium voltage, 3 phase lines.      |          Needs the nominal voltages          |
+|        *mv_oh_3ph_len_mi*        | Float | miles | The total length of medium voltage, overhead, 3 phase lines. |  Needs the nominal voltages and line_type.   |
+|         *mv_2ph_len_mi*          | Float | miles |      The total length of medium voltage, 2 phase lines.      |          Needs the nominal voltages          |
+|        *mv_oh_2ph_len_mi*        | Float | miles | The total length of medium voltage, overhead, 2 phase lines. |  Needs the nominal voltages and line_type.   |
+|         *mv_1ph_len_mi*          | Float | miles |      The total length of medium voltage, 1 phase lines.      |          Needs the nominal voltages          |
+|        *mv_oh_1ph_len_mi*        | Float | miles | The total length of medium voltage, overhead, 1 phase lines. |  Needs the nominal voltages and line_type.   |
+| *perct_mv_oh_len* | Float |   -   |       Percentage of MV lines that are overhead lines.        |  Needs the nominal voltages and line_type.   |
+| *ratio_mv_len_to_num_cust* | Float | miles |     mv_length_miles devided by the number of customers.      | Needs nominal voltages and load information. |
+|        *max_sub_node_distance_mi*        | Float | miles | Maximum distance between the substation and any node of the network. |                                              |
 |    *nominal_medium_voltage_class*     | Float | Volts |              Nominal voltage of medium voltage.              |                                              |
 
 ### Realistic electrical design and equipment parameters (LV)
 
 |              Metric name              | Type  | Unit  |                      Metric description                      |                   Comments                   |
 | :-----------------------------------: | :---: | :---: | :----------------------------------------------------------: | :------------------------------------------: |
-|           *lv_length_miles*           | Float | miles |            The total length of low voltage lines.            |          Needs the nominal voltages          |
-|         *Length_lv3ph_miles*          | Float | miles |       The total length of low voltage, 3 phase lines.        |          Needs the nominal voltages          |
-|        *Length_OH_lv3ph_miles*        | Float | miles |  The total length of low voltage, overhead, 3 phase lines.   |  Needs the nominal voltages and line_type.   |
-|         *Length_lv1ph_miles*          | Float | miles |       The total length of low voltage, 1 phase lines.        |          Needs the nominal voltages          |
-|        *Length_OH_lv1ph_miles*        | Float | miles |  The total length of low voltage, overhead, 1 phase lines.   |  Needs the nominal voltages and line_type.   |
-|    *maximum_length_of_secondaries*    | Float | miles | The maximum length between a distribution transformer and a low voltage customer. |          Needs the nominal voltages          |
-|         *Length_lv2ph_miles*          | Float | miles |       The total length of low voltage, 2 phase lines.        |          Needs the nominal voltages          |
-|        *Length_OH_lv2ph_miles*        | Float | miles |  The total length of low voltage, overhead, 2 phase lines.   |  Needs the nominal voltages and line_type.   |
-|    *percentage_overhead_LV_lines*     | Float |   -   |       Percentage of LV lines that are overhead lines.        |  Needs the nominal voltages and line_type.   |
-| *ratio_LV_line_length_to_nb_customer* | Float | miles |     lv_length_miles devided by the number of customers.      | Needs nominal voltages and load information. |
+|           *lv_len_mi*           | Float | miles |            The total length of low voltage lines.            |          Needs the nominal voltages          |
+|         *lv_3ph_len_mi*          | Float | miles |       The total length of low voltage, 3 phase lines.        |          Needs the nominal voltages          |
+|        *lv_oh_3ph_len_mi*        | Float | miles |  The total length of low voltage, overhead, 3 phase lines.   |  Needs the nominal voltages and line_type.   |
+|         *lv_1ph_len_mi*          | Float | miles |       The total length of low voltage, 1 phase lines.        |          Needs the nominal voltages          |
+|        *lv_oh_1ph_len_mi*        | Float | miles |  The total length of low voltage, overhead, 1 phase lines.   |  Needs the nominal voltages and line_type.   |
+|    *max_lv_line:*    | Float | miles | The maximum length between a distribution transformer and a low voltage customer. |          Needs the nominal voltages          |
+|         *lv_2ph_len_mi*          | Float | miles |       The total length of low voltage, 2 phase lines.        |          Needs the nominal voltages          |
+|        *lv_oh_2ph_len_mi*        | Float | miles |  The total length of low voltage, overhead, 2 phase lines.   |  Needs the nominal voltages and line_type.   |
+| *perct_lv_oh_len* | Float |   -   |       Percentage of LV lines that are overhead lines.        |  Needs the nominal voltages and line_type.   |
+| *ratio_lv_len_to_num_cust* | Float | miles |     lv_length_miles devided by the number of customers.      | Needs nominal voltages and load information. |
 
 ### Voltage control schemes
 
 |           Metric name            |  Type   | Unit  |                      Metric description                      |                     Comments                     |
 | :------------------------------: | :-----: | :---: | :----------------------------------------------------------: | :----------------------------------------------: |
-|        *No_of_Regulators*        | Integer |   -   |               The number of regulator objects.               |                                                  |
-|      *Nb_of_CapacitorBanks*      | Integer |   -   |                The number of capacitor banks.                |                                                  |
-|         *No_of_Boosters*         | Integer |   -   |                   The number of boosters.                    | Boosters are not currently implemented in DiTTo. |
-| *average_regulator_sub_distance* |  Float  | miles | Mean distance between the substation and regulator objects.  |       If no regulator, this metric is Nan.       |
-| *average_capacitor_sub_distance* |  Float  | miles | Mean distance between the substation and capacitor bank objects. |       If no capacitor, this metric is Nan.       |
+|        *num_regulators*        | Integer |   -   |               The number of regulator objects.               |                                                  |
+|      *num_capacitors*      | Integer |   -   |                The number of capacitor banks.                |                                                  |
+|         *num_boosters*         | Integer |   -   |                   The number of boosters.                    | Boosters are not currently implemented in DiTTo. |
+| *avg_regulator_sub_distance_mi* |  Float  | miles | Mean distance between the substation and regulator objects.  |       If no regulator, this metric is Nan.       |
+| *avg_capacitor_sub_distance_mi* |  Float  | miles | Mean distance between the substation and capacitor bank objects. |       If no capacitor, this metric is Nan.       |
 
 ### Basic protection
 
 |           Metric name           |  Type   | Unit  |                     Metric description                     |              Comments              |
 | :-----------------------------: | :-----: | :---: | :--------------------------------------------------------: | :--------------------------------: |
-|          *No_of_Fuses*          | Integer |   -   |                      Number of Fuses.                      |                                    |
-|        *No_of_Reclosers*        | Integer |   -   |                    Number of Reclosers.                    |                                    |
-|     *No_of_Sectionalizers*      | Integer |   -   |                 Number of Sectionalizers.                  |                                    |
-|  *sectionalizers_per_recloser*  |  Float  |   -   |    *No_of_Sectionalizers* divided by *No_of_Reclosers*.    | If no recloser, this metric is Nan |
-| *average_recloser_sub_distance* |  Float  | miles | Mean distance between the substation and recloser objects. | If no recloser, this metric is Nan |
-|        *No_of_Breakers*         | Integer |   -   |                    Number of Breakers.                     |                                    |
+|          *num_fuses*          | Integer |   -   |                      Number of Fuses.                      |                                    |
+|        *num_reclosers*        | Integer |   -   |                    Number of Reclosers.                    |                                    |
+|     *num_sectionalizers*      | Integer |   -   |                 Number of Sectionalizers.                  |                                    |
+|  *num_sectionalizers_per_recloser*  |  Float  |   -   |    *No_of_Sectionalizers* divided by *No_of_Reclosers*.    | If no recloser, this metric is Nan |
+| *avg_recloser_sub_distance_mi* |  Float  | miles | Mean distance between the substation and recloser objects. | If no recloser, this metric is Nan |
+|        *num_breakers*         | Integer |   -   |                    Number of Breakers.                     |                                    |
 
 ### Reconfiguration Options
 
 |              Metric name              |  Type   | Unit |                      Metric description                      |                           Comments                           |
 | :-----------------------------------: | :-----: | :--: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|           *No_of_Switches*            | Integer |  -   |                     Number of switches.                      |                                                              |
-|         *No_of_Interruptors*          | Integer |  -   |                   Number of interruptors.                    |                                                              |
-| *number_of_links_to_adjacent_feeders* | Integer |  -   | Number of links between the current feeder and other feeders. | This metrics only works when computing metrics per feeder on a system with multiple feeders. |
-|       *nb_loops_within_feeder*        | Integer |  -   |              Number of loops within the feeder.              |                                                              |
+|           *num_switches*            | Integer |  -   |                     Number of switches.                      |                                                              |
+|         *num_interruptors*          | Integer |  -   |                   Number of interruptors.                    |                                                              |
+| *num_links_adjacent_feeders* | Integer |  -   | Number of links between the current feeder and other feeders. | This metrics only works when computing metrics per feeder on a system with multiple feeders. |
+|       *num_loops*        | Integer |  -   |              Number of loops within the feeder.              |                                                              |
 
 ### Transformers
 
 |                  Metric name                  |  Type   | Unit |                      Metric description                      |                          Comments                           |
 | :-------------------------------------------: | :-----: | :--: | :----------------------------------------------------------: | :---------------------------------------------------------: |
-|       *nb_of_distribution_transformers*       | Integer |  -   |             Number of distribution transformers.             |                                                             |
-|      *number_of_overloaded_transformer*       | Integer |  -   | Number of distribution transformers where its secondary KVA rating is smaller than the sum of downstream load KVA. |                                                             |
-| *distribution_transformer_total_capacity_MVA* |  Float  | MVA  | Sum of distribution transformer total capacity (sum of ratings accross the windings) |                                                             |
-|                 *nb_1ph_Xfrm*                 | Integer |  -   |              Number of one phase transformers.               |                                                             |
-|                 *nb_3ph_Xfrm*                 | Integer |  -   |             Number of three phase transformers.              |                                                             |
-|             *Ratio_1phto3ph_Xfrm*             |  Float  |  -   |            *nb_1ph_Xfrm* divided by *nb_3ph_Xfrm*            | if there is no three phase transformer, this metric is Nan. |
+|       *num_distribution_transformers*       | Integer |  -   |             Number of distribution transformers.             |                                                             |
+|      *num_overloaded_transformers*       | Integer |  -   | Number of distribution transformers where its secondary KVA rating is smaller than the sum of downstream load KVA. |                                                             |
+| *sum_distribution_transformer_mva* |  Float  | MVA  | Sum of distribution transformer total capacity (sum of ratings accross the windings) |                                                             |
+|                 *num_1ph_transformers*                 | Integer |  -   |              Number of one phase transformers.               |                                                             |
+|                 *num_3ph_transformers*                 | Integer |  -   |             Number of three phase transformers.              |                                                             |
+|             *ratio_1ph_to_3ph_transformers*             |  Float  |  -   |            *nb_1ph_Xfrm* divided by *nb_3ph_Xfrm*            | if there is no three phase transformer, this metric is Nan. |
 
 ### Substations
 
 |        Metric name        |  Type  | Unit |       Metric description        | Comments |
 | :-----------------------: | :----: | :--: | :-----------------------------: | :------: |
-|     *Substation_Name*     | String |  -   |   The name of the substation.   |          |
-| *Substation_Capacity_MVA* | Float  | MVA  | The capacity of the substation. |          |
+|     *substation_name*     | String |  -   |   The name of the substation.   |          |
+| *sub_capacity_mva* | Float  | MVA  | The capacity of the substation. |          |
 
 ### Load specification
 
 |            Metric name            |  Type   |       Unit       |                      Metric description                      |          Comments          |
 | :-------------------------------: | :-----: | :--------------: | :----------------------------------------------------------: | :------------------------: |
-|         *Total_Demand_kW*         |  Float  |      Watts       |                  Total active power demand.                  |                            |
-|      *total_demand_phase_A*       |  Float  |      Watts       |            Total active power demand on phase A.             |                            |
-|      *total_demand_phase_B*       |  Float  |      Watts       |            Total active power demand on phase B.             |                            |
-|      *total_demand_phase_C*       |  Float  |      Watts       |            Total active power demand on phase C.             |                            |
-|    *Total_Reactive_Power_kVar*    |  Float  |       Vars       |                 Total reactive power demand.                 |                            |
-|   *lv_ph_A_load_kw_percentage*    |  Float  |        -         |  Percentage of low voltage active power demand on phase A.   |                            |
-|   *lv_ph_B_load_kw_percentage*    |  Float  |        -         |  Percentage of low voltage active power demand on phase B.   |                            |
-|   *lv_ph_C_load_kw_percentage*    |  Float  |        -         |  Percentage of low voltage active power demand on phase C.   |                            |
-|         *No_Loads_LV_1ph*         | Integer |        -         |             Number of low voltage, 1 phase loads             |                            |
-|         *No_Loads_LV_3ph*         | Integer |        -         |             Number of low voltage, 3 phase loads             |                            |
-|         *No_Loads_MV_3ph*         | Integer |        -         |           Number of medium voltage, 3 phase loads            |                            |
-|        *No_Loads_per_Xfrm*        |  Float  |        -         |    Average number of loads per distribution transformer.     |                            |
-|    *average_load_power_factor*    |  Float  |        -         |               Average power factor for loads.                |                            |
-| *average_imbalance_load_by_phase* |  Float  |      Watts       |                             TODO                             |                            |
-|         *No_of_Customers*         | Integer |        -         |                     Number of customers.                     | Need customer information. |
+|         *sum_load_kw*         |  Float  |      Watts       |                  Total active power demand.                  |                            |
+|      *sum_load_pha_kw*       |  Float  |      Watts       |            Total active power demand on phase A.             |                            |
+|      *sum_load_phb_kw*       |  Float  |      Watts       |            Total active power demand on phase B.             |                            |
+|      *sum_load_phc_kw*       |  Float  |      Watts       |            Total active power demand on phase C.             |                            |
+|    *sum_load_kvar*    |  Float  |       Vars       |                 Total reactive power demand.                 |                            |
+|   *perct_lv_pha_load_kw*    |  Float  |        -         |  Percentage of low voltage active power demand on phase A.   |                            |
+|   *perct_lv_phb_load_kw*    |  Float  |        -         |  Percentage of low voltage active power demand on phase B.   |                            |
+|   *perct_lv_phc_load_kw*    |  Float  |        -         |  Percentage of low voltage active power demand on phase C.   |                            |
+|         *num_lv_1ph_loads*         | Integer |        -         |             Number of low voltage, 1 phase loads             |                            |
+|         *num_lv_3ph_loads*         | Integer |        -         |             Number of low voltage, 3 phase loads             |                            |
+|         *num_mv_3ph_loads*         | Integer |        -         |           Number of medium voltage, 3 phase loads            |                            |
+|        *avg_num_load_per_transformer*        |  Float  |        -         |    Average number of loads per distribution transformer.     |                            |
+|    *avg_load_pf*    |  Float  |        -         |               Average power factor for loads.                |                            |
+| *avg_load_imbalance_by_phase* |  Float  |      Watts       |                             TODO                             |                            |
+|         *num_customers*         | Integer |        -         |                     Number of customers.                     | Need customer information. |
 |        *customer_density*         |  Float  | per square miles | *No_of_Customers* divided by the convex Hull surface of the feeder. |                            |
-|          *load_density*           |  Float  | per square miles | *Total_Demand_kW* divided by the convex Hull surface of the feeder. |                            |
-|           *var_density*           |  Float  | per square miles | *Total_Reactive_Power_kVar* divided by the convex Hull surface of the feeder. |                            |
+|          *load_density_kw*           |  Float  | per square miles | *Total_Demand_kW* divided by the convex Hull surface of the feeder. |                            |
+|           *load_density_kvar*           |  Float  | per square miles | *Total_Reactive_Power_kVar* divided by the convex Hull surface of the feeder. |                            |
 
 ### Graph Topology
 
 |    Metric name     | Type  | Unit |   Metric description   | Comments |
 | :----------------: | :---: | :--: | :--------------------: | :------: |
-|    *Avg_Degree*    | Float |  -   |      Mean degree.      |          |
-| *Char_Path_Length* | Float |  -   |  Average path length.  |          |
-|  *Graph_Diameter*  | Float |  -   | Diameter of the graph. |          |
+|    *avg_degree*    | Float |  -   |      Mean degree.      |          |
+| *Char_path_Length* | Float |  -   |  Average path length.  |          |
+|  *diameter*  | Float |  -   | Diameter of the graph. |          |
 
 
 
