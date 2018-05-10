@@ -12,6 +12,7 @@ from ditto.models.node import Node
 from ditto.models.line import Line
 from ditto.models.winding import Winding
 from ditto.models.powertransformer import PowerTransformer
+from ditto.models.regulator import Regulator
 from ditto.models.position import Position
 from ditto.models.wire import Wire
 from ditto.models.phase_winding import PhaseWinding
@@ -20,9 +21,10 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.capacitor import Capacitor
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.base import Unicode
+from ditto.models.feeder_metadata import Feeder_metadata
 
 
-class reader:
+class Reader(object):
     '''JSON-->DiTTo Reader class
 
 The reader expects the following format:
@@ -96,7 +98,7 @@ Author: Nicolas Gensollen. January 2018
 
         ditto_klasses = [
             'PowerSource', 'Node', 'Line', 'Winding', 'PowerTransformer', 'Position', 'Wire', 'PhaseWinding', 'Load', 'PhaseLoad', 'Capacitor',
-            'PhaseCapacitor'
+            'PhaseCapacitor', 'Feeder_metadata', 'Regulator'
         ]
 
         #Create a new empty model

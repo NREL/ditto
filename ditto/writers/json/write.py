@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
 import json
+import json_tricks
 
 from ditto.models.position import Position
 from ditto.models.base import Unicode
@@ -14,7 +15,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.phase_capacitor import PhaseCapacitor
 
 
-class writer:
+class Writer(object):
     '''DiTTo--->JSON Writer class
 
 The writer produce a file with the following format:
@@ -167,4 +168,7 @@ The output file is configured in the constructor.
                 _model[-1][key] = {'klass': str(type(value)).split("'")[1], 'value': value}
 
         with open(self.output_path, 'w') as f:
-            json.dump(_model, f)
+            try:
+                f.write(json.dumps(_model))
+            except:
+                f.write(json_tricks.dumps(_model,allow_nan=True))
