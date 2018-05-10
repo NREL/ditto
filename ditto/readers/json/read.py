@@ -24,7 +24,7 @@ from ditto.models.base import Unicode
 from ditto.models.feeder_metadata import Feeder_metadata
 
 
-class Reader:
+class Reader(object):
     '''JSON-->DiTTo Reader class
 
 The reader expects the following format:

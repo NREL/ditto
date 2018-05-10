@@ -15,7 +15,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.phase_capacitor import PhaseCapacitor
 
 
-class Writer:
+class Writer(object):
     '''DiTTo--->JSON Writer class
 
 The writer produce a file with the following format:
@@ -169,6 +169,6 @@ The output file is configured in the constructor.
 
         with open(self.output_path, 'w') as f:
             try:
-                json.dump(_model, f)
+                f.write(json.dumps(_model))
             except:
-                json_tricks.dump(_model,f,allow_nan=True)
+                f.write(json_tricks.dumps(_model,allow_nan=True))
