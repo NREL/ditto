@@ -88,7 +88,7 @@ class Writer(AbstractWriter):
         if 'linecodes_flag' in kwargs and isinstance(kwargs['linecodes_flag'], bool):
             self.linecodes_flag = kwargs['linecodes_flag']
 
-        self.output_name = kwargs.get("output_name", "ephasor_model.xlsx")
+        self.output_name = kwargs.get("output_name", "ephasor_model")
 
         # Call super
         super(Writer, self).__init__(**kwargs)
@@ -953,7 +953,7 @@ class Writer(AbstractWriter):
         df4 = self.transformer()
 
         df9 = self.bus()
-        writer = pd.ExcelWriter(self.output_path + self.output_name, engine='xlsxwriter')
+        writer = pd.ExcelWriter(os.path.join(self.output_path,self.output_name+'.xlsx'), engine='xlsxwriter')
 
         df1.to_excel(writer, 'Line 3-phase', index=False)
         # workbook = writer.book
