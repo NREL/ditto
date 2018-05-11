@@ -763,14 +763,14 @@ class Writer(AbstractWriter):
                         #if line_type=='breaker':
                         #    new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,phases))
 
-                        if line_type=='switch':
+                        if line_type=='switch' or line_type == 'breaker':
                             closed_phase=np.sort([wire.phase for wire in i.wires if wire.is_open==0 and wire.phase not in ['N','N1','N2']])
                             if len(closed_phase)==0:
                                 new_line_string+=',M,None,0'
                             else:
                                 new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,closed_phase))
 
-                        if line_type=='fuse' or line_type=='recloser' or line_type=='breaker':
+                        if line_type=='fuse' or line_type=='recloser':
                             closed_phase=np.sort([wire.phase for wire in i.wires if wire.phase not in ['N','N1','N2']])
                             new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,closed_phase))
 
