@@ -827,9 +827,38 @@ class network_analyzer():
 
             #Total demand and total KVAR updates
             if hasattr(obj, 'phase_loads') and obj.phase_loads is not None:
+
                 _phase_loads_ = [p for p in obj.phase_loads if p.drop != 1]
-                self.results[feeder_name]['sum_load_kw'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
-                self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
+
+                #If P and Q are zero for all phase and we have the KVA of the connected_transformer, then use that...
+                if np.all(np.array([pl.p for pl in _phase_loads_])==0) and np.all(np.array([pl.q for pl in _phase_loads_])==0):
+                    if obj.transformer_connected_kva is not None and obj.transformer_connected_kva != 0:
+                        self.results[feeder_name]['sum_load_kw'] += obj.transformer_connected_kva
+                        self.load_distribution.append(obj.transformer_connected_kva)
+                        #Assume balance accross phases...
+                        for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
+                            if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
+                                if hasattr(phase_load, 'p') and phase_load.p is not None:
+                                    if phase_load.phase == 'A':
+                                        self.results[feeder_name]['sum_load_pha_kw'] += float(obj.transformer_connected_kva) / float(len(_phase_loads_))
+                                    elif phase_load.phase == 'B':
+                                        self.results[feeder_name]['sum_load_phb_kw'] += float(obj.transformer_connected_kva) / float(len(_phase_loads_))
+                                    elif phase_load.phase == 'C':
+                                        self.results[feeder_name]['sum_load_phc_kw'] += float(obj.transformer_connected_kva) / float(len(_phase_loads_))
+                else:
+                    self.results[feeder_name]['sum_load_kw'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
+                    self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
+
+                    for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
+                        if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
+                            if hasattr(phase_load, 'p') and phase_load.p is not None:
+                                if phase_load.phase == 'A':
+                                    self.results[feeder_name]['sum_load_pha_kw'] += phase_load.p
+                                elif phase_load.phase == 'B':
+                                    self.results[feeder_name]['sum_load_phb_kw'] += phase_load.p
+                                elif phase_load.phase == 'C':
+                                    self.results[feeder_name]['sum_load_phc_kw'] += phase_load.p
+
                 self.results[feeder_name]['sum_load_kvar'] += np.sum([pl.q for pl in _phase_loads_ if pl.q is not None])
                 #Pass if P and Q are zero (might happen in some datasets...)
                 try:
@@ -837,15 +866,6 @@ class network_analyzer():
                     self.results[feeder_name]['power_factor_distribution'].append(load_power_factor)
                 except ZeroDivisionError:
                     pass
-                for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
-                    if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
-                        if hasattr(phase_load, 'p') and phase_load.p is not None:
-                            if phase_load.phase == 'A':
-                                self.results[feeder_name]['sum_load_pha_kw'] += phase_load.p
-                            elif phase_load.phase == 'B':
-                                self.results[feeder_name]['sum_load_phb_kw'] += phase_load.p
-                            elif phase_load.phase == 'C':
-                                self.results[feeder_name]['sum_load_phc_kw'] += phase_load.p
 
             return
 
