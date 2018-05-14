@@ -1743,7 +1743,7 @@ class Reader(AbstractReader):
                     new_line['wires']=[]
                     total_closed = 0
                     for p in phases+['N']:
-                        if p in settings['closedphase']:
+                        if p in settings['closedphase'] and settings['closedphase'].lower() != 'none':
                             api_wire=self.configure_wire(model, {}, {}, p, True, False, False) # Assume a closed switch as default
                             total_closed+=1
                         elif p == 'N' and total_closed >= 1:
@@ -1799,7 +1799,8 @@ class Reader(AbstractReader):
                     new_line['wires']=[]
                     total_closed = 0
                     for p in phases+['N']:
-                        if p in settings['closedphase']:
+                        if p in settings['closedphase'] and settings['closedphase'].lower() != 'none':
+                            total_closed+=1
                             api_wire=self.configure_wire(model, {}, {}, p, False, False, False)
                         elif p == 'N' and total_closed >= 1:
                             api_wire=self.configure_wire(model, {}, {}, p, False, False, False) # Assume a closed switch as default
@@ -2452,8 +2453,6 @@ class Reader(AbstractReader):
                                                    'taps':22,
                                                    'lowerbandwidth':23,
                                                    'upperbandwidth':24,
-                                                   'minreg_range':25,
-                                                   'maxreg_range':26,
                                                    }
         mapp_grounding_transformer_settings={'sectionid':0,
                                                                    'equipmentid':6,
@@ -2514,6 +2513,8 @@ class Reader(AbstractReader):
                                                            'secondarytap':11,
                                                            'primarybasevoltage':17,
                                                            'secondarybasevoltage':18,
+                                                           'maxbuck':29,
+                                                           'maxboost':30,
                                                            'phaseon':37,
                                                                 }
         mapp_transformer={'id':0,
@@ -2531,8 +2532,6 @@ class Reader(AbstractReader):
                                           'taps':24,
                                           'lowerbandwidth':25,
                                           'upperbandwidth':26,
-                                          'minreg_range':27,
-                                          'maxreg_range':28,
                                           'phaseshift':41,
                                         }
         mapp_phase_shifter_transformer_settings={'sectionid':0,
@@ -2616,7 +2615,7 @@ class Reader(AbstractReader):
             #
             self.settings.update( self.parser_helper(line,
                                                           ['transformer_settings'],
-                                                          ['sectionid', 'eqid', 'coordx', 'coordy', 'primaryfixedtapsetting', 'secondaryfixedtapsetting', 'tertiaryfixedtapsetting', 'primarybasevoltage', 'secondarybasevoltage', 'tertiarybasevoltage'],
+                                                          ['sectionid', 'eqid', 'coordx', 'coordy', 'primaryfixedtapsetting', 'secondaryfixedtapsetting', 'tertiaryfixedtapsetting', 'primarybasevoltage', 'secondarybasevoltage', 'tertiarybasevoltage','maxbuck','maxboost'],
                                                           mapp_transformer_settings,
                                                           {'type':'transformer'}))
 
@@ -2652,7 +2651,7 @@ class Reader(AbstractReader):
             #
             self.auto_transformers.update( self.parser_helper(line,
                                                           ['auto_transformer'],
-                                                          ['id', 'kva', 'connection_configuration','noloadlosses','isltc','taps','lowerbandwidth','upperbandwidth','minreg_range','maxreg_range'],
+                                                          ['id', 'kva', 'connection_configuration','noloadlosses','isltc','taps','lowerbandwidth','upperbandwidth'],
                                                           mapp_auto_transformer) )
 
             #########################################
@@ -2698,7 +2697,7 @@ class Reader(AbstractReader):
             #
             self.transformers.update( self.parser_helper(line,
                                                       ['transformer'],
-                                                      ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift','isltc','taps','lowerbandwidth','upperbandwidth','minreg_range','maxreg_range'],
+                                                      ['id', 'type', 'kva', 'kvllprim', 'kvllsec', 'z1', 'z0', 'xr', 'xr0', 'conn', 'noloadlosses', 'phaseshift','isltc','taps','lowerbandwidth','upperbandwidth'],
                                                       mapp_transformer) )
 
         for sectionID, settings in self.settings.items():
@@ -2858,13 +2857,13 @@ class Reader(AbstractReader):
                     taps = float(transformer_data['taps'])
                     lowerbandwidth = float(transformer_data['lowerbandwidth'])
                     upperbandwidth = float(transformer_data['upperbandwidth'])
-                    minreg_range = transformer_data['minreg_range']
-                    maxreg_range = transformer_data['maxreg_range']
+                    minreg_range = int(float(settings['maxbuck']))
+                    maxreg_range = int(float(settings['maxboost']))
                     center_bandwidth = upperbandwidth - lowerbandwidth
 
                     api_regulator.ltc = 1
-                    api_regulator.highstep = int(math.floor(taps/2.0))
-                    api_regulator.lowstep = int(math.ceil(taps/2.0))
+                    api_regulator.highstep = minreg_range
+                    api_regulator.lowstep = maxreg_range
                     api_regulator.center_bandwidth = center_bandwidth
                     api_regulator.bandwidth = (upperbandwidth+lowerbandwidth) # ie. use the average bandwidth. The upper and lower are typically the same
                     #TODO: Add unit checking. These units are in percentages. Need to be updated to be in Volts for consistency (BUG in cyme writer too)

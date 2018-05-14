@@ -1083,6 +1083,22 @@ class Reader(AbstractReader):
                 except AttributeError:
                     pass
 
+                try:
+                    if len(wires) == 0:
+                        for p in obj['phases'].strip('"'):
+                            if p == 'N':
+                                continue
+                            api_wire = Wire(model)
+                            api_wire.phase = p
+                            wires.append(api_wire)
+                            if obj['status'] == 'OPEN':
+                                wires[-1].is_open = True
+                            else:
+                                wires[-1].is_open = False
+                except AttributeError:
+                    pass
+
+
                 api_line.wires = wires
 
             if obj_type == 'switch':
