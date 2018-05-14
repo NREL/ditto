@@ -1153,7 +1153,7 @@ class network_analyzer():
                     self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kvar'] = float(self.results[_feeder_ref]['sum_load_kvar'])/float(hull_surf_sqmile)
-                    self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['distribution_transformer_total_capacity_MVA'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['sum_distribution_transformer_mva'])/float(hull_surf_sqmile)
 
 
     def compute_all_metrics(self,*args):
@@ -1328,7 +1328,7 @@ class network_analyzer():
                 self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kvar'] = float(self.results[_feeder_ref]['sum_load_kvar'])/float(hull_surf_sqmile)
-                self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['distribution_transformer_total_capacity_MVA'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['sum_distribution_transformer_mva'])/float(hull_surf_sqmile)
 
 
 
