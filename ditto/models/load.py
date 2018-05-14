@@ -55,5 +55,8 @@ class Load(DiTToHasTraits):
     #Modification: Nicolas (December 2017)
     upstream_transformer_name = Unicode(help='''The name of the distribution transformer which serves this load''', default_value=None)
 
+    #Modification: Nicolas (May 2018)
+    transformer_connected_kva = Float(help='''KVA of the distribution transformer which serves this load.''', default_value=None)
+
     def build(self, model):
         self._model = model
