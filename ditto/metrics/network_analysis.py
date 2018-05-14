@@ -169,6 +169,11 @@ class network_analyzer():
         self.node_feeder_mapping = {}
         self.points = {}
 
+        #This flag indicates whether we should compute the kva density metric using transformer objects
+        #Default is True. If set to False, the `transformer_connected_kva` attribute of load objects will
+        #be used. This enables fair comparison between networks where LV data is missing.
+        self.compute_kva_density_with_transformers = True
+
         self.__substations = [obj for obj in self.model.models if isinstance(obj, PowerTransformer) and obj.is_substation == 1]
 
     def provide_network(self,network):
@@ -322,7 +327,7 @@ class network_analyzer():
                'sum_load_kvar', 'perct_lv_pha_load_kw', 'perct_lv_phb_load_kw', 'perct_lv_phc_load_kw',
                'num_lv_1ph_loads', 'num_lv_3ph_loads', 'num_mv_3ph_loads', 'avg_num_load_per_transformer',
                'avg_load_pf', 'avg_load_imbalance_by_phase', 'num_customers', 'cust_density',
-               'load_density_kw', 'load_density_kvar',
+               'load_density_kw', 'load_density_kvar', 'kva_density',
 
                #Graph Topology
                'avg_degree', 'avg_path_len', 'diameter'
@@ -756,6 +761,11 @@ class network_analyzer():
             if hasattr(obj, 'num_users') and obj.num_users is not None:
                 self.results[feeder_name]['num_customers'] += obj.num_users
 
+            #If we use the loads to compute the kva distribution...
+            if not self.compute_kva_density_with_transformers:
+                if hasattr(obj, 'transformer_connected_kva') and obj.transformer_connected_kva is not None:
+                    self.results[feeder_name]['sum_distribution_transformer_mva'] += obj.transformer_connected_kva * 10**-6
+
             if hasattr(obj, 'upstream_transformer_name') and obj.upstream_transformer_name is not None:
                 #Number of loads per distribution transformer
                 if obj.upstream_transformer_name in self.results[feeder_name]['num_load_per_transformer']:
@@ -827,9 +837,38 @@ class network_analyzer():
 
             #Total demand and total KVAR updates
             if hasattr(obj, 'phase_loads') and obj.phase_loads is not None:
+
                 _phase_loads_ = [p for p in obj.phase_loads if p.drop != 1]
-                self.results[feeder_name]['sum_load_kw'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
-                self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
+
+                #If P and Q are zero for all phase and we have the KVA of the connected_transformer, then use that...
+                if np.all(np.array([pl.p for pl in _phase_loads_])==0) and np.all(np.array([pl.q for pl in _phase_loads_])==0):
+                    if obj.transformer_connected_kva is not None and obj.transformer_connected_kva != 0:
+                        self.results[feeder_name]['sum_load_kw'] += obj.transformer_connected_kva
+                        self.load_distribution.append(obj.transformer_connected_kva)
+                        #Assume balance accross phases...
+                        for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
+                            if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
+                                if hasattr(phase_load, 'p') and phase_load.p is not None:
+                                    if phase_load.phase == 'A':
+                                        self.results[feeder_name]['sum_load_pha_kw'] += float(obj.transformer_connected_kva) / float(len(_phase_loads_))
+                                    elif phase_load.phase == 'B':
+                                        self.results[feeder_name]['sum_load_phb_kw'] += float(obj.transformer_connected_kva) / float(len(_phase_loads_))
+                                    elif phase_load.phase == 'C':
+                                        self.results[feeder_name]['sum_load_phc_kw'] += float(obj.transformer_connected_kva) / float(len(_phase_loads_))
+                else:
+                    self.results[feeder_name]['sum_load_kw'] += np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
+                    self.load_distribution.append(np.sum([pl.p for pl in _phase_loads_ if pl.p is not None]))
+
+                    for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
+                        if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
+                            if hasattr(phase_load, 'p') and phase_load.p is not None:
+                                if phase_load.phase == 'A':
+                                    self.results[feeder_name]['sum_load_pha_kw'] += phase_load.p
+                                elif phase_load.phase == 'B':
+                                    self.results[feeder_name]['sum_load_phb_kw'] += phase_load.p
+                                elif phase_load.phase == 'C':
+                                    self.results[feeder_name]['sum_load_phc_kw'] += phase_load.p
+
                 self.results[feeder_name]['sum_load_kvar'] += np.sum([pl.q for pl in _phase_loads_ if pl.q is not None])
                 #Pass if P and Q are zero (might happen in some datasets...)
                 try:
@@ -837,15 +876,6 @@ class network_analyzer():
                     self.results[feeder_name]['power_factor_distribution'].append(load_power_factor)
                 except ZeroDivisionError:
                     pass
-                for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
-                    if hasattr(phase_load,'phase') and phase_load.phase in ['A','B','C']:
-                        if hasattr(phase_load, 'p') and phase_load.p is not None:
-                            if phase_load.phase == 'A':
-                                self.results[feeder_name]['sum_load_pha_kw'] += phase_load.p
-                            elif phase_load.phase == 'B':
-                                self.results[feeder_name]['sum_load_phb_kw'] += phase_load.p
-                            elif phase_load.phase == 'C':
-                                self.results[feeder_name]['sum_load_phc_kw'] += phase_load.p
 
             return
 
@@ -935,8 +965,10 @@ class network_analyzer():
                     obj.windings[0].nominal_voltage!=obj.windings[1].nominal_voltage):
                     self.results[feeder_name]['num_distribution_transformers'] += 1
 
-                    if hasattr(obj.windings[0], 'rated_power') and obj.windings[0].rated_power is not None:
-                        self.results[feeder_name]['sum_distribution_transformer_mva'] += obj.windings[0].rated_power * 10**-6 #DiTTo in va
+                    #If we use the transformers to compute the kva distribution
+                    if self.compute_kva_density_with_transformers:
+                        if hasattr(obj.windings[0], 'rated_power') and obj.windings[0].rated_power is not None:
+                            self.results[feeder_name]['sum_distribution_transformer_mva'] += obj.windings[0].rated_power * 10**-6 #DiTTo in va
 
                     if hasattr(obj.windings[0], 'phase_windings') and obj.windings[0].phase_windings is not None:
                         if len(obj.windings[0].phase_windings) == 1:
@@ -961,10 +993,14 @@ class network_analyzer():
             logger.debug('Could not find feeder for {}'.format(obj.name))
             return None
 
-    def compute_all_metrics_per_feeder(self):
+    def compute_all_metrics_per_feeder(self, **kwargs):
         '''
             Computes all the available metrics for each feeder.
         '''
+        #Enables changing the flag
+        if 'compute_kva_density_with_transformers' in kwargs and isinstance(kwargs['compute_kva_density_with_transformers'], bool):
+            self.compute_kva_density_with_transformers = kwargs['compute_kva_density_with_transformers']
+
         self.transformer_load_mapping=self.get_transformer_load_mapping()
         self.compute_node_line_mapping()
         self.load_distribution = []
@@ -1119,6 +1155,8 @@ class network_analyzer():
             self.results[_feeder_ref]['cust_density'] = np.nan
             self.results[_feeder_ref]['load_density_kw'] = np.nan
             self.results[_feeder_ref]['load_density_kvar'] = np.nan
+            self.results[_feeder_ref]['kva_density'] = np.nan
+
             try:
                 _points=np.array(self.points[_feeder_ref])
             except KeyError:
@@ -1131,9 +1169,10 @@ class network_analyzer():
                     self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kvar'] = float(self.results[_feeder_ref]['sum_load_kvar'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['sum_distribution_transformer_mva'])/float(hull_surf_sqmile)
 
 
-    def compute_all_metrics(self,*args):
+    def compute_all_metrics(self,*args,**kwargs):
         '''
             This function computes all the metrics for the whole network in a way that optimizes performance.
             Instead of calling all the metrics one by one, we loop over the objects only once and update the metrics.
@@ -1144,6 +1183,11 @@ class network_analyzer():
             f_name = args[0]
         else:
             f_name = 'global'
+
+        #Enables changing the flag
+        if 'compute_kva_density_with_transformers' in kwargs and isinstance(kwargs['compute_kva_density_with_transformers'], bool):
+            self.compute_kva_density_with_transformers = kwargs['compute_kva_density_with_transformers']
+
         self.results = {f_name: self.setup_results_data_structure()}
         self.transformer_load_mapping=self.get_transformer_load_mapping()
         self.compute_node_line_mapping()
@@ -1291,6 +1335,8 @@ class network_analyzer():
         self.results[_feeder_ref]['cust_density'] = np.nan
         self.results[_feeder_ref]['load_density_kw'] = np.nan
         self.results[_feeder_ref]['load_density_kvar'] = np.nan
+        self.results[_feeder_ref]['kva_density'] = np.nan
+
         try:
             _points=np.array(self.points[_feeder_ref])
         except KeyError:
@@ -1303,6 +1349,8 @@ class network_analyzer():
                 self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kvar'] = float(self.results[_feeder_ref]['sum_load_kvar'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['sum_distribution_transformer_mva'])/float(hull_surf_sqmile)
+
 
 
     def number_of_regulators(self):
