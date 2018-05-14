@@ -322,7 +322,7 @@ class network_analyzer():
                'sum_load_kvar', 'perct_lv_pha_load_kw', 'perct_lv_phb_load_kw', 'perct_lv_phc_load_kw',
                'num_lv_1ph_loads', 'num_lv_3ph_loads', 'num_mv_3ph_loads', 'avg_num_load_per_transformer',
                'avg_load_pf', 'avg_load_imbalance_by_phase', 'num_customers', 'cust_density',
-               'load_density_kw', 'load_density_kvar',
+               'load_density_kw', 'load_density_kvar', 'kva_density',
 
                #Graph Topology
                'avg_degree', 'avg_path_len', 'diameter'
@@ -1139,6 +1139,8 @@ class network_analyzer():
             self.results[_feeder_ref]['cust_density'] = np.nan
             self.results[_feeder_ref]['load_density_kw'] = np.nan
             self.results[_feeder_ref]['load_density_kvar'] = np.nan
+            self.results[_feeder_ref]['kva_density'] = np.nan
+
             try:
                 _points=np.array(self.points[_feeder_ref])
             except KeyError:
@@ -1151,6 +1153,7 @@ class network_analyzer():
                     self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kvar'] = float(self.results[_feeder_ref]['sum_load_kvar'])/float(hull_surf_sqmile)
+                    self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['distribution_transformer_total_capacity_MVA'])/float(hull_surf_sqmile)
 
 
     def compute_all_metrics(self,*args):
@@ -1311,6 +1314,8 @@ class network_analyzer():
         self.results[_feeder_ref]['cust_density'] = np.nan
         self.results[_feeder_ref]['load_density_kw'] = np.nan
         self.results[_feeder_ref]['load_density_kvar'] = np.nan
+        self.results[_feeder_ref]['kva_density'] = np.nan
+
         try:
             _points=np.array(self.points[_feeder_ref])
         except KeyError:
@@ -1323,6 +1328,8 @@ class network_analyzer():
                 self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kvar'] = float(self.results[_feeder_ref]['sum_load_kvar'])/float(hull_surf_sqmile)
+                self.results[_feeder_ref]['kva_density'] = float(10**3*self.results[_feeder_ref]['distribution_transformer_total_capacity_MVA'])/float(hull_surf_sqmile)
+
 
 
     def number_of_regulators(self):
