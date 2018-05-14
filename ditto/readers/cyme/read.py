@@ -3329,6 +3329,11 @@ class Reader(AbstractReader):
             else:
                 load_data={}
 
+            if 'connectedkva' in settings:
+                connectedkva = float(settings['connectedkva'])
+            else:
+                connectedkva = None
+
             if 'valuetype' in settings:
                 value_type=int(settings['valuetype'])
 
@@ -3394,6 +3399,18 @@ class Reader(AbstractReader):
                     except:
                         pass
 
+                    try:
+                        if not fusion:
+                            if connectedkva is not None:                            
+                                api_load.transformer_connected_kva = connectedkva
+                        elif connectedkva is not None:
+                            if api_load.transformer_connected_kva is None:
+                                api_load.transformer_connected_kva = connectedkva
+                            else:
+                                api_load.transformer_connected_kva += connectedkva            
+                    except:
+                        pass
+                    
                     try:
                         if not fusion:
                             api_load.connection_type=self.connection_configuration_mapping(load_data['connection'])
