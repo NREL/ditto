@@ -583,6 +583,7 @@ class network_analyzer():
             'sub_trans_impedance_list': {}, #Store the list of line positive sequence impedances between the substation and each distribution transformer
             'trans_cust_impedance_list': {}, #Store the list of line positive sequence impedances between each customer and its distribution transformer
             'nominal_voltages': [], #Store the different nominal voltage values
+            'convex_hull_area_sqmi': 0, #Convex hull area for the feeder
             'substation_name': _src,
             'feeder_type': None,
         }
@@ -1165,6 +1166,7 @@ class network_analyzer():
             if len(_points)>2:
                 hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
                 hull_surf_sqmile = hull.area * 3.86102*10**-7 #Convert surface from square meters to square miles 
+                self.results[_feeder_ref]['convex_hull_area_sqmi'] = hull_surf_sqmile #Store the convex hull area
                 if hull_surf_sqmile!=0:
                     self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                     self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
@@ -1345,6 +1347,7 @@ class network_analyzer():
         if len(_points)>2:
             hull = ConvexHull(_points) #Compute the Convex Hull using Scipy
             hull_surf_sqmile = hull.area * 3.86102*10**-7 #Convert surface from square meters to square miles 
+            self.results[_feeder_ref]['convex_hull_area_sqmi'] = hull_surf_sqmile #Store the convex hull area
             if hull_surf_sqmile!=0:
                 self.results[_feeder_ref]['cust_density'] = float(self.results[_feeder_ref]['num_customers'])/float(hull_surf_sqmile)
                 self.results[_feeder_ref]['load_density_kw'] = float(self.results[_feeder_ref]['sum_load_kw'])/float(hull_surf_sqmile)
