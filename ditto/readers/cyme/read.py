@@ -3402,12 +3402,12 @@ class Reader(AbstractReader):
                     try:
                         if not fusion:
                             if connectedkva is not None:                            
-                                api_load.transformer_connected_kva = connectedkva
+                                api_load.transformer_connected_kva = connectedkva * 10**3 #DiTTo in var
                         elif connectedkva is not None:
                             if api_load.transformer_connected_kva is None:
-                                api_load.transformer_connected_kva = connectedkva
+                                api_load.transformer_connected_kva = connectedkva * 10**3 #DiTTo in var
                             else:
-                                api_load.transformer_connected_kva += connectedkva            
+                                api_load.transformer_connected_kva += connectedkva * 10**3 #DiTTo in var           
                     except:
                         pass
                     
