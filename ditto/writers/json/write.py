@@ -69,7 +69,8 @@ object_1={'klass':'PowerTransformer',
 Author: Nicolas Gensollen. January 2018.
 
 '''
-
+    register_names = ["json", "Json", "JSON"]
+    
     def __init__(self, **kwargs):
         '''Class CONSTRUCTOR
 
