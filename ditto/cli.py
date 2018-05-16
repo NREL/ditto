@@ -62,7 +62,7 @@ def convert(ctx, **kwargs):
     from_reader_name = kwargs["from"]
     to_writer_name = kwargs["to"]
     
-    if "jsonize" in kwargs:
+    if kwargs["jsonize"] is not None:
         Converter(
             registered_reader_class=registered_readers[from_reader_name],
             registered_writer_class=registered_writers[to_writer_name],
