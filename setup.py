@@ -39,7 +39,7 @@ setup(
             "gridlabd=ditto.readers.gridlabd:GridLABDReader",
             "opendss=ditto.readers.opendss:OpenDSSReader",
             "cyme=ditto.readers.cyme:CymeReader",
-	    "demo=ditto.readers.demo:DemoReader"
+            "demo=ditto.readers.demo:DemoReader"
         ],
         "ditto.writers": [
             "gridlabd=ditto.writers.gridlabd:GridLABDWriter",
