@@ -31,7 +31,10 @@ setup(
     packages=find_packages(),
     package_dir={'ditto': 'ditto'},
     entry_points={
-        "console_scripts": ["ditto=ditto.cli:cli"],
+        "console_scripts": [
+            "ditto=ditto.cli:cli",
+            "ditto-cli=ditto.cli:cli"
+        ],
         "ditto.readers": [
             "gridlabd=ditto.readers.gridlabd:GridLABDReader",
             "opendss=ditto.readers.opendss:OpenDSSReader",
