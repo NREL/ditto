@@ -6,6 +6,7 @@ from builtins import super, range, zip, round, map
 import json
 import json_tricks
 
+from ditto.writers.abstract_writer import AbstractWriter
 from ditto.models.position import Position
 from ditto.models.base import Unicode
 from ditto.models.wire import Wire
@@ -15,7 +16,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.phase_capacitor import PhaseCapacitor
 
 
-class Writer(object):
+class Writer(AbstractWriter):
     '''DiTTo--->JSON Writer class
 
 The writer produce a file with the following format:
