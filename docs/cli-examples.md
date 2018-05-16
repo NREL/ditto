@@ -13,27 +13,27 @@ Conversion examples with more advanced features can be found in the examples sub
 DiTTo supports a command line interface (CLI) to quickly convert a model. The command is simply:
 
 ```bash
-ditto convert
+$ ditto-cli convert
 ```
 
 Help can be obtained using:
 
 ```bash
-ditto convert --help
+$ ditto-cli convert --help
 ```
 
 #### From and To
 
-The options ```—from``` and ```—to``` are easy to understand, they just tell ```ditto convert``` what format is expected for the input, and what format is desired for the output. If we want to convert from opendss to gridlabd, we can use:
+The options ```—from``` and ```—to``` are easy to understand, they just tell ```ditto-cli convert``` what format is expected for the input, and what format is desired for the output. If we want to convert from opendss to gridlabd, we can use:
 
 ```bash
-ditto convert --from opendss --to gridlabd
+$ ditto-cli convert --from opendss --to gridlabd
 ```
 
 Note that, we can use short-cut names for the format like:
 
 ```bash
-ditto convert --from dss --to glm
+$ ditto-cli convert --from dss --to glm
 ```
 
 #### Input
@@ -43,7 +43,7 @@ In addition to the formats, we need to provide some input to DiTTo. The main iss
 To be consistent, the CLI accepts only one file whatever the format. If we have a gridlabd model entirely stored in a file called ```model.glm``` we can use:
 
 ```bash
-ditto convert --from glm --input ./model.glm --to cyme
+$ ditto-cli convert --from glm --input ./model.glm --to cyme
 ```
 
 For formats like Cyme where we need multiple input files, we need to write a simple JSON configuration file:
@@ -61,15 +61,15 @@ For formats like Cyme where we need multiple input files, we need to write a sim
 Which results in the following command:
 
 ```bash
-ditto convert --from cyme --input ./config.json --to dss
+$ ditto-cli convert --from cyme --input ./config.json --to dss
 ```
 
 #### Output
 
-Finally, we need to tell ```ditto convert``` where to write the output. This is done with the ```—output``` option. Make sure to provide the path to the folder you want the files to be written in. For example, if we want to output in a folder named ```./results``` we do the following:
+Finally, we need to tell ```ditto-cli convert``` where to write the output. This is done with the ```—output``` option. Make sure to provide the path to the folder you want the files to be written in. For example, if we want to output in a folder named ```./results``` we do the following:
 
 ```bash
-ditto convert --from cyme --input ./config.json --to dss --output ./results/
+$ ditto-cli convert --from cyme --input ./config.json --to dss --output ./results/
 ```
 
 ### Examples
@@ -79,7 +79,7 @@ ditto convert --from cyme --input ./config.json --to dss --output ./results/
 Run the following command:
 
 ```bash
-ditto convert --input ../tests/data/gridlabd/4node.glm --from glm --to dss --output ./
+$ ditto-cli convert --input ../tests/data/gridlabd/4node.glm --from glm --to dss --output ./
 ```
 
 #### Convert the IEEE 13 node from OpenDSS to CYME
@@ -87,7 +87,7 @@ ditto convert --input ../tests/data/gridlabd/4node.glm --from glm --to dss --out
 Here, we use the configuration file: ```ditto/examples/ieee_13node_opendss_input.json```:
 
 ```bash
-ditto convert --input ../examples/ieee_13node_opendss_input.json --from opendss --to cyme --output ./
+$ ditto-cli convert --input ../examples/ieee_13node_opendss_input.json --from opendss --to cyme --output ./
 ```
 
 ### Method 2: Writing a script

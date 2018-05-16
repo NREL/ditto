@@ -15,7 +15,7 @@ $ python ieee_8500_opendss_to_cyme.py
 Alternatively, you can use the CLI and the configuration file ```ieee_8500_opendss_to_cyme.json```. Open a terminal and run:
 
 ```bash
-$ ditto convert --from dss --input ieee_8500_to_cyme.json --to cyme --output .
+$ ditto-cli convert --from dss --input ieee_8500_to_cyme.json --to cyme --output .
 ```
 
 
@@ -32,7 +32,7 @@ $ python epri_j1_opendss_to_cyme.py
 Alternatively, you can use the CLI and the configuration file ```epri_j1_opendss_to_cyme.json```. Open a terminal and run:
 
 ```bash
-ditto convert --from dss --input epri_j1_opendss_to_cyme.json --to cyme --output .
+$ ditto-cli convert --from dss --input epri_j1_opendss_to_cyme.json --to cyme --output .
 ```
 
 ### Example 3: IEEE 123
@@ -48,7 +48,7 @@ $ python ieee_123node_gridlabd_to_opendss.py
 Alternatively, you can use the CLI:
 
 ```bash
-ditto convert --from glm --input ../tests/data/big_cases/gridlabd/ieee_123node/123_node.glm --to dss --output .
+$ ditto-cli convert --from glm --input ../tests/data/big_cases/gridlabd/ieee_123node/123_node.glm --to dss --output .
 ```
 
 #### CYME —> OpenDSS
@@ -62,6 +62,6 @@ $ python ieee_123node_cyme_to_opendss.py
 Alternatively, you can use the CLI and the configuration file ```ieee_123node_cyme_to_opendss.json```. Open a terminal and run:
 
 ```bash
-$ ditto convert --from cyme --input ieee_123node_cyme_to_opendss.json --to dss --output .
+$ ditto-cli convert --from cyme --input ieee_123node_cyme_to_opendss.json --to dss --output .
 ```
 
