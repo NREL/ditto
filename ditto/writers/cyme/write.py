@@ -671,27 +671,27 @@ class Writer(AbstractWriter):
                             if 'A' in cond_id:
                                 tt['CondID_A']=cond_id['A']
                             else:
-                                tt['CondID_A']='DEFAULT'
+                                tt['CondID_A']='NONE'
                             if 'B' in cond_id:
                                 tt['CondID_B']=cond_id['B']
                             else:
-                                tt['CondID_B']='DEFAULT'
+                                tt['CondID_B']='NONE'
                             if 'C' in cond_id:
                                 tt['CondID_C']=cond_id['C']
                             else:
-                                tt['CondID_C']='DEFAULT'
+                                tt['CondID_C']='NONE'
                             if 'N' in cond_id:
                                 tt['CondID_N']=cond_id['N']
                             else:
-                                tt['CondID_N']='DEFAULT'
+                                tt['CondID_N']='NONE'
                             if 'N1' in cond_id:
                                 tt['CondID_N1']=cond_id['N1']
                             else:
-                                tt['CondID_N1']='DEFAULT'
+                                tt['CondID_N1']='NONE'
                             if 'N2' in cond_id:
                                 tt['CondID_N2']=cond_id['N2']
                             else:
-                                tt['CondID_N2']='DEFAULT'
+                                tt['CondID_N2']='NONE'
 
                             if hasattr(i, 'wires') and i.wires is not None:
                                 for wire in i.wires:
