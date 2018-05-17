@@ -2103,6 +2103,14 @@ class Writer(AbstractWriter):
                     f.write('\n')
 
 
+            #Spacing table
+            #
+            f.write('\n[SPACING TABLE FOR LINE]\n')
+            f.write('FORMAT_SPACINGTABLEFORLINE=ID,GMDPh-Ph,GMDPh-N,AvgPhCondHeight,AvgNeutralHeight,PosOfCond1_X,PosOfCond1_Y,PosOfCond2_X,PosOfCond2_Y,PosOfCond3_X,PosOfCond3_Y,PosOfNeutralCond_X,PosOfNeutralCond_Y,PosOfNeutralCond_N2_X,PosOfNeutralCond_N2_Y,BundleDistance,NBPhasesPerCircuit,NBConductorsPerPhase,NBNeutrals,TowerType,DistanceA,DistanceB,DistanceC,DistanceD,DistanceE,ConductorStatusN1,ConductorStatusN2,FootingResistanceN1,FootingResistanceN2,TowerSpanN1,TowerSpanN2,Favorite,Flags,Comments\n')
+            f.write('DEFAULT,,,,,-0.609600,10.058400,0.000000,8.839200,0.609600,10.058400,0.000000,11.277600,,,0.010000,3,1,1,0,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,1.000000,1.000000,300.000000,300.000000,0,0,\n')
+            #TODO
+            #Add the user-defined spacing tables here
+
             #Capacitors
             #
             if len(self.capcodes)>0:
