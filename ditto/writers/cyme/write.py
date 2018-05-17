@@ -219,6 +219,7 @@ class Writer(AbstractWriter):
         #Lists for storing strings
         source_string_list=[]
         overhead_string_list=[]
+        overhead_byphase_string_list = []
         underground_string_list=[]
         switch_string_list=[]
         fuse_string_list=[]
@@ -233,7 +234,7 @@ class Writer(AbstractWriter):
         #(impedance matrix, ampacity...)
         #This dictionary will be outputed in write_equipment_file
         ID=0
-        self.linecodes={}
+        self.linecodes_overhead={}
         ID_cable=0
         self.cablecodes={}
         ID_cap=0
@@ -377,6 +378,7 @@ class Writer(AbstractWriter):
                 if isinstance(i, Line):
 
                     matching_list={'overhead': overhead_string_list,
+                                   'by_phase': overhead_byphase_string_list,
                                    'underground': underground_string_list,
                                    'switch': switch_string_list,
                                    'fuse': fuse_string_list,
@@ -705,48 +707,73 @@ class Writer(AbstractWriter):
                                                 pass
 
 
+                            #If we have 3 phases, use OVERHEADLINE SETTING
+                            if len(phases)==3:
 
-                            tt.update({'SpacingID':'DEFAULT','Ba':0,'Bb':0,'Bc':0,'UserDefinedImpedances':1})
+                                tt.update({'SpacingID':'DEFAULT','Ba':0,'Bb':0,'Bc':0,'UserDefinedImpedances':1})
 
-                            for k,p1 in enumerate(phases):
-                                for j,p2 in enumerate(phases):
-                                    if j==k:
-                                        tt['R{p}'.format(p=p1)]=i.impedance_matrix[k][j].real*10**3
-                                        tt['X{p}'.format(p=p1)]=i.impedance_matrix[k][j].imag*10**3
-                                    elif j>k:
-                                        if p1=='A' and p2=='C':
-                                            tt['MutualResistanceCA']=i.impedance_matrix[k][j].real*10**3
-                                            tt['MutualReactanceCA']=i.impedance_matrix[k][j].imag*10**3
-                                        else:
-                                            tt['MutualResistance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].real*10**3
-                                            tt['MutualReactance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].imag*10**3
+                                for k,p1 in enumerate(phases):
+                                    for j,p2 in enumerate(phases):
+                                        if j==k:
+                                            tt['R{p}'.format(p=p1)]=i.impedance_matrix[k][j].real*10**3
+                                            tt['X{p}'.format(p=p1)]=i.impedance_matrix[k][j].imag*10**3
+                                        elif j>k:
+                                            if p1=='A' and p2=='C':
+                                                tt['MutualResistanceCA']=i.impedance_matrix[k][j].real*10**3
+                                                tt['MutualReactanceCA']=i.impedance_matrix[k][j].imag*10**3
+                                            else:
+                                                tt['MutualResistance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].real*10**3
+                                                tt['MutualReactance{p1}{p2}'.format(p1=p1,p2=p2)]=i.impedance_matrix[k][j].imag*10**3
 
-                            if hasattr(i,'nameclass') and i.nameclass is not None:
-                                line_nameclass=i.nameclass
-                                self.linecodes[line_nameclass]=tt
-                                new_line_string+=','+line_nameclass
-                            else:
-                                #If the linecode dictionary is empty, just add the new element
-                                if len(self.linecodes)==0:
-                                    ID+=1
-                                    self.linecodes[ID]=tt
-                                    new_line_string+=',line_'+str(ID)
-
-                                #Otherwise, loop over the dict to find a matching linecode
+                                if hasattr(i,'nameclass') and i.nameclass is not None:
+                                    line_nameclass=i.nameclass
+                                    self.linecodes_overhead[line_nameclass]=tt
+                                    new_line_string+=','+line_nameclass
                                 else:
-                                    found=False
-                                    for k,v in self.linecodes.items():
-                                        if v==tt:
-                                            new_line_string+=',line_'+str(k)
-                                            found=True
-                                    if not found:
+                                    #If the linecode dictionary is empty, just add the new element
+                                    if len(self.linecodes_overhead)==0:
                                         ID+=1
-                                        self.linecodes['line_'+str(ID)]=tt
+                                        self.linecodes_overhead[ID]=tt
                                         new_line_string+=',line_'+str(ID)
-                            #except:
-                            #    new_line_string+=','
-                            #    pass
 
+                                    #Otherwise, loop over the dict to find a matching linecode
+                                    else:
+                                        found=False
+                                        for k,v in self.linecodes_overhead.items():
+                                            if v==tt:
+                                                new_line_string+=',line_'+str(k)
+                                                found=True
+                                        if not found:
+                                            ID+=1
+                                            self.linecodes_overhead['line_'+str(ID)]=tt
+                                            new_line_string+=',line_'+str(ID)
+
+                            #If we have less than 3 phases, then use a BY_PHASE configuration
+                            else:
+                                line_type = 'by_phase' #Change the line_type to write the line under the proper header
+
+                                #Add device number and phase conductor IDs
+                                new_line_string += ',{device},{condIDA},{condIDB},{condIDC}'.format(device=new_sectionID, condIDA=tt['CondID_A'], condIDB=tt['CondID_B'], condIDC=tt['CondID_C'])
+                                
+                                #Add neutral conductor IDs
+                                #
+                                #If we have valid IDs for BOTH N1 and N2, then use that
+                                if tt['CondID_N1'] != 'NONE' and tt['CondID_N2'] != 'NONE':
+                                    new_line_string += ',{condIDN1},{condIDN2}'.format(condIDN1=tt['CondID_N1'], condIDN2=tt['CondID_N2'])
+                                #Otherwise, if we have a valid ID for N, then use that as condIDN1 and use whatever we have for N2
+                                elif tt['CondID_N'] != 'NONE':
+                                    new_line_string += ',{condIDN1},{condIDN2}'.format(condIDN1=tt['CondID_N'], condIDN2=tt['CondID_N2'])
+                                #Otherwise, do as for case 1
+                                else:
+                                    new_line_string += ',{condIDN1},{condIDN2}'.format(condIDN1=tt['CondID_N1'], condIDN2=tt['CondID_N2'])
+
+
+                                #Use Default spacing 
+                                #
+                                #TODO: User-defined spacing support
+                                #
+                                new_line_string += ',DEFAULT'
+                            
 
                         #Length
                         if hasattr(i, 'length') and i.length is not None:
@@ -760,8 +787,6 @@ class Writer(AbstractWriter):
                             if line_type!='switch' and line_type!='fuse' and line_type!='recloser' and line_type!='breaker':
                                 new_line_string+=','
 
-                        #if line_type=='breaker':
-                        #    new_line_string+=',M,{},0'.format(reduce(lambda x,y:x+y,phases))
 
                         if line_type=='switch' or line_type == 'breaker':
                             closed_phase=np.sort([wire.phase for wire in i.wires if wire.is_open==0 and wire.phase not in ['N','N1','N2']])
@@ -1851,6 +1876,14 @@ class Writer(AbstractWriter):
                 f.write('FORMAT_OVERHEADLINESETTING=SectionID,LineCableID,Length,ConnectionStatus\n')
                 for overhead_string in overhead_string_list:
                     f.write(overhead_string+'\n')
+
+            #Overhead by phase lines
+            #
+            if len(overhead_byphase_string_list)>0:
+                f.write('\n[OVERHEAD BY PHASE SETTING]\n')
+                f.write('FORMAT_OVERHEADBYPHASESETTING=SectionID,DeviceNumber,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Length,ConnectionStatus\n')
+                for overhead_byphase_string in overhead_byphase_string_list:
+                    f.write(overhead_byphase_string+'\n')
 
             #Underground lines
             #
