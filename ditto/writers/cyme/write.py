@@ -2086,7 +2086,7 @@ class Writer(AbstractWriter):
                             f.write(','+str(data[key]))
                         else:
                             if key in ['CondID_A','CondID_B','CondID_C','CondID_N1','CondID_N2','SpacingID']:
-                                f.write('DEFAULT,')
+                                f.write('NONE,')
                             else:
                                 f.write(',0')
                     f.write(',0\n')
