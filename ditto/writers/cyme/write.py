@@ -1880,7 +1880,7 @@ class Writer(AbstractWriter):
             #Overhead by phase lines
             #
             if len(overhead_byphase_string_list)>0:
-                f.write('\n[OVERHEAD BY PHASE SETTING]\n')
+                f.write('\n[OVERHEAD BYPHASE SETTING]\n')
                 f.write('FORMAT_OVERHEADBYPHASESETTING=SectionID,DeviceNumber,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Length,ConnectionStatus\n')
                 for overhead_byphase_string in overhead_byphase_string_list:
                     f.write(overhead_byphase_string+'\n')
