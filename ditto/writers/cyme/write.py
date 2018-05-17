@@ -2108,11 +2108,11 @@ class Writer(AbstractWriter):
 
             #Lines
             #
-            if len(self.linecodes)>0:
+            if len(self.linecodes_overhead)>0:
                 f.write('\n[LINE UNBALANCED]\n')
                 f.write('FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n')
 
-                for ID,data in self.linecodes.items():
+                for ID,data in self.linecodes_overhead.items():
                     f.write(str(ID))
                     for key in ['RA','RB','RC','XA','XB','XC','MutualResistanceAB','MutualResistanceBC','MutualResistanceCA','MutualReactanceAB','MutualReactanceBC','MutualReactanceCA','CondID_A','CondID_B','CondID_C','CondID_N1','CondID_N2','SpacingID','Ba','Bb','Bc','AmpsA','AmpsB','AmpsC','UserDefinedImpedances']:
                         if key in data:
