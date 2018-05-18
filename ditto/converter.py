@@ -123,7 +123,8 @@ class Converter(object):
     def build_path(self, path):
         '''Take a path as input and check that all folders exists as in the path.
         If folders are missing, they are created.
-        .. warning:: Expects a path in the form './folder1/folder2/folder3/'''
+        .. warning:: Expects a path in the form './folder1/folder2/folder3/
+        '''
         # First we need to get all the directories in the given path
         dirs=path.split('/')
 

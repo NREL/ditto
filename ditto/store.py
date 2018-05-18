@@ -97,9 +97,9 @@ class Store(object):
             element.link_model = self
             self.cim_store[element.UUID] = element
 
-    """ All objects with a name field included in a dictionary which maps the name to the object. Set in set_name() on the object itself if the object has a name. The dictionary is reset to empty first"""
 
     def set_names(self):
+        """ All objects with a name field included in a dictionary which maps the name to the object. Set in set_name() on the object itself if the object has a name. The dictionary is reset to empty first"""
         self._model_names = {}
         for m in self.models:
             m.set_name(self)
@@ -119,13 +119,13 @@ class Store(object):
         #logger.debug('Printing Attributes...')
         #self._network.print_attrs()
 
-    ''' First convert graph to directed graph (doubles the edges hence creating length 2 cycles)
+
+    def delete_cycles(self):
+        ''' First convert graph to directed graph (doubles the edges hence creating length 2 cycles)
         Then find cycles of length greater than 2
         Use heuristic of removing edge in the middle of the longest single phase section of the loop
         If no single phase sections, remove edge the furthest from the source
-    '''
-
-    def delete_cycles(self):
+        '''
         for i in self._network.find_cycles():
             if len(i) > 2:
                 logger.debug('Detected cycle {cycle}'.format(cycle=i))

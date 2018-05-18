@@ -10,9 +10,11 @@ from ditto.models.timeseries import Timeseries
 logger = logging.getLogger(__name__)
 
 class Modifier:
-    """ Recursively delete an object from the model"""
+    '''Modifier class.'''
+    
 
     def delete_element(self, model, obj):
+        """ Recursively delete an object from the model"""
         for attr in obj.traits():
             class_name = str(type(obj.traits()[attr])).strip("<>'").split('.')[-1]
             if class_name == 'List':
@@ -26,9 +28,9 @@ class Modifier:
         model.remove_element(obj) #TODO: Improve this so the data isn't stored in a list
         return model
 
-    """ Create a new object within the model"""
 
     def copy(self, model, obj):
+        """ Create a new object within the model"""
         new_obj = type(obj)(model)
         for attr in obj.traits():
             class_name = str(type(obj.traits()[attr])).strip("<>'").split('.')[-1]
@@ -48,10 +50,12 @@ class Modifier:
                 setattr(new_obj, attr, new_attr)
         return new_obj
 
-    """ For all the attributes in obj_1 and obj_2, set the non-list attributes in obj_1 to those from obj_2 when they aren't None. If overwrite=False, attributes in object_1 which aren't empty aren't overwritten.
-        Precondition: obj_1 and obj_2 are of the same class"""
 
     def set_attributes(self, model_1, obj_1, obj_2, overwrite=True):
+        """
+        For all the attributes in obj_1 and obj_2, set the non-list attributes in obj_1 to those from obj_2 when they aren't None. If overwrite=False, attributes in object_1 which aren't empty aren't overwritten.
+        Precondition: obj_1 and obj_2 are of the same class
+        """
         for attr in obj_2.traits(): # Iterate through all attributes in obj_2. These should be the same traits as obj_1 assuming the precondition
             class_name = str(type(obj_2.traits()[attr])).strip("<>'").split('.')[-1]
             # TODO: check for reactance tuples: str(obj_2.traits()[attr]._trait.klass).strip("<>'").split('.')[-1] != (Int,Int,Int):
@@ -140,11 +144,11 @@ class Modifier:
                         continue
                     setattr(obj_1, attr, value)
 
-    """
-        Find all the objects in model_1 with the same name as model_2 and augment them with the attributes with those from model_2 which have been set (are not None). If overwrite is True, any existing attributes are overwritten, otherwise they are skipped
-    """
 
     def merge(self, model_1, model_2, overwrite=True):
+        """
+        Find all the objects in model_1 with the same name as model_2 and augment them with the attributes with those from model_2 which have been set (are not None). If overwrite is True, any existing attributes are overwritten, otherwise they are skipped
+        """
         model_1.set_names()
         model_2.set_names()
         for obj_name in model_2.model_names: # Iterate through all objects in model_2 which have a name
@@ -161,11 +165,11 @@ class Modifier:
         model_1.set_names()
         return model_1
 
-    """
-        Add all the named objects in model_2 are added to model_1
-    """
 
     def add(self, model_1, model_2):
+        """
+        Add all the named objects in model_2 are added to model_1
+        """
         model_1.set_names()
         model_2.set_names()
         for obj_name in model_2.model_names:
@@ -174,12 +178,12 @@ class Modifier:
         model_1.set_names()
         return model_1
 
-    """
-        Delete the named objects in model_2 (and their sub-objects) from model_1.
-        NOTE that this only uses the names of the nodes to do the deletion
-    """
 
     def delete(self, model_1, model_2):
+        """
+        Delete the named objects in model_2 (and their sub-objects) from model_1.
+        NOTE that this only uses the names of the nodes to do the deletion
+        """
         model_1.set_names()
         model_2.set_names()
         for obj_name in model_2.model_names:

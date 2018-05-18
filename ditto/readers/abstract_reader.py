@@ -125,7 +125,8 @@ class AbstractReader(object):
                 This is useful if we have a quantity in something per unit distance.
                 For example, if we want to convert x Ohms per miles in Ohms per meters, then flag inverse as True.
 
-        .. seealso:: convert_from_meters, unit_conversion'''
+        .. seealso:: convert_from_meters, unit_conversion
+        '''
 
         if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
             inverse = kwargs['inverse']
@@ -233,7 +234,8 @@ class AbstractReader(object):
 
         .. note:: If the unit is not one of these, the function returns None
 
-        .. seealso:: convert_to_meters, unit_conversion'''
+        .. seealso:: convert_to_meters, unit_conversion
+        '''
 
         if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
             inverse = kwargs['inverse']
@@ -319,7 +321,8 @@ class AbstractReader(object):
 
         .. note:: If the unit is not one of these, the function returns None
 
-        .. seealso:: convert_to_meters, convert_from_meters'''
+        .. seealso:: convert_to_meters, convert_from_meters
+        '''
 
         supported_units = ['km', 'm', 'ft', 'kft', 'in', 'cm', 'mi']
         if unit_from not in supported_units:
@@ -346,7 +349,8 @@ class AbstractReader(object):
 
         **Formula:**
 
-        :math:`d(p,q)=\\sqrt{ \\sum_{i=1}^n ( p_i - q_i )^2 }`'''
+        :math:`d(p,q)=\\sqrt{ \\sum_{i=1}^n ( p_i - q_i )^2 }`
+        '''
 
         N_dim = len(p1)
         if len(p2) != N_dim:
@@ -512,48 +516,36 @@ class AbstractReader(object):
 
     def parse_nodes(self, model):
         '''Parse the node.
-
         .. note:: Has to be implemented in subclasses.
-
         '''
         pass
 
     def parse_lines(self, model):
         '''Parse the lines.
-
         .. note:: Has to be implemented in subclasses.
-
         '''
         pass
 
     def parse_capacitors(self, model):
         '''Parse the capacitors.
-
         .. note:: Has to be implemented in subclasses.
-
         '''
         pass
 
     def parse_transformers(self, model):
         '''Parse the transformers.
-
         .. note:: Has to be implemented in subclasses.
-
         '''
         pass
 
     def parse_regulators(self, model):
         '''Parse the regulators.
-
         .. note:: Has to be implemented in subclasses.
-
         '''
         pass
 
     def parse_loads(self, model):
         '''Parse the loads.
-
         .. note:: Has to be implemented in subclasses.
-
         '''
         pass

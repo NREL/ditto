@@ -32,12 +32,9 @@ class Writer(AbstractWriter):
         DiTTo--->CYME Writer class
 
         Author: Nicolas Gensollen. October 2017
-
     '''
     def __init__(self, **kwargs):
-        '''
-            Class CONSTRUCTOR.
-        '''
+        '''Class CONSTRUCTOR.'''
 
         #Call super
         super(Writer, self).__init__(**kwargs)
@@ -47,19 +44,19 @@ class Writer(AbstractWriter):
 
     def connection_configuration_mapping(self, value):
         '''
-            Map the connection configuration from DiTTo to CYME.
+        Map the connection configuration from DiTTo to CYME.
 
-            **Mapping:**
+        **Mapping:**
 
-            +----------+----------------+------------+
-            |   Value  |       CYME     |  DiTTo     |
-            +==========+================+============+
-            | 0 or '0' |       'Yg'     |   'Y'      |
-            +----------+----------------+------------+
-            | 2 or '2' |     'Delta'    |   'D'      |
-            +----------+----------------+------------+
-            | 5 or '5' |      'Zg'      |   'Z'      |
-            +----------+----------------+------------+
+        +----------+----------------+------------+
+        |   Value  |       CYME     |  DiTTo     |
+        +==========+================+============+
+        | 0 or '0' |       'Yg'     |   'Y'      |
+        +----------+----------------+------------+
+        | 2 or '2' |     'Delta'    |   'D'      |
+        +----------+----------------+------------+
+        | 5 or '5' |      'Zg'      |   'Z'      |
+        +----------+----------------+------------+
         '''
         if value=='Y':return '0'
         elif value=='D':return '2'
@@ -69,34 +66,34 @@ class Writer(AbstractWriter):
 
     def transformer_connection_configuration_mapping(self, value1, value2):
         '''
-            Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
+        Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
 
-            :param value: CYME value (either string or id)
-            :type value: int or str
-            :param winding: Number of the winding (0 or 1)
-            :type winding: int
-            :returns: DiTTo connection configuration for the requested winding
-            :rtype: str
+        :param value: CYME value (either string or id)
+        :type value: int or str
+        :param winding: Number of the winding (0 or 1)
+        :type winding: int
+        :returns: DiTTo connection configuration for the requested winding
+        :rtype: str
 
-            **Mapping:**
+        **Mapping:**
 
-            +----------+----------------+------------+
-            |   Value  |       CYME     |  DiTTo     |
-            +----------+----------------+-----+------+
-            |          |                | 1st | 2nd  |
-            +==========+================+=====+======+
-            | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
-            +----------+----------------+-----+------+
-            | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
-            +----------+----------------+-----+------+
-            | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
-            +----------+----------------+-----+------+
-            | 4 or '4' |      'D_D'     | 'D' | 'D'  |
-            +----------+----------------+-----+------+
-            |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
-            +----------+----------------+-----+------+
-            |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
-            +----------+----------------+-----+------+
+        +----------+----------------+------------+
+        |   Value  |       CYME     |  DiTTo     |
+        +----------+----------------+-----+------+
+        |          |                | 1st | 2nd  |
+        +==========+================+=====+======+
+        | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
+        +----------+----------------+-----+------+
+        | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
+        +----------+----------------+-----+------+
+        | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
+        +----------+----------------+-----+------+
+        | 4 or '4' |      'D_D'     | 'D' | 'D'  |
+        +----------+----------------+-----+------+
+        |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
+        +----------+----------------+-----+------+
+        |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
+        +----------+----------------+-----+------+
         '''
         #if 'Z' not in value1 and 'Z' not in value2:
         #    return value1+'_'+value2
@@ -119,8 +116,8 @@ class Writer(AbstractWriter):
 
     def merge_regulators(self, regulators):
         '''
-            Merge a list of regulator strings such that there is only one regulator per section.
-            The purpose of this is to merge all the single phase regulators on the same sections into multi-phase regulators.
+        Merge a list of regulator strings such that there is only one regulator per section.
+        The purpose of this is to merge all the single phase regulators on the same sections into multi-phase regulators.
         '''
         section_reg={}
         for reg in regulators:
@@ -134,9 +131,7 @@ class Writer(AbstractWriter):
 
 
     def merge(self, string1,string2):
-        '''
-            Helper function for merge_regulators.
-        '''
+        '''Helper function for merge_regulators.'''
         s1=string1.split(',')
         s2=string2.split(',')
         if len(s1)!=len(s2):
@@ -154,9 +149,7 @@ class Writer(AbstractWriter):
 
 
     def get_center_tap_impedances(self,R0,R1,R2,XHL,XHT,XLT,KVA_BASE):
-        '''
-            Computes the impedance and XR ratio for center tap transformers modelled as three windings transformers.
-        '''
+        '''Computes the impedance and XR ratio for center tap transformers modelled as three windings transformers.'''
         RT=R0*2.0
         #RT=R0*4.0 #Shell type
         X0=(XHL+XHT-XLT)/2.0
@@ -170,11 +163,11 @@ class Writer(AbstractWriter):
 
     def write(self, model, **kwargs):
         '''
-            General write function. Responsible for calling the sub-parsers.
+        General write function. Responsible for calling the sub-parsers.
 
-            .. note::
+        .. note::
 
-            write_network_file must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
+        write_network_file must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
         '''
         self.section_line_list=[]
         self.node_string_list=[]
@@ -206,11 +199,11 @@ class Writer(AbstractWriter):
 
     def write_network_file(self, model, **kwargs):
         '''
-            Loop over DiTTo objects and write the corresponding CYME network file.
+        Loop over DiTTo objects and write the corresponding CYME network file.
 
-            .. note::
+        .. note::
 
-            This must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
+        This must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
         '''
         model.set_names()
         #Output network file
@@ -1970,9 +1963,7 @@ class Writer(AbstractWriter):
 
 
     def write_equipment_file(self, model, **kwargs):
-        '''
-            Write the equipment file.
-        '''
+        '''Write the equipment file.'''
         output_file=self.output_path+'/equipment.txt'
 
         with open(output_file, 'w') as f:
@@ -2207,9 +2198,7 @@ class Writer(AbstractWriter):
 
 
     def write_load_file(self, model, **kwargs):
-        '''
-            Loop over the DiTTo objects and write the CYME load file.
-        '''
+        '''Loop over the DiTTo objects and write the CYME load file.'''
         #Output load file
         output_file=self.output_path+'/loads.txt'
 
