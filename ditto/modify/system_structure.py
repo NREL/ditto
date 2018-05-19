@@ -684,7 +684,7 @@ The purpose of this function is to find this transformer as well as all the line
                 #Loop over the wires...
                 for wire in line_obj.wires:
                     #Same story here, flag the wires with phases that do not match.
-                    if hasattr(wire, 'phase') and wire.phase not in phase:
+                    if hasattr(wire, 'phase') and wire.phase not in ['N','N1','N2'] and wire.phase not in phase:
                         wire.drop = 1
 
             #It might be the case that we need to create new objects.
