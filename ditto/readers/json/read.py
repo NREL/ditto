@@ -6,6 +6,7 @@ from builtins import super, range, zip, round, map
 import json
 import numpy
 
+from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.power_source import PowerSource
 from ditto.models.node import Node
@@ -24,7 +25,7 @@ from ditto.models.base import Unicode
 from ditto.models.feeder_metadata import Feeder_metadata
 
 
-class Reader(object):
+class Reader(AbstractReader):
     '''JSON-->DiTTo Reader class
 
 The reader expects the following format:
@@ -78,6 +79,7 @@ object_1={'klass':'PowerTransformer',
 Author: Nicolas Gensollen. January 2018
 
 '''
+    register_names = ["json", "Json", "JSON"]
 
     def __init__(self, **kwargs):
         '''Class CONSTRUCTOR

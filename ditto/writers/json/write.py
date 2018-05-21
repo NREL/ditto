@@ -3,9 +3,11 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
+import os
 import json
 import json_tricks
 
+from ditto.writers.abstract_writer import AbstractWriter
 from ditto.models.position import Position
 from ditto.models.base import Unicode
 from ditto.models.wire import Wire
@@ -15,7 +17,7 @@ from ditto.models.phase_load import PhaseLoad
 from ditto.models.phase_capacitor import PhaseCapacitor
 
 
-class Writer(object):
+class Writer(AbstractWriter):
     '''DiTTo--->JSON Writer class
 
 The writer produce a file with the following format:
@@ -69,7 +71,8 @@ object_1={'klass':'PowerTransformer',
 Author: Nicolas Gensollen. January 2018.
 
 '''
-
+    register_names = ["json", "Json", "JSON"]
+    
     def __init__(self, **kwargs):
         '''Class CONSTRUCTOR
 
@@ -77,7 +80,12 @@ Author: Nicolas Gensollen. January 2018.
         if 'output_path' in kwargs:
             self.output_path = kwargs['output_path']
         else:
-            self.output_path = './out.json'
+            self.output_path = './'
+
+        if 'filename' in kwargs:
+            self.filename = kwargs['filename']
+        else:
+            self.filename = 'Model.json'
 
     def write(self, model):
         '''Write a given DiTTo model to a JSON file.
@@ -167,7 +175,7 @@ The output file is configured in the constructor.
 
                 _model[-1][key] = {'klass': str(type(value)).split("'")[1], 'value': value}
 
-        with open(self.output_path, 'w') as f:
+        with open(os.path.join(self.output_path,self.filename), 'w') as f:
             try:
                 f.write(json.dumps(_model))
             except:

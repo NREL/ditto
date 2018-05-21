@@ -29,6 +29,7 @@ def cli(ctx, verbose):
 @click.option("--output", type=click.Path(exists=True), help="Path to output file")
 @click.option("--from", help="Convert from OpenDSS, Cyme, GridLAB-D, Demo")
 @click.option("--to", help="Convert to OpenDSS, Cyme, GridLAB-D, Demo")
+@click.option("--jsonize", type=click.Path(exists=True), help="Serialize the DiTTo representation to the specified path")
 @click.pass_context
 def convert(ctx, **kwargs):
     """ Convert from one type to another"""
@@ -60,12 +61,23 @@ def convert(ctx, **kwargs):
 
     from_reader_name = kwargs["from"]
     to_writer_name = kwargs["to"]
-    Converter(
-        registered_reader_class=registered_readers[from_reader_name],
-        registered_writer_class=registered_writers[to_writer_name],
-        input_path=kwargs["input"],
-        output_path=kwargs["output"],
-    ).convert()
+    
+    if kwargs["jsonize"] is not None:
+        Converter(
+            registered_reader_class=registered_readers[from_reader_name],
+            registered_writer_class=registered_writers[to_writer_name],
+            input_path=kwargs["input"],
+            output_path=kwargs["output"],
+            json_path=kwargs["jsonize"],
+            registered_json_writer_class=registered_writers['json']
+        ).convert()
+    else:
+        Converter(
+            registered_reader_class=registered_readers[from_reader_name],
+            registered_writer_class=registered_writers[to_writer_name],
+            input_path=kwargs["input"],
+            output_path=kwargs["output"],
+        ).convert()
 
     sys.exit(0)
 

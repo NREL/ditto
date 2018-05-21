@@ -40,12 +40,14 @@ setup(
             "opendss=ditto.readers.opendss:OpenDSSReader",
             "cyme=ditto.readers.cyme:CymeReader",
             "demo=ditto.readers.demo:DemoReader"
+            "json=ditto.readers.json:JsonReader"
         ],
         "ditto.writers": [
             "gridlabd=ditto.writers.gridlabd:GridLABDWriter",
             "opendss=ditto.writers.opendss:OpenDSSWriter",
             "cyme=ditto.writers.cyme:CymeWriter",
-            "demo=ditto.writers.demo:DemoWriter"
+            "demo=ditto.writers.demo:DemoWriter",
+            "json=ditto.writers.json:JsonWriter"
         ],
     },
     include_package_data=True,
