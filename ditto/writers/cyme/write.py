@@ -1807,13 +1807,21 @@ class Writer(AbstractWriter):
             f.write('FORMAT_SOURCE=SourceID,DeviceNumber,NodeID,NetworkID\n')
             k=0
             self.substation_IDs={}
+
             for _source,_voltage in self.sources.items():
+                #_source should be the name of the headnode for one feeder_metadata object
+                # TODO: Find a better way to find it
+                for obj in model.models:
+                    if isinstance(obj,Feeder_metadata) and obj.headnode==_source:
+                        sourceID = obj.headnode + '_src'
+                        nodeID = obj.headnode
+                        NetworkID = obj.name
                 k+=1
                 for j,sub in enumerate(self.substations):
                     if sub['connecting_element']==_source:
                         self.substations[j]['sub_ID']='sub_'+str(k)
                 self.substation_IDs[_source]='sub{}'.format(k)
-                f.write('sub_{k},sub_{k},{source},{NetID}\n'.format(source=_source, k=k, NetID='subtransmission'))
+                f.write('{sourceID},sub_{k},{nodeID},{NetID}\n'.format(sourceID=sourceID, k=k, nodeID=nodeID, NetID=NetworkID))
 
             f.write('\n[HEADNODES]\n')
             f.write('FORMAT_HEADNODES=NodeID,NetworkID\n')
