@@ -2513,8 +2513,11 @@ class Reader(AbstractReader):
                                                            'secondarytap':11,
                                                            'primarybasevoltage':17,
                                                            'secondarybasevoltage':18,
+                                                           'setpoint':21,
                                                            'maxbuck':29,
                                                            'maxboost':30,
+                                                           'ct':31,
+                                                           'pt':32,
                                                            'phaseon':37,
                                                                 }
         mapp_transformer={'id':0,
@@ -2615,7 +2618,7 @@ class Reader(AbstractReader):
             #
             self.settings.update( self.parser_helper(line,
                                                           ['transformer_settings'],
-                                                          ['sectionid', 'eqid', 'coordx', 'coordy', 'primaryfixedtapsetting', 'secondaryfixedtapsetting', 'tertiaryfixedtapsetting', 'primarybasevoltage', 'secondarybasevoltage', 'tertiarybasevoltage','maxbuck','maxboost'],
+                                                          ['sectionid', 'eqid', 'coordx', 'coordy', 'primaryfixedtapsetting', 'secondaryfixedtapsetting', 'tertiaryfixedtapsetting', 'primarybasevoltage', 'secondarybasevoltage', 'tertiarybasevoltage','setpoint','maxbuck','maxboost','ct','pt'],
                                                           mapp_transformer_settings,
                                                           {'type':'transformer'}))
 
@@ -2859,11 +2862,17 @@ class Reader(AbstractReader):
                     upperbandwidth = float(transformer_data['upperbandwidth'])
                     minreg_range = int(float(settings['maxbuck']))
                     maxreg_range = int(float(settings['maxboost']))
+                    setpoint = float(settings['setpoint'])
+                    ct = int(float(settings['ct']))
+                    pt = int(float(settings['pt']))
                     center_bandwidth = upperbandwidth - lowerbandwidth
 
                     api_regulator.ltc = 1
                     api_regulator.highstep = minreg_range
                     api_regulator.lowstep = maxreg_range
+                    api_regulator.pt_ratio = pt
+                    api_regulator.ct_ratio = ct
+                    api_regulator.setpoint = setpoint
                     api_regulator.center_bandwidth = center_bandwidth
                     api_regulator.bandwidth = (upperbandwidth+lowerbandwidth) # ie. use the average bandwidth. The upper and lower are typically the same
                     #TODO: Add unit checking. These units are in percentages. Need to be updated to be in Volts for consistency (BUG in cyme writer too)
