@@ -819,15 +819,21 @@ class Writer(AbstractWriter):
                         #Add the strings to the lists
                         #
                         if new_section_line!='':
-                            try:
-                                self.section_line_list.append(new_section_line)
-                                if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                                    if i.feeder_name in self.section_line_feeder_mapping:
-                                        self.section_line_feeder_mapping[i.feeder_name].append(new_section_line)
-                                    else:
-                                        self.section_line_feeder_mapping[i.feeder_name]=[new_section_line]
-                            except:
-                                pass
+                            self.section_line_list.append(new_section_line)
+                            #If the object is inside of a substation...
+                            if hasattr(i,'is_substation') and i.is_substation == 1:
+                                #...it should have the name of the substation specified in the 'substation_name' attribute
+                                if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                    #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                    ff_name = 'substation_{}'.format(i.substation_name)
+                            #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                            elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                                ff_name = i.feeder_name
+
+                            if ff_name in self.section_line_feeder_mapping:
+                                self.section_line_feeder_mapping[ff_name].append(new_section_line)
+                            else:
+                                self.section_line_feeder_mapping[ff_name]=[new_section_line]
 
                         if new_line_string!='':
                             try:
@@ -939,11 +945,21 @@ class Writer(AbstractWriter):
 
                     if new_section is not None:
                         self.section_line_list.append(new_section)
-                        if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                            if i.feeder_name in self.section_line_feeder_mapping:
-                                self.section_line_feeder_mapping[i.feeder_name].append(new_section)
-                            else:
-                                self.section_line_feeder_mapping[i.feeder_name]=[new_section]
+                        #If the object is inside of a substation...
+                        if hasattr(i,'is_substation') and i.is_substation == 1:
+                            #...it should have the name of the substation specified in the 'substation_name' attribute
+                            if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                ff_name = 'substation_{}'.format(i.substation_name)
+                        #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                        elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                            ff_name = i.feeder_name
+
+                        if ff_name in self.section_line_feeder_mapping:
+                            self.section_line_feeder_mapping[ff_name].append(new_section)
+                        else:
+                            self.section_line_feeder_mapping[ff_name]=[new_section]
+
 
 
                 #If we get a Regulator
@@ -986,7 +1002,7 @@ class Writer(AbstractWriter):
                         hasattr(model[i.connected_transformer].windings[1],'nominal_voltage') and
                         model[i.connected_transformer].windings[0].nominal_voltage is not None and
                         model[i.connected_transformer].windings[1].nominal_voltage is not None):
-                        
+
                         winding1 = model[i.connected_transformer].windings[0]
                         winding2 = model[i.connected_transformer].windings[1]
                         if hasattr(model[i.connected_transformer],'from_element') and model[i.connected_transformer].from_element is not None and hasattr(model[i.connected_transformer],'to_element') and model[i.connected_transformer].to_element is not None:
@@ -1030,12 +1046,21 @@ class Writer(AbstractWriter):
                                                 phase_on+=str(phase_winding.phase)
 
                             if new_trans_section is not None and new_trans_section not in self.section_line_list:
-                                    self.section_line_list.append(new_trans_section)
-                                    if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                                        if i.feeder_name in self.section_line_feeder_mapping:
-                                            self.section_line_feeder_mapping[i.feeder_name].append(new_trans_section)
-                                        else:
-                                            self.section_line_feeder_mapping[i.feeder_name]=[new_trans_section]
+                                self.section_line_list.append(new_trans_section)
+                                #If the object is inside of a substation...
+                                if hasattr(i,'is_substation') and i.is_substation == 1:
+                                    #...it should have the name of the substation specified in the 'substation_name' attribute
+                                    if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                        #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                        ff_name = 'substation_{}'.format(i.substation_name)
+                                #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                                elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                                    ff_name = i.feeder_name
+
+                                if ff_name in self.section_line_feeder_mapping:
+                                    self.section_line_feeder_mapping[ff_name].append(new_section)
+                                else:
+                                    self.section_line_feeder_mapping[ff_name]=[new_section]
 
 
                             if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
@@ -1180,12 +1205,21 @@ class Writer(AbstractWriter):
 
                     if new_section is not None and new_section not in self.section_line_list:
                         self.section_line_list.append(new_section)
-                        if hasattr(i,'feeder_name') and i.feeder_name is not None:
+                        #If the object is inside of a substation...
+                        if hasattr(i,'is_substation') and i.is_substation == 1:
+                            #...it should have the name of the substation specified in the 'substation_name' attribute
+                            if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                ff_name = 'substation_{}'.format(i.substation_name)
+                        #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                        elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                            ff_name = i.feeder_name
 
-                            if i.feeder_name in self.section_line_feeder_mapping:
-                                self.section_line_feeder_mapping[i.feeder_name].append(new_section)
-                            else:
-                                self.section_line_feeder_mapping[i.feeder_name]=[new_section]
+                        if ff_name in self.section_line_feeder_mapping:
+                            self.section_line_feeder_mapping[ff_name].append(new_section)
+                        else:
+                            self.section_line_feeder_mapping[ff_name]=[new_section]
+
 
                     try:
                         new_regulator_string+=new_section_ID
@@ -1356,7 +1390,7 @@ class Writer(AbstractWriter):
 
                     if hasattr(i,'highstep') and i.highstep is not None:
                         MaxBuck = str(i.lowstep)
-                        
+
 
                     #Find out if we have a two or three windings transformer
                     if hasattr(transformer_object, 'windings') and transformer_object.windings is not None:
@@ -1370,13 +1404,22 @@ class Writer(AbstractWriter):
                                             phase_on+=str(phase_winding.phase)
 
                         if new_section is not None and new_section not in self.section_line_list:
-                                self.section_line_list.append(new_section)
-                                if hasattr(transformer_object,'feeder_name') and transformer_object.feeder_name is not None:
+                            self.section_line_list.append(new_section)
+                            #If the object is inside of a substation...
+                            if hasattr(transformer_object,'is_substation') and transformer_object.is_substation == 1:
+                                #...it should have the name of the substation specified in the 'substation_name' attribute
+                                if hasattr(transformer_object,'substation_name') and transformer_object.substation_name is not None and transformer_object.substation_name != '':
+                                    #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                    ff_name = 'substation_{}'.format(transformer_object.substation_name)
+                            #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                            elif hasattr(transformer_object,'feeder_name') and transformer_object.feeder_name is not None and transformer_object.feeder_name != '':
+                                ff_name = transformer_object.feeder_name
 
-                                    if transformer_object.feeder_name in self.section_line_feeder_mapping:
-                                        self.section_line_feeder_mapping[transformer_object.feeder_name].append(new_section)
-                                    else:
-                                        self.section_line_feeder_mapping[transformer_object.feeder_name]=[new_section]
+                            if ff_name in self.section_line_feeder_mapping:
+                                self.section_line_feeder_mapping[ff_name].append(new_section)
+                            else:
+                                self.section_line_feeder_mapping[ff_name]=[new_section]
+
 
                         #Case 1: Two Windings
                         #
@@ -1830,7 +1873,7 @@ class Writer(AbstractWriter):
             #    k+=1
             #    nodeID=source_string.split(',')[0]
             #    f.write('{nodeID},{NetID}\n'.format(nodeID=nodeID, NetID=k))
-            for f_name,section_l in self.section_line_feeder_mapping.items():
+            for f_name,section_l in self.section_feeder_mapping.items():
 #                for kk in model.models:
 #                   if isinstance(kk,Feeder_metadata):
 #                       print(kk.name, kk.headnode)
