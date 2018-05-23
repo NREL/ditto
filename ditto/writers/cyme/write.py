@@ -1867,7 +1867,8 @@ class Writer(AbstractWriter):
             f.write('\n[SECTION]\n')
             f.write('FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase\n')
             f.write('FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet\n')
-
+            if 'subtransmission' in self.section_line_feeder_mapping:
+                f.write('FORMAT_TRANSMISSIONLINE=NetworkID,HeadNodeID,CoordSet\n')
             #k=0
             #for source_string in source_string_list:
             #    k+=1
@@ -1878,7 +1879,10 @@ class Writer(AbstractWriter):
             #        f.write(section_line+'\n')
             for f_name,section_l in self.section_line_feeder_mapping.items():
                 head=model[f_name].headnode#self.section_headnode_mapping[f_name]
-                f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                if f_name == 'subtransmission':
+                    f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                else:
+                    f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
                 for sec in section_l:
                     f.write(sec+'\n')
 
