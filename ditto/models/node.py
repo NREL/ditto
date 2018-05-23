@@ -34,6 +34,9 @@ class Node(DiTToHasTraits):
     # Support for substation connection points. These identify if the node connects the substation to a feeder or high voltage source
     is_substation_connection = Int(help='''1 if the node connects from inside a substation to outside, 0 otherwise.''', default=None)
 
+    #Modification: Nicolas (May 2018)
+    is_substation = Int(help='''Flag that indicates wheter the element is inside a substation or not.''', default_value=0)
+
     def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
 
         self._model = model
