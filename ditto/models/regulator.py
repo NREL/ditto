@@ -63,6 +63,8 @@ class Regulator(DiTToHasTraits):
     #Modification: Tarek (April 2018)
     setpoint = Float(help='''The percentage p.u. voltage setpoint of the regulator''', default_value=None)
 
+    #Modification: Nicolas (May 2018)
+    is_substation = Int(help='''Flag that indicates wheter the element is inside a substation or not.''', default_value=0)
 
     def build(self, model):
         self._model = model

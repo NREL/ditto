@@ -76,6 +76,9 @@ class Line(DiTToHasTraits):
     #Modification: Nicolas (March 2018)
     nameclass = Unicode(help='''Nameclass of the line object.''', default_value=None)
 
+    #Modification: Nicolas (May 2018)
+    is_substation = Int(help='''Flag that indicates wheter the element is inside a substation or not.''', default_value=0)
+
     def build(
         self,
         model,
