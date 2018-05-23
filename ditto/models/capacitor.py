@@ -68,5 +68,8 @@ class Capacitor(DiTToHasTraits):
     substation_name = Unicode(help='''The name of the substation to which the object is connected.''', default=None)
     feeder_name = Unicode(help='''The name of the feeder the object is on.''', default=None)
 
+    #Modification: Nicolas (May 2018)
+    is_substation = Int(help='''Flag that indicates wheter the element is inside a substation or not.''', default_value=0)
+
     def build(self, model):
         self._model = model

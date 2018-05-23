@@ -33,7 +33,7 @@ def test_opendss_to_json():
         r.parse(m)
         m.set_names()
         output_path = tempfile.TemporaryDirectory()
-        w = Writer(output_path=os.path.join(output_path.name,'test.json'))
+        w = Writer(output_path=output_path.name)
         w.write(m)
 
 def test_cyme_to_json():
@@ -49,7 +49,7 @@ def test_cyme_to_json():
         r.parse(m)
         m.set_names()
         output_path = tempfile.TemporaryDirectory()
-        w = Writer(output_path=os.path.join(output_path.name,'test.json'))
+        w = Writer(output_path=output_path.name)
         w.write(m)
 
 def test_json_reader():
@@ -74,9 +74,9 @@ def test_json_serialize_deserialize():
         )
         r.parse(m)
         m.set_names()
-        w = Writer(output_path='./test.json')
+        w = Writer(output_path='./')
         w.write(m)
-        jr = json_reader(input_file='./test.json')
+        jr = json_reader(input_file='./Model.json')
         jr.parse()
         jr.model.set_names()
 
@@ -90,7 +90,7 @@ def test_json_serialize_deserialize():
                 obj = m[json_obj.name]
                 assert compare(json_obj,obj)
 
-        os.remove('./test.json')
+        os.remove('./Model.json')
 
 
 def compare(obj1, obj2):

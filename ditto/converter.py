@@ -33,7 +33,7 @@ class Converter(object):
     Author: Nicolas Gensollen. October 2017
     '''
 
-    def __init__(self, registered_reader_class, registered_writer_class, input_path, output_path, verbose=True):
+    def __init__(self, registered_reader_class, registered_writer_class, input_path, output_path, verbose=True, **kwargs):
         '''Converter class CONSTRUCTOR.'''
 
         self.reader_class = registered_reader_class
@@ -53,6 +53,14 @@ class Converter(object):
         # TODO: check if this is in the registered list
         self._from = registered_reader_class.format_name
         self._to = registered_writer_class.format_name
+
+        #Serialize the DiTTo model before writing it out.
+        if "json_path" in kwargs and "registered_json_writer_class" in kwargs:
+            self.jsonize = True
+            self.json_path = kwargs['json_path']
+            self.json_writer_class = kwargs['registered_json_writer_class']
+        else:
+            self.jsonize = False
 
         self.verbose = verbose
 
@@ -168,6 +176,10 @@ class Converter(object):
         self.configure_writer(output)
 
         self.reader.parse(self.m)
+
+        if self.jsonize:
+            self.json_writer = self.json_writer_class(output_path=self.json_path)
+            self.json_writer.write(self.m)
 
         self.writer.write(self.m, verbose=self.verbose)
 

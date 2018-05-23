@@ -58,5 +58,9 @@ class Load(DiTToHasTraits):
     #Modification: Nicolas (May 2018)
     transformer_connected_kva = Float(help='''KVA of the distribution transformer which serves this load.''', default_value=None)
 
+    #Modification: Nicolas (May 2018)
+    is_substation = Int(help='''Flag that indicates wheter the element is inside a substation or not.''', default_value=0)
+
+
     def build(self, model):
         self._model = model
