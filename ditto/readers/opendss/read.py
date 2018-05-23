@@ -239,7 +239,52 @@ Responsible for calling the sub-parsers and logging progress.
 
         self.parse_storage(model)
 
+        self.set_nominal_voltages(model)
+
         return 1
+
+    def set_nominal_voltages(self, model):
+        '''Loop over the buses and set the kv base.
+        Then loop over the objects and set the kv base using the connecting element.
+        .. warning: This has to be called last in parse.
+        '''
+        model.set_names()
+        AllBusNames = dss.Circuit.AllBusNames()
+        for bus_name in AllBusNames:
+            #Set the active bus
+            dss.Circuit.SetActiveBus(bus_name)
+            #Set the nominal voltage of the corresponding node in the DiTTo Model
+            try:
+                model[bus_name.lower()].nominal_voltage = dss.Bus.kVBase()*math.sqrt(3)*10**3 #DiTTo in volts
+            except:
+                print('Could not set nominal voltage for bus {b}'.format(b=bus_name))
+                pass
+
+        for obj in model.models:
+            if hasattr(obj,'nominal_voltage') and obj.nominal_voltage is None:
+                #If the object has a connecting_element attribute
+                if hasattr(obj,'connecting_element'):
+                    try:
+                        obj.nominal_voltage = model[obj.connecting_element].nominal_voltage
+                    except:
+                        pass
+                elif hasattr(obj,'from_element'):
+                    try:
+                        obj.nominal_voltage = model[obj.from_element].nominal_voltage
+                    except:
+                        pass
+            elif isinstance(obj,PowerTransformer) or isinstance(obj,Regulator):
+                #Get the from_element
+                _from = obj.from_element
+                #Get the to_element
+                _to = obj.to_element
+                mapp ={0:_from,1:_to,2:_to}
+                for x in range(3):
+                    if len(obj.windings)>x and obj.windings[x].nominal_voltage is None:
+                        try:
+                            obj.windings[x].nominal_voltage = model[mapp[x]].nominal_voltage
+                        except:
+                            pass
 
     def parse_feeder_metadata(self, model):
         with open(self.feeder_file, 'r') as f:
