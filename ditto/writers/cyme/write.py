@@ -1942,8 +1942,28 @@ class Writer(AbstractWriter):
 
             #Subnetwork Connections
             #
-#Use subnetwork connections
-
+            #Use subnetwork connections only for substations
+            # TODO: Let the user specify what should be subnetworked
+            if 'substation_0' in self.section_line_feeder_mapping:
+                f.write('\n[SUBNETWORK CONNECTIONS]\n')
+                f.write('FORMAT_SUBNETWORKCONNECTIONS=SubNetID,NodeID,ConnectorCoordX,ConnectorCoordY\n')
+                for f_name,section_l in self.section_line_feeder_mapping.items():
+                    if 'substation' in f_name:
+                        #We need to find all the connections between the subnetwork and the rest of the system
+                        #Use the "is_substation_connection" attribute of Node objects
+                        #
+                        #TODO: Better way to do this???
+                        for obj in model.models:
+                            if isinstance(obj,Node) and obj.is_substation_connection == 1:
+                                #We also need the coordinates of this connection.
+                                #Use the coordinates of the Node
+                                if obj.positions is not None and len(obj.positions)>0:
+                                    X = obj.positions[0].long
+                                    Y = obj.positions[0].lat
+                                #If we don't have coordinates, then set to (0,0)....
+                                else:
+                                    X = 0;Y = 0
+                                f.write('{NetID},{NodeID},{X},{Y}\n'.format(NetID=f_name, NodeID=obj.name, X=X,Y=Y))
 
             #Overhead lines
             #
