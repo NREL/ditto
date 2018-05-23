@@ -255,7 +255,7 @@ Responsible for calling the sub-parsers and logging progress.
             dss.Circuit.SetActiveBus(bus_name)
             #Set the nominal voltage of the corresponding node in the DiTTo Model
             try:
-                model[bus_name.lower()].nominal_voltage = dss.Bus.kVBase()*math.sqrt(3)
+                model[bus_name.lower()].nominal_voltage = dss.Bus.kVBase()*math.sqrt(3)*10**3 #DiTTo in volts
             except:
                 print('Could not set nominal voltage for bus {b}'.format(b=bus_name))
                 pass
