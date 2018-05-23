@@ -1366,7 +1366,6 @@ class Writer(AbstractWriter):
                     new_section=None
                     new_section_ID=None
                     if hasattr(transformer_object, 'from_element') and transformer_object.from_element is not None and hasattr(transformer_object, 'to_element') and transformer_object.to_element is not None:
-                        try:
                             new_section='{f}_{t},{f},{t},'.format(f=transformer_object.from_element,t=transformer_object.to_element)
                             new_section_ID='{f}_{t}'.format(f=transformer_object.from_element,t=transformer_object.to_element)
                             # If it's a regulator, use the regulator object to find the feeder and substation if they're set
@@ -1377,8 +1376,6 @@ class Writer(AbstractWriter):
                                     self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
                                 if hasattr(i, 'substation_name') and i.substation_name is not None:
                                     self.section_headnode_mapping[i.feeder_name]=i.substation_name
-                        except:
-                            pass
 
 
 
@@ -1918,7 +1915,7 @@ class Writer(AbstractWriter):
             f.write('\n[SECTION]\n')
 
             #Always write the SECTION format
-            f.write('FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase\n')
+            f.write('FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase,SubNetworkId\n')
 
             #Always write the FEEDER format
             f.write('FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet\n')
@@ -1954,15 +1951,18 @@ class Writer(AbstractWriter):
                 #If we are considering the subtransmission network, use TRANSMISSIONLINE
                 if f_name == 'subtransmission':
                     f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                    subnetID = ''
                 #If substation is in the name of the "feeder", then use SUBSTATION
                 elif 'substation' in f_name:
                     f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.split('ation_')[1],HeadNodeID=head,coordset=1))
+                    subnetID = f_name.split('ation_')[1]
                 #Otherwise, it should be an actual feeder, so use FEEDER
                 else:
                     f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                    subnetID = ''
                 #Then, write all the sections belonging to this subnetwork
                 for sec in section_l:
-                    f.write(sec+'\n')
+                    f.write(sec+',{}'.format(subnetID)+'\n')
 
             #Subnetworks
             #
