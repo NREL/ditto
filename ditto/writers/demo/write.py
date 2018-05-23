@@ -126,11 +126,38 @@ class Writer(AbstractWriter):
                                     all_z[j][k] = 0  # Default 0 impedance if no impedance matrix
                                 else:
                                     all_z[j][k] = complex(lc[j_cnt][k_cnt])
-#all_z[j][k] = complex(lc[j][k])
                                 if len(lc) < 3:
                                     j = j_cnt
                                     k = k_cnt
+                        fp.write('Impedance:\n')
+                        for j in range(3):
+                            for k in range(3):
+                                fp.write('%.6f+%.6fj  '%(all_z[j][k].real*1000,all_z[j][k].imag*1000)) #Output in units of capacitance per km
+                            fp.write('\n')
+                        fp.write('\n')
 
+                    if hasattr(i,'capacitance_matrix') and i.capacitance_matrix is not None:
+                        all_c = [ [ complex(0,0) for posi in range(3) ] for posj in range(3)]
+                        lc = i.capacitance_matrix
+                        if (len(phases) != len(lc)):
+                            logger.debug('Warning - capacitance matrix size different from number of phases for line {ln}'.format(ln=i.name))
+                            logger.debug(i.name, i.from_element, i.to_element)
+                            logger.debug(phases)
+                            logger.debug(lc)
+
+                        for j_cnt in range(len(phases)): # For 3x3 matrices or 2x2 secondary matrices
+                            for k_cnt in range(len(phases)):
+                                j_val = phases[j_cnt]
+                                k_val = phases[k_cnt]
+                                j = phase_map[j_val] - 1
+                                k = phase_map[k_val] - 1
+                                if len(lc) == 0:
+                                    all_c[j][k] = 0  # Default 0 impedance if no impedance matrix
+                                else:
+                                    all_c[j][k] = complex(lc[j_cnt][k_cnt])
+                                if len(lc) < 3:
+                                    j = j_cnt
+                                    k = k_cnt
 
 #                                impedance = str(lc[j][k]).strip('()')
 #                                pattern = re.compile('[^e]-')
@@ -138,9 +165,13 @@ class Writer(AbstractWriter):
 #                                if not '+' in impedance and not len(pattern.findall(impedance)) > 0:
 #                                    impedance = '0+' + impedance
 #                                dic['z{one}{two}'.format(one=phase_map[j_val], two=phase_map[k_val])] = impedance
+                        fp.write('Shunt Capacitance:\n')
                         for j in range(3):
                             for k in range(3):
-                                fp.write('%.6f+%.6fj  '%(all_z[j][k].real*1000,all_z[j][k].imag*1000)) #Output in units of ohms per km
+                                if all_c[j][k].real <0:
+                                    fp.write('%.6f%.6fj  '%(0,all_c[j][k].real*1000)) #Output in units of capacitance per km
+                                else:
+                                    fp.write('%.6f+%.6fj  '%(0,all_c[j][k].real*1000)) #Output in units of capacitance per km
                             fp.write('\n')
                         fp.write('\n')
                     
