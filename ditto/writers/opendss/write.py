@@ -302,15 +302,15 @@ author: Nicolas Gensollen. October 2017.
                     else:
                         substation_text_map[substation_name].add(feeder_name)
                     txt = ''
-                    if feeder_name in feeder_text_map:
-                        txt = feeder_text_map[feeder_name]
+                    if substation_name+'_'+feeder_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
                     txt += '{name} {X} {Y}\n'.format(name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long)
-                    feeder_text_map[feeder_name] = txt
+                    feeder_text_map[substation_name+'_'+feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -379,8 +379,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
 
                 if hasattr(i, 'name') and i.name is not None:
@@ -643,11 +643,11 @@ author: Nicolas Gensollen. October 2017.
                             txt += ' XHL=%f XHT=%f XLT=%f' % (default_x[0], default_x[1], default_x[2])
 
                 txt += '\n\n'
-                feeder_text_map[feeder_name] = txt
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -700,8 +700,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
 
                 #Name
@@ -787,11 +787,11 @@ author: Nicolas Gensollen. October 2017.
                 #TODO: See with Tarek and Elaine how we can support that
 
                 txt += '\n'
-                feeder_text_map[feeder_name] = txt
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -840,8 +840,8 @@ author: Nicolas Gensollen. October 2017.
                     else:
                         substation_text_map[substation_name].add(feeder_name)
                     txt = ''
-                    if feeder_name in feeder_text_map:
-                        txt = feeder_text_map[feeder_name]
+                    if substation_name+'_'+feeder_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
 
                     #Name
@@ -901,11 +901,11 @@ author: Nicolas Gensollen. October 2017.
                         txt += ' pf={power_factor}'.format(power_factor=i.power_factor)
 
                     txt += '\n'
-                    feeder_text_map[feeder_name] = txt
+                    feeder_text_map[substation_name+'_'+feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -956,8 +956,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
 
                 if hasattr(i, 'data_location') and i.data_location is not None and os.path.isfile(i.data_location) and (i.scale_factor is None or i.scale_factor == 1):
                     filename = i.data_location.split('/')[-1][:-4] # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
@@ -987,7 +987,7 @@ author: Nicolas Gensollen. October 2017.
                         self.timeseries_format[filename] = 'yearly'
                     txt += 'New loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n'.format(filename=filename, npoints=npoints, data_location=scaled_data_location)
                     self.timeseries_datasets[i.data_location] = filename
-                    feeder_text_map[feeder_name] = txt
+                    feeder_text_map[substation_name+'_'+feeder_name] = txt
 
             # elif: In memory
             #     pass
@@ -998,7 +998,7 @@ author: Nicolas Gensollen. October 2017.
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -1051,8 +1051,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
 
                 #Name
@@ -1166,10 +1166,10 @@ author: Nicolas Gensollen. October 2017.
                             #TODO: manage the data correctly when it is only in memory
 
                 txt += '\n\n'
-                feeder_text_map[feeder_name] = txt
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -1230,8 +1230,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
 
 
@@ -1369,7 +1369,10 @@ author: Nicolas Gensollen. October 2017.
                 if hasattr(i, 'pt_ratio') and i.pt_ratio is not None:
                     txt += ' ptratio={PT}'.format(PT=i.pt_ratio)
 
-                #ct_ratio (Not mapped)
+                #ct ratio
+                if hasattr(i, 'ct_ratio') and i.pt_ratio is not None:
+                    txt += ' ctratio={CT}'.format(CT=i.ct_ratio)
+
 
                 #phase shift (Not mapped)
 
@@ -1390,6 +1393,9 @@ author: Nicolas Gensollen. October 2017.
                 #Voltage limit
                 if hasattr(i, 'voltage_limit') and i.voltage_limit is not None:
                     txt += ' vlimit={vlim}'.format(vlim=i.voltage_limit)
+
+                if hasattr(i,'setpoint') and i.setpoint is not None:
+                    txt += ' vreg = {setp}'.format(setp=i.setpoint/100.0 *120)
 
                 #X (Store in the Phase Windings of the transformer)
                 if i.name in self.compensator:
@@ -1418,13 +1424,13 @@ author: Nicolas Gensollen. October 2017.
                             txt += ' R={r}'.format(r=list(self.compensator[i.name]['R'])[0])
 
                 txt += '\n\n'
-                feeder_text_map[feeder_name] = txt
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
+
+        import pdb;pdb.set_trace()
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                if feeder_name == 'subtransmission':
-                    import pdb;pdb.set_trace()
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -1485,8 +1491,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
 
                 #Name
                 if hasattr(i, 'name') and i.name is not None:
@@ -1593,10 +1599,10 @@ author: Nicolas Gensollen. October 2017.
                         txt += ' PTPhase={PT}'.format(PT=self.phase_mapping(i.pt_phase))
 
                 txt += '\n\n'
-                feeder_text_map[feeder_name] = txt
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
@@ -1681,8 +1687,8 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ''
-                if feeder_name in feeder_text_map:
-                    txt = feeder_text_map[feeder_name]
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
                     
 
 
@@ -1748,11 +1754,11 @@ author: Nicolas Gensollen. October 2017.
                     txt += fuse_line
                     txt += '\n\n'
 
-                feeder_text_map[feeder_name] = txt
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[feeder_name]
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
                 feeder_name = feeder_name.replace('>','-')
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
