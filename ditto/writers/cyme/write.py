@@ -216,6 +216,8 @@ class Writer(AbstractWriter):
         #Output network file
         output_file=self.output_path+'/network.txt'
 
+        self.network_have_substations = False
+
         #Lists for storing strings
         source_string_list=[]
         overhead_string_list=[]
@@ -826,6 +828,7 @@ class Writer(AbstractWriter):
                                 if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
                                     #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
                                     ff_name = 'substation_{}'.format(i.substation_name)
+                                    self.network_have_substations = True
                             #If the object is not inside of a substation, then use the feeder_name attribute if it exists
                             elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
                                 ff_name = i.feeder_name
@@ -951,6 +954,7 @@ class Writer(AbstractWriter):
                             if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
                                 #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
                                 ff_name = 'substation_{}'.format(i.substation_name)
+                                self.network_have_substations = True
                         #If the object is not inside of a substation, then use the feeder_name attribute if it exists
                         elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
                             ff_name = i.feeder_name
@@ -1053,6 +1057,7 @@ class Writer(AbstractWriter):
                                     if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
                                         #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
                                         ff_name = 'substation_{}'.format(i.substation_name)
+                                        self.network_have_substations = True
                                 #If the object is not inside of a substation, then use the feeder_name attribute if it exists
                                 elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
                                     ff_name = i.feeder_name
@@ -1211,6 +1216,7 @@ class Writer(AbstractWriter):
                             if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
                                 #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
                                 ff_name = 'substation_{}'.format(i.substation_name)
+                                self.network_have_substations = True
                         #If the object is not inside of a substation, then use the feeder_name attribute if it exists
                         elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
                             ff_name = i.feeder_name
@@ -1411,6 +1417,7 @@ class Writer(AbstractWriter):
                                 if hasattr(transformer_object,'substation_name') and transformer_object.substation_name is not None and transformer_object.substation_name != '':
                                     #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
                                     ff_name = 'substation_{}'.format(transformer_object.substation_name)
+                                    self.network_have_substations = True
                             #If the object is not inside of a substation, then use the feeder_name attribute if it exists
                             elif hasattr(transformer_object,'feeder_name') and transformer_object.feeder_name is not None and transformer_object.feeder_name != '':
                                 ff_name = transformer_object.feeder_name
@@ -1878,8 +1885,9 @@ class Writer(AbstractWriter):
 #                   if isinstance(kk,Feeder_metadata):
 #                       print(kk.name, kk.headnode)
 #import pdb;pdb.set_trace()
-                head=model[f_name].headnode#self.section_headnode_mapping[f_name]
-                f.write('{nodeID},{NetID}\n'.format(nodeID=head, NetID=f_name))
+                if f_name != '':
+                    head=model[f_name].headnode#self.section_headnode_mapping[f_name]
+                    f.write('{nodeID},{NetID}\n'.format(nodeID=head, NetID=f_name))
 
             #Source equivalent
             #
@@ -1892,7 +1900,7 @@ class Writer(AbstractWriter):
                 f.write(source_string+'\n')
 
             for f_name,section_l in self.section_line_feeder_mapping.items():
-                if f_name!='subtransmission':
+                if f_name!='subtransmission' and 'substation' not in f_name:
                     temp=model[f_name]
                     if hasattr(temp,'nominal_voltage') and temp.nominal_voltage is not None:
                         volt=temp.nominal_voltage*10**-3
@@ -1921,7 +1929,7 @@ class Writer(AbstractWriter):
 
             #If we have a substation (have to have "substation in the name...),
             #then write the SUBSTATION format
-            if 'substation_0' in self.section_line_feeder_mapping:
+            if self.network_have_substations:
                 f.write('FORMAT_SUBSTATION=NetworkID,HeadNodeID,CoordSet\n')
 
             #####################################
@@ -1939,13 +1947,16 @@ class Writer(AbstractWriter):
             #######################################
 
             for f_name,section_l in self.section_line_feeder_mapping.items():
-                head=model[f_name].headnode#self.section_headnode_mapping[f_name]
+                if 'substation' in f_name:
+                    head = ''
+                else:
+                    head=model[f_name].headnode#self.section_headnode_mapping[f_name]
                 #If we are considering the subtransmission network, use TRANSMISSIONLINE
                 if f_name == 'subtransmission':
                     f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
                 #If substation is in the name of the "feeder", then use SUBSTATION
                 elif 'substation' in f_name:
-                    f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                    f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.split('ation_')[1],HeadNodeID=head,coordset=1))
                 #Otherwise, it should be an actual feeder, so use FEEDER
                 else:
                     f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
@@ -1958,7 +1969,7 @@ class Writer(AbstractWriter):
             #Use subnetworks only for substations
             # TODO: Let the user specify what should be subnetworked...
             #
-            if 'substation_0' in self.section_line_feeder_mapping:
+            if self.network_have_substations:
                 f.write('\n[SUBNETWORKS]\n')
                 f.write('FORMAT_SUBNETWORKS=SubNetID,Angle,X,Y,Height,Length,SymbolID,SubNetTypeID,Version,SymbolReferenceSize,TextReferenceSize,CoordSet\n')
                 for f_name,section_l in self.section_line_feeder_mapping.items():
@@ -1968,7 +1979,7 @@ class Writer(AbstractWriter):
                         Xs = []; Ys = []
                         #TODO: Better way to do this???
                         for obj in model.models:
-                            if isinstance(obj,Node) and obj.feeder_name == f_name:
+                            if isinstance(obj,Node) and obj.substation_name == f_name.split('ation_')[1]:
                                 if len(obj.positions)>0 and obj.positions[0] is not None:
                                     if obj.positions[0].lat is not None and obj.positions[0].long is not None:
                                         Xs.append(obj.positions[0].long)
@@ -1981,13 +1992,13 @@ class Writer(AbstractWriter):
                         else:
                             logger.warning('Could not find any coordinate for substation {s}. Setting the subnetwork coordinates to (0,0)...'.format(s=f_name))
                             X = 0; Y = 0
-                        f.write('SUBSTATION={NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n'.format(NetID=f_name, X=X,Y=Y,Height=125.00,Length=125.00))
+                        f.write('{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n'.format(NetID=f_name.split('ation_')[1], X=X,Y=Y,Height=125.00,Length=125.00))
 
             #Subnetwork Connections
             #
             #Use subnetwork connections only for substations
             # TODO: Let the user specify what should be subnetworked
-            if 'substation_0' in self.section_line_feeder_mapping:
+            if self.network_have_substations:
                 f.write('\n[SUBNETWORK CONNECTIONS]\n')
                 f.write('FORMAT_SUBNETWORKCONNECTIONS=SubNetID,NodeID,ConnectorCoordX,ConnectorCoordY\n')
                 for f_name,section_l in self.section_line_feeder_mapping.items():
@@ -1997,7 +2008,7 @@ class Writer(AbstractWriter):
                         #
                         #TODO: Better way to do this???
                         for obj in model.models:
-                            if isinstance(obj,Node) and obj.is_substation_connection == 1:
+                            if isinstance(obj,Node) and obj.is_substation_connection == 1 and obj.substation_name == f_name.split('ation_')[1]:
                                 #We also need the coordinates of this connection.
                                 #Use the coordinates of the Node
                                 if obj.positions is not None and len(obj.positions)>0:
@@ -2006,7 +2017,7 @@ class Writer(AbstractWriter):
                                 #If we don't have coordinates, then set to (0,0)....
                                 else:
                                     X = 0;Y = 0
-                                f.write('{NetID},{NodeID},{X},{Y}\n'.format(NetID=f_name, NodeID=obj.name, X=X,Y=Y))
+                                f.write('{NetID},{NodeID},{X},{Y}\n'.format(NetID=f_name.split('ation_')[1], NodeID=obj.name, X=X,Y=Y))
 
             #Overhead lines
             #
