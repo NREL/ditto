@@ -1865,10 +1865,26 @@ class Writer(AbstractWriter):
             #Sections
             #
             f.write('\n[SECTION]\n')
+
+            #Always write the SECTION format
             f.write('FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase\n')
+
+            #Always write the FEEDER format
             f.write('FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet\n')
+
+            #If we have subtransmission, then write the TRANSMISSIONLINE format
             if 'subtransmission' in self.section_line_feeder_mapping:
                 f.write('FORMAT_TRANSMISSIONLINE=NetworkID,HeadNodeID,CoordSet\n')
+
+            #If we have a substation (have to have "substation in the name...),
+            #then write the SUBSTATION format
+            if 'substation_0' in self.section_line_feeder_mapping:
+                f.write('FORMAT_SUBSTATION=NetworkID,HeadNodeID,CoordSet\n')
+
+            #####################################
+            #  TO REMOVE ????????
+            ####################################
+            #
             #k=0
             #for source_string in source_string_list:
             #    k+=1
@@ -1877,14 +1893,56 @@ class Writer(AbstractWriter):
             #    section_list=self.merge_regulators(self.section_line_list)
             #    for section_line in section_list:
             #        f.write(section_line+'\n')
+            #######################################
+
             for f_name,section_l in self.section_line_feeder_mapping.items():
                 head=model[f_name].headnode#self.section_headnode_mapping[f_name]
+                #If we are considering the subtransmission network, use TRANSMISSIONLINE
                 if f_name == 'subtransmission':
                     f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                #If substation is in the name of the "feeder", then use SUBSTATION
+                elif 'substation' in f_name:
+                    f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                #Otherwise, it should be an actual feeder, so use FEEDER
                 else:
                     f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                #Then, write all the sections belonging to this subnetwork
                 for sec in section_l:
                     f.write(sec+'\n')
+
+            #Subnetworks
+            #
+            #Use subnetworks only for substations
+            # TODO: Let the user specify what should be subnetworked...
+            #
+            if 'substation_0' in self.section_line_feeder_mapping:
+                f.write('\n[SUBNETWORKS]\n')
+                f.write('FORMAT_SUBNETWORKS=SubNetID,Angle,X,Y,Height,Length,SymbolID,SubNetTypeID,Version,SymbolReferenceSize,TextReferenceSize,CoordSet\n')
+                for f_name,section_l in self.section_line_feeder_mapping.items():
+                    if 'substation' in f_name:
+                        #We need to find the X,Y coordinates for the subnetwork
+                        #Take the average of the coordinates we have
+                        Xs = []; Ys = []
+                        #TODO: Better way to do this???
+                        for obj in model.models:
+                            if isinstance(obj,Node) and obj.feeder_name == f_name:
+                                if len(obj.positions)>0 and obj.positions[0] is not None:
+                                    if obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                        Xs.append(obj.positions[0].long)
+                                        Ys.append(obj.positions[0].lat)
+                        #If we were able to sample some coordinates, take the average
+                        if len(Xs)>0 and len(Ys)>0:
+                            X = np.mean(Xs)
+                            Y = np.mean(Ys)
+                        #Otherwise, set to 0,0 (best effort...)
+                        else:
+                            logger.warning('Could not find any coordinate for substation {s}. Setting the subnetwork coordinates to (0,0)...'.format(s=f_name))
+                            X = 0; Y = 0
+                        f.write('SUBSTATION={NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n'.format(NetID=f_name, X=X,Y=Y,Height=125.00,Length=125.00))
+
+            #Subnetwork Connections
+            #
+#Use subnetwork connections
 
 
             #Overhead lines
