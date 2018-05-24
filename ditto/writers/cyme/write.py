@@ -1975,20 +1975,59 @@ class Writer(AbstractWriter):
                 for f_name,section_l in self.section_line_feeder_mapping.items():
                     if 'substation' in f_name:
                         #We need to find the X,Y coordinates for the subnetwork
-                        #Take the average of the coordinates we have
-                        Xs = []; Ys = []
+                        #(CASE 1) - First, we try setting these coordinates as the average of the LV elements.
+                        #(CASE 2) - If this does not work, we try using the average of all the substation elements.
+                        #(CASE 3) - If this does not work either, we try using the global average (all Nodes in the system), such that
+                        #the subnetwork is more or less in the middle of the system.
+                        #(CASE 4) - Finally, if nothing works, set the coordinates as (0,0)...
+                        defaultX = []; defaultY = []
+                        by_nominal_voltage_X = {}
+                        by_nominal_voltage_Y = {}
+                        all_coordsX = []; all_coordsY = []
+                        #
                         #TODO: Better way to do this???
+                        #
                         for obj in model.models:
-                            if isinstance(obj,Node) and obj.substation_name == f_name.split('ation_')[1]:
-                                if len(obj.positions)>0 and obj.positions[0] is not None:
-                                    if obj.positions[0].lat is not None and obj.positions[0].long is not None:
-                                        Xs.append(obj.positions[0].long)
-                                        Ys.append(obj.positions[0].lat)
+                            #(CASE 3) - Just append all Node's valid coordinates to all_coordsX and all_coordsY
+                            if isinstance(obj,Node) and len(obj.positions)>0 and obj.positions[0] is not None and obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                all_coordsX.append(obj.positions[0].long)
+                                all_coordsY.append(obj.positions[0].lat)
+                            #(CASE 1) - Since we don't know what the LV value is beforehand, we store all coordinates by nominal voltage
+                            #in the dictionaries by_nominal_voltage_X and by_nominal_voltage_Y.
+                            if isinstance(obj,Node) and obj.substation_name == f_name.split('ation_')[1] and obj.is_substation == 1:
+                                if obj.nominal_voltage is not None:
+                                    if len(obj.positions)>0 and obj.positions[0] is not None:
+                                        if obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                            if obj.nominal_voltage in by_nominal_voltage_X and obj.nominal_voltage in by_nominal_voltage_Y:
+                                                by_nominal_voltage_X[obj.nominal_voltage].append(obj.positions[0].long)
+                                                by_nominal_voltage_Y[obj.nominal_voltage].append(obj.positions[0].lat)
+                                            else:
+                                                by_nominal_voltage_X[obj.nominal_voltage] = [obj.positions[0].long]
+                                                by_nominal_voltage_Y[obj.nominal_voltage] = [obj.positions[0].lat]
+                                #(CASE 2) - If the nominal voltage was None, then add the coordinates to the default list
+                                else:
+                                    if len(obj.positions)>0 and obj.positions[0] is not None:
+                                        if obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                            defaultX.append(obj.positions[0].long)
+                                            defaultY.append(obj.positions[0].lat)
+                        #(CASE 1)                    
+                        if len(list(by_nominal_voltage_X.keys()))>0:
+                            low_voltage = min(list(by_nominal_voltage_X.keys()))
+                            Xs = by_nominal_voltage_X[low_voltage]
+                            Ys = by_nominal_voltage_Y[low_voltage]
+                        #(CASE 2)
+                        else:
+                            Xs = defaultX
+                            Ys = defaultY
                         #If we were able to sample some coordinates, take the average
                         if len(Xs)>0 and len(Ys)>0:
                             X = np.mean(Xs)
                             Y = np.mean(Ys)
-                        #Otherwise, set to 0,0 (best effort...)
+                        #(CASE 3)
+                        elif len(all_coordsX)>0 and len(all_coordsY)>0:
+                            X = np.mean(all_coordsX)
+                            Y = np.mean(all_coordsY)
+                        #(CASE 4) - Otherwise, set to 0,0 (best effort...)
                         else:
                             logger.warning('Could not find any coordinate for substation {s}. Setting the subnetwork coordinates to (0,0)...'.format(s=f_name))
                             X = 0; Y = 0
