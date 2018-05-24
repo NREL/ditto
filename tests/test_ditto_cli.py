@@ -37,3 +37,12 @@ def test_gridlabd_to_opendss_cli():
     if p.returncode != 0:
         raise Exception("Error in ditto cli: {}".format(p.returncode))
 
+def test_metric_computation_cli():
+    '''Tests metric computation from command line interface
+    TODO: Add better tests that check the metric values and compare them with ground truth.
+    '''
+    output_path = tempfile.TemporaryDirectory()
+    p = subprocess.Popen(shlex.split(""" ditto-cli metric --from="dss" --to="xlsx" --input="./tests/read_dss_13node.json" --feeder=False --output="{}" """.format(output_path.name).strip()))
+    p.wait()
+    if p.returncode != 0:
+        raise Exception("Error in ditto cli: {}".format(p.returncode))
