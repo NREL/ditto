@@ -315,24 +315,28 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect=''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['buses']), 'w') as fp:
                         fp.write(txt)
                         self.all_buses.append(txt)
-#import pdb;pdb.set_trace()
-#self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['buses']))
+                    # Not currently redirecting buscoords to each subfolder - just use the aggregate in the root directory 
+                    #self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['buses']))
         if len(self.all_buses)>0:
             with open(os.path.join(self.output_path,self.output_filenames['buses']),'w') as fp: #Writes all the buscoords to the base folder as well
                 fp.write(''.join(txt for txt in self.all_buses))
@@ -652,22 +656,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect=''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['transformers']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['transformers']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['transformers']))
 
         return 1
 
@@ -796,22 +804,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['storage']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['storage']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['storage']))
 
 
         return 1
@@ -910,22 +922,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['PVSystems']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['PVSystems']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['PVSystems']))
 
 
 
@@ -1003,22 +1019,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['loadshapes']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['loadshapes']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['loadshapes']))
 
 
 
@@ -1174,22 +1194,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['loads']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['loads']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['loads']))
 
 
 
@@ -1361,7 +1385,7 @@ author: Nicolas Gensollen. October 2017.
 
                 #highstep
                 if hasattr(i, 'highstep') and i.highstep is not None:
-                    txt += ' maxtapchange={high}'.format(high=i.highstep)
+                    txt += ' maxtapchange={high}'.format(high=0) #i.highstep)
 
                 #lowstep (Not mapped)
 
@@ -1369,9 +1393,8 @@ author: Nicolas Gensollen. October 2017.
                 if hasattr(i, 'pt_ratio') and i.pt_ratio is not None:
                     txt += ' ptratio={PT}'.format(PT=i.pt_ratio)
 
-                #ct ratio
-                if hasattr(i, 'ct_ratio') and i.pt_ratio is not None:
-                    txt += ' ctratio={CT}'.format(CT=i.ct_ratio)
+                #ct ratio (Not mapped)
+
 
 
                 #phase shift (Not mapped)
@@ -1380,7 +1403,7 @@ author: Nicolas Gensollen. October 2017.
 
                 #bandwidth
                 if hasattr(i, 'bandwidth') and i.bandwidth is not None:
-                    txt += ' band={b}'.format(b=i.bandwidth)
+                   txt += ' band={b}'.format(b=i.bandwidth*1.2) #The bandwidth is operated at 120 V
 
                 #band center
                 if hasattr(i, 'bandcenter') and i.bandcenter is not None:
@@ -1426,7 +1449,7 @@ author: Nicolas Gensollen. October 2017.
                 txt += '\n\n'
                 feeder_text_map[substation_name+'_'+feeder_name] = txt
 
-        import pdb;pdb.set_trace()
+#import pdb;pdb.set_trace()
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
@@ -1435,17 +1458,21 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['regulators']), 'w') as fp:
@@ -1456,7 +1483,7 @@ author: Nicolas Gensollen. October 2017.
                                 f.write(trans_string)
                                 f.write('\n\n')
 
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['regulators']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['regulators']))
 
 
         return 1
@@ -1607,22 +1634,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['capacitors']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['capacitors']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['capacitors']))
 
 
         return 1
@@ -1733,6 +1764,14 @@ author: Nicolas Gensollen. October 2017.
                 else:
                     txt += ' switch=n'
 
+                if hasattr(i,'wires') and i.wires is not None and len(i.wires)>0:
+                    closed_phase=np.sort([wire.phase for wire in i.wires if wire.is_open==0 and wire.phase not in ['N','N1','N2']])
+                    if len(closed_phase) == 0:
+                        txt+= ' enabled=n'
+                    else:
+                        txt+= ' enabled=y'
+
+
                  #is_fuse
                 if hasattr(i, 'is_fuse') and i.is_fuse == 1:
                     fuse_line = 'New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=yes'.format(name=i.name)
@@ -1763,22 +1802,26 @@ author: Nicolas Gensollen. October 2017.
                 substation_name = substation_name.replace('>','-')
                 if txt != '':
                     output_folder = None
+                    output_redirect = None
                     if self.separate_substations:
                         output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     else:
                         output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
                         output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(os.path.join(output_folder,self.output_filenames['lines']), 'w') as fp:
                         fp.write(txt)
-                    self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['lines']))
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['lines']))
 
 
 
@@ -1831,22 +1874,26 @@ author: Nicolas Gensollen. October 2017.
 
         if len(self.all_wires)>0:
             output_folder = None
+            output_redirect = None
             if self.separate_substations and substation_name is not None:
                 output_folder = os.path.join(self.output_path,substation_name)
+                output_redirect = substation_name
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
             else:
                 output_folder = os.path.join(self.output_path)
+                output_redirect = ''
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
             if self.separate_feeders and feeder_name is not None:
                 output_folder = os.path.join(output_folder,feeder_name)
+                output_redirect = os.path.join(output_redirect,feeder_name)
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
             fp = open(os.path.join(output_folder, self.output_filenames['wiredata']), 'w')
-            self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['wiredata']))
+            self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['wiredata']))
             for wire_name,wire_data in self.all_wires.items():
                 fp.write('New WireData.{name}'.format(name=wire_name))
                 for key,value in wire_data.items():
@@ -1894,22 +1941,26 @@ author: Nicolas Gensollen. October 2017.
 
         if len(self.all_geometries)>0:
             output_folder = None
+            output_redirect = None
             if self.separate_substations and substation_name is not None:
                 output_folder = os.path.join(self.output_path,substation_name)
+                output_redirect = substation_name
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
             else:
                 output_folder = os.path.join(self.output_path)
+                output_redirect = ''
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
             if self.separate_feeders and feeder_name is not None:
                 output_folder = os.path.join(output_folder,feeder_name)
+                output_redirect = os.path.join(output_redirect,feeder_name)
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
             fp = open(os.path.join(output_folder, self.output_filenames['linegeometry']), 'w')
-            self.files_to_redirect.append(os.path.join(output_folder, self.output_filenames['linegeometry']))
+            self.files_to_redirect.append(os.path.join(output_redirect, self.output_filenames['linegeometry']))
             for geometry_name,geometry_data in self.all_geometries.items():
                 fp.write('New LineGeometry.{name}'.format(name=geometry_name))
                 if 'nconds' in geometry_data:
@@ -1981,22 +2032,26 @@ author: Nicolas Gensollen. October 2017.
 
         if len(self.all_linecodes)>0:
             output_folder = None
+            output_redirect = None
             if self.separate_substations and substation_name is not None:
                 output_folder = os.path.join(self.output_path,substation_name)
+                output_redirect = substation_name
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
             else:
                 output_folder = os.path.join(self.output_path)
+                output_redirect = ''
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
             if self.separate_feeders and feeder_name is not None:
                 output_folder = os.path.join(output_folder,feeder_name)
+                output_redirect = os.path.join(output_redirect,feeder_name)
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
             fp = open(os.path.join(output_folder, self.output_filenames['linecodes']), 'w')
-            self.files_to_redirect.append(os.path.join(output_folder,self.output_filenames['linecodes']))
+            self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['linecodes']))
             for linecode_name, linecode_data in self.all_linecodes.items():
                 fp.write('New Linecode.{name}'.format(name=linecode_name))
                 for k,v in linecode_data.items():
