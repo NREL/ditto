@@ -50,12 +50,17 @@ def metric(ctx, **kwargs):
 
     from_reader_name = kwargs["from"]
 
-    MetricComputer(registered_reader_class=registered_readers[from_reader_name] ,
-                   input_path=kwargs["input"] ,
-                   output_format=kwargs["to"] ,
-                   output_path=kwargs["output"] ,
-                   by_feeder=kwargs["feeder"]).compute()
-    sys.exit(0)
+    try:
+        MetricComputer(registered_reader_class=registered_readers[from_reader_name] ,
+                       input_path=kwargs["input"] ,
+                       output_format=kwargs["to"] ,
+                       output_path=kwargs["output"] ,
+                       by_feeder=kwargs["feeder"]).compute()
+    except Exception as e:
+        # TODO: discuss whether we should raise exception here?
+        sys.exit(1) # TODO: Set error code based on exception
+    else:
+        sys.exit(0)
 
 @cli.command()
 @click.option("--input", type=click.Path(exists=True), help="Path to input file")

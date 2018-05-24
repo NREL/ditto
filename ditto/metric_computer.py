@@ -19,7 +19,7 @@ class MetricComputer(Converter):
         self.by_feeder = by_feeder
         self.output_format = output_format
         #Call super
-        Converter.__init__(self, registered_reader_class, None, input_path, output_path, verbose=True, **kwargs)
+        super(MetricComputer, self).__init__(registered_reader_class, None, input_path, output_path, verbose=True, **kwargs)
 
     def convert(self):
         '''Cannot call convert.'''
