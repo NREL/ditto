@@ -1370,6 +1370,9 @@ author: Nicolas Gensollen. October 2017.
                 #Winding
                 if hasattr(i, 'winding') and i.winding is not None:
                     txt += ' winding={w}'.format(w=i.winding)
+                else:
+                   txt += ' winding=2'
+
 
                 #CTprim
                 if hasattr(i, 'ct_prim') and i.ct_prim is not None:
@@ -1385,7 +1388,7 @@ author: Nicolas Gensollen. October 2017.
 
                 #highstep
                 if hasattr(i, 'highstep') and i.highstep is not None:
-                    txt += ' maxtapchange={high}'.format(high=0) #i.highstep)
+                    txt += ' maxtapchange={high}'.format(high=i.highstep)
 
                 #lowstep (Not mapped)
 
@@ -1393,7 +1396,7 @@ author: Nicolas Gensollen. October 2017.
                 if hasattr(i, 'pt_ratio') and i.pt_ratio is not None:
                     txt += ' ptratio={PT}'.format(PT=i.pt_ratio)
 
-                #ct ratio (Not mapped)
+                #ct ratio  (Not mapped)
 
 
 
@@ -1678,7 +1681,7 @@ author: Nicolas Gensollen. October 2017.
         lines_to_geometrify = []
         lines_to_linecodify = []
         for i in model.models:
-            if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_sectionalizer == 0 and i.is_recloser == 0 and i.is_fuse == 0:
+            if isinstance(i, Line):# and i.is_switch == 0 and i.is_breaker == 0 and i.is_sectionalizer == 0 and i.is_recloser == 0 and i.is_fuse == 0:
                 use_linecodes = False
                 for wire in i.wires:
                     #If we are missing the position of at least one wire, default to linecodes
@@ -1697,6 +1700,7 @@ author: Nicolas Gensollen. October 2017.
                     lines_to_linecodify.append(i)
                 else:
                     lines_to_geometrify.append(i)
+
 
         self.write_wiredata(lines_to_geometrify) # No feeder data specified as these are written to the base folder
         self.write_linegeometry(lines_to_geometrify)
@@ -1997,18 +2001,38 @@ author: Nicolas Gensollen. October 2017.
 '''
         cnt = 0
         for i in list_of_lines:
-            if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_recloser == 0 and i.is_sectionalizer == 0 and i.is_fuse == 0:
+            if isinstance(i, Line):# and i.is_switch == 0 and i.is_breaker == 0 and i.is_recloser == 0 and i.is_sectionalizer == 0 and i.is_fuse == 0:
 
                 parsed_line = self.parse_line(i)
+                
                 if len(parsed_line)>0:
+
                     if i.nameclass is not None:
-                        if i.nameclass not in self.all_linecodes:
-                            self.all_linecodes[i.nameclass] = parsed_line
+                        if 'nphases' in parsed_line:
+                            n_phases = str(parsed_line['nphases'])
                         else:
-                            if self.all_linecodes[i.nameclass] != parsed_line:
-                                self.all_linecodes[i.nameclass+'_'+str(cnt)] = parsed_line
-                                i.nameclass = i.nameclass+'_'+str(cnt)
-                                cnt += 1
+                            n_phases=''
+                        nameclass_phase = i.nameclass+'_'+n_phases
+                        if nameclass_phase not in self.all_linecodes:
+                            self.all_linecodes[nameclass_phase] = parsed_line
+                            i.nameclass = nameclass_phase
+                        else:
+                            if self.all_linecodes[nameclass_phase] != parsed_line:
+                                found_subnumber = False
+                                for j in range(cnt):
+                                    if nameclass_phase+'_'+str(j) in self.all_linecodes:
+                                        i.nameclass = nameclass_phase+ '_'+str(j)
+                                        found_subnumber = True
+                                        break
+                                if not found_subnumber:
+                                    self.all_linecodes[nameclass_phase+'_'+str(cnt)] = parsed_line
+                                    i.nameclass = nameclass_phase + '_'+str(cnt)
+                                    cnt+=1
+                            else:
+                                 i.nameclass = nameclass_phase
+
+
+
                     else:
                         linecode_found = False
                         for k,v in self.all_linecodes.items():
@@ -2251,7 +2275,7 @@ author: Nicolas Gensollen. October 2017.
 
             #Write LineGeometry.dss then if it exists
             if self.output_filenames['linegeometry'] in self.files_to_redirect:
-                fp.write('Redirect {f}\n'.format(f=self.output_filenames['linegeometry'])) #Currently line geometry is in the base folder)
+                fp.write('Redirect {f}\n'.format(f=self.output_filenames['linegeometry'])) #Currently line geometry is in the base folder
                 self.files_to_redirect.remove(self.output_filenames['linegeometry'])
 
             #Then, redirect the rest (the order should not matter anymore)
