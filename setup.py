@@ -91,6 +91,8 @@ setup(
             "nbsphinx",
             "sphinxcontrib-napoleon",
             "ghp-import",
+            "black",
+            "pre-commit",
         ]
     },
 )
