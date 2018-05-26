@@ -4,6 +4,10 @@
 import os
 from codecs import open
 from setuptools import setup, find_packages
+from setuptools.command.develop import develop
+from subprocess import check_call
+import shlex
+
 
 try:
     from pypandoc import convert_text
@@ -19,6 +23,12 @@ with open(os.path.join(here, 'ditto', 'version.py'), encoding='utf-8') as f:
     version = f.read()
 
 version = version.split()[2].strip('"').strip("'")
+
+class PostDevelopCommand(develop):
+
+    def run(self):
+        check_call(shlex.split("pre-commit install"))
+        super(PostDevelopCommand, self).run()
 
 setup(
     name='ditto',
@@ -95,4 +105,5 @@ setup(
             "pre-commit",
         ]
     },
+    cmdclass={"develop": PostDevelopCommand}
 )
