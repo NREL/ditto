@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os
+import logging
 from codecs import open
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from subprocess import check_call
 import shlex
 
+logger = logging.getLogger(__name__)
 
 try:
     from pypandoc import convert_text
@@ -24,11 +26,24 @@ with open(os.path.join(here, "ditto", "version.py"), encoding="utf-8") as f:
 
 version = version.split()[2].strip('"').strip("'")
 
+test_requires = [
+    "backports.tempfile",
+    "pytest",
+    "pytest-cov",
+    "sphinx-rtd-theme",
+    "nbsphinx",
+    "sphinxcontrib-napoleon",
+    "ghp-import",
+]
+
 
 class PostDevelopCommand(develop):
 
     def run(self):
-        check_call(shlex.split("pre-commit install"))
+        try:
+            check_call(shlex.split("pre-commit install"))
+        except Exception as e:
+            logger.warning("Unable to run 'pre-commit install'")
         super(PostDevelopCommand, self).run()
 
 
@@ -92,17 +107,8 @@ setup(
         "scipy",
     ],
     extras_require={
-        "dev": [
-            "backports.tempfile",
-            "pytest",
-            "pytest-cov",
-            "sphinx-rtd-theme",
-            "nbsphinx",
-            "sphinxcontrib-napoleon",
-            "ghp-import",
-            "black",
-            "pre-commit",
-        ]
+        "test": test_requires,
+        "dev": test_requires + ["black", "pre-commit"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )
