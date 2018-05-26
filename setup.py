@@ -44,7 +44,7 @@ class PostDevelopCommand(develop):
             check_call(shlex.split("pre-commit install"))
         except Exception as e:
             logger.warning("Unable to run 'pre-commit install'")
-        super(PostDevelopCommand, self).run()
+        develop.run(self)
 
 
 setup(
