@@ -48,7 +48,8 @@ setup(
             "gridlabd=ditto.readers.gridlabd:GridLABDReader",
             "opendss=ditto.readers.opendss:OpenDSSReader",
             "cyme=ditto.readers.cyme:CymeReader",
-            "demo=ditto.readers.demo:DemoReader" "json=ditto.readers.json:JsonReader",
+            "demo=ditto.readers.demo:DemoReader",
+            "json=ditto.readers.json:JsonReader",
         ],
         "ditto.writers": [
             "gridlabd=ditto.writers.gridlabd:GridLABDWriter",
