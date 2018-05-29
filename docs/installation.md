@@ -51,3 +51,5 @@ OR
 $ python setup.py install # not recommended
 ```
 
+See the developer guide for instructions on how to add features to ditto.
+
