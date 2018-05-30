@@ -38,6 +38,9 @@ class Converter(object):
 
         self.reader_class = registered_reader_class
 
+        if registered_writer_class is None:
+            logger.warning('Writer class is set to None')
+
         self.writer_class = registered_writer_class
 
         #If the file provided is a JSON file, a configuration file is assumed
@@ -52,7 +55,10 @@ class Converter(object):
 
         # TODO: check if this is in the registered list
         self._from = registered_reader_class.format_name
-        self._to = registered_writer_class.format_name
+        if registered_writer_class is not None:
+            self._to = registered_writer_class.format_name
+        else:
+            self._to = None
 
         #Serialize the DiTTo model before writing it out.
         if "json_path" in kwargs and "registered_json_writer_class" in kwargs:
@@ -157,8 +163,11 @@ class Converter(object):
     def configure_writer(self, outputs):
         '''Configure the writer.'''
 
-        logger.debug("Using Writer {} with outputs {}".format(self.writer_class, outputs))
-        self.writer=self.writer_class(**outputs)
+        if self.writer_class is not None:
+            logger.debug("Using Writer {} with outputs {}".format(self.writer_class, outputs))
+            self.writer=self.writer_class(**outputs)
+        else:
+            logger.error("Cannot configure the writer because Writer class is None.")
 
     def convert(self):
         '''Run the conversion: from_format--->DiTTo--->to_format on all the feeders in feeder_list.'''
