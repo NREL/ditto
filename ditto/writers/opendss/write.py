@@ -30,59 +30,57 @@ logger = logging.getLogger(__name__)
 
 
 class Writer(AbstractWriter):
-    '''DiTTo--->OpenDSS writer class.
-Use to write a DiTTo model to OpenDSS format.
+    '''
+    DiTTo--->OpenDSS writer class.
+    Use to write a DiTTo model to OpenDSS format.
 
-:param log_file: Name/path of the log file. Optional. Default='./OpenDSS_writer.log'
-:type log_file: str
-:param output_path: Path to write the OpenDSS files. Optional. Default='./'
-:type output_path: str
+    :param log_file: Name/path of the log file. Optional. Default='./OpenDSS_writer.log'
+    :type log_file: str
+    :param output_path: Path to write the OpenDSS files. Optional. Default='./'
+    :type output_path: str
 
-**Constructor:**
+    **Constructor:**
 
->>> my_writer=Writer(log_file='./logs/my_log.log', output_path='./feeder_output/')
+    >>> my_writer=Writer(log_file='./logs/my_log.log', output_path='./feeder_output/')
 
-**Output file names:**
+    **Output file names:**
 
-+-----------------+--------------------+
-|     Object      |    File name       |
-+=================+====================+
-|      buses      |   Buscoords.dss    |
-+-----------------+--------------------+
-|  transformers   |   Transformers.dss |
-+-----------------+--------------------+
-|      loads      |      Loads.dss     |
-+-----------------+--------------------+
-|   regulators    |   Regulators.dss   |
-+-----------------+--------------------+
-|   capacitors    |   Capacitors.dss   |
-+-----------------+--------------------+
-|     lines       |      Lines.dss     |
-+-----------------+--------------------+
-|    wiredata     |    WireData.dss    |
-+-----------------+--------------------+
-|   linegeometry  |  LineGeometry.dss  |
-+-----------------+--------------------+
-|     linecodes   |    LineCodes.dss   |
-+-----------------+--------------------+
-|     loadshapes  |    LoadShapes.dss  |
-+-----------------+--------------------+
-|     storages    |     Storages.dss   |
-+-----------------+--------------------+
-|    PVSystems    |     PVSystems.dss  |
-+-----------------+--------------------+
-|      master     |      Master.dss    |
-+-----------------+--------------------+
+    +-----------------+--------------------+
+    |     Object      |    File name       |
+    +=================+====================+
+    |      buses      |   Buscoords.dss    |
+    +-----------------+--------------------+
+    |  transformers   |   Transformers.dss |
+    +-----------------+--------------------+
+    |      loads      |      Loads.dss     |
+    +-----------------+--------------------+
+    |   regulators    |   Regulators.dss   |
+    +-----------------+--------------------+
+    |   capacitors    |   Capacitors.dss   |
+    +-----------------+--------------------+
+    |     lines       |      Lines.dss     |
+    +-----------------+--------------------+
+    |    wiredata     |    WireData.dss    |
+    +-----------------+--------------------+
+    |   linegeometry  |  LineGeometry.dss  |
+    +-----------------+--------------------+
+    |     linecodes   |    LineCodes.dss   |
+    +-----------------+--------------------+
+    |     loadshapes  |    LoadShapes.dss  |
+    +-----------------+--------------------+
+    |     storages    |     Storages.dss   |
+    +-----------------+--------------------+
+    |    PVSystems    |     PVSystems.dss  |
+    +-----------------+--------------------+
+    |      master     |      Master.dss    |
+    +-----------------+--------------------+
 
-author: Nicolas Gensollen. October 2017.
-
-'''
+    author: Nicolas Gensollen. October 2017.
+    '''
     register_names = ["dss", "opendss", "OpenDSS", "DSS"]
 
     def __init__(self, **kwargs):
-        '''Constructor for the OpenDSS writer.
-
-'''
+        '''Constructor for the OpenDSS writer.'''
         self.timeseries_datasets = {}
         self.timeseries_format = {}
         self.all_linecodes = {}
@@ -118,16 +116,15 @@ author: Nicolas Gensollen. October 2017.
     def write(self, model, **kwargs):
         '''General writing function responsible for calling the sub-functions.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:param verbose: Set verbose mode. Optional. Default=False
-:type verbose: bool
-:param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
-:type write_taps: bool
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :param verbose: Set verbose mode. Optional. Default=False
+        :type verbose: bool
+        :param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
+        :type write_taps: bool
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         #Verbose print the progress
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose = kwargs['verbose']
@@ -207,26 +204,25 @@ author: Nicolas Gensollen. October 2017.
     def phase_mapping(self, phase):
         '''Maps the Ditto phases ('A','B','C') into OpenDSS phases (1,2,3).
 
-**Phase mapping:**
+        **Phase mapping:**
 
-+---------------+-------------+
-| OpenDSS phase | DiTTo phase |
-+===============+=============+
-|    1 or '1'   |     'A'     |
-+---------------+-------------+
-|    2 or '2'   |     'B'     |
-+---------------+-------------+
-|    3 or '3'   |     'C'     |
-+---------------+-------------+
+        +---------------+-------------+
+        | OpenDSS phase | DiTTo phase |
+        +===============+=============+
+        |    1 or '1'   |     'A'     |
+        +---------------+-------------+
+        |    2 or '2'   |     'B'     |
+        +---------------+-------------+
+        |    3 or '3'   |     'C'     |
+        +---------------+-------------+
 
-:param phase: Phase in DiTTo format
-:type phase: unicode
-:returns: Phase in OpenDSS format
-:rtype: int
+        :param phase: Phase in DiTTo format
+        :type phase: unicode
+        :returns: Phase in OpenDSS format
+        :rtype: int
 
-.. note:: Returns None if phase is not in ['A','B','C']
-
-'''
+        .. note:: Returns None if phase is not in ['A','B','C']
+        '''
         if phase == u'A':
             return 1
         elif phase == u'B':
@@ -237,9 +233,7 @@ author: Nicolas Gensollen. October 2017.
             return None
 
     def mode_mapping(self, mode):
-        '''
-            TODO
-        '''
+        '''TODO'''
         if mode.lower() == 'currentFlow':
             return 'current'
         elif mode.lower() == 'voltage':
@@ -258,14 +252,13 @@ author: Nicolas Gensollen. October 2017.
     def write_bus_coordinates(self, model):
         '''Write the bus coordinates to a CSV file ('buscoords.csv' by default), with the following format:
 
->>> bus_name,coordinate_X,coordinate_Y
+        >>> bus_name,coordinate_X,coordinate_Y
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         txt = ''
         #Loop over the DiTTo objects
         for i in model.models:
@@ -287,17 +280,16 @@ author: Nicolas Gensollen. October 2017.
     def write_transformers(self, model):
         '''Write the transformers to an OpenDSS file (Transformers.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
 
-.. note::
+        .. note::
 
-    - Assume that within the transformer API everything is stored in windings.
-    - Currently not modelling open winding connections (e.g. open-delta open-wye)
-
-'''
+            - Assume that within the transformer API everything is stored in windings.
+            - Currently not modelling open winding connections (e.g. open-delta open-wye)
+        '''
         #Create and open the transformer DSS file
         txt = ''
 
@@ -579,11 +571,10 @@ author: Nicolas Gensollen. October 2017.
     def write_storages(self, model):
         '''Write the storage devices stored in the model.
 
-            .. note:: Pretty straightforward for now since the DiTTo storage model class was built from the OpenDSS documentation.
-                      The core representation is succeptible to change when mapping with other formats.
+        .. note:: Pretty straightforward for now since the DiTTo storage model class was built from the OpenDSS documentation.
+                  The core representation is succeptible to change when mapping with other formats.
 
-            .. todo:: Develop the docstring a little bit more...
-
+        .. todo:: Develop the docstring a little bit more...
         '''
         txt = ''
 
@@ -680,9 +671,7 @@ author: Nicolas Gensollen. October 2017.
 
 
     def write_PVs(self, model):
-        '''Write the PVs.
-
-        '''
+        '''Write the PVs.'''
         txt = ''
         for i in model.models:
             if isinstance(i, PowerSource):
@@ -756,10 +745,10 @@ author: Nicolas Gensollen. October 2017.
 
     def write_timeseries(self, model):
         '''Write all the unique timeseries objects to csv files if they are in memory.
-           If the data is already on disk, no new data is created.
-           Then create the Loadshapes.dss file containing the links to the loadshapes.
-           Currently all loadshapes are assumed to be yearly
-           TODO: Add daily profiles as well
+        If the data is already on disk, no new data is created.
+        Then create the Loadshapes.dss file containing the links to the loadshapes.
+        Currently all loadshapes are assumed to be yearly
+        TODO: Add daily profiles as well
         '''
         txt = ''
 
@@ -815,12 +804,11 @@ author: Nicolas Gensollen. October 2017.
     def write_loads(self, model):
         '''Write the loads to an OpenDSS file (Loads.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         txt = ''
 
         for i in model.models:
@@ -949,12 +937,11 @@ author: Nicolas Gensollen. October 2017.
     def write_regulators(self, model):
         '''Write the regulators to an OpenDSS file (Regulators.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         txt = ''
 
         #It might be the case that we have to create new transformers from the regulators.
@@ -1166,12 +1153,11 @@ author: Nicolas Gensollen. October 2017.
     def write_capacitors(self, model):
         '''Write the capacitors to an OpenDSS file (Capacitors.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         txt = ''
 
         for i in model.models:
@@ -1294,12 +1280,11 @@ author: Nicolas Gensollen. October 2017.
     def write_lines(self, model):
         '''Write the lines to an OpenDSS file (Lines.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         txt = ''
 
         #First, we have to decide if we want to output using LineGeometries and WireData or using LineCodes
@@ -1410,12 +1395,12 @@ author: Nicolas Gensollen. October 2017.
 
     def write_wiredata(self, list_of_lines):
         '''
-            Write the wires to an OpenDSS file (WireData.dss by default).
+        Write the wires to an OpenDSS file (WireData.dss by default).
 
-            :param model: DiTTo model
-            :type model: DiTTo model
-            :returns: 1 for success, -1 for failure
-            :rtype: int
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
         '''
         cnt = 1
         #Loop over the objects
@@ -1466,14 +1451,14 @@ author: Nicolas Gensollen. October 2017.
 
     def write_linegeometry(self, list_of_lines):
         '''
-            Write the Line geometries to an OpenDSS file (LineGeometry.dss by default).
+        Write the Line geometries to an OpenDSS file (LineGeometry.dss by default).
 
-            :param model: DiTTo model
-            :type model: DiTTo model
-            :returns: 1 for success, -1 for failure
-            :rtype: int
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
 
-            .. warning:: This must be called after write_wiredata()
+        .. warning:: This must be called after write_wiredata()
         '''
         cpt = 1
         for i in list_of_lines:
@@ -1525,17 +1510,16 @@ author: Nicolas Gensollen. October 2017.
     def write_linecodes(self, list_of_lines):
         '''Write the linecodes to an OpenDSS file (Linecodes.dss by default).
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
 
-.. note::
+        .. note::
 
-    Since there is no linecode object equivalent in DiTTo, we have to re-construct them from the line objects.
-    Therefore, when doing DSS--->DiTTo--->DSS for the same circuit, the new linecodes will have different names than the old ones.
-
-'''
+            Since there is no linecode object equivalent in DiTTo, we have to re-construct them from the line objects.
+            Therefore, when doing DSS--->DiTTo--->DSS for the same circuit, the new linecodes will have different names than the old ones.
+        '''
         cnt = 0
         for i in list_of_lines:
             if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_recloser == 0 and i.is_sectionalizer == 0 and i.is_fuse == 0:
@@ -1584,13 +1568,13 @@ author: Nicolas Gensollen. October 2017.
 
     def parse_line(self, line):
         '''
-            This function is used to associate lines to linecodes or linegeometry.
-            Multiple lines can share the same parameters (like length, resistance matrix,...), such that these lines will be be associated with the same linecode.
+        This function is used to associate lines to linecodes or linegeometry.
+        Multiple lines can share the same parameters (like length, resistance matrix,...), such that these lines will be be associated with the same linecode.
 
-            :param line: Line diTTo object
-            :type line: Line diTTo object
-            :returns: result
-            :rtype: dict
+        :param line: Line diTTo object
+        :type line: Line diTTo object
+        :returns: result
+        :rtype: dict
         '''
         result = {}
         uni = 'm'
@@ -1656,12 +1640,12 @@ author: Nicolas Gensollen. October 2017.
 
     def parse_wire(self, wire):
         '''
-            Takes a wire diTTo object as input and outputs a dictionary with the attributes of the wire.
+        Takes a wire diTTo object as input and outputs a dictionary with the attributes of the wire.
 
-            :param wire: Wire diTTo object
-            :type wire: Wire diTTo object
-            :returns: result
-            :rtype: dict
+        :param wire: Wire diTTo object
+        :type wire: Wire diTTo object
+        :returns: result
+        :rtype: dict
         '''
         result = {}
 
@@ -1694,14 +1678,14 @@ author: Nicolas Gensollen. October 2017.
 
     def parse_line_geometry(self, line):
         '''
-            Takes a Line object as input and outputs a dictionary for building a lineGeometry string.
+        Takes a Line object as input and outputs a dictionary for building a lineGeometry string.
 
-            :param line: Line diTTo object
-            :type line: Line
-            :returns: result
-            :rtype: dict
+        :param line: Line diTTo object
+        :type line: Line
+        :returns: result
+        :rtype: dict
 
-            .. note:: This model keeps the line neutrals in and doesn't reduce them out
+        .. note:: This model keeps the line neutrals in and doesn't reduce them out
         '''
         result = {}
         wire_list = line.wires
@@ -1739,8 +1723,7 @@ author: Nicolas Gensollen. October 2017.
 
 
     def write_master_file(self,model):
-        '''Write the master.dss file.
-        '''
+        '''Write the master.dss file.'''
         with open(os.path.join(self.output_path,self.output_filenames['master']), 'w') as fp:
             fp.write('Clear\n\nNew Circuit.Name ')
             for obj in model.models:

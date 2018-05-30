@@ -18,65 +18,63 @@ from ditto.models.phase_capacitor import PhaseCapacitor
 
 
 class Writer(AbstractWriter):
-    '''DiTTo--->JSON Writer class
+    '''
+    DiTTo--->JSON Writer class
 
-The writer produce a file with the following format:
+    The writer produce a file with the following format:
 
-    - objects are stored in a list [object_1,object_2,...,object_N]
-    - Each object is a dictionary object_1={'klass':'PowerTransformer',
-                                            'is_substationr':{'klass':'int',
-                                                              'value':'1'
-                                                             },
-                                            (...)
-                                            }
-    - The special key 'klass' indicates the type of the object considered.
-    - klass can be:
-            - a DiTTo object type like 'PowerTransformer' or 'Winding'
-            - a "standard" type like 'int', 'float', or 'str'
-            - a list ('list')
-            - a complex number: 1+2j will be {'klass':'complex', 'value':[1,2]}
-
-.. note:: For nested objects, this format can become a bit complex. See example below
-
-**Example:**
-
-object_1={'klass':'PowerTransformer',
-          'is_substation':{'klass':'int',
-                           'value':'1'
-                         },
-          'windings':{'klass':'list',
-                      'value':[{'klass':'Winding',
-                                'rated_power':{'klass':'float',
-                                               'value':'1000'
-                                               }
-                                'phase_windings':{'klass':'list',
-                                                  'value':[{'klass':'PhaseWinding',
-                                                            'phase':{'klass':'Unicode',
-                                                                     'value':'C'
-                                                                     },
-                                                            (...)
-                                                            },
-                                                            (...)
-                                                            ]
+        - objects are stored in a list [object_1,object_2,...,object_N]
+        - Each object is a dictionary object_1={'klass':'PowerTransformer',
+                                                'is_substationr':{'klass':'int',
+                                                                  'value':'1'
+                                                                 },
+                                                (...)
                                                 }
-                                (...)
-                                },
-                                (...)
-                              ]
-                      },
-            }
+        - The special key 'klass' indicates the type of the object considered.
+        - klass can be:
+                - a DiTTo object type like 'PowerTransformer' or 'Winding'
+                - a "standard" type like 'int', 'float', or 'str'
+                - a list ('list')
+                - a complex number: 1+2j will be {'klass':'complex', 'value':[1,2]}
 
-.. TODO:: Better format?
+    .. note:: For nested objects, this format can become a bit complex. See example below
 
-Author: Nicolas Gensollen. January 2018.
+    **Example:**
 
-'''
+    object_1={'klass':'PowerTransformer',
+              'is_substation':{'klass':'int',
+                               'value':'1'
+                             },
+              'windings':{'klass':'list',
+                          'value':[{'klass':'Winding',
+                                    'rated_power':{'klass':'float',
+                                                   'value':'1000'
+                                                   }
+                                    'phase_windings':{'klass':'list',
+                                                      'value':[{'klass':'PhaseWinding',
+                                                                'phase':{'klass':'Unicode',
+                                                                         'value':'C'
+                                                                         },
+                                                                (...)
+                                                                },
+                                                                (...)
+                                                                ]
+                                                    }
+                                    (...)
+                                    },
+                                    (...)
+                                  ]
+                          },
+                }
+
+    .. TODO:: Better format?
+
+    Author: Nicolas Gensollen. January 2018.
+    '''
     register_names = ["json", "Json", "JSON"]
-    
-    def __init__(self, **kwargs):
-        '''Class CONSTRUCTOR
 
-'''
+    def __init__(self, **kwargs):
+        '''Class CONSTRUCTOR'''
         if 'output_path' in kwargs:
             self.output_path = kwargs['output_path']
         else:
@@ -88,10 +86,10 @@ Author: Nicolas Gensollen. January 2018.
             self.filename = 'Model.json'
 
     def write(self, model):
-        '''Write a given DiTTo model to a JSON file.
-The output file is configured in the constructor.
-
-'''
+        '''
+        Write a given DiTTo model to a JSON file.
+        The output file is configured in the constructor.
+        '''
 
         _model = []
         for obj in model.models:

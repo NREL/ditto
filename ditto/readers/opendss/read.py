@@ -69,7 +69,8 @@ class Reader(AbstractReader):
     .. warning::
 
     The reader uses OpenDSSDirect heavily. <https://github.com/NREL/OpenDSSDirect.py>
-    For more information on this package contact Dheepak Krishnamurthy.'''
+    For more information on this package contact Dheepak Krishnamurthy.
+    '''
 
     register_names = ["dss", "opendss", "OpenDSS", "DSS"]
 
@@ -107,14 +108,13 @@ class Reader(AbstractReader):
 
     def set_dss_file_names(self, new_names):
         '''Specify the path to some required DSS files.
-Because the reader is relying on OpenDSSdirect, we only need the path to the master file and the path to the bus coordinates file.
+        Because the reader is relying on OpenDSSdirect, we only need the path to the master file and the path to the bus coordinates file.
 
-:param new_names: dictionary with file names: {'Nodes': path_to_file, 'master': path_to_file}
-:type new_names: dict
-:returns: 1 for sucess, -1 for failure.
-:rtype: int
-
-'''
+        :param new_names: dictionary with file names: {'Nodes': path_to_file, 'master': path_to_file}
+        :type new_names: dict
+        :returns: 1 for sucess, -1 for failure.
+        :rtype: int
+        '''
         if not isinstance(new_names, dict):
             self.logger.error('set_dss_file_names() expects a dictionary')
             return -1
@@ -126,12 +126,11 @@ Because the reader is relying on OpenDSSdirect, we only need the path to the mas
 
     def function(self, string):
         '''Execture the OpenDSS command passed as a string.
-Log an error if the commanf cannot be runned.
+        Log an error if the commanf cannot be runned.
 
-:param string: String of the OpenDSS command to execute (ex: 'New Transformer.T1 ...')
-:type string: str
-
-'''
+        :param string: String of the OpenDSS command to execute (ex: 'New Transformer.T1 ...')
+        :type string: str
+        '''
         try:
             return dss.run_command(string)
         except:
@@ -140,26 +139,25 @@ Log an error if the commanf cannot be runned.
     def phase_mapping(self, dss_phase):
         '''Map the phases of OpenDSS (1, 2, or 3) into DiTTo phases ('A', 'B', or 'C').
 
-**Phase mapping:**
+        **Phase mapping:**
 
-+---------------+-------------+
-| OpenDSS phase | DiTTo phase |
-+===============+=============+
-|    1 or '1'   |     'A'     |
-+---------------+-------------+
-|    2 or '2'   |     'B'     |
-+---------------+-------------+
-|    3 or '3'   |     'C'     |
-+---------------+-------------+
+        +---------------+-------------+
+        | OpenDSS phase | DiTTo phase |
+        +===============+=============+
+        |    1 or '1'   |     'A'     |
+        +---------------+-------------+
+        |    2 or '2'   |     'B'     |
+        +---------------+-------------+
+        |    3 or '3'   |     'C'     |
+        +---------------+-------------+
 
-:param dss_phase: Phase number in OpenDSS format
-:type dss_phase: int or str
-:returns: Phase in DiTTo format
-:rtype: str
+        :param dss_phase: Phase number in OpenDSS format
+        :type dss_phase: int or str
+        :returns: Phase in DiTTo format
+        :rtype: str
 
-.. note:: The function accepts both integers and strings as input (1 or '1' for example).
-
-'''
+        .. note:: The function accepts both integers and strings as input (1 or '1' for example).
+        '''
         #Also make sure that if a phase is already in DiTTo format it does not return a None instead...
         if dss_phase == 1 or dss_phase == '1' or dss_phase == 'A':
             return 'A'
@@ -173,16 +171,15 @@ Log an error if the commanf cannot be runned.
     def build_opendssdirect(self, master_dss_file):
         '''Uses OpenDSSDirect to run the master DSS file.
 
-:param master_dss_file: Path to DSS file responsible for creating the circuit and loading all the OpenDSS objects. (Usually, it looks like a serie of redirect commands).
-:type master_dss_file: str
-:returns: 1 for success, -1 for failure.
-:rtype: int
+        :param master_dss_file: Path to DSS file responsible for creating the circuit and loading all the OpenDSS objects. (Usually, it looks like a serie of redirect commands).
+        :type master_dss_file: str
+        :returns: 1 for success, -1 for failure.
+        :rtype: int
 
-..note:: After running this function, all circuit elements can be accessed through the openDSSDirect api.
+        ..note:: After running this function, all circuit elements can be accessed through the openDSSDirect api.
 
-.. warning:: Calling this function before parsing is required.
-
-'''
+        .. warning:: Calling this function before parsing is required.
+        '''
         self.logger.info('Reading DSS file {name}...'.format(name=master_dss_file))
 
         try:
@@ -204,16 +201,15 @@ Log an error if the commanf cannot be runned.
 
     def parse(self, model, **kwargs):
         '''General parse function.
-Responsible for calling the sub-parsers and logging progress.
+        Responsible for calling the sub-parsers and logging progress.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:param verbose: Set verbose mode. Optional. Default=False
-:type verbose: bool
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :param verbose: Set verbose mode. Optional. Default=False
+        :type verbose: bool
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         start = time.time()
         self.source_name='Sourcebus'
         #In order to parse, we need that opendssdirect was previously run
@@ -315,12 +311,11 @@ Responsible for calling the sub-parsers and logging progress.
     def parse_power_source(self, model, **kwargs):
         '''Power source parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         sources = dss.utils.class_to_dataframe('Vsource')
 
         for source_name, source_data in sources.items():
@@ -413,18 +408,17 @@ Responsible for calling the sub-parsers and logging progress.
     def parse_nodes(self, model, **kwargs):
         '''Node parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:param coordinates_delimiter: The character that delimites the fieds in the coordinates file. Optional. Default=','
-:type coordinates_delimiter: str
-:returns: 1 for success, -1 for failure
-:rtype: int
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :param coordinates_delimiter: The character that delimites the fieds in the coordinates file. Optional. Default=','
+        :type coordinates_delimiter: str
+        :returns: 1 for success, -1 for failure
+        :rtype: int
 
-.. note:: This function is a bit different from the other parsers. To get the bus coordinates, it has to read and parse the coordinates file.
+        .. note:: This function is a bit different from the other parsers. To get the bus coordinates, it has to read and parse the coordinates file.
 
-.. note:: There is currently no easy way to get the bus data in OpenDSSdirect yet. To get the phase numbers, we loop over the lines and extract the phases from the two end buses.
-
-'''
+        .. note:: There is currently no easy way to get the bus data in OpenDSSdirect yet. To get the phase numbers, we loop over the lines and extract the phases from the two end buses.
+        '''
         #Get the coordinate file
         self.bus_coord_file = self.DSS_file_names['Nodes']
         skip_coordinate_parsing=False
@@ -593,12 +587,11 @@ Responsible for calling the sub-parsers and logging progress.
     def parse_lines(self, model):
         '''Line parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         #In order to parse, we need that opendssdirect was previously run
         if not self.is_opendssdirect_built:
             self.build_opendssdirect(self.DSS_file_names['master'])
@@ -1330,12 +1323,11 @@ Responsible for calling the sub-parsers and logging progress.
     def parse_regulators(self, model):
         '''Regulator parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         regulators = dss.utils.class_to_dataframe('RegControl')
         transformers = dss.utils.class_to_dataframe('Transformer')
         self._regulators = []
@@ -1544,12 +1536,11 @@ Responsible for calling the sub-parsers and logging progress.
     def parse_capacitors(self, model):
         '''Capacitor parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         capacitors = dss.utils.class_to_dataframe('capacitor')
         cap_control = dss.utils.class_to_dataframe('CapControl')
         self._capacitors = []
@@ -1736,12 +1727,11 @@ Responsible for calling the sub-parsers and logging progress.
     def parse_loads(self, model):
         '''Load parser.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         loads = dss.utils.class_to_dataframe('Load')
         self._loads = []
 
@@ -1949,8 +1939,7 @@ Responsible for calling the sub-parsers and logging progress.
 
 
     def parse_storage(self, model):
-        '''Parse the storages.
-        '''
+        '''Parse the storages.'''
         storages = dss.utils.class_to_dataframe('storage')
 
         for name, data in storages.items():

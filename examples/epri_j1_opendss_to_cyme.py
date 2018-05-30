@@ -14,9 +14,9 @@ from ditto.store import Store
 
 def main():
     '''
-        Conversion example of a relatively large test system: the EPRI J1 feeder.
-        OpenDSS ---> CYME example.
-        This example uses the dss files located in tests/data/big_cases/opendss/epri_j1
+    Conversion example of a relatively large test system: the EPRI J1 feeder.
+    OpenDSS ---> CYME example.
+    This example uses the dss files located in tests/data/big_cases/opendss/epri_j1
     '''
 
     #Path settings (assuming it is run from examples folder)

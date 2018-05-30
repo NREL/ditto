@@ -11,38 +11,34 @@ logger = logging.getLogger(__name__)
 
 class Reader(AbstractReader):
     '''
-        Demo_format -> DiTTo Reader class
-        Author: Tarek Elgindy April 2018
+    Demo_format -> DiTTo Reader class
+    Author: Tarek Elgindy April 2018
 
-        This file provides a sample reader for a very simple model format
-        containing only lines and nodes in a .txt file.
+    This file provides a sample reader for a very simple model format
+    containing only lines and nodes in a .txt file.
 
-        The Demo file contains two types of entries - nodes and lines:
+    The Demo file contains two types of entries - nodes and lines:
 
-        Node <node_name>
-        Line <line_name> <from_node> <to_node>
+    Node <node_name>
+    Line <line_name> <from_node> <to_node>
 
-        An example system is given below:
-        ---
-        Node n1
-        Node n2
-        Node n3
-        Node n4
-        Line l1 n1 n2
-        Line l2 n2 n3
-        Line l3 n2 n4
-        ---
+    An example system is given below:
+    ---
+    Node n1
+    Node n2
+    Node n3
+    Node n4
+    Line l1 n1 n2
+    Line l2 n2 n3
+    Line l3 n2 n4
+    ---
 
-        No other attributes are specified for this model format.
-        
-
+    No other attributes are specified for this model format.
     '''
     register_names = ["demo","Demo"]
 	
     def __init__(self, **kwargs):
-        '''
-            CYME-->Demo class constructor
-        '''
+        '''CYME-->Demo class constructor'''
         self.input_file = kwargs.get("input_file", "./demo.txt")	
         # Call super
         super(Reader, self).__init__(**kwargs)
@@ -50,8 +46,8 @@ class Reader(AbstractReader):
 		
     def get_file_content(self):
         '''
-            Opens the file specified by self.input_file 
-            The content is stored in self.content
+        Opens the file specified by self.input_file 
+        The content is stored in self.content
         '''
         try:
             with open(self.input_file, 'r') as f:
@@ -63,11 +59,11 @@ class Reader(AbstractReader):
 
     def parse(self, model, **kwargs):
         '''
-            Parse the Demo model into DiTTO
-            :param model: DiTTo model
-            :type model:DiTTo model
-            :param verbose: Set the verbose mode. Optional Default = True
-            :type verbose: bool
+        Parse the Demo model into DiTTO
+        :param model: DiTTo model
+        :type model:DiTTo model
+        :param verbose: Set the verbose mode. Optional Default = True
+        :type verbose: bool
         '''
 
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
