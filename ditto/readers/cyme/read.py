@@ -184,6 +184,7 @@ class Reader(AbstractReader):
             "overhead_line_settings": "[OVERHEADLINE SETTING]",
             "overhead_byphase_settings": "[OVERHEAD BYPHASE SETTING]",
             "underground_line_settings": "[UNDERGROUNDLINE SETTING]",
+            "switch": "[SWITCH]",
             "switch_settings": "[SWITCH SETTING]",
             "sectionalizer": "[SECTIONALIZER]",
             "sectionalizer_settings": "[SECTIONALIZER SETTING]",
@@ -1652,11 +1653,12 @@ class Reader(AbstractReader):
 
         mapp_sectionalizers = {"id": 0, "amps": 1, "kvll": 6, "interruptingrating": 20}
 
+        mapp_switch_eq = {"id": 0, "amps": 1, "kvll": 6}
+
         # Instanciate the lists for storing objects
         self.overhead_lines = []
         self.underground_lines = []
         self.sections = []
-        self.switches = []
         # self.lines=[]
         self.lines_unbalanced = []
         # self.spacings=[]
@@ -1676,6 +1678,7 @@ class Reader(AbstractReader):
         self.fuses = {}
         self.reclosers = {}
         self.sectionalizers = {}
+        self.switches = {}
 
         # Instanciate the list in which we store the DiTTo line objects
         self._lines = []
@@ -2083,6 +2086,18 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
+            #               SWITCHES                #
+            #                                       #
+            #########################################
+            #
+            self.switches.update(
+                self.parser_helper(
+                    line, ["switch"], ["id", "amps", "kvll"], mapp_switch_eq
+                )
+            )
+
+            #########################################
+            #                                       #
             #                 FUSES                 #
             #                                       #
             #########################################
@@ -2251,14 +2266,32 @@ class Reader(AbstractReader):
                     new_line["is_switch"] = 1
                     new_line["wires"] = []
                     total_closed = 0
+
+                    # Get and map the closed phases
+                    if "closedphase" in settings:
+                        closedphase = mapp_closed_phase[settings["closedphase"]]
+                    else:
+                        closedphase = (
+                            "ABC"
+                        )  # If no info, then everything is closed by default...
+
+                    # Get the sectionalizer equipment data
+                    if "eqid" in settings and settings["eqid"] in self.switches:
+                        switch_data = self.switches[settings["eqid"]]
+                    else:
+                        switch_data = {}
+
+                    # Pass the nameclass to the wires
+                    if "nameclass" in new_line:
+                        switch_data["nameclass"] = new_line["nameclass"]
+
+                    # Create the wires
                     for p in phases + ["N"]:
-                        if (
-                            p in settings["closedphase"]
-                            and settings["closedphase"].lower() != "none"
-                        ):
+                        if p in closedphase and closedphase.lower() != "none":
+                            total_closed += 1
                             api_wire = self.configure_wire(
                                 model,
-                                {},
+                                switch_data,
                                 {},
                                 p,
                                 True,
@@ -2268,12 +2301,11 @@ class Reader(AbstractReader):
                                 False,
                                 False,
                                 False,
-                            )  # Assume a closed switch as default
-                            total_closed += 1
+                            )
                         elif p == "N" and total_closed >= 1:
                             api_wire = self.configure_wire(
                                 model,
-                                {},
+                                switch_data,
                                 {},
                                 p,
                                 True,
@@ -2283,22 +2315,21 @@ class Reader(AbstractReader):
                                 False,
                                 False,
                                 False,
-                            )  # Assume a closed switch as default
-
+                            )
                         else:
                             api_wire = self.configure_wire(
                                 model,
-                                {},
+                                switch_data,
                                 {},
                                 p,
                                 True,
+                                False,
                                 True,
-                                True,
                                 False,
                                 False,
                                 False,
                                 False,
-                            )  # Assume a closed switch as default
+                            )
                         new_line["wires"].append(api_wire)
                     api_line = Line(model)
                     for k, v in new_line.items():
