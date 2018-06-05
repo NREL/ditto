@@ -1282,6 +1282,12 @@ class Reader(AbstractReader):
         except:
             pass
 
+        # Set the nameclass
+        try:
+            api.wire.nameclass = conductor_data["nameclass"]
+        except:
+            pass
+
         # Set the GMR of the wire
         try:
             api_wire.gmr = float(conductor_data["gmr"])
@@ -2226,6 +2232,10 @@ class Reader(AbstractReader):
             new_line["is_sectionalizer"] = 0
             new_line["is_network_protector"] = 0
 
+            # Set the nameclass of the line as the equipment ID
+            if "eqid" in settings:
+                new_line["nameclass"] = settings["eqid"]
+
             if "type" in settings:
 
                 # Overhead lines
@@ -2315,6 +2325,10 @@ class Reader(AbstractReader):
                     else:
                         sectionalizer_data = {}
 
+                    # Pass the nameclass to the wires
+                    if "nameclass" in new_line:
+                        sectionalizer_data["nameclass"] = new_line["nameclass"]
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2385,6 +2399,10 @@ class Reader(AbstractReader):
                         fuse_data = self.fuses[settings["eqid"]]
                     else:
                         fuse_data = {}
+
+                    # Pass the nameclass to the wires
+                    if "nameclass" in new_line:
+                        fuse_data["nameclass"] = new_line["nameclass"]
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -2458,6 +2476,10 @@ class Reader(AbstractReader):
                     else:
                         recloser_data = {}
 
+                    # Pass the nameclass to the wires
+                    if "nameclass" in new_line:
+                        recloser_data["nameclass"] = new_line["nameclass"]
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2528,6 +2550,10 @@ class Reader(AbstractReader):
                         breaker_data = self.breakers[settings["eqid"]]
                     else:
                         breaker_data = {}
+
+                    # Pass the nameclass to the wires
+                    if "nameclass" in new_line:
+                        breaker_data["nameclass"] = new_line["nameclass"]
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -2605,6 +2631,10 @@ class Reader(AbstractReader):
                         ]
                     else:
                         network_protector_data = {}
+
+                    # Pass the nameclass to the wires
+                    if "nameclass" in new_line:
+                        network_protector_data["nameclass"] = new_line["nameclass"]
 
                     # Create the wires
                     for p in phases + ["N"]:
