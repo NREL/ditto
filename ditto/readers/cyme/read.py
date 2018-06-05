@@ -186,6 +186,7 @@ class Reader(AbstractReader):
             "underground_line_settings": "[UNDERGROUNDLINE SETTING]",
             "switch_settings": "[SWITCH SETTING]",
             "sectionalizer_settings": "[SECTIONALIZER SETTING]",
+            "fuse": "[FUSE]",
             "fuse_settings": "[FUSE SETTING]",
             "recloser_settings": "[RECLOSER SETTING]",
             "breaker": "[BREAKER]",
@@ -1268,6 +1269,8 @@ class Reader(AbstractReader):
         api_wire.is_open = is_open
         api_wire.is_fuse = is_fuse
         api_wire.is_network_protector = is_network_protector
+        api_wire.is_breaker = is_breaker
+        api_wire.is_recloser = is_recloser
 
         # Set the diameter of the wire
         try:
@@ -1293,6 +1296,13 @@ class Reader(AbstractReader):
                 api_wire.interrupting_rating = float(
                     conductor_data["interruptingrating"]
                 )
+            except:
+                pass
+
+        # Set the fuse limit current of the wire if it is a fuse
+        if is_fuse:
+            try:
+                api_wire.fuse_limit = float(conductor_data["interruptingrating"])
             except:
                 pass
 
@@ -1657,6 +1667,8 @@ class Reader(AbstractReader):
         self.cables = {}
 
         self.network_protectors = {}
+        self.breakers = {}
+        self.fuses = {}
 
         # Instanciate the list in which we store the DiTTo line objects
         self._lines = []
@@ -2064,6 +2076,21 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
+            #                 FUSES                 #
+            #                                       #
+            #########################################
+            #
+            self.fuses.update(
+                self.parser_helper(
+                    line,
+                    ["fuse"],
+                    ["id", "amps", "kvll", "interruptingrating"],
+                    mapp_network_protectors,  # Same as network protectors
+                )
+            )
+
+            #########################################
+            #                                       #
             #               BREAKERS                #
             #                                       #
             #########################################
@@ -2225,10 +2252,65 @@ class Reader(AbstractReader):
                 elif "fuse" in settings["type"]:
                     new_line["is_fuse"] = 1
                     new_line["wires"] = []
+                    total_closed = 0
+
+                    # Get and map the closed phases
+                    if "closedphase" in settings:
+                        closedphase = mapp_closed_phase[settings["closedphase"]]
+                    else:
+                        closedphase = (
+                            "ABC"
+                        )  # If no info, then everything is closed by default...
+
+                    # Get the fuse equipment data
+                    if "eqid" in settings and settings["eqid"] in self.fuses:
+                        fuse_data = self.fuses[settings["eqid"]]
+                    else:
+                        fuse_data = {}
+
+                    # Create the wires
                     for p in phases + ["N"]:
-                        api_wire = self.configure_wire(
-                            model, {}, {}, p, False, True, False, False
-                        )
+                        if p in closedphase and closedphase.lower() != "none":
+                            total_closed += 1
+                            api_wire = self.configure_wire(
+                                model,
+                                fuse_data,
+                                {},
+                                p,
+                                False,
+                                True,
+                                False,
+                                False,
+                                False,
+                                False,
+                            )
+                        elif p == "N" and total_closed >= 1:
+                            api_wire = self.configure_wire(
+                                model,
+                                breaker_data,
+                                {},
+                                p,
+                                False,
+                                True,
+                                False,
+                                False,
+                                False,
+                                False,
+                            )
+                        else:
+                            api_wire = self.configure_wire(
+                                model,
+                                breaker_data,
+                                {},
+                                p,
+                                False,
+                                True,
+                                True,
+                                False,
+                                False,
+                                False,
+                            )
+
                         new_line["wires"].append(api_wire)
                     api_line = Line(model)
                     for k, v in new_line.items():
