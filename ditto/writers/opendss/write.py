@@ -93,6 +93,9 @@ author: Nicolas Gensollen. October 2017.
         self.files_to_redirect=[]
 
         self.write_taps = False
+        self.separate_feeders = False
+        self.separate_substations = False
+        self.verbose = False
 
         self.output_filenames = {'buses': 'Buscoords.dss',
                                  'transformers': 'Transformers.dss',
@@ -1681,7 +1684,7 @@ author: Nicolas Gensollen. October 2017.
         lines_to_geometrify = []
         lines_to_linecodify = []
         for i in model.models:
-            if isinstance(i, Line):# and i.is_switch == 0 and i.is_breaker == 0 and i.is_sectionalizer == 0 and i.is_recloser == 0 and i.is_fuse == 0:
+            if isinstance(i, Line):
                 use_linecodes = False
                 for wire in i.wires:
                     #If we are missing the position of at least one wire, default to linecodes
@@ -2001,7 +2004,7 @@ author: Nicolas Gensollen. October 2017.
 '''
         cnt = 0
         for i in list_of_lines:
-            if isinstance(i, Line):# and i.is_switch == 0 and i.is_breaker == 0 and i.is_recloser == 0 and i.is_sectionalizer == 0 and i.is_fuse == 0:
+            if isinstance(i, Line):
 
                 parsed_line = self.parse_line(i)
                 
@@ -2109,7 +2112,9 @@ author: Nicolas Gensollen. October 2017.
 
         #If we have the impedance matrix, we need to extract both
         #the resistance and reactance matrices
-        if hasattr(line, 'impedance_matrix') and line.impedance_matrix is not None:
+        R = None
+        X= None
+        if hasattr(line, 'impedance_matrix') and line.impedance_matrix is not None and line.impedance_matrix != []:
             #Use numpy arrays since it is much easier for complex numbers
             try:
                 Z = np.array(line.impedance_matrix)
@@ -2117,7 +2122,16 @@ author: Nicolas Gensollen. October 2017.
                 X = np.imag(Z) #Reactance  matrix
             except:
                 self.logger.error('Problem with impedance matrix in line {name}'.format(name=line.name))
+        # Provide small impedance matrix for switches and breakers with no impedance matrix
+        elif (hasattr(line,'is_switch') and line.is_switch) or (hasattr(line,'is_breaker') and line.is_breaker) or (hasattr(line,'is_fuse') and line.is_fuse) and 'nphases' in result:
+            X = [[0 for i in range(result['nphases'])] for j in range(result['nphases'])]
+            for i in range(result['nphases']):
+                X[i][i] = 0.00000001
+            R = [[0 for i in range(result['nphases'])] for j in range(result['nphases'])]
+            for i in range(result['nphases']):
+                R[i][i] = 0.00000001
 
+        if R is not None and X is not None:
             result['Rmatrix']='('
             for row in R:
                 for elt in row:
