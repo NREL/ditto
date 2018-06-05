@@ -31,7 +31,7 @@ def test_network_protectors():
     for obj in m.models:
         if isinstance(obj, Line):
             # Section A is ABC and the protector is closed on ABC
-            if obj.name == "A":
+            if obj.name == "a":
                 # The line should be a network protector...
                 assert obj.is_network_protector
                 # ...and it should have 4 wires: A, B, C, and N
@@ -48,7 +48,7 @@ def test_network_protectors():
                     assert wire.network_protector_limit == 600.0
 
             # Section B is AC and the protector is closed on A only
-            if obj.name == "B":
+            elif obj.name == "b":
                 # The line should be a network protector...
                 assert obj.is_network_protector
                 # ...and it should have 3 wires: A, C, and N
@@ -70,3 +70,6 @@ def test_network_protectors():
 
                     # The network protector limit should be 600 amps for all wires
                     assert wire.network_protector_limit == 600.0
+
+            else:
+                raise ValueError("Unknown line name {name}".format(name=obj.name))
