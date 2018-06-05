@@ -188,6 +188,7 @@ class Reader(AbstractReader):
             "sectionalizer_settings": "[SECTIONALIZER SETTING]",
             "fuse_settings": "[FUSE SETTING]",
             "recloser_settings": "[RECLOSER SETTING]",
+            "breaker": "[BREAKER]",
             "breaker_settings": "[BREAKER SETTING]",
             "section": "[SECTION]",
             "line": "[LINE]",
@@ -1244,6 +1245,8 @@ class Reader(AbstractReader):
         is_fuse,
         is_open,
         is_network_protector,
+        is_breaker,
+        is_recloser,
     ):
         """Helper function that creates a DiTTo wire object and configures it."""
         # Instanciate the wire DiTTo object
@@ -2061,6 +2064,21 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
+            #               BREAKERS                #
+            #                                       #
+            #########################################
+            #
+            self.breakers.update(
+                self.parser_helper(
+                    line,
+                    ["breaker"],
+                    ["id", "amps", "kvll", "interruptingrating"],
+                    mapp_network_protectors,  # Same as network protectors
+                )
+            )
+
+            #########################################
+            #                                       #
             #         NETWORK PROTECTORS            #
             #                                       #
             #########################################
@@ -2236,23 +2254,64 @@ class Reader(AbstractReader):
                     new_line["is_breaker"] = 1
                     new_line["wires"] = []
                     total_closed = 0
+
+                    # Get and map the closed phases
+                    if "closedphase" in settings:
+                        closedphase = mapp_closed_phase[settings["closedphase"]]
+                    else:
+                        closedphase = (
+                            "ABC"
+                        )  # If no info, then everything is closed by default...
+
+                    # Get the breaker equipment data
+                    if "eqid" in settings and settings["eqid"] in self.breakers:
+                        breaker_data = self.breakers[settings["eqid"]]
+                    else:
+                        breaker_data = {}
+
+                    # Create the wires
                     for p in phases + ["N"]:
-                        if (
-                            p in settings["closedphase"]
-                            and settings["closedphase"].lower() != "none"
-                        ):
+                        if p in closedphase and closedphase.lower() != "none":
                             total_closed += 1
                             api_wire = self.configure_wire(
-                                model, {}, {}, p, False, False, False, False
+                                model,
+                                breaker_data,
+                                {},
+                                p,
+                                False,
+                                False,
+                                False,
+                                False,
+                                True,
+                                False,
                             )
                         elif p == "N" and total_closed >= 1:
                             api_wire = self.configure_wire(
-                                model, {}, {}, p, False, False, False, False
-                            )  # Assume a closed switch as default
+                                model,
+                                breaker_data,
+                                {},
+                                p,
+                                False,
+                                False,
+                                False,
+                                False,
+                                True,
+                                False,
+                            )
                         else:
                             api_wire = self.configure_wire(
-                                model, {}, {}, p, False, False, True, False
-                            )  # Assume a closed switch as default
+                                model,
+                                breaker_data,
+                                {},
+                                p,
+                                False,
+                                False,
+                                True,
+                                False,
+                                True,
+                                False,
+                            )
+
                         new_line["wires"].append(api_wire)
                     api_line = Line(model)
                     for k, v in new_line.items():
@@ -2297,6 +2356,8 @@ class Reader(AbstractReader):
                                 False,
                                 False,
                                 True,
+                                False,
+                                False,
                             )
                         elif p == "N" and total_closed >= 1:
                             api_wire = self.configure_wire(
@@ -2308,6 +2369,8 @@ class Reader(AbstractReader):
                                 False,
                                 False,
                                 True,
+                                False,
+                                False,
                             )
                         else:
                             api_wire = self.configure_wire(
@@ -2319,6 +2382,8 @@ class Reader(AbstractReader):
                                 False,
                                 True,
                                 True,
+                                False,
+                                False,
                             )
                         new_line["wires"].append(api_wire)
 
@@ -2487,6 +2552,8 @@ class Reader(AbstractReader):
                             False,
                             False,
                             False,
+                            False,
+                            False,
                         )
                         new_line["wires"].append(api_wire)
 
@@ -2513,6 +2580,8 @@ class Reader(AbstractReader):
                         conductor_data,
                         spacing_data,
                         "N",
+                        False,
+                        False,
                         False,
                         False,
                         False,
@@ -2719,6 +2788,8 @@ class Reader(AbstractReader):
                             False,
                             False,
                             False,
+                            False,
+                            False,
                         )
                         new_line["wires"].append(api_wire)
 
@@ -2758,12 +2829,16 @@ class Reader(AbstractReader):
                             False,
                             False,
                             False,
+                            False,
+                            False,
                         )
                         api_wire_n2 = self.configure_wire(
                             model,
                             conductor_n2_data,
                             spacing_data,
                             "N2",
+                            False,
+                            False,
                             False,
                             False,
                             False,
@@ -2787,6 +2862,8 @@ class Reader(AbstractReader):
                             False,
                             False,
                             False,
+                            False,
+                            False,
                         )
                         new_line["wires"].append(api_wire)
 
@@ -2802,6 +2879,8 @@ class Reader(AbstractReader):
                                 conductor_data,
                                 spacing_data,
                                 "N",
+                                False,
+                                False,
                                 False,
                                 False,
                                 False,
@@ -3057,6 +3136,8 @@ class Reader(AbstractReader):
                             False,
                             False,
                             False,
+                            False,
+                            False,
                         )
                         new_line["wires"].append(api_wire)
 
@@ -3095,6 +3176,8 @@ class Reader(AbstractReader):
                             conductor_data,
                             spacing_data,
                             "N",
+                            False,
+                            False,
                             False,
                             False,
                             False,
