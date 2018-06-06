@@ -1772,7 +1772,7 @@ author: Nicolas Gensollen. October 2017.
                     txt += ' switch=n'
 
                 if hasattr(i,'wires') and i.wires is not None and len(i.wires)>0:
-                    closed_phase=np.sort([wire.phase for wire in i.wires if wire.is_open==0 and wire.phase not in ['N','N1','N2']])
+                    closed_phase=np.sort([wire.phase for wire in i.wires if (wire.is_open==0 or wire.is_open is None) and wire.phase not in ['N','N1','N2']])
                     if len(closed_phase) == 0:
                         txt+= ' enabled=n'
                     else:
@@ -1781,7 +1781,7 @@ author: Nicolas Gensollen. October 2017.
 
                  #is_fuse
                 if hasattr(i, 'is_fuse') and i.is_fuse == 1:
-                    fuse_line = 'New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=yes'.format(name=i.name)
+                    fuse_line = 'New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y'.format(name=i.name)
                 else:
                     fuse_line = ''
 
