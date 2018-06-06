@@ -45,11 +45,13 @@ class Wire(DiTToHasTraits):
         default_value=None,
     )
     is_open = Int(
-        help="""This flag indicates whether or not the line is open (if it is a switch/fuse)""",
+        help="""This flag indicates whether or not the line is open (if it is a switch/fuse/breaker/recloser/sectionalizer/network protector).""",
         default_value=None,
     )
-    fuse_limit = Float(
-        help="""The maximum current that can pass through the wire before the fuse blows""",
+    # Modification: Nicolas Gensollen (June 2018)
+    # fuse_limit --> interrupting_rating (more generic)
+    interrupting_rating = Float(
+        help="""The maximum current that can pass through the wire before the equipment disconnects.""",
         default_value=None,
     )
     concentric_neutral_gmr = Float(
@@ -89,10 +91,6 @@ class Wire(DiTToHasTraits):
     is_network_protector = Int(
         help="""This flag indicates whether or not this wire is also a network protector.""",
         default_value=0,
-    )
-    network_protector_limit = Float(
-        help="""The maximum current before the network protector disconnects.""",
-        default_value=None,
     )
 
     def build(self, model):
