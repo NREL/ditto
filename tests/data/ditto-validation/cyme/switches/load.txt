@@ -1,0 +1,17 @@
+[GENERAL]
+DATE=June 04, 2018 at 12:08:21
+CYME_VERSION=8.00
+CYMDIST_REVISION=8
+
+[SI]
+
+[CUSTOMER CLASS]
+FORMAT_CUSTOMERCLASS=ID,DCCustomerType,Description,Color,ConstantPower,ConstantCurrent,ConstantImpedance,UtilizationFactor,PowerFactor,MeteredLoads,NonMeteredLoads,LoadFactor,FrequencySensitivityP,FrequencySensitivityQ,EnableHarmonic,HarmonicCurrentSourceInPercent,IsExponentialModel,ConstantImpedanceZP,ConstantImpedanceZQ,ConstantCurrentIP,ConstantCurrentIQ,ConstantPowerPP,ConstantPowerPQ,ExponentialModelP,ExponentialModelQ,LoadFlowVoltagePercentOfNominal,LossesPerCustomer,ConnectedCenterTap1N,ConnectedCenterTap2N,AdjustmentSettings,PowerCurveModel,PowerCurveModelId
+Commercial,
+
+[LOADS]
+FORMAT_LOADS=SectionID,DeviceNumber,DeviceStage,Flags,LoadType,Connection,Location
+
+[CUSTOMER LOADS]
+FORMAT_CUSTOMERLOADS=SectionID,DeviceNumber,LoadType,CustomerNumber,CustomerType,ConnectionStatus,LockDuringLoadAllocation,Year,LoadModelID,NormalPriority,EmergencyPriority,ValueType,LoadPhase,Value1,Value2,ConnectedKVA,KWH,NumberOfCustomer,CenterTapPercent,CenterTapPercent2,LoadValue1N1,LoadValue1N2,LoadValue2N1,LoadValue2N2
+
