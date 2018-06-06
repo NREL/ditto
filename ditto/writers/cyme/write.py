@@ -32,12 +32,9 @@ class Writer(AbstractWriter):
         DiTTo--->CYME Writer class
 
         Author: Nicolas Gensollen. October 2017
-
     '''
     def __init__(self, **kwargs):
-        '''
-            Class CONSTRUCTOR.
-        '''
+        '''Class CONSTRUCTOR.'''
 
         #Call super
         super(Writer, self).__init__(**kwargs)
@@ -47,19 +44,19 @@ class Writer(AbstractWriter):
 
     def connection_configuration_mapping(self, value):
         '''
-            Map the connection configuration from DiTTo to CYME.
+        Map the connection configuration from DiTTo to CYME.
 
-            **Mapping:**
+        **Mapping:**
 
-            +----------+----------------+------------+
-            |   Value  |       CYME     |  DiTTo     |
-            +==========+================+============+
-            | 0 or '0' |       'Yg'     |   'Y'      |
-            +----------+----------------+------------+
-            | 2 or '2' |     'Delta'    |   'D'      |
-            +----------+----------------+------------+
-            | 5 or '5' |      'Zg'      |   'Z'      |
-            +----------+----------------+------------+
+        +----------+----------------+------------+
+        |   Value  |       CYME     |  DiTTo     |
+        +==========+================+============+
+        | 0 or '0' |       'Yg'     |   'Y'      |
+        +----------+----------------+------------+
+        | 2 or '2' |     'Delta'    |   'D'      |
+        +----------+----------------+------------+
+        | 5 or '5' |      'Zg'      |   'Z'      |
+        +----------+----------------+------------+
         '''
         if value=='Y':return '0'
         elif value=='D':return '2'
@@ -69,34 +66,34 @@ class Writer(AbstractWriter):
 
     def transformer_connection_configuration_mapping(self, value1, value2):
         '''
-            Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
+        Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
 
-            :param value: CYME value (either string or id)
-            :type value: int or str
-            :param winding: Number of the winding (0 or 1)
-            :type winding: int
-            :returns: DiTTo connection configuration for the requested winding
-            :rtype: str
+        :param value: CYME value (either string or id)
+        :type value: int or str
+        :param winding: Number of the winding (0 or 1)
+        :type winding: int
+        :returns: DiTTo connection configuration for the requested winding
+        :rtype: str
 
-            **Mapping:**
+        **Mapping:**
 
-            +----------+----------------+------------+
-            |   Value  |       CYME     |  DiTTo     |
-            +----------+----------------+-----+------+
-            |          |                | 1st | 2nd  |
-            +==========+================+=====+======+
-            | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
-            +----------+----------------+-----+------+
-            | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
-            +----------+----------------+-----+------+
-            | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
-            +----------+----------------+-----+------+
-            | 4 or '4' |      'D_D'     | 'D' | 'D'  |
-            +----------+----------------+-----+------+
-            |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
-            +----------+----------------+-----+------+
-            |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
-            +----------+----------------+-----+------+
+        +----------+----------------+------------+
+        |   Value  |       CYME     |  DiTTo     |
+        +----------+----------------+-----+------+
+        |          |                | 1st | 2nd  |
+        +==========+================+=====+======+
+        | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
+        +----------+----------------+-----+------+
+        | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
+        +----------+----------------+-----+------+
+        | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
+        +----------+----------------+-----+------+
+        | 4 or '4' |      'D_D'     | 'D' | 'D'  |
+        +----------+----------------+-----+------+
+        |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
+        +----------+----------------+-----+------+
+        |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
+        +----------+----------------+-----+------+
         '''
         #if 'Z' not in value1 and 'Z' not in value2:
         #    return value1+'_'+value2
@@ -119,8 +116,8 @@ class Writer(AbstractWriter):
 
     def merge_regulators(self, regulators):
         '''
-            Merge a list of regulator strings such that there is only one regulator per section.
-            The purpose of this is to merge all the single phase regulators on the same sections into multi-phase regulators.
+        Merge a list of regulator strings such that there is only one regulator per section.
+        The purpose of this is to merge all the single phase regulators on the same sections into multi-phase regulators.
         '''
         section_reg={}
         for reg in regulators:
@@ -134,9 +131,7 @@ class Writer(AbstractWriter):
 
 
     def merge(self, string1,string2):
-        '''
-            Helper function for merge_regulators.
-        '''
+        '''Helper function for merge_regulators.'''
         s1=string1.split(',')
         s2=string2.split(',')
         if len(s1)!=len(s2):
@@ -154,9 +149,7 @@ class Writer(AbstractWriter):
 
 
     def get_center_tap_impedances(self,R0,R1,R2,XHL,XHT,XLT,KVA_BASE):
-        '''
-            Computes the impedance and XR ratio for center tap transformers modelled as three windings transformers.
-        '''
+        '''Computes the impedance and XR ratio for center tap transformers modelled as three windings transformers.'''
         RT=R0*2.0
         #RT=R0*4.0 #Shell type
         X0=(XHL+XHT-XLT)/2.0
@@ -170,11 +163,11 @@ class Writer(AbstractWriter):
 
     def write(self, model, **kwargs):
         '''
-            General write function. Responsible for calling the sub-parsers.
+        General write function. Responsible for calling the sub-parsers.
 
-            .. note::
+        .. note::
 
-            write_network_file must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
+        write_network_file must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
         '''
         self.section_line_list=[]
         self.node_string_list=[]
@@ -206,15 +199,17 @@ class Writer(AbstractWriter):
 
     def write_network_file(self, model, **kwargs):
         '''
-            Loop over DiTTo objects and write the corresponding CYME network file.
+        Loop over DiTTo objects and write the corresponding CYME network file.
 
-            .. note::
+        .. note::
 
-            This must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
+        This must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
         '''
         model.set_names()
         #Output network file
         output_file=self.output_path+'/network.txt'
+
+        self.network_have_substations = False
 
         #Lists for storing strings
         source_string_list=[]
@@ -819,15 +814,22 @@ class Writer(AbstractWriter):
                         #Add the strings to the lists
                         #
                         if new_section_line!='':
-                            try:
-                                self.section_line_list.append(new_section_line)
-                                if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                                    if i.feeder_name in self.section_line_feeder_mapping:
-                                        self.section_line_feeder_mapping[i.feeder_name].append(new_section_line)
-                                    else:
-                                        self.section_line_feeder_mapping[i.feeder_name]=[new_section_line]
-                            except:
-                                pass
+                            self.section_line_list.append(new_section_line)
+                            #If the object is inside of a substation...
+                            if hasattr(i,'is_substation') and i.is_substation == 1:
+                                #...it should have the name of the substation specified in the 'substation_name' attribute
+                                if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                    #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                    ff_name = 'substation_{}'.format(i.substation_name)
+                                    self.network_have_substations = True
+                            #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                            elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                                ff_name = i.feeder_name
+
+                            if ff_name in self.section_line_feeder_mapping:
+                                self.section_line_feeder_mapping[ff_name].append(new_section_line)
+                            else:
+                                self.section_line_feeder_mapping[ff_name]=[new_section_line]
 
                         if new_line_string!='':
                             try:
@@ -939,11 +941,22 @@ class Writer(AbstractWriter):
 
                     if new_section is not None:
                         self.section_line_list.append(new_section)
-                        if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                            if i.feeder_name in self.section_line_feeder_mapping:
-                                self.section_line_feeder_mapping[i.feeder_name].append(new_section)
-                            else:
-                                self.section_line_feeder_mapping[i.feeder_name]=[new_section]
+                        #If the object is inside of a substation...
+                        if hasattr(i,'is_substation') and i.is_substation == 1:
+                            #...it should have the name of the substation specified in the 'substation_name' attribute
+                            if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                ff_name = 'substation_{}'.format(i.substation_name)
+                                self.network_have_substations = True
+                        #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                        elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                            ff_name = i.feeder_name
+
+                        if ff_name in self.section_line_feeder_mapping:
+                            self.section_line_feeder_mapping[ff_name].append(new_section)
+                        else:
+                            self.section_line_feeder_mapping[ff_name]=[new_section]
+
 
 
                 #If we get a Regulator
@@ -986,7 +999,7 @@ class Writer(AbstractWriter):
                         hasattr(model[i.connected_transformer].windings[1],'nominal_voltage') and
                         model[i.connected_transformer].windings[0].nominal_voltage is not None and
                         model[i.connected_transformer].windings[1].nominal_voltage is not None):
-                        
+
                         winding1 = model[i.connected_transformer].windings[0]
                         winding2 = model[i.connected_transformer].windings[1]
                         if hasattr(model[i.connected_transformer],'from_element') and model[i.connected_transformer].from_element is not None and hasattr(model[i.connected_transformer],'to_element') and model[i.connected_transformer].to_element is not None:
@@ -1030,12 +1043,22 @@ class Writer(AbstractWriter):
                                                 phase_on+=str(phase_winding.phase)
 
                             if new_trans_section is not None and new_trans_section not in self.section_line_list:
-                                    self.section_line_list.append(new_trans_section)
-                                    if hasattr(i,'feeder_name') and i.feeder_name is not None:
-                                        if i.feeder_name in self.section_line_feeder_mapping:
-                                            self.section_line_feeder_mapping[i.feeder_name].append(new_trans_section)
-                                        else:
-                                            self.section_line_feeder_mapping[i.feeder_name]=[new_trans_section]
+                                self.section_line_list.append(new_trans_section)
+                                #If the object is inside of a substation...
+                                if hasattr(i,'is_substation') and i.is_substation == 1:
+                                    #...it should have the name of the substation specified in the 'substation_name' attribute
+                                    if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                        #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                        ff_name = 'substation_{}'.format(i.substation_name)
+                                        self.network_have_substations = True
+                                #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                                elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                                    ff_name = i.feeder_name
+
+                                if ff_name in self.section_line_feeder_mapping:
+                                    self.section_line_feeder_mapping[ff_name].append(new_section)
+                                else:
+                                    self.section_line_feeder_mapping[ff_name]=[new_section]
 
 
                             if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
@@ -1180,12 +1203,22 @@ class Writer(AbstractWriter):
 
                     if new_section is not None and new_section not in self.section_line_list:
                         self.section_line_list.append(new_section)
-                        if hasattr(i,'feeder_name') and i.feeder_name is not None:
+                        #If the object is inside of a substation...
+                        if hasattr(i,'is_substation') and i.is_substation == 1:
+                            #...it should have the name of the substation specified in the 'substation_name' attribute
+                            if hasattr(i,'substation_name') and i.substation_name is not None and i.substation_name != '':
+                                #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                ff_name = 'substation_{}'.format(i.substation_name)
+                                self.network_have_substations = True
+                        #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                        elif hasattr(i,'feeder_name') and i.feeder_name is not None and i.feeder_name != '':
+                            ff_name = i.feeder_name
 
-                            if i.feeder_name in self.section_line_feeder_mapping:
-                                self.section_line_feeder_mapping[i.feeder_name].append(new_section)
-                            else:
-                                self.section_line_feeder_mapping[i.feeder_name]=[new_section]
+                        if ff_name in self.section_line_feeder_mapping:
+                            self.section_line_feeder_mapping[ff_name].append(new_section)
+                        else:
+                            self.section_line_feeder_mapping[ff_name]=[new_section]
+
 
                     try:
                         new_regulator_string+=new_section_ID
@@ -1326,7 +1359,6 @@ class Writer(AbstractWriter):
                     new_section=None
                     new_section_ID=None
                     if hasattr(transformer_object, 'from_element') and transformer_object.from_element is not None and hasattr(transformer_object, 'to_element') and transformer_object.to_element is not None:
-                        try:
                             new_section='{f}_{t},{f},{t},'.format(f=transformer_object.from_element,t=transformer_object.to_element)
                             new_section_ID='{f}_{t}'.format(f=transformer_object.from_element,t=transformer_object.to_element)
                             # If it's a regulator, use the regulator object to find the feeder and substation if they're set
@@ -1337,8 +1369,6 @@ class Writer(AbstractWriter):
                                     self.section_feeder_mapping[i.feeder_name]=[new_sectionID]
                                 if hasattr(i, 'substation_name') and i.substation_name is not None:
                                     self.section_headnode_mapping[i.feeder_name]=i.substation_name
-                        except:
-                            pass
 
 
 
@@ -1356,7 +1386,7 @@ class Writer(AbstractWriter):
 
                     if hasattr(i,'highstep') and i.highstep is not None:
                         MaxBuck = str(i.lowstep)
-                        
+
 
                     #Find out if we have a two or three windings transformer
                     if hasattr(transformer_object, 'windings') and transformer_object.windings is not None:
@@ -1370,13 +1400,23 @@ class Writer(AbstractWriter):
                                             phase_on+=str(phase_winding.phase)
 
                         if new_section is not None and new_section not in self.section_line_list:
-                                self.section_line_list.append(new_section)
-                                if hasattr(transformer_object,'feeder_name') and transformer_object.feeder_name is not None:
+                            self.section_line_list.append(new_section)
+                            #If the object is inside of a substation...
+                            if hasattr(transformer_object,'is_substation') and transformer_object.is_substation == 1:
+                                #...it should have the name of the substation specified in the 'substation_name' attribute
+                                if hasattr(transformer_object,'substation_name') and transformer_object.substation_name is not None and transformer_object.substation_name != '':
+                                    #Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                    ff_name = 'substation_{}'.format(transformer_object.substation_name)
+                                    self.network_have_substations = True
+                            #If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                            elif hasattr(transformer_object,'feeder_name') and transformer_object.feeder_name is not None and transformer_object.feeder_name != '':
+                                ff_name = transformer_object.feeder_name
 
-                                    if transformer_object.feeder_name in self.section_line_feeder_mapping:
-                                        self.section_line_feeder_mapping[transformer_object.feeder_name].append(new_section)
-                                    else:
-                                        self.section_line_feeder_mapping[transformer_object.feeder_name]=[new_section]
+                            if ff_name in self.section_line_feeder_mapping:
+                                self.section_line_feeder_mapping[ff_name].append(new_section)
+                            else:
+                                self.section_line_feeder_mapping[ff_name]=[new_section]
+
 
                         #Case 1: Two Windings
                         #
@@ -1807,13 +1847,21 @@ class Writer(AbstractWriter):
             f.write('FORMAT_SOURCE=SourceID,DeviceNumber,NodeID,NetworkID\n')
             k=0
             self.substation_IDs={}
+
             for _source,_voltage in self.sources.items():
+                #_source should be the name of the headnode for one feeder_metadata object
+                # TODO: Find a better way to find it
+                for obj in model.models:
+                    if isinstance(obj,Feeder_metadata) and obj.headnode==_source:
+                        sourceID = obj.headnode + '_src'
+                        nodeID = obj.headnode
+                        NetworkID = obj.name
                 k+=1
                 for j,sub in enumerate(self.substations):
                     if sub['connecting_element']==_source:
                         self.substations[j]['sub_ID']='sub_'+str(k)
                 self.substation_IDs[_source]='sub{}'.format(k)
-                f.write('sub_{k},sub_{k},{source},{NetID}\n'.format(source=_source, k=k, NetID='subtransmission'))
+                f.write('{sourceID},sub_{k},{nodeID},{NetID}\n'.format(sourceID=sourceID, k=k, nodeID=nodeID, NetID=NetworkID))
 
             f.write('\n[HEADNODES]\n')
             f.write('FORMAT_HEADNODES=NodeID,NetworkID\n')
@@ -1822,13 +1870,14 @@ class Writer(AbstractWriter):
             #    k+=1
             #    nodeID=source_string.split(',')[0]
             #    f.write('{nodeID},{NetID}\n'.format(nodeID=nodeID, NetID=k))
-            for f_name,section_l in self.section_line_feeder_mapping.items():
+            for f_name,section_l in self.section_feeder_mapping.items():
 #                for kk in model.models:
 #                   if isinstance(kk,Feeder_metadata):
 #                       print(kk.name, kk.headnode)
 #import pdb;pdb.set_trace()
-                head=model[f_name].headnode#self.section_headnode_mapping[f_name]
-                f.write('{nodeID},{NetID}\n'.format(nodeID=head, NetID=f_name))
+                if f_name != '':
+                    head=model[f_name].headnode#self.section_headnode_mapping[f_name]
+                    f.write('{nodeID},{NetID}\n'.format(nodeID=head, NetID=f_name))
 
             #Source equivalent
             #
@@ -1841,7 +1890,7 @@ class Writer(AbstractWriter):
                 f.write(source_string+'\n')
 
             for f_name,section_l in self.section_line_feeder_mapping.items():
-                if f_name!='subtransmission':
+                if f_name!='subtransmission' and 'substation' not in f_name:
                     temp=model[f_name]
                     if hasattr(temp,'nominal_voltage') and temp.nominal_voltage is not None:
                         volt=temp.nominal_voltage*10**-3
@@ -1857,9 +1906,26 @@ class Writer(AbstractWriter):
             #Sections
             #
             f.write('\n[SECTION]\n')
-            f.write('FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase\n')
+
+            #Always write the SECTION format
+            f.write('FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase,SubNetworkId\n')
+
+            #Always write the FEEDER format
             f.write('FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet\n')
 
+            #If we have subtransmission, then write the TRANSMISSIONLINE format
+            if 'subtransmission' in self.section_line_feeder_mapping:
+                f.write('FORMAT_TRANSMISSIONLINE=NetworkID,HeadNodeID,CoordSet\n')
+
+            #If we have a substation (have to have "substation in the name...),
+            #then write the SUBSTATION format
+            if self.network_have_substations:
+                f.write('FORMAT_SUBSTATION=NetworkID,HeadNodeID,CoordSet\n')
+
+            #####################################
+            #  TO REMOVE ????????
+            ####################################
+            #
             #k=0
             #for source_string in source_string_list:
             #    k+=1
@@ -1868,12 +1934,122 @@ class Writer(AbstractWriter):
             #    section_list=self.merge_regulators(self.section_line_list)
             #    for section_line in section_list:
             #        f.write(section_line+'\n')
-            for f_name,section_l in self.section_line_feeder_mapping.items():
-                head=model[f_name].headnode#self.section_headnode_mapping[f_name]
-                f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
-                for sec in section_l:
-                    f.write(sec+'\n')
+            #######################################
 
+            for f_name,section_l in self.section_line_feeder_mapping.items():
+                if 'substation' in f_name:
+                    head = ''
+                else:
+                    head=model[f_name].headnode#self.section_headnode_mapping[f_name]
+                #If we are considering the subtransmission network, use TRANSMISSIONLINE
+                if f_name == 'subtransmission':
+                    f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                    subnetID = ''
+                #If substation is in the name of the "feeder", then use SUBSTATION
+                elif 'substation' in f_name:
+                    f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.split('ation_')[1],HeadNodeID=head,coordset=1))
+                    subnetID = f_name.split('ation_')[1]
+                #Otherwise, it should be an actual feeder, so use FEEDER
+                else:
+                    f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,HeadNodeID=head,coordset=1))
+                    subnetID = ''
+                #Then, write all the sections belonging to this subnetwork
+                for sec in section_l:
+                    f.write(sec+',{}'.format(subnetID)+'\n')
+
+            #Subnetworks
+            #
+            #Use subnetworks only for substations
+            # TODO: Let the user specify what should be subnetworked...
+            #
+            if self.network_have_substations:
+                f.write('\n[SUBNETWORKS]\n')
+                f.write('FORMAT_SUBNETWORKS=SubNetID,Angle,X,Y,Height,Length,SymbolID,SubNetTypeID,Version,SymbolReferenceSize,TextReferenceSize,CoordSet\n')
+                for f_name,section_l in self.section_line_feeder_mapping.items():
+                    if 'substation' in f_name:
+                        #We need to find the X,Y coordinates for the subnetwork
+                        #(CASE 1) - First, we try setting these coordinates as the average of the LV elements.
+                        #(CASE 2) - If this does not work, we try using the average of all the substation elements.
+                        #(CASE 3) - If this does not work either, we try using the global average (all Nodes in the system), such that
+                        #the subnetwork is more or less in the middle of the system.
+                        #(CASE 4) - Finally, if nothing works, set the coordinates as (0,0)...
+                        defaultX = []; defaultY = []
+                        by_nominal_voltage_X = {}
+                        by_nominal_voltage_Y = {}
+                        all_coordsX = []; all_coordsY = []
+                        #
+                        #TODO: Better way to do this???
+                        #
+                        for obj in model.models:
+                            #(CASE 3) - Just append all Node's valid coordinates to all_coordsX and all_coordsY
+                            if isinstance(obj,Node) and len(obj.positions)>0 and obj.positions[0] is not None and obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                all_coordsX.append(obj.positions[0].long)
+                                all_coordsY.append(obj.positions[0].lat)
+                            #(CASE 1) - Since we don't know what the LV value is beforehand, we store all coordinates by nominal voltage
+                            #in the dictionaries by_nominal_voltage_X and by_nominal_voltage_Y.
+                            if isinstance(obj,Node) and obj.substation_name == f_name.split('ation_')[1] and obj.is_substation == 1:
+                                if obj.nominal_voltage is not None:
+                                    if len(obj.positions)>0 and obj.positions[0] is not None:
+                                        if obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                            if obj.nominal_voltage in by_nominal_voltage_X and obj.nominal_voltage in by_nominal_voltage_Y:
+                                                by_nominal_voltage_X[obj.nominal_voltage].append(obj.positions[0].long)
+                                                by_nominal_voltage_Y[obj.nominal_voltage].append(obj.positions[0].lat)
+                                            else:
+                                                by_nominal_voltage_X[obj.nominal_voltage] = [obj.positions[0].long]
+                                                by_nominal_voltage_Y[obj.nominal_voltage] = [obj.positions[0].lat]
+                                #(CASE 2) - If the nominal voltage was None, then add the coordinates to the default list
+                                else:
+                                    if len(obj.positions)>0 and obj.positions[0] is not None:
+                                        if obj.positions[0].lat is not None and obj.positions[0].long is not None:
+                                            defaultX.append(obj.positions[0].long)
+                                            defaultY.append(obj.positions[0].lat)
+                        #(CASE 1)                    
+                        if len(list(by_nominal_voltage_X.keys()))>0:
+                            low_voltage = min(list(by_nominal_voltage_X.keys()))
+                            Xs = by_nominal_voltage_X[low_voltage]
+                            Ys = by_nominal_voltage_Y[low_voltage]
+                        #(CASE 2)
+                        else:
+                            Xs = defaultX
+                            Ys = defaultY
+                        #If we were able to sample some coordinates, take the average
+                        if len(Xs)>0 and len(Ys)>0:
+                            X = np.mean(Xs)
+                            Y = np.mean(Ys)
+                        #(CASE 3)
+                        elif len(all_coordsX)>0 and len(all_coordsY)>0:
+                            X = np.mean(all_coordsX)
+                            Y = np.mean(all_coordsY)
+                        #(CASE 4) - Otherwise, set to 0,0 (best effort...)
+                        else:
+                            logger.warning('Could not find any coordinate for substation {s}. Setting the subnetwork coordinates to (0,0)...'.format(s=f_name))
+                            X = 0; Y = 0
+                        f.write('{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n'.format(NetID=f_name.split('ation_')[1], X=X,Y=Y,Height=125.00,Length=125.00))
+
+            #Subnetwork Connections
+            #
+            #Use subnetwork connections only for substations
+            # TODO: Let the user specify what should be subnetworked
+            if self.network_have_substations:
+                f.write('\n[SUBNETWORK CONNECTIONS]\n')
+                f.write('FORMAT_SUBNETWORKCONNECTIONS=SubNetID,NodeID,ConnectorCoordX,ConnectorCoordY\n')
+                for f_name,section_l in self.section_line_feeder_mapping.items():
+                    if 'substation' in f_name:
+                        #We need to find all the connections between the subnetwork and the rest of the system
+                        #Use the "is_substation_connection" attribute of Node objects
+                        #
+                        #TODO: Better way to do this???
+                        for obj in model.models:
+                            if isinstance(obj,Node) and obj.is_substation_connection == 1 and obj.substation_name == f_name.split('ation_')[1]:
+                                #We also need the coordinates of this connection.
+                                #Use the coordinates of the Node
+                                if obj.positions is not None and len(obj.positions)>0:
+                                    X = obj.positions[0].long
+                                    Y = obj.positions[0].lat
+                                #If we don't have coordinates, then set to (0,0)....
+                                else:
+                                    X = 0;Y = 0
+                                f.write('{NetID},{NodeID},{X},{Y}\n'.format(NetID=f_name.split('ation_')[1], NodeID=obj.name, X=X,Y=Y))
 
             #Overhead lines
             #
@@ -1970,9 +2146,7 @@ class Writer(AbstractWriter):
 
 
     def write_equipment_file(self, model, **kwargs):
-        '''
-            Write the equipment file.
-        '''
+        '''Write the equipment file.'''
         output_file=self.output_path+'/equipment.txt'
 
         with open(output_file, 'w') as f:
@@ -2207,9 +2381,7 @@ class Writer(AbstractWriter):
 
 
     def write_load_file(self, model, **kwargs):
-        '''
-            Loop over the DiTTo objects and write the CYME load file.
-        '''
+        '''Loop over the DiTTo objects and write the CYME load file.'''
         #Output load file
         output_file=self.output_path+'/loads.txt'
 

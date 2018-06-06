@@ -73,16 +73,15 @@ class Writer(AbstractWriter):
     def write(self, model, **kwargs):
         '''General writing function responsible for calling the sub-functions.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:param verbose: Set verbose mode. Optional. Default=False
-:type verbose: bool
-:param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
-:type write_taps: bool
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :param verbose: Set verbose mode. Optional. Default=False
+        :type verbose: bool
+        :param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
+        :type write_taps: bool
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         #Verbose print the progress
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose = kwargs['verbose']
@@ -159,14 +158,14 @@ class Writer(AbstractWriter):
 
     def write_nodes(self, model, fp, sourcebus='sourcebus'):
         ''' Write the Nodes into the existing file.
-            Positions not written into gridlab-d
-            Assume there is always a neutral phase if non-neutral phases exist
+        Positions not written into gridlab-d
+        Assume there is always a neutral phase if non-neutral phases exist
 
-:param model: DiTTo model
-:type model: DiTTo model
-:returns: 1 for success, -1 for failure
-:rtype: int
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         for i in model.models:
             if isinstance(i, Node):
                 fp.write('object node {\n')

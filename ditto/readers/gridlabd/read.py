@@ -38,18 +38,17 @@ from ..abstract_reader import AbstractReader
 logger = logging.getLogger(__name__)
 
 class Reader(AbstractReader):
-
+    """
+    The schema is read in gridlabd.py which is imported as a module here.
+    The class objects are stored in the global space of the gridlabd module
+    """
     register_names = ["glm", "gridlabd"]
 
     all_gld_objects = {}
     all_api_objects = {}
-    """
-        The schema is read in gridlabd.py which is imported as a module here.
-        The class objects are stored in the global space of the gridlabd module
-    """
 
     def __init__(self, **kwargs):
-        '''Gridlabd class CONSTRCTOR.'''
+        '''Gridlabd class CONSTRUCTOR.'''
 
         self.input_file = kwargs.get("input_file", "./input.glm")
         super(Reader, self).__init__(**kwargs)

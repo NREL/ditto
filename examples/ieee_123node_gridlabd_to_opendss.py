@@ -14,9 +14,9 @@ from ditto.store import Store
 
 def main():
     '''
-        Conversion example of the IEEE 123 node system.
-        Gridlab-D ---> OpenDSS example.
-        This example uses the glm file located in tests/data/big_cases/gridlabd/ieee_123node
+    Conversion example of the IEEE 123 node system.
+    Gridlab-D ---> OpenDSS example.
+    This example uses the glm file located in tests/data/big_cases/gridlabd/ieee_123node
     '''
 
     #Path settings (assuming it is run from examples folder)

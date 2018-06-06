@@ -1,7 +1,17 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Complex, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Complex,
+    Unicode,
+    Any,
+    Int,
+    List,
+    observe,
+    Instance,
+)
 
 from .position import Position
 from .wire import Wire
@@ -21,63 +31,104 @@ class Line(DiTToHasTraits):
 
     """
 
-    name = Unicode(help='''Name of the line object''')
-    nominal_voltage = Float(help='''This parameter defines the base voltage of the wire.''', default_value=None)
-    line_type = Unicode(help='''Whether the line is overhead or underground''', default_value='overhead')
-    length = Float(help='''This parameter is the length of the Line.''', default_value=0)
-    from_element = Any(help='''Name of the node which connects to the 'from' end of the line''', default_value=None)
-    to_element = Any(help=''''Name of the node which connects to the 'to' end of the line''', default_value=None)
-    is_fuse = Int(help='''This flag indicates whether or not the line is also a fuse''', default_value=None)
-    is_switch = Int(help='''This flag indicates whether or not the line is also a switch''', default_value=None)
-    is_banked = Int(
-        help='''This flag indicates whether or not the switch is banked. If this is true, the switch objects are controlled together''',
-        default_value=None
+    name = Unicode(help="""Name of the line object""")
+    nominal_voltage = Float(
+        help="""This parameter defines the base voltage of the wire.""",
+        default_value=None,
     )
-    faultrate = Float(help='''The number of faults that occur per year''', default_value=None)
+    line_type = Unicode(
+        help="""Whether the line is overhead or underground""", default_value="overhead"
+    )
+    length = Float(
+        help="""This parameter is the length of the Line.""", default_value=0
+    )
+    from_element = Any(
+        help="""Name of the node which connects to the 'from' end of the line""",
+        default_value=None,
+    )
+    to_element = Any(
+        help="""'Name of the node which connects to the 'to' end of the line""",
+        default_value=None,
+    )
+    is_fuse = Int(
+        help="""This flag indicates whether or not the line is also a fuse""",
+        default_value=None,
+    )
+    is_switch = Int(
+        help="""This flag indicates whether or not the line is also a switch""",
+        default_value=None,
+    )
+    is_banked = Int(
+        help="""This flag indicates whether or not the switch is banked. If this is true, the switch objects are controlled together""",
+        default_value=None,
+    )
+    faultrate = Float(
+        help="""The number of faults that occur per year""", default_value=None
+    )
     wires = List(
         Instance(Wire),
-        help='''This parameter is a list of all the wires included on the line. The wires are objects containing elements of phase, X and Y. ''',
-        default_value=None
+        help="""This parameter is a list of all the wires included on the line. The wires are objects containing elements of phase, X and Y. """,
+        default_value=None,
     )
     positions = List(
         Instance(Position),
-        help=
-        '''This parameter is a list of positional points describing the line. The positions are objects containing elements of long, lat and elevation. The points can be used to map the position of the line.  ''',
-        default_value=None
+        help="""This parameter is a list of positional points describing the line. The positions are objects containing elements of long, lat and elevation. The points can be used to map the position of the line.  """,
+        default_value=None,
     )
     impedance_matrix = List(
         List(Complex),
-        help=
-        '''This provides the matrix representation of the line impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.'''
+        help="""This provides the matrix representation of the line impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
     capacitance_matrix = List(
         List(Complex),
-        help=
-        '''This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.'''
+        help="""This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
 
-    #Modification: Nicolas (December 2017)
-    #Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
-    #I think we need both since a substation might have multiple feeders attached to it.
-    #These attributes are filled once the DiTTo model has been created using the Network module
-    substation_name = Unicode(help='''The name of the substation to which the object is connected.''', default_value=None)
-    feeder_name = Unicode(help='''The name of the feeder the object is on.''', default_value=None)
+    # Modification: Nicolas (December 2017)
+    # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
+    # I think we need both since a substation might have multiple feeders attached to it.
+    # These attributes are filled once the DiTTo model has been created using the Network module
+    substation_name = Unicode(
+        help="""The name of the substation to which the object is connected.""",
+        default_value=None,
+    )
+    feeder_name = Unicode(
+        help="""The name of the feeder the object is on.""", default_value=None
+    )
 
-    #Modification: Nicolas (December 2017)
-    #Add a is_recloser attribute as an easy and quick way to handle reclosers in DiTTo
-    is_recloser = Int(help='''This flag indicates whether or not the line is also a recloser''', default_value=None)
+    # Modification: Nicolas (December 2017)
+    # Add a is_recloser attribute as an easy and quick way to handle reclosers in DiTTo
+    is_recloser = Int(
+        help="""This flag indicates whether or not the line is also a recloser""",
+        default_value=None,
+    )
 
-    #Modification: Nicolas (January 2018)
-    is_breaker = Int(help='''This flag indicates whether or not the line is also a breaker''', default_value=None)
+    # Modification: Nicolas (January 2018)
+    is_breaker = Int(
+        help="""This flag indicates whether or not the line is also a breaker""",
+        default_value=None,
+    )
 
-    #Modification: Nicolas (March 2018)
-    is_sectionalizer = Int(help='''This flag indicates whether or not the line is also a sectionalizer''', default_value=None)
+    # Modification: Nicolas (March 2018)
+    is_sectionalizer = Int(
+        help="""This flag indicates whether or not the line is also a sectionalizer""",
+        default_value=None,
+    )
 
-    #Modification: Nicolas (March 2018)
-    nameclass = Unicode(help='''Nameclass of the line object.''', default_value=None)
+    # Modification: Nicolas (March 2018)
+    nameclass = Unicode(help="""Nameclass of the line object.""", default_value=None)
 
-    #Modification: Nicolas (May 2018)
-    is_substation = Int(help='''Flag that indicates wheter the element is inside a substation or not.''', default_value=0)
+    # Modification: Nicolas (May 2018)
+    is_substation = Int(
+        help="""Flag that indicates wheter the element is inside a substation or not.""",
+        default_value=0,
+    )
+
+    # Modification: Nicolas (June 2018)
+    is_network_protector = Int(
+        help="""This flag indicates whether or not the line is also a network protector.""",
+        default_value=0,
+    )
 
     def build(
         self,
@@ -90,7 +141,7 @@ class Line(DiTToHasTraits):
         wireSpacingInfo=None,
         Location=None,
         Terminal1=None,
-        Terminal2=None
+        Terminal2=None,
     ):
 
         pass

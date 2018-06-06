@@ -64,18 +64,18 @@ class Writer(AbstractWriter):
         self.logger.info('DiTTo--->Demo writer successfuly instanciated.')
 
     def write(self, model, **kwargs):
-        '''General writing function responsible for calling the sub-functions.
+        '''
+        General writing function responsible for calling the sub-functions.
 
-:param model: DiTTo model
-:type model: DiTTo model
-:param verbose: Set verbose mode. Optional. Default=False
-:type verbose: bool
-:param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
-:type write_taps: bool
-:returns: 1 for success, -1 for failure
-:rtype: int
-
-'''
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :param verbose: Set verbose mode. Optional. Default=False
+        :type verbose: bool
+        :param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
+        :type write_taps: bool
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        '''
         #Verbose print the progress
         if 'verbose' in kwargs and isinstance(kwargs['verbose'], bool):
             self.verbose = kwargs['verbose']

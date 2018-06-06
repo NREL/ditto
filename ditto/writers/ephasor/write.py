@@ -66,10 +66,7 @@ class Writer(AbstractWriter):
     """
 
     def __init__(self, **kwargs):
-        """
-        Constructor for the ePhasor writer.
-
-        """
+        """Constructor for the ePhasor writer."""
 
         self.m = None
         self._lines = []
