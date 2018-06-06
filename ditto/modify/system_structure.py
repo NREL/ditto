@@ -24,29 +24,29 @@ from ditto.network.network import Network
 logger = logging.getLogger(__name__)
 
 class system_structure_modifier(Modifier):
-    '''This class implements all methods modifying the topology of a DiTTo model.
-The class inherits from the Modifier class and uses the DiTTo Network module.
+    '''
+    This class implements all methods modifying the topology of a DiTTo model.
+    The class inherits from the Modifier class and uses the DiTTo Network module.
 
-What it does:
+    What it does:
 
-    - feeder_preprocessing: Performs automatic recognition of feeders in the system. All elements of a given feeder have the same feeder_name and substation_name attributes.
-    - center_tap_load_preprocessing: Re-organize all phases and objects downstream of center-tap transformers such that the system is coherent.
+        - feeder_preprocessing: Performs automatic recognition of feeders in the system. All elements of a given feeder have the same feeder_name and substation_name attributes.
+        - center_tap_load_preprocessing: Re-organize all phases and objects downstream of center-tap transformers such that the system is coherent.
 
-Author: Nicolas Gensollen. December 2017.
+    Author: Nicolas Gensollen. December 2017.
 
-'''
+    '''
 
     def __init__(self, model, *args):
         '''Class CONSTRUCTOR.
 
-:param model: DiTTo model on which to perform modifications
-:type model: DiTTo model
-:param source: Name of the source node. (The network will be built from this node)
-:type source: String (name of object is used)
+        :param model: DiTTo model on which to perform modifications
+        :type model: DiTTo model
+        :param source: Name of the source node. (The network will be built from this node)
+        :type source: String (name of object is used)
 
-.. warning:: source cannot be the name of a line or a transformer since these objects are not nodes but edges in the Network representation.
-
-'''
+        .. warning:: source cannot be the name of a line or a transformer since these objects are not nodes but edges in the Network representation.
+        '''
         #Store the model as attribute
         self.model = model
 
@@ -96,9 +96,10 @@ Author: Nicolas Gensollen. December 2017.
 
        
     def set_missing_coords_recur(self):
-        ''' Identify nodes that don't have coordinates set and set them to be the
-            average of the existing position values of the neighboring nodes. 
-            If no adjacent nodes have positional values continue to compute recursively (via while loop)
+        ''' 
+        Identify nodes that don't have coordinates set and set them to be the
+        average of the existing position values of the neighboring nodes. 
+        If no adjacent nodes have positional values continue to compute recursively (via while loop)
         '''
         recur_nodes = []
         for i in self.model.models:
@@ -141,9 +142,10 @@ Author: Nicolas Gensollen. December 2017.
 
             
     def set_feeder_metadata(self, feeder_name=None, substation=None, transformer=None):
-        ''' This function sets the feeder metada and adds it to the model
-            This can be used when parsing a file with feeder information to 
-            Add feeder data to the model
+        ''' 
+        This function sets the feeder metada and adds it to the model
+        This can be used when parsing a file with feeder information to 
+        Add feeder data to the model
         '''
         feeder_metadata = Feeder_metadata(self.model)
         feeder_metadata.name = feeder_name
@@ -154,14 +156,14 @@ Author: Nicolas Gensollen. December 2017.
 
 
     def set_feeder_headnodes(self):
-        '''This function sets the headnode for the feeder_metadata.
-The headnode cannot simply be the name of the feeder because that would create a name conflict.
-For some reason, in the RNM output, the name of the feeder if something like "a->b", and the headnodes
-are something like "b->a_S" or "b->a_S_S" or "b->a_S_S_S". So the goal of this function is to loop over the feeder_metadata,
-find the buses directly downstream of the substation (i.e. the headnodes), and put a value for the headnode attribute.
-If this convention changes, this function might need to be updated...
-
-'''
+        '''
+        This function sets the headnode for the feeder_metadata.
+        The headnode cannot simply be the name of the feeder because that would create a name conflict.
+        For some reason, in the RNM output, the name of the feeder if something like "a->b", and the headnodes
+        are something like "b->a_S" or "b->a_S_S" or "b->a_S_S_S". So the goal of this function is to loop over the feeder_metadata,
+        find the buses directly downstream of the substation (i.e. the headnodes), and put a value for the headnode attribute.
+        If this convention changes, this function might need to be updated...
+        '''
         for obj in self.model.models:
             if isinstance(obj, Feeder_metadata):
                 name_cleaned = obj.name.replace('.', '').lower().replace('_src','')
@@ -188,14 +190,14 @@ If this convention changes, this function might need to be updated...
                             obj.operating_voltage = obj.nominal_voltage
 
     def set_nominal_voltages_recur(self, *args):
-        '''This function sets the nominal voltage of the elements in the network.
-This is currently the fastest implementation available as of early January 2018.
-It uses a kind os message passing algorithm. A node passes its nominal voltage to its
-succesors but modify this value if there is a voltage transformation.
+        '''
+        This function sets the nominal voltage of the elements in the network.
+        This is currently the fastest implementation available as of early January 2018.
+        It uses a kind os message passing algorithm. A node passes its nominal voltage to its
+        succesors but modify this value if there is a voltage transformation.
 
-.. note:: This implementation is MUCH faster than looping over objects and looking for the secondary voltage of the upstream transformer.
-
-'''
+        .. note:: This implementation is MUCH faster than looping over objects and looking for the secondary voltage of the upstream transformer.
+        '''
         if not args:
             node = self.source
             voltage = self.source_voltage
@@ -216,12 +218,12 @@ succesors but modify this value if there is a voltage transformation.
             self.set_nominal_voltages_recur(child, new_value, node)
 
     def set_nominal_voltages_recur_line(self):
-        '''This function should be called after set_nominal_voltages_recur to set the nominal voltage of the lines,
-because set_nominal_voltages_recur only acts on the nodes.
+        '''
+        This function should be called after set_nominal_voltages_recur to set the nominal voltage of the lines,
+        because set_nominal_voltages_recur only acts on the nodes.
 
-.. warning:: Have to be called after set_nominal_voltages_recur.
-
-'''
+        .. warning:: Have to be called after set_nominal_voltages_recur.
+        '''
         for obj in self.model.models:
             #If we get a line
             if isinstance(obj, Line) and obj.nominal_voltage is None:
@@ -234,26 +236,26 @@ because set_nominal_voltages_recur only acts on the nodes.
                         obj.nominal_voltage = node_from_object.nominal_voltage
 
     def set_load_coordinates(self, **kwargs):
-        '''Tries to give a position to load objects where position is not known.
-This can happen when reading from OpenDSS for example since loads are connected to buses but are not included in the buscoordinate file.
+        '''
+        Tries to give a position to load objects where position is not known.
+        This can happen when reading from OpenDSS for example since loads are connected to buses but are not included in the buscoordinate file.
 
-We position the load with the following very simple heuristic
+        We position the load with the following very simple heuristic
 
-    - load elevation=connecting element elevation + delta_elevation
-    - load longitude=connecting element longitude + delta_longitude
-    - load latitude =connecting element latitude + delta_latitude
+            - load elevation=connecting element elevation + delta_elevation
+            - load longitude=connecting element longitude + delta_longitude
+            - load latitude =connecting element latitude + delta_latitude
 
-The user can specify what values he/she wants to use:
+        The user can specify what values he/she wants to use:
 
-    >>> modifier.set_load_coordinates(delta_longitude=.35, delta_latitude=0, delta_elevation=0.1)
+            >>> modifier.set_load_coordinates(delta_longitude=.35, delta_latitude=0, delta_elevation=0.1)
 
-Default values are:
+        Default values are:
 
-    - delta_longitude=0.1
-    - delta_latitude=0.1
-    - delta_elevation=0
-
-'''
+            - delta_longitude=0.1
+            - delta_latitude=0.1
+            - delta_elevation=0
+        '''
         if 'delta_longitude' in kwargs and isinstance(kwargs['delta_longitude'], (int, float)):
             delta_longitude = kwargs['delta_longitude']
         else:
@@ -291,25 +293,25 @@ Default values are:
                         pass
 
     def feeder_preprocessing(self):
-        '''Performs the feeder cut pre-processing step.
-The function basically loops over all the transformers, looking for those used as substations (attribute is_substation=1).
-Once the substations are identified, we look for all the objects downstream of each substation.
-These elements are identified as a feeder for this substation.
-Each object has an attribute 'substation_name' which is then set to the name of the substation transformer.
+        '''
+        Performs the feeder cut pre-processing step.
+        The function basically loops over all the transformers, looking for those used as substations (attribute is_substation=1).
+        Once the substations are identified, we look for all the objects downstream of each substation.
+        These elements are identified as a feeder for this substation.
+        Each object has an attribute 'substation_name' which is then set to the name of the substation transformer.
 
-.. warning:: It might be the case that we have substations downstream of substations. In this case, only the elements dowstream of the most downstream substations will be considered as feeders.
+        .. warning:: It might be the case that we have substations downstream of substations. In this case, only the elements dowstream of the most downstream substations will be considered as feeders.
 
-.. TODO:: Clarify how we define feeders when we have multiple susbstation levels.
+        .. TODO:: Clarify how we define feeders when we have multiple susbstation levels.
 
-.. TODO:: Make sure everything behaves well when using Tarek's substation layer... (No clue on what is going to happen here...)
+        .. TODO:: Make sure everything behaves well when using Tarek's substation layer... (No clue on what is going to happen here...)
 
-.. note::
+        .. note::
 
-    - A transformer is not a node in the network representation, but an edge.
-    - This means that we have to use the secondary bus to perform the dfs.
-    - If a substation has multiple feeders attached to it, it should still be possible to easily use this function.
-
-'''
+            - A transformer is not a node in the network representation, but an edge.
+            - This means that we have to use the secondary bus to perform the dfs.
+            - If a substation has multiple feeders attached to it, it should still be possible to easily use this function.
+        '''
         #Store the list of objects per feeder.
         #This is useful to run some tests (count, intersection...)
         self._list_of_feeder_objects = []
@@ -359,13 +361,13 @@ Each object has an attribute 'substation_name' which is then set to the name of 
                                 down_elt.feeder_name = 'Feeder_' + elt.name #Change the feeder naming convention here...
 
     def test_feeder_cut(self):
-        '''This function tests the feeder cut obtained with feeder_preprocessing().
-It prints some basic statistics on the feeders and look at the intersections.
-If the cut was done properly, we shouldn't have elements in multiple feeders.
+        '''
+        This function tests the feeder cut obtained with feeder_preprocessing().
+        It prints some basic statistics on the feeders and look at the intersections.
+        If the cut was done properly, we shouldn't have elements in multiple feeders.
 
-.. TODO:: Change the code to make real tests instead of print statements.
-
-'''
+        .. TODO:: Change the code to make real tests instead of print statements.
+        '''
         #Number of feeders
         N_feeder = len(self._list_of_feeder_objects)
         logger.debug('Number of feeders defined = {}'.format(N_feeder))
@@ -387,31 +389,31 @@ If the cut was done properly, we shouldn't have elements in multiple feeders.
                         logger.debug(intersection)
 
     def set_nominal_voltages(self):
-        '''This function does the exact same thing as _set_nominal_voltages.
-The implementation is less obvious but should be much faster.
+        '''
+        This function does the exact same thing as _set_nominal_voltages.
+        The implementation is less obvious but should be much faster.
 
-**Algorithm:**
+        **Algorithm:**
 
-    - Find all edges modeling transformers in the network
-    - Disconnect these edges (which should disconnect the network)
-    - Compute the connected components
-    - Group the nodes according to these connected components
-    - Re-connect the network by adding back the removed edges
-    - For every group of nodes:
-        - Find the nominal voltage of one node (look at secondary voltage of the upstream transformer)
-        - All nodes in this group get the same nominal voltage
-    - For every line:
-        - Set nominal voltage as the nominal voltage of one of the end-points (that we have thanks to the previous loop...)
+            - Find all edges modeling transformers in the network
+            - Disconnect these edges (which should disconnect the network)
+            - Compute the connected components
+            - Group the nodes according to these connected components
+            - Re-connect the network by adding back the removed edges
+            - For every group of nodes:
+                - Find the nominal voltage of one node (look at secondary voltage of the upstream transformer)
+                - All nodes in this group get the same nominal voltage
+            - For every line:
+                - Set nominal voltage as the nominal voltage of one of the end-points (that we have thanks to the previous loop...)
 
-.. note:: This should be faster than _set_nominal_voltages since we only look upstream once for every group instead of doing it once for every node.
+        .. note:: This should be faster than _set_nominal_voltages since we only look upstream once for every group instead of doing it once for every node.
 
-.. warning:: Use set_nominal_voltages_recur instead.
+        .. warning:: Use set_nominal_voltages_recur instead.
 
-.. TODO:: Find out why the results of this and set_nominal_voltages_recur don't match...
+        .. TODO:: Find out why the results of this and set_nominal_voltages_recur don't match...
 
-.. TODO:: Remove this once everything is stable??
-
-'''
+        .. TODO:: Remove this once everything is stable??
+        '''
         self.model.set_names()
 
         #We will remove all edges representing transformers
@@ -488,15 +490,15 @@ The implementation is less obvious but should be much faster.
                         obj.nominal_voltage = node_from_object.nominal_voltage
 
     def _set_nominal_voltages(self):
-        '''This function looks for all nodes and lines which have empty nominal_voltage fields.
-The function goes upstream in the network representation to find a transformer.
-The nominal voltage of the secondary of this transformer is then used to fill the empty nominal_voltage fields.
+        '''
+        This function looks for all nodes and lines which have empty nominal_voltage fields.
+        The function goes upstream in the network representation to find a transformer.
+        The nominal voltage of the secondary of this transformer is then used to fill the empty nominal_voltage fields.
 
-.. warning:: DO NOT USE. Use set_nominal_voltages instead
+        .. warning:: DO NOT USE. Use set_nominal_voltages instead
 
-.. TODO:: Remove this once everything is stable.
-
-'''
+        .. TODO:: Remove this once everything is stable.
+        '''
         self.model.set_names()
         #Loop over the objects
         for obj in self.model.models:
@@ -548,18 +550,18 @@ The nominal voltage of the secondary of this transformer is then used to fill th
                                 obj.nominal_voltage = secondary_voltage
 
     def center_tap_load_preprocessing(self):
-        '''Performs the center tap load pre-processing step.
-This function is responsible for setting the correct phase of center-tap loads.
-In OpenDSS, we will have these loads as two phase AB loads even if the upstream center tap transformer is one phase.
-The purpose of this function is to find this transformer as well as all the lines in between, grab the phase of the center tap transformer, and then apply the required modifications to the DiTTo objects.
+        '''
+        Performs the center tap load pre-processing step.
+        This function is responsible for setting the correct phase of center-tap loads.
+        In OpenDSS, we will have these loads as two phase AB loads even if the upstream center tap transformer is one phase.
+        The purpose of this function is to find this transformer as well as all the lines in between, grab the phase of the center tap transformer, and then apply the required modifications to the DiTTo objects.
 
-.. note::
+        .. note::
 
-    - This function is using the network module to find upstream elements in an efficient way.
-    - If we need to delete elments like phase loads or wires, we set the drop flag of the corresponding element to 1 such that they won't be outputed in the writer.
-      This is much faster than deleting the elements for now (delete is looping which is time consumming).
-
-'''
+            - This function is using the network module to find upstream elements in an efficient way.
+            - If we need to delete elments like phase loads or wires, we set the drop flag of the corresponding element to 1 such that they won't be outputed in the writer.
+            This is much faster than deleting the elements for now (delete is looping which is time consumming).
+        '''
         #Set the names in the model.
         #Required if we wish to access objects by names directly instead of looping
         self.model.set_names()
@@ -742,7 +744,8 @@ The purpose of this function is to find this transformer as well as all the line
         #                 self.delete_element(self.model,wire)
 
     def open_close_switches(self,path_to_dss_file):
-        '''Since there is not way to indicate wether a switch is open or closed in OpenDSS, RNM use the following convention:
+        '''
+        Since there is not way to indicate wether a switch is open or closed in OpenDSS, RNM use the following convention:
             - If the switch has attribute R1 equals to 1e11, then the switch is open
             - Otherwise it is closed.
         '''
@@ -774,8 +777,8 @@ The purpose of this function is to find this transformer as well as all the line
 
     def set_switching_devices_ampacity(self):
         '''
-            Loop over all switching devices without valid ampacity values.
-            Look at the neighboring lines and use their ampacity as value.
+        Loop over all switching devices without valid ampacity values.
+        Look at the neighboring lines and use their ampacity as value.
         '''
         #Loop over the ditto objects and find the switches, breakers, sectionalizers, fuses, and reclosers
         for obj in self.model.models:

@@ -28,72 +28,67 @@ from ditto.models.feeder_metadata import Feeder_metadata
 class Reader(AbstractReader):
     '''JSON-->DiTTo Reader class
 
-The reader expects the following format:
+    The reader expects the following format:
 
-    - objects are stored in a list [object_1,object_2,...,object_N]
-    - Each object is a dictionary object_1={'klass':'PowerTransformer',
-                                            'is_substationr':{'klass':'int',
-                                                              'value':'1'
-                                                             },
-                                            (...)
-                                            }
-    - The special key 'klass' indicates the type of the object considered.
-    - klass can be:
-            - a DiTTo object type like 'PowerTransformer' or 'Winding'
-            - a "standard" type like 'int', 'float', or 'str'
-            - a list ('list')
-            - a complex number: 1+2j will be {'klass':'complex', 'value':[1,2]}
-
-.. note:: For nested objects, this format can become a bit complex. See example below
-
-**Example:**
-
-object_1={'klass':'PowerTransformer',
-          'is_substation':{'klass':'int',
-                           'value':'1'
-                         },
-          'windings':{'klass':'list',
-                      'value':[{'klass':'Winding',
-                                'rated_power':{'klass':'float',
-                                               'value':'1000'
-                                               }
-                                'phase_windings':{'klass':'list',
-                                                  'value':[{'klass':'PhaseWinding',
-                                                            'phase':{'klass':'Unicode',
-                                                                     'value':'C'
-                                                                     },
-                                                            (...)
-                                                            },
-                                                            (...)
-                                                            ]
+        - objects are stored in a list [object_1,object_2,...,object_N]
+        - Each object is a dictionary object_1={'klass':'PowerTransformer',
+                                                'is_substationr':{'klass':'int',
+                                                                  'value':'1'
+                                                                 },
+                                                (...)
                                                 }
-                                (...)
-                                },
-                                (...)
-                              ]
-                      },
-            }
+        - The special key 'klass' indicates the type of the object considered.
+        - klass can be:
+                - a DiTTo object type like 'PowerTransformer' or 'Winding'
+                - a "standard" type like 'int', 'float', or 'str'
+                - a list ('list')
+                - a complex number: 1+2j will be {'klass':'complex', 'value':[1,2]}
 
-.. TODO:: Better format?
+    .. note:: For nested objects, this format can become a bit complex. See example below
 
-Author: Nicolas Gensollen. January 2018
+    **Example:**
 
-'''
+    object_1={'klass':'PowerTransformer',
+              'is_substation':{'klass':'int',
+                               'value':'1'
+                             },
+              'windings':{'klass':'list',
+                          'value':[{'klass':'Winding',
+                                    'rated_power':{'klass':'float',
+                                                   'value':'1000'
+                                                   }
+                                    'phase_windings':{'klass':'list',
+                                                      'value':[{'klass':'PhaseWinding',
+                                                                'phase':{'klass':'Unicode',
+                                                                         'value':'C'
+                                                                         },
+                                                                (...)
+                                                                },
+                                                                (...)
+                                                                ]
+                                                    }
+                                    (...)
+                                    },
+                                    (...)
+                                  ]
+                          },
+                }
+
+    .. TODO:: Better format?
+
+    Author: Nicolas Gensollen. January 2018
+    '''
     register_names = ["json", "Json", "JSON"]
 
     def __init__(self, **kwargs):
-        '''Class CONSTRUCTOR
-
-'''
+        '''Class CONSTRUCTOR'''
         if 'input_file' in kwargs:
             self.input_file = kwargs['input_file']
         else:
             raise ValueError('No input file provided to the reader.')
 
     def parse(self):
-        '''Parse a JSON file to a DiTTo model.
-
-'''
+        '''Parse a JSON file to a DiTTo model.'''
         #Open the input file and get the data
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
