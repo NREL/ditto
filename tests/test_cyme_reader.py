@@ -45,7 +45,7 @@ def test_network_protectors():
                     assert not wire.is_open
 
                     # The network protector limit should be 600 amps for all wires
-                    assert wire.network_protector_limit == 600.0
+                    assert wire.interrupting_rating == 600.0
 
             # Section B is AC and the protector is closed on A only
             elif obj.name == "b":
@@ -69,7 +69,7 @@ def test_network_protectors():
                         assert wire.is_open
 
                     # The network protector limit should be 600 amps for all wires
-                    assert wire.network_protector_limit == 600.0
+                    assert wire.interrupting_rating == 600.0
 
             else:
                 raise ValueError("Unknown line name {name}".format(name=obj.name))

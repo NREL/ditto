@@ -1287,7 +1287,7 @@ class Reader(AbstractReader):
         # Set the interupting current of the wire if it is a network protectors
         if is_network_protector:
             try:
-                api_wire.network_protector_limit = float(
+                api_wire.interrupting_rating = float(
                     conductor_data["interruptingrating"]
                 )
             except:
