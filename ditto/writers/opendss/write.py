@@ -1754,7 +1754,7 @@ class Writer(AbstractWriter):
                     txt += ' switch=n'
 
                 if hasattr(i,'wires') and i.wires is not None and len(i.wires)>0:
-                    closed_phase=np.sort([wire.phase for wire in i.wires if (wire.is_open==0 or wire.is_open is None) and wire.phase not in ['N','N1','N2']])
+                    closed_phase=np.sort([wire.phase for wire in i.wires if (wire.is_open==0 or wire.is_open is None) and wire.phase is not None and wire.phase not in ['N','N1','N2']])
                     if len(closed_phase) == 0:
                         txt+= ' enabled=n'
                     else:
