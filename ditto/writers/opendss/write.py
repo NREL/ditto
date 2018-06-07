@@ -111,6 +111,8 @@ class Writer(AbstractWriter):
         #Call super
         super(Writer, self).__init__(**kwargs)
 
+        self._baseKV_ = set()
+
         self.logger.info('DiTTo--->OpenDSS writer successfuly instanciated.')
 
     def write(self, model, **kwargs):
@@ -410,6 +412,7 @@ class Writer(AbstractWriter):
                             #Nominal voltage
                             if hasattr(winding, 'nominal_voltage') and winding.nominal_voltage is not None:
                                 txt += ' Kv={kv}'.format(kv=winding.nominal_voltage * 10**-3) #OpenDSS in kvolts
+                                self._baseKV_.add(winding.nominal_voltage * 10**-3)
 
                             #rated power
                             if hasattr(winding, 'rated_power') and winding.rated_power is not None:
@@ -518,6 +521,7 @@ class Writer(AbstractWriter):
                             #Nominal voltage
                             if hasattr(winding, 'nominal_voltage') and winding.nominal_voltage is not None:
                                 txt += ' Kv={kv}'.format(kv=winding.nominal_voltage * 10**-3) #OpenDSS in kvolts
+                                self._baseKV_.add(winding.nominal_voltage * 10**-3)
 
                             #rated power
                             if hasattr(winding, 'rated_power') and winding.rated_power is not None:
@@ -607,6 +611,7 @@ class Writer(AbstractWriter):
                 #nominal_voltage
                 if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
                     txt += ' kV={volt}'.format(volt=i.nominal_voltage*10**-3) #DiTTo in volts
+                    self._baseKV_.add(i.nominal_voltage*10**-3)
 
                 #rated_power
                 if hasattr(i, 'rated_power') and i.rated_power is not None:
@@ -692,6 +697,7 @@ class Writer(AbstractWriter):
                     #nominal voltage
                     if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
                         txt += ' kV={kV}'.format(kV=i.nominal_voltage*10**-3) #DiTTo in volts
+                        self._baseKV_.add(i.nominal_voltage*10**-3)
 
                     #rated power
                     if hasattr(i, 'rated_power') and i.rated_power is not None:
@@ -846,6 +852,7 @@ class Writer(AbstractWriter):
                 #nominal voltage
                 if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
                     txt += ' kV={volt}'.format(volt=i.nominal_voltage * 10**-3)
+                    self._baseKV_.add(i.nominal_voltage*10**-3)
 
                 #Vmin
                 if hasattr(i, 'vmin') and i.vmin is not None:
@@ -1012,6 +1019,7 @@ class Writer(AbstractWriter):
                             for w, winding in enumerate(i.windings):
                                 if hasattr(i.windings[w], 'nominal_voltage'):
                                     kvs += str(i.windings[w].nominal_voltage) + ', '
+                                    self._baseKV_.add(i.windings[w].nominal_voltage)
                             kvs = kvs[:-2]
                             kvs += ')'
                             transfo_creation_string += kvs
@@ -1193,6 +1201,7 @@ class Writer(AbstractWriter):
                 #nominal_voltage
                 if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
                     txt += ' Kv={volt}'.format(volt=i.nominal_voltage * 10**-3) #OpenDSS in Kvolts
+                    self._baseKV_.add(i.nominal_voltage * 10**-3)
 
                 #connection type
                 if hasattr(i, 'connection_type') and i.connection_type is not None:
@@ -1741,6 +1750,7 @@ class Writer(AbstractWriter):
 
                     if hasattr(obj,'nominal_voltage') and obj.nominal_voltage is not None:
                         fp.write(' basekV={volt}'.format(volt=obj.nominal_voltage*10**-3)) #DiTTo in volts
+                        self._baseKV_.add(obj.nominal_voltage*10**-3)
 
                     if hasattr(obj, 'positive_sequence_impedance') and obj.positive_sequence_impedance is not None:
                         R1=obj.positive_sequence_impedance.real
@@ -1768,6 +1778,10 @@ class Writer(AbstractWriter):
             for file in self.files_to_redirect:
                 if file != self.output_filenames['buses']:
                     fp.write('Redirect {file}\n'.format(file=file))
+
+            _baseKV_list_ = list(self._baseKV_)
+            _baseKV_list_ = sorted(_baseKV_list_)
+            fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 
             fp.write('\nCalcvoltagebases\n\n')
 
