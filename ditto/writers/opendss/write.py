@@ -1732,7 +1732,12 @@ class Writer(AbstractWriter):
                         cleaned_name = obj.name[:-4]
                     else:
                         cleaned_name = obj.name
-                    fp.write('bus1={name} pu=1.0'.format(name=cleaned_name))
+                    if hasattr(obj, "connecting_element") and obj.connecting_element is not None:
+                        fp.write('bus1={name} pu=1.0'.format(name=obj.connecting_element))
+                    else:
+                        logger.warning("No valid name for connecting element of source {}. Using name of the source instead...".format(cleaned_name))
+                        fp.write('bus1={name} pu=1.0'.format(name=cleaned_name))
+
 
                     if hasattr(obj,'nominal_voltage') and obj.nominal_voltage is not None:
                         fp.write(' basekV={volt}'.format(volt=obj.nominal_voltage*10**-3)) #DiTTo in volts
