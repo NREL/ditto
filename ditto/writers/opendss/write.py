@@ -1729,11 +1729,11 @@ class Writer(AbstractWriter):
 
                 #Set the units in miles for comparison (IEEE 13 nodes feeder)
                 #TODO: Let the user specify the export units
-                txt += ' Units=mi'
+                txt += ' Units=km'
 
                 #Length
                 if hasattr(i, 'length') and i.length is not None:
-                    txt += ' Length={length}'.format(length=self.convert_from_meters(np.real(i.length), u'mi'))
+                    txt += ' Length={length}'.format(length=self.convert_from_meters(np.real(i.length), u'km'))
 
                 #nominal_voltage (Not mapped)
 
@@ -2088,8 +2088,8 @@ class Writer(AbstractWriter):
         :rtype: dict
         '''
         result = {}
-        uni = 'm'
-        result['units'] = 'm' #DiTTO is in meters
+        uni = 'km'
+        result['units'] = 'km' #DiTTO is in meters
 
         #N_phases
         if hasattr(line, 'wires') and line.wires is not None:
@@ -2174,12 +2174,12 @@ class Writer(AbstractWriter):
         #GMR
         if hasattr(wire, 'gmr') and wire.gmr is not None:
             result['GMRac'] =  wire.gmr
-            result['GMRunits'] = 'm' #Let OpenDSS know we are in meters here
+            result['GMRunits'] = 'km' #Let OpenDSS know we are in meters here
 
         #Diameter
         if hasattr(wire, 'diameter') and wire.diameter is not None:
             result['Diam'] = wire.diameter
-            result['Radunits'] = 'm' #Let OpenDSS know we are in meters here
+            result['Radunits'] = 'km' #Let OpenDSS know we are in meters here
 
         #Ampacity
         if hasattr(wire, 'ampacity') and wire.ampacity is not None:
@@ -2214,7 +2214,7 @@ class Writer(AbstractWriter):
         result['nconds'] =len(wire_list)
         phase_wires = [w for w in wire_list if w.phase in ['A', 'B', 'C']]
         result['nphases'] = len(phase_wires)
-        result['units'] = 'm'
+        result['units'] = 'km'
         result['conductor_list'] = []
         for cond,wire in enumerate(wire_list):
             result['conductor_list'].append({})
