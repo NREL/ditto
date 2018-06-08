@@ -22,12 +22,12 @@ class Network:
 
     def provide_graphs(self,graph,digraph):
         '''
-            This functions sets the graph and digraph of the Network class with direct user inputs.
-            This can be useful if the user has the graphs stored and does not want to re-compute them.
-            It can also be useful when work has to be done to get connected networks. It might be easier to
-            perform the work beforehand, and create a Network instance for each connected component.
+        This functions sets the graph and digraph of the Network class with direct user inputs.
+        This can be useful if the user has the graphs stored and does not want to re-compute them.
+        It can also be useful when work has to be done to get connected networks. It might be easier to
+        perform the work beforehand, and create a Network instance for each connected component.
 
-            .. warning: The method does not do any safety check yet...
+        .. warning: The method does not do any safety check yet...
         '''
         self.graph=graph
         self.digraph=digraph
@@ -173,7 +173,7 @@ class Network:
 
     def remove_open_switches(self, model):
         for m in model.models:
-            if hasattr(m,'is_switch') and m.is_switch is not None and hasattr(m,'from_element') and hasattr(m,'to_element') and m.from_element is not None and m.to_element is not None and len(m.wires)>0:
+            if hasattr(m,'is_switch') and (m.is_switch or m.is_breaker) is not None and hasattr(m,'from_element') and hasattr(m,'to_element') and m.from_element is not None and m.to_element is not None and len(m.wires)>0:
                 is_open = True
                 for w in m.wires:
                     if hasattr(w,'is_open') and w.is_open is not None and not w.is_open:
@@ -206,9 +206,8 @@ class Network:
 
     def get_all_elements_downstream(self, model, source):
         '''Returns all the DiTTo objects which location is downstream of a given node.
-This might be handy when trying to find all the objects below a substation such that the network can be properly seperated in different feeders for analysis.
-
-'''
+        This might be handy when trying to find all the objects below a substation such that the network can be properly seperated in different feeders for analysis.
+        '''
         _elts = set()
         model.set_names()
 
@@ -283,9 +282,9 @@ This might be handy when trying to find all the objects below a substation such 
         start_node = self.graph[source]
         return (set(nx.bfs_edges(self.graph, source)))
 
-    '''Find all edges that have both edges in the set of provided nodes'''
 
     def find_internal_edges(self, nodeset):
+        '''Find all edges that have both edges in the set of provided nodes'''
         internal_edges = set()
         all_edges = set()
         names = nx.get_edge_attributes(self.graph, 'name')

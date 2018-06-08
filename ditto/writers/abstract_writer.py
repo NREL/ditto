@@ -31,9 +31,7 @@ class AbstractWriter(object):
     #@abstractmethod
     def write(self, model, **kwargs):
         '''Write abstract method.
-
         .. note:: To be implemented in subclasses.
-
         '''
         pass
 
