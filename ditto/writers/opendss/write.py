@@ -91,6 +91,9 @@ class Writer(AbstractWriter):
         self.files_to_redirect=[]
 
         self.write_taps = False
+        self.separate_feeders = False
+        self.separate_substations = False
+        self.verbose = False
 
         self.output_filenames = {'buses': 'Buscoords.dss',
                                  'transformers': 'Transformers.dss',
@@ -103,7 +106,7 @@ class Writer(AbstractWriter):
                                  'linegeometry': 'LineGeometry.dss',
                                  'wiredata': 'WireData.dss',
                                  'loadshapes': 'LoadShapes.dss',
-                                 'storages': 'Storages.dss',
+                                 'storage': 'Storage.dss',
                                  'PVSystems': 'PVSystems.dss',
                                  'master': 'Master.dss'
                                  }
@@ -137,6 +140,16 @@ class Writer(AbstractWriter):
             self.write_taps = kwargs['write_taps']
         else:
             self.write_taps = False
+
+        if 'separate_feeders' in kwargs:
+            self.separate_feeders = kwargs['separate_feeders']
+        else:
+            self.separate_feeders = False
+
+        if 'separate_substations' in kwargs:
+            self.separate_substations = kwargs['separate_substations']
+        else:
+            self.separate_substations = False
 
         #Write the bus coordinates
         self.logger.info('Writing the bus coordinates...')
@@ -255,13 +268,15 @@ class Writer(AbstractWriter):
         '''Write the bus coordinates to a CSV file ('buscoords.csv' by default), with the following format:
 
         >>> bus_name,coordinate_X,coordinate_Y
-
+        
         :param model: DiTTo model
         :type model: DiTTo model
         :returns: 1 for success, -1 for failure
         :rtype: int
         '''
-        txt = ''
+        feeder_text_map= {}
+        substation_text_map= {}
+        self.all_buses = []
         #Loop over the DiTTo objects
         for i in model.models:
             #If we find a node
@@ -269,11 +284,58 @@ class Writer(AbstractWriter):
 
                 #Extract the name and the coordinates
                 if ((hasattr(i, 'name') and i.name is not None) and (hasattr(i, 'positions') and i.positions is not None and len(i.positions) > 0)):
-                    txt += '{name} {X} {Y}\n'.format(name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long)
+                    if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                        feeder_name = i.feeder_name     
+                    else:
+                        feeder_name = 'DEFAULT'
+                    if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                        substation_name = i.substation_name     
+                    else:
+                        substation_name = 'DEFAULT'
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['buses']), 'w') as fp:
-                fp.write(txt)
+                    if not substation_name in substation_text_map:
+                        substation_text_map[substation_name] = set([feeder_name])
+                    else:
+                        substation_text_map[substation_name].add(feeder_name)
+                    txt = ''
+                    if substation_name+'_'+feeder_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
+                    txt += '{name} {X} {Y}\n'.format(name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long)
+                    feeder_text_map[substation_name+'_'+feeder_name] = txt
+
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect=''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['buses']), 'w') as fp:
+                        fp.write(txt)
+                        self.all_buses.append(txt)
+                    # Not currently redirecting buscoords to each subfolder - just use the aggregate in the root directory 
+                    #self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['buses']))
+        if len(self.all_buses)>0:
+            with open(os.path.join(self.output_path,self.output_filenames['buses']),'w') as fp: #Writes all the buscoords to the base folder as well
+                fp.write(''.join(txt for txt in self.all_buses))
             self.files_to_redirect.append(self.output_filenames['buses'])
 
         return 1
@@ -293,7 +355,8 @@ class Writer(AbstractWriter):
             - Currently not modelling open winding connections (e.g. open-delta open-wye)
         '''
         #Create and open the transformer DSS file
-        txt = ''
+        substation_text_map = {}
+        feeder_text_map = {}
 
         #Loop over the DiTTo objects
         for i in model.models:
@@ -301,6 +364,24 @@ class Writer(AbstractWriter):
             if isinstance(i, PowerTransformer):
                 #Write the data in the file
                 #Name
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
+
                 if hasattr(i, 'name') and i.name is not None:
                     txt += 'New Transformer.' + i.name
                 else:
@@ -563,11 +644,35 @@ class Writer(AbstractWriter):
                             txt += ' XHL=%f XHT=%f XLT=%f' % (default_x[0], default_x[1], default_x[2])
 
                 txt += '\n\n'
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['transformers']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['transformers'])
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect=''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['transformers']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['transformers']))
 
         return 1
 
@@ -580,10 +685,29 @@ class Writer(AbstractWriter):
 
         .. todo:: Develop the docstring a little bit more...
         '''
-        txt = ''
 
+        substation_text_map = {}
+        feeder_text_map = {}
         for i in model.models:
             if isinstance(i, Storage):
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
+
                 #Name
                 if hasattr(i, 'name') and i.name is not None:
                     txt += 'New Storage.{name}'.format(name=i.name)
@@ -668,20 +792,65 @@ class Writer(AbstractWriter):
                 #TODO: See with Tarek and Elaine how we can support that
 
                 txt += '\n'
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['storages']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['storages'])
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
 
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['storage']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['storage']))
+
+
+        return 1
 
     def write_PVs(self, model):
         '''Write the PVs.'''
-        txt = ''
+        feeder_text_map= {}
+        substation_text_map= {}
         for i in model.models:
             if isinstance(i, PowerSource):
                 #If is_sourcebus is set to 1, then the object represents a source and not a PV system
                 if hasattr(i, 'is_sourcebus') and i.is_sourcebus==0:
+                    if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                        feeder_name = i.feeder_name     
+                    else:
+                        feeder_name = 'DEFAULT'
+                    if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                        substation_name = i.substation_name     
+                    else:
+                        substation_name = 'DEFAULT'
+
+                    if not substation_name in substation_text_map:
+                        substation_text_map[substation_name] = set([feeder_name])
+                    else:
+                        substation_text_map[substation_name].add(feeder_name)
+                    txt = ''
+                    if substation_name+'_'+feeder_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
+
                     #Name
                     if hasattr(i, 'name') and i.name is not None:
                         txt += 'New PVSystem.{name}'.format(name=i.name)
@@ -740,12 +909,35 @@ class Writer(AbstractWriter):
                         txt += ' pf={power_factor}'.format(power_factor=i.power_factor)
 
                     txt += '\n'
+                    feeder_text_map[substation_name+'_'+feeder_name] = txt
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['PVSystems']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['PVSystems'])
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
 
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['PVSystems']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['PVSystems']))
 
 
 
@@ -756,13 +948,30 @@ class Writer(AbstractWriter):
         Currently all loadshapes are assumed to be yearly
         TODO: Add daily profiles as well
         '''
-        txt = ''
 
+        substation_text_map = {}
+        feeder_text_map = {}
         all_data = set()
         for i in model.models:
             if isinstance(i, Timeseries):
-                if hasattr(i, 'data_location'
-                           ) and i.data_location is not None and os.path.isfile(i.data_location) and (i.scale_factor is None or i.scale_factor == 1):
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
+
+                if hasattr(i, 'data_location') and i.data_location is not None and os.path.isfile(i.data_location) and (i.scale_factor is None or i.scale_factor == 1):
                     filename = i.data_location.split('/')[-1][:-4] # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
                     if i.data_location in self.timeseries_datasets:
                         continue
@@ -775,9 +984,7 @@ class Writer(AbstractWriter):
                             filename=filename, npoints=npoints, data_location=i.data_location)
                     self.timeseries_datasets[i.data_location] = filename
 
-                elif hasattr(i, 'data_location') and i.data_location is not None and os.path.isfile(
-                    i.data_location
-                ) and i.scale_factor is not None and i.scale_factor != 1:
+                elif hasattr(i, 'data_location') and i.data_location is not None and os.path.isfile( i.data_location) and i.scale_factor is not None and i.scale_factor != 1:
                     filename = i.data_location.split('/')[-1][:-4] + '_scaled' # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
                     scaled_data_location = i.data_location[:-4] + '__scaled%s' % (str(int((i.scale_factor) * 100)).zfill(3)) + i.data_location[-4:]
                     if i.data_location in self.timeseries_datasets:
@@ -790,9 +997,9 @@ class Writer(AbstractWriter):
                         self.timeseries_format[filename] = 'daily'
                     else:
                         self.timeseries_format[filename] = 'yearly'
-                    txt += 'New loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n'.format(
-                            filename=filename, npoints=npoints, data_location=scaled_data_location)
+                    txt += 'New loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n'.format(filename=filename, npoints=npoints, data_location=scaled_data_location)
                     self.timeseries_datasets[i.data_location] = filename
+                    feeder_text_map[substation_name+'_'+feeder_name] = txt
 
             # elif: In memory
             #     pass
@@ -801,10 +1008,35 @@ class Writer(AbstractWriter):
 
                     #pass #TODO: write the timeseries data if it's in memory
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['loadshapes']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['loadshapes'])
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['loadshapes']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['loadshapes']))
+
+
 
 
     def write_loads(self, model):
@@ -815,10 +1047,28 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         '''
-        txt = ''
 
+        substation_text_map = {}
+        feeder_text_map = {}
         for i in model.models:
             if isinstance(i, Load):
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
 
                 #Name
                 if hasattr(i, 'name') and i.name is not None:
@@ -932,11 +1182,36 @@ class Writer(AbstractWriter):
                             #TODO: manage the data correctly when it is only in memory
 
                 txt += '\n\n'
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['loads']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['loads'])
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['loads']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['loads']))
+
+
 
         return 1
 
@@ -949,8 +1224,9 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         '''
-        txt = ''
 
+        substation_text_map = {}
+        feeder_text_map = {}
         #It might be the case that we have to create new transformers from the regulators.
         #In this case, we build the strings and store them in a list.
         #At the end, we simply loop over the list to write all strings to transformers.dss
@@ -958,6 +1234,25 @@ class Writer(AbstractWriter):
 
         for i in model.models:
             if isinstance(i, Regulator):
+
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
+
 
                 if hasattr(i, 'name') and i.name is not None:
                     txt += 'New RegControl.{name}'.format(name=i.name)
@@ -1071,6 +1366,9 @@ class Writer(AbstractWriter):
                 #Winding
                 if hasattr(i, 'winding') and i.winding is not None:
                     txt += ' winding={w}'.format(w=i.winding)
+                else:
+                   txt += ' winding=2'
+
 
                 #CTprim
                 if hasattr(i, 'ct_prim') and i.ct_prim is not None:
@@ -1094,7 +1392,9 @@ class Writer(AbstractWriter):
                 if hasattr(i, 'pt_ratio') and i.pt_ratio is not None:
                     txt += ' ptratio={PT}'.format(PT=i.pt_ratio)
 
-                #ct_ratio (Not mapped)
+                #ct ratio  (Not mapped)
+
+
 
                 #phase shift (Not mapped)
 
@@ -1102,7 +1402,7 @@ class Writer(AbstractWriter):
 
                 #bandwidth
                 if hasattr(i, 'bandwidth') and i.bandwidth is not None:
-                    txt += ' band={b}'.format(b=i.bandwidth)
+                   txt += ' band={b}'.format(b=i.bandwidth*1.2) #The bandwidth is operated at 120 V
 
                 #band center
                 if hasattr(i, 'bandcenter') and i.bandcenter is not None:
@@ -1115,6 +1415,9 @@ class Writer(AbstractWriter):
                 #Voltage limit
                 if hasattr(i, 'voltage_limit') and i.voltage_limit is not None:
                     txt += ' vlimit={vlim}'.format(vlim=i.voltage_limit)
+
+                if hasattr(i,'setpoint') and i.setpoint is not None:
+                    txt += ' vreg = {setp}'.format(setp=i.setpoint/100.0 *120)
 
                 #X (Store in the Phase Windings of the transformer)
                 if i.name in self.compensator:
@@ -1143,18 +1446,43 @@ class Writer(AbstractWriter):
                             txt += ' R={r}'.format(r=list(self.compensator[i.name]['R'])[0])
 
                 txt += '\n\n'
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
 
-        #If we have new transformers to add...
-        if len(transfo_creation_string_list) > 0:
-            with open(os.path.join(self.output_path, self.output_filenames['transformers']), 'a') as f:
-                for trans_string in transfo_creation_string_list:
-                    f.write(trans_string)
-                    f.write('\n\n')
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['regulators']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['regulators'])
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['regulators']), 'w') as fp:
+                        fp.write(txt)
+                    if len(transfo_creation_string_list) > 0:
+                        with open(os.path.join(output_folder, self.output_filenames['transformers']), 'a') as f:
+                            for trans_string in transfo_creation_string_list:
+                                f.write(trans_string)
+                                f.write('\n\n')
+
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['regulators']))
+
 
         return 1
 
@@ -1166,11 +1494,29 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         '''
-        txt = ''
 
+        substation_text_map = {}
+        feeder_text_map = {}
         for i in model.models:
 
             if isinstance(i, Capacitor):
+
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
 
                 #Name
                 if hasattr(i, 'name') and i.name is not None:
@@ -1278,11 +1624,35 @@ class Writer(AbstractWriter):
                         txt += ' PTPhase={PT}'.format(PT=self.phase_mapping(i.pt_phase))
 
                 txt += '\n\n'
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['capacitors']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['capacitors'])
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['capacitors']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['capacitors']))
+
 
         return 1
 
@@ -1294,8 +1664,9 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         '''
-        txt = ''
 
+        substation_text_map = {}
+        feeder_text_map = {}
         #First, we have to decide if we want to output using LineGeometries and WireData or using LineCodes
         #We divide the lines in 2 groups:
         #- if we have enough information about the wires and the spacing, 
@@ -1304,7 +1675,7 @@ class Writer(AbstractWriter):
         lines_to_geometrify = []
         lines_to_linecodify = []
         for i in model.models:
-            if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_sectionalizer == 0 and i.is_recloser == 0 and i.is_fuse == 0:
+            if isinstance(i, Line):
                 use_linecodes = False
                 for wire in i.wires:
                     #If we are missing the position of at least one wire, default to linecodes
@@ -1324,12 +1695,31 @@ class Writer(AbstractWriter):
                 else:
                     lines_to_geometrify.append(i)
 
-        self.write_wiredata(lines_to_geometrify)
+
+        self.write_wiredata(lines_to_geometrify) # No feeder data specified as these are written to the base folder
         self.write_linegeometry(lines_to_geometrify)
-        self.write_linecodes(lines_to_linecodify)
+        self.write_linecodes(lines_to_linecodify) 
 
         for i in model.models:
             if isinstance(i, Line):
+                if self.separate_feeders and hasattr(i,'feeder_name') and i.feeder_name is not None:
+                    feeder_name = i.feeder_name     
+                else:
+                    feeder_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'substation_name') and i.substation_name is not None:
+                    substation_name = i.substation_name     
+                else:
+                    substation_name = 'DEFAULT'
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ''
+                if substation_name+'_'+feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+feeder_name]
+                    
+
 
                 #Name
                 if hasattr(i, 'name') and i.name is not None:
@@ -1339,11 +1729,11 @@ class Writer(AbstractWriter):
 
                 #Set the units in miles for comparison (IEEE 13 nodes feeder)
                 #TODO: Let the user specify the export units
-                txt += ' Units=mi'
+                txt += ' Units=km'
 
                 #Length
                 if hasattr(i, 'length') and i.length is not None:
-                    txt += ' Length={length}'.format(length=self.convert_from_meters(np.real(i.length), u'mi'))
+                    txt += ' Length={length}'.format(length=self.convert_from_meters(np.real(i.length), u'km'))
 
                 #nominal_voltage (Not mapped)
 
@@ -1372,9 +1762,17 @@ class Writer(AbstractWriter):
                 else:
                     txt += ' switch=n'
 
+                if hasattr(i,'wires') and i.wires is not None and len(i.wires)>0:
+                    closed_phase=np.sort([wire.phase for wire in i.wires if (wire.is_open==0 or wire.is_open is None) and wire.phase is not None and wire.phase not in ['N','N1','N2']])
+                    if len(closed_phase) == 0:
+                        txt+= ' enabled=n'
+                    else:
+                        txt+= ' enabled=y'
+
+
                  #is_fuse
                 if hasattr(i, 'is_fuse') and i.is_fuse == 1:
-                    fuse_line = 'New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=yes'.format(name=i.name)
+                    fuse_line = 'New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y'.format(name=i.name)
                 else:
                     fuse_line = ''
 
@@ -1393,16 +1791,43 @@ class Writer(AbstractWriter):
                     txt += fuse_line
                     txt += '\n\n'
 
-        if txt != '':
-            with open(os.path.join(self.output_path, self.output_filenames['lines']), 'w') as fp:
-                fp.write(txt)
-            self.files_to_redirect.append(self.output_filenames['lines'])
-    
+                feeder_text_map[substation_name+'_'+feeder_name] = txt
+
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+feeder_name]
+                feeder_name = feeder_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path,substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ''
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder,feeder_name)
+                        output_redirect = os.path.join(output_redirect,feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(os.path.join(output_folder,self.output_filenames['lines']), 'w') as fp:
+                        fp.write(txt)
+                    self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['lines']))
+
+
+
         return 1
 
 
 
-    def write_wiredata(self, list_of_lines):
+    def write_wiredata(self, list_of_lines,feeder_name = None, substation_name=None):
         '''
         Write the wires to an OpenDSS file (WireData.dss by default).
 
@@ -1446,8 +1871,27 @@ class Writer(AbstractWriter):
                                 cnt += 1
 
         if len(self.all_wires)>0:
-            fp = open(os.path.join(self.output_path, self.output_filenames['wiredata']), 'w')
-            self.files_to_redirect.append(self.output_filenames['wiredata'])
+            output_folder = None
+            output_redirect = None
+            if self.separate_substations and substation_name is not None:
+                output_folder = os.path.join(self.output_path,substation_name)
+                output_redirect = substation_name
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+            else:
+                output_folder = os.path.join(self.output_path)
+                output_redirect = ''
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+            if self.separate_feeders and feeder_name is not None:
+                output_folder = os.path.join(output_folder,feeder_name)
+                output_redirect = os.path.join(output_redirect,feeder_name)
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+            fp = open(os.path.join(output_folder, self.output_filenames['wiredata']), 'w')
+            self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['wiredata']))
             for wire_name,wire_data in self.all_wires.items():
                 fp.write('New WireData.{name}'.format(name=wire_name))
                 for key,value in wire_data.items():
@@ -1458,7 +1902,7 @@ class Writer(AbstractWriter):
 
 
 
-    def write_linegeometry(self, list_of_lines):
+    def write_linegeometry(self, list_of_lines, feeder_name=None, substation_name=None):
         '''
         Write the Line geometries to an OpenDSS file (LineGeometry.dss by default).
 
@@ -1494,8 +1938,27 @@ class Writer(AbstractWriter):
                             cpt += 1
 
         if len(self.all_geometries)>0:
-            fp = open(os.path.join(self.output_path, self.output_filenames['linegeometry']), 'w')
-            self.files_to_redirect.append(self.output_filenames['linegeometry'])
+            output_folder = None
+            output_redirect = None
+            if self.separate_substations and substation_name is not None:
+                output_folder = os.path.join(self.output_path,substation_name)
+                output_redirect = substation_name
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+            else:
+                output_folder = os.path.join(self.output_path)
+                output_redirect = ''
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+            if self.separate_feeders and feeder_name is not None:
+                output_folder = os.path.join(output_folder,feeder_name)
+                output_redirect = os.path.join(output_redirect,feeder_name)
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+            fp = open(os.path.join(output_folder, self.output_filenames['linegeometry']), 'w')
+            self.files_to_redirect.append(os.path.join(output_redirect, self.output_filenames['linegeometry']))
             for geometry_name,geometry_data in self.all_geometries.items():
                 fp.write('New LineGeometry.{name}'.format(name=geometry_name))
                 if 'nconds' in geometry_data:
@@ -1516,7 +1979,7 @@ class Writer(AbstractWriter):
         return 1
 
 
-    def write_linecodes(self, list_of_lines):
+    def write_linecodes(self, list_of_lines,feeder_name=None,substation_name=None):
         '''Write the linecodes to an OpenDSS file (Linecodes.dss by default).
 
         :param model: DiTTo model
@@ -1531,18 +1994,38 @@ class Writer(AbstractWriter):
         '''
         cnt = 0
         for i in list_of_lines:
-            if isinstance(i, Line) and i.is_switch == 0 and i.is_breaker == 0 and i.is_recloser == 0 and i.is_sectionalizer == 0 and i.is_fuse == 0:
+            if isinstance(i, Line):
 
                 parsed_line = self.parse_line(i)
+                
                 if len(parsed_line)>0:
+
                     if i.nameclass is not None:
-                        if i.nameclass not in self.all_linecodes:
-                            self.all_linecodes[i.nameclass] = parsed_line
+                        if 'nphases' in parsed_line:
+                            n_phases = str(parsed_line['nphases'])
                         else:
-                            if self.all_linecodes[i.nameclass] != parsed_line:
-                                self.all_linecodes[i.nameclass+'_'+str(cnt)] = parsed_line
-                                i.nameclass = i.nameclass+'_'+str(cnt)
-                                cnt += 1
+                            n_phases=''
+                        nameclass_phase = i.nameclass+'_'+n_phases
+                        if nameclass_phase not in self.all_linecodes:
+                            self.all_linecodes[nameclass_phase] = parsed_line
+                            i.nameclass = nameclass_phase
+                        else:
+                            if self.all_linecodes[nameclass_phase] != parsed_line:
+                                found_subnumber = False
+                                for j in range(cnt):
+                                    if nameclass_phase+'_'+str(j) in self.all_linecodes:
+                                        i.nameclass = nameclass_phase+ '_'+str(j)
+                                        found_subnumber = True
+                                        break
+                                if not found_subnumber:
+                                    self.all_linecodes[nameclass_phase+'_'+str(cnt)] = parsed_line
+                                    i.nameclass = nameclass_phase + '_'+str(cnt)
+                                    cnt+=1
+                            else:
+                                 i.nameclass = nameclass_phase
+
+
+
                     else:
                         linecode_found = False
                         for k,v in self.all_linecodes.items():
@@ -1565,8 +2048,27 @@ class Writer(AbstractWriter):
                             cnt += 1
 
         if len(self.all_linecodes)>0:
-            fp = open(os.path.join(self.output_path, self.output_filenames['linecodes']), 'w')
-            self.files_to_redirect.append(self.output_filenames['linecodes'])
+            output_folder = None
+            output_redirect = None
+            if self.separate_substations and substation_name is not None:
+                output_folder = os.path.join(self.output_path,substation_name)
+                output_redirect = substation_name
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+            else:
+                output_folder = os.path.join(self.output_path)
+                output_redirect = ''
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+            if self.separate_feeders and feeder_name is not None:
+                output_folder = os.path.join(output_folder,feeder_name)
+                output_redirect = os.path.join(output_redirect,feeder_name)
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+
+            fp = open(os.path.join(output_folder, self.output_filenames['linecodes']), 'w')
+            self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['linecodes']))
             for linecode_name, linecode_data in self.all_linecodes.items():
                 fp.write('New Linecode.{name}'.format(name=linecode_name))
                 for k,v in linecode_data.items():
@@ -1586,8 +2088,8 @@ class Writer(AbstractWriter):
         :rtype: dict
         '''
         result = {}
-        uni = 'm'
-        result['units'] = 'm' #DiTTO is in meters
+        uni = 'km'
+        result['units'] = 'km' #DiTTO is in meters
 
         #N_phases
         if hasattr(line, 'wires') and line.wires is not None:
@@ -1600,7 +2102,9 @@ class Writer(AbstractWriter):
 
         #If we have the impedance matrix, we need to extract both
         #the resistance and reactance matrices
-        if hasattr(line, 'impedance_matrix') and line.impedance_matrix is not None:
+        R = None
+        X= None
+        if hasattr(line, 'impedance_matrix') and line.impedance_matrix is not None and line.impedance_matrix != []:
             #Use numpy arrays since it is much easier for complex numbers
             try:
                 Z = np.array(line.impedance_matrix)
@@ -1608,7 +2112,16 @@ class Writer(AbstractWriter):
                 X = np.imag(Z) #Reactance  matrix
             except:
                 self.logger.error('Problem with impedance matrix in line {name}'.format(name=line.name))
+        # Provide small impedance matrix for switches and breakers with no impedance matrix
+        elif (hasattr(line,'is_switch') and line.is_switch) or (hasattr(line,'is_breaker') and line.is_breaker) or (hasattr(line,'is_fuse') and line.is_fuse) and 'nphases' in result:
+            X = [[0 for i in range(result['nphases'])] for j in range(result['nphases'])]
+            for i in range(result['nphases']):
+                X[i][i] = 0.00000001
+            R = [[0 for i in range(result['nphases'])] for j in range(result['nphases'])]
+            for i in range(result['nphases']):
+                R[i][i] = 0.00000001
 
+        if R is not None and X is not None:
             result['Rmatrix']='('
             for row in R:
                 for elt in row:
@@ -1661,12 +2174,12 @@ class Writer(AbstractWriter):
         #GMR
         if hasattr(wire, 'gmr') and wire.gmr is not None:
             result['GMRac'] =  wire.gmr
-            result['GMRunits'] = 'm' #Let OpenDSS know we are in meters here
+            result['GMRunits'] = 'km' #Let OpenDSS know we are in meters here
 
         #Diameter
         if hasattr(wire, 'diameter') and wire.diameter is not None:
             result['Diam'] = wire.diameter
-            result['Radunits'] = 'm' #Let OpenDSS know we are in meters here
+            result['Radunits'] = 'km' #Let OpenDSS know we are in meters here
 
         #Ampacity
         if hasattr(wire, 'ampacity') and wire.ampacity is not None:
@@ -1701,7 +2214,7 @@ class Writer(AbstractWriter):
         result['nconds'] =len(wire_list)
         phase_wires = [w for w in wire_list if w.phase in ['A', 'B', 'C']]
         result['nphases'] = len(phase_wires)
-        result['units'] = 'm'
+        result['units'] = 'km'
         result['conductor_list'] = []
         for cond,wire in enumerate(wire_list):
             result['conductor_list'].append({})
@@ -1736,7 +2249,7 @@ class Writer(AbstractWriter):
         with open(os.path.join(self.output_path,self.output_filenames['master']), 'w') as fp:
             fp.write('Clear\n\nNew Circuit.Name ')
             for obj in model.models:
-                if isinstance(obj,PowerSource) and obj.is_sourcebus==1:
+                if isinstance(obj,PowerSource) and obj.is_sourcebus==1: #For RNM datasets only one source exists.
                     if '_src' in obj.name:
                         cleaned_name = obj.name[:-4]
                     else:
@@ -1766,18 +2279,19 @@ class Writer(AbstractWriter):
 
             #Write WireData.dss first if it exists
             if self.output_filenames['wiredata'] in self.files_to_redirect:
-                fp.write('Redirect {f}\n'.format(f=self.output_filenames['wiredata']))
+                fp.write('Redirect {f}\n'.format(f=self.output_filenames['wiredata'])) #Currently wire data is in the base folder
                 self.files_to_redirect.remove(self.output_filenames['wiredata'])
 
             #Write LineGeometry.dss then if it exists
             if self.output_filenames['linegeometry'] in self.files_to_redirect:
-                fp.write('Redirect {f}\n'.format(f=self.output_filenames['linegeometry']))
+                fp.write('Redirect {f}\n'.format(f=self.output_filenames['linegeometry'])) #Currently line geometry is in the base folder
                 self.files_to_redirect.remove(self.output_filenames['linegeometry'])
 
             #Then, redirect the rest (the order should not matter anymore)
+            # Buscoords is not included here, only the combined buscoords file is included in the master file
             for file in self.files_to_redirect:
-                if file != self.output_filenames['buses']:
-                    fp.write('Redirect {file}\n'.format(file=file))
+                if file[-1*len(self.output_filenames['buses']):] != self.output_filenames['buses']:
+                    fp.write('Redirect {file}\n'.format(file=file)) 
 
             _baseKV_list_ = list(self._baseKV_)
             _baseKV_list_ = sorted(_baseKV_list_)
@@ -1785,8 +2299,8 @@ class Writer(AbstractWriter):
 
             fp.write('\nCalcvoltagebases\n\n')
 
-            if self.output_filenames['buses'] in self.files_to_redirect:
-                fp.write('Buscoords {f}\n'.format(f=self.output_filenames['buses']))
+            if self.output_filenames['buses'] in self.files_to_redirect: #Only write combined bus file to masterfile
+                fp.write('Buscoords {f}\n'.format(f=self.output_filenames['buses'])) #The buscoords are also written to base folder as well as the subfolders
 
             fp.write('\nSolve')
 
