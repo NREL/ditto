@@ -173,7 +173,7 @@ class Network:
 
     def remove_open_switches(self, model):
         for m in model.models:
-            if hasattr(m,'is_switch') and m.is_switch is not None and hasattr(m,'from_element') and hasattr(m,'to_element') and m.from_element is not None and m.to_element is not None and len(m.wires)>0:
+            if hasattr(m,'is_switch') and (m.is_switch or m.is_breaker) is not None and hasattr(m,'from_element') and hasattr(m,'to_element') and m.from_element is not None and m.to_element is not None and len(m.wires)>0:
                 is_open = True
                 for w in m.wires:
                     if hasattr(w,'is_open') and w.is_open is not None and not w.is_open:

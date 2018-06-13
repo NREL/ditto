@@ -3498,6 +3498,8 @@ class Reader(AbstractReader):
             "secondarybasevoltage": 18,
             "maxbuck": 29,
             "maxboost": 30,
+            "ct":31,
+            "pt":32,
             "phaseon": 37,
         }
         mapp_transformer = {
@@ -3660,6 +3662,8 @@ class Reader(AbstractReader):
                         "tertiarybasevoltage",
                         "maxbuck",
                         "maxboost",
+                        "ct",
+                        "pt",
                     ],
                     mapp_transformer_settings,
                     {"type": "transformer"},
@@ -4013,11 +4017,17 @@ class Reader(AbstractReader):
                     upperbandwidth = float(transformer_data["upperbandwidth"])
                     minreg_range = int(float(settings["maxbuck"]))
                     maxreg_range = int(float(settings["maxboost"]))
+                    setpoint = float(settings['setpoint'])
+                    ct = int(float(settings['ct']))
+                    pt = int(float(settings['pt']))
                     center_bandwidth = upperbandwidth - lowerbandwidth
 
                     api_regulator.ltc = 1
                     api_regulator.highstep = minreg_range
                     api_regulator.lowstep = maxreg_range
+                    api_regulator.pt_ratio = pt
+                    api_regulator.ct_ratio = ct
+                    api_regulator.setpoint = setpoint
                     api_regulator.center_bandwidth = center_bandwidth
                     api_regulator.bandwidth = (
                         upperbandwidth + lowerbandwidth
