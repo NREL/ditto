@@ -620,8 +620,9 @@ class Reader(AbstractReader):
 
         for name, data in lines.items():
 
-            #Skip Line object if disabled
-            if not data["enabled"]:
+            #Skip Line object if disabled and not a switch
+            #(Otherwise it could mean that the switch is open)
+            if not data["Switch"] and not data["enabled"]:
                 continue
 
             api_line = Line(model)
