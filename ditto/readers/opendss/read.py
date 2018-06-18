@@ -320,6 +320,10 @@ class Reader(AbstractReader):
 
         for source_name, source_data in sources.items():
 
+            #Skip PowerSource object if disabled
+            if not source_data["enabled"]:
+                continue
+
             #Instanciate DiTTo PowerSource object
             try:
                 api_power_source = PowerSource(model)
@@ -599,11 +603,11 @@ class Reader(AbstractReader):
         #In OpenDSS, fuses are attached to line objects
         #Here, we get all the line names which have a fuse
         fuses = dss.utils.class_to_dataframe('Fuse')
-        fuses_names = [d['MonitoredObj'][0].lower().split('.')[1] for name, d in fuses.items()]
+        fuses_names = [d['MonitoredObj'][0].lower().split('.')[1] for name, d in fuses.items() if d['enabled']]
 
         #In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe('recloser')
-        reclosers_names = [d['MonitoredObj'][0].lower().split('.')[1] for name, d in reclosers.items()]
+        reclosers_names = [d['MonitoredObj'][0].lower().split('.')[1] for name, d in reclosers.items() if d['enabled']]
 
         start = time.time()
         lines = dss.utils.class_to_dataframe('Line')
@@ -615,6 +619,10 @@ class Reader(AbstractReader):
         self._lines = []
 
         for name, data in lines.items():
+
+            #Skip Line object if disabled
+            if not data["enabled"]:
+                continue
 
             api_line = Line(model)
             api_line.feeder_name=self.source_name
@@ -1109,6 +1117,10 @@ class Reader(AbstractReader):
 
         for name, data in transformers.items():
 
+            #Skip Transformer object if disabled
+            if not data["enabled"]:
+                continue
+
             api_transformer = PowerTransformer(model)
             api_transformer.feeder_name=self.source_name
 
@@ -1334,6 +1346,10 @@ class Reader(AbstractReader):
 
         for name, data in regulators.items():
 
+            #Skip Regulator object if disabled
+            if not data["enabled"]:
+                continue
+
             api_regulator = Regulator(model)
 
             api_regulator.feeder_name=self.source_name
@@ -1547,6 +1563,10 @@ class Reader(AbstractReader):
 
         for name, data in capacitors.items():
 
+            #Skip Capacitor object if disabled
+            if not data["enabled"]:
+                continue
+
             api_capacitor = Capacitor(model)
 
             api_capacitor.feeder_name=self.source_name
@@ -1736,6 +1756,10 @@ class Reader(AbstractReader):
         self._loads = []
 
         for name, data in loads.items():
+
+            #Skip Load object if disabled
+            if not data["enabled"]:
+                continue
 
             api_load = Load(model)
             api_load.feeder_name=self.source_name
@@ -1943,6 +1967,11 @@ class Reader(AbstractReader):
         storages = dss.utils.class_to_dataframe('storage')
 
         for name, data in storages.items():
+
+            #Skip Storage object if disabled
+            if not data["enabled"]:
+                continue
+
             api_storage=Storage(model)
             api_storage.feeder_name=self.source_name
 
