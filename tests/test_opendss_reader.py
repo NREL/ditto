@@ -57,3 +57,5 @@ def test_disabled_objects():
     assert "regulator_reg3" not in m.model_names
     assert "regulator_reg2" not in m.model_names
     assert "reg2" in m.model_names
+    assert "671692" in m.model_names #Switch 671692 should exists....
+    assert [wire.is_open for wire in m["671692"].wires] == [1,1,1,1] #...but it should be open on all phases
