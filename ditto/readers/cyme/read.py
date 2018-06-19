@@ -1301,8 +1301,14 @@ class Reader(AbstractReader):
         except:
             pass
 
-        # Set the interupting current of the wire if it is a network protectors, a fuse, a sectionalizer, or a recloser
-        if is_network_protector or is_fuse or is_sectionalizer or is_recloser:
+        # Set the interupting current of the wire if it is a network protectors, a fuse, a sectionalizer, a breaker, or a recloser
+        if (
+            is_network_protector
+            or is_fuse
+            or is_sectionalizer
+            or is_breaker
+            or is_recloser
+        ):
             try:
                 api_wire.interrupting_rating = float(
                     conductor_data["interruptingrating"]
@@ -3917,8 +3923,8 @@ class Reader(AbstractReader):
             "secondarybasevoltage": 18,
             "maxbuck": 29,
             "maxboost": 30,
-            "ct":31,
-            "pt":32,
+            "ct": 31,
+            "pt": 32,
             "phaseon": 37,
         }
         mapp_transformer = {
@@ -4436,9 +4442,9 @@ class Reader(AbstractReader):
                     upperbandwidth = float(transformer_data["upperbandwidth"])
                     minreg_range = int(float(settings["maxbuck"]))
                     maxreg_range = int(float(settings["maxboost"]))
-                    setpoint = float(settings['setpoint'])
-                    ct = int(float(settings['ct']))
-                    pt = int(float(settings['pt']))
+                    setpoint = float(settings["setpoint"])
+                    ct = int(float(settings["ct"]))
+                    pt = int(float(settings["pt"]))
                     center_bandwidth = upperbandwidth - lowerbandwidth
 
                     api_regulator.ltc = 1
