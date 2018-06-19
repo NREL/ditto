@@ -25,6 +25,7 @@ from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.network_attributes import NetworkAttributes
 
 from ditto.models.base import Unicode
 
@@ -811,14 +812,12 @@ class Reader(AbstractReader):
         # Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
 
-        # The variable self.network_type is set in the parse_sections() function.
-        # i.e. parse_sections
-        if self.network_type == "substation":
-            logger.info("Parsing the subnetwork connections...")
-            self.parse_subnetwork_connections(model)
-        else:
-            logger.info("Parsing the Headnodes...")
-            self.parse_head_nodes(model)
+        logger.info("Parsing the Headnodes...")
+        self.parse_head_nodes(model)
+
+        logger.info("Parsing the subnetwork connections...")
+        self.parse_subnetwork_connections(model)
+
 
     def parse_header(self):
         """
@@ -889,10 +888,11 @@ class Reader(AbstractReader):
         for key in self.subnetwork_connections:
             model[
                 self.subnetwork_connections[key]["nodeid"]
-            ].is_substation_connection = 1
+            ].is_subnetwork_connection = 1
 
     def parse_head_nodes(self, model):
         """ This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes"""
+        model.set_names()
         # Open the network file
         self.get_file_content("network")
         mapp = {
@@ -906,12 +906,19 @@ class Reader(AbstractReader):
             )
 
         for sid, headnode in headnodes.items():
-            feeder_metadata = Feeder_metadata(model)
-            feeder_metadata.name = headnode["networkid"].strip().lower()
-            feeder_metadata.headnode = headnode["nodeid"].strip().lower()
+            netw = "net_{}".format(headnode["networkid"].strip().lower())
+            if netw not in self.network_names:
+                raise ValueError('Unknown network {net} for headnode {head}.'.format(net=netw, head=sid))
+            if model[netw].headnode is not None:
+                if model[netw].headnode != headnode["nodeid"].strip().lower() and model[netw].headnode != '':
+                    raise ValueError("Network {netID} already has a headnode {head1}. Cannot assign headnode {head2}...".format(netID=netw, 
+                        head1=model[netw].headnode, head2=headnode["nodeid"].strip().lower()))
+            model[netw].headnode = headnode["nodeid"].strip().lower()
+            
 
     def parse_sources(self, model):
         """Parse the sources."""
+        model.set_names()
         # Open the network file
         self.get_file_content("network")
 
@@ -978,7 +985,8 @@ class Reader(AbstractReader):
                 if source_equivalent_data["loadmodelname"].lower() != "default":
                     continue  # Want to only use the default source equivalent configuration
                 for k, v in self.section_phase_mapping.items():
-                    if v["fromnodeid"] == source_equivalent_data["nodeid"]:
+                    #import pdb;pdb.set_trace()
+                    if v["fromnodeid"] == source_equivalent_data["nodeid"].lower():
                         sectionID = k
                         _from = v["fromnodeid"]
                         _to = v["tonodeid"]
@@ -996,6 +1004,27 @@ class Reader(AbstractReader):
                     pass
 
                 api_source.name = _from + "_src"
+
+                subID = None
+                if sid in subs:
+                    subID = subs[sid]["id"]
+
+                #Set the sourceID of the network object
+                if sectionID in self.section_network_mapping:
+                    _netID = self.section_network_mapping[sectionID]
+                    if model[_netID].sourceID is None:
+                        model[_netID].sourceID = api_source.name
+                    else:
+                        if model[_netID].sourceID != api_source.name:
+                            raise ValueError("Network {netID} has already a source {sID1}. Cannot add {sID2}...".format(netID=_netID,
+                                sID1=model[_netID].sourceID, sID2=api_source.name))
+                    if model[_netID].substation_name is None:
+                        model[_netID].substation_name = subID
+                    else:
+                        if model[_netID].substation_name != subID:
+                            raise ValueError("Network {netID} has already a substation name {sID1}. Cannot add {sID2}...".format(netID=_netID,
+                                sID1=model[_netID].substation_name, sID2=subID))
+
 
                 try:
                     api_source.nominal_voltage = (
@@ -1069,6 +1098,26 @@ class Reader(AbstractReader):
                         pass
 
                     api_source.name = _from + "_src"
+
+                    subID = None
+                    if sid in subs:
+                        subID = subs[sid]["id"]
+
+                    #Set the sourceID of the network object
+                    if sectionID in self.section_network_mapping:
+                        _netID = self.section_network_mapping[sectionID]
+                        if model[_netID].sourceID is None:
+                            model[_netID].sourceID = api_source.name
+                        else:
+                            if model[_netID].sourceID != api_source.name:
+                                raise ValueError("Network {netID} has already a source {sID1}. Cannot add {sID2}...".format(netID=_netID,
+                                    sID1=model[_netID].sourceID, sID2=api_source.name))
+                        if model[_netID].substation_name is None:
+                            model[_netID].substation_name = subID
+                        else:
+                            if model[_netID].substation_name != subID:
+                                raise ValueError("Network {netID} has already a substation name {sID1}. Cannot add {sID2}...".format(netID=_netID,
+                                    sID1=model[_netID].substation_name, sID2=subID))
 
                     try:
                         if "desiredvoltage" in sdata:
@@ -1243,6 +1292,13 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            #Set the network name
+            if ID.lower() in self.node_section_mapping:
+                _sectionID = self.node_section_mapping[ID.lower()]
+                if _sectionID in self.section_network_mapping:
+                    api_node.network_name = self.section_network_mapping[_sectionID]
+
+
             # Add the node to the list
             self._nodes.append(api_node)
 
@@ -1359,6 +1415,96 @@ class Reader(AbstractReader):
 
         return api_wire
 
+    def get_format(self, line):
+        """
+        Returns the format encoded in the line.
+        """
+        return list(map(lambda x: x.strip(), map(lambda x: x.lower(), line.split("=")[1].split(","))))
+
+    def parse_network_data(self, line, _format):
+        """Parse network data."""
+        # We should have a format, otherwise, raise an error...
+        if _format is None:
+            raise ValueError("No format for parsing line {}".format(line))
+
+        # Get the network data (everything after the '=' symbol)
+        network_data = line.split("=")[1].split(",")
+
+        # Check that the data obtained have the same length as the format provided
+        # otherwise, raise an error...
+        if len(network_data) != len(_format):
+            raise ValueError(
+                "Network data length {a} does not match format length {b}.".format(
+                    a=len(network_data), b=len(_format)
+                )
+            )
+
+        # Check that we have a networkid in the format
+        # otherwise, raise an error...
+        if "networkid" not in _format:
+            raise ValueError(
+                "Cannot find the networkid in format: "
+                + str(_format)
+            )
+
+        # Check that we have a sectionid in the format
+        # otherwise, raise an error...
+        #if "sectionid" not in _format:
+        #    raise ValueError(
+        #        "Cannot find the sectionid in format: "
+        #        + str(_format)
+        #   )
+
+        # We should be able to get the networkid from the network data.
+        _netID = network_data[_format.index("networkid")].lower()
+
+        #And the headnodeID
+        _headnode = network_data[_format.index("headnodeid")].lower()
+
+        return "net_{}".format(_netID), _headnode #net_ prefix is added in order to avoid name conflicts. Sometimes the name of the network is the same as a node...
+
+    def parse_section_data(self, line, _format):
+        """Parse the section data."""
+        # We should have a format for sections,
+        # otherwise, raise an error...
+        if _format is None:
+            raise ValueError("No format for sections.")
+
+        # Extract the data for this section
+        section_data = list(map(lambda x: x.strip(), line.split(",")))
+
+        # Check length coherence...
+        if len(section_data) != len(_format):
+            raise ValueError(
+                "Section data length {a} does not match section format length {b}.".format(
+                    a=len(section_data), b=len(_format)
+                )
+            )
+
+        # Grab the sectionid
+        _sectionID = section_data[
+            _format.index("sectionid")
+        ].lower()
+
+        #Grab the phase
+        _phase = section_data[
+            _format.index("phase")
+        ].lower()
+
+        #Grab the from node
+        _from = section_data[
+            _format.index("fromnodeid")
+        ].lower()
+
+        #Grab the to node
+        _to = section_data[
+            _format.index("tonodeid")
+        ].lower()
+
+        return _sectionID, _phase, _from, _to
+
+
+
     def parse_sections(self, model):
         """
         This function is responsible for parsing the sections. It is expecting the following structure:
@@ -1391,14 +1537,15 @@ class Reader(AbstractReader):
 
         .. warning:: This should be called prior to any other parser because the other parsers rely on these 3 data structures.
         """
-        self.feeder_section_mapping = {}
-        self.section_feeder_mapping = {}
+        self.section_network_mapping = {}
         self.section_phase_mapping = {}
-
-        self.network_data = {}
-
+        self.node_section_mapping = {}
+        self.network_names = []
+       
         format_section = None
         format_feeder = None
+        format_substation = None
+        format_secondarynetwork = None
         _netID = None
 
         job_is_done = False
@@ -1429,81 +1576,47 @@ class Reader(AbstractReader):
 
                     # First, we grab the format used to define sections
                     if "format_section" in line.lower():
-                        format_section = list(
-                            map(
-                                lambda x: x.strip(),
-                                map(lambda x: x.lower(), line.split("=")[1].split(",")),
-                            )
-                        )
+                        format_section = self.get_format(line)
 
                     # Then, we grab the format used to define feeders
-                    elif (
-                        "format_feeder" in line.lower()
-                        or "format_substation" in line.lower()
-                    ):
-                        format_feeder = list(
-                            map(
-                                lambda x: x.strip(),
-                                map(lambda x: x.lower(), line.split("=")[1].split(",")),
-                            )
-                        )
+                    elif "format_feeder" in line.lower():
+                        format_feeder = self.get_format(line)
+
+                    elif "format_substation" in line.lower():
+                        format_substation = self.get_format(line)
+
+                    elif "format_secondarynetwork" in line.lower():
+                        format_secondarynetwork = self.get_format(line)
 
                     # If we have a new feeder declaration
-                    elif len(line) >= 7 and (
-                        line[:7].lower() == "feeder="
-                        or line[:11].lower() == "substation="
-                    ):
-                        if line[:7].lower() == "feeder=":
-                            self.network_type = "feeder"
-                        if line[:11].lower() == "substation=":
-                            self.network_type = "substation"
+                    elif len(line) >= 7 and line[:7].lower() == "feeder=":
+                        _netID, _headnode = self.parse_network_data(line, format_feeder)
+                        # Create a subnetwork object
+                        api_subnet = NetworkAttributes(model)
+                        api_subnet.name = _netID
+                        api_subnet.network_type = 'feeder'
+                        api_subnet.headnode = _headnode
+                        self.network_names.append(_netID)
 
-                        # We should have a format for sections and feeders,
-                        # otherwise, raise an error...
-                        if format_section is None:
-                            raise ValueError("No format for sections.")
+                    # If we have a new substation declaration
+                    elif len(line) >= 11 and line[:11].lower() == "substation=":
+                        _netID, _headnode = self.parse_network_data(line, format_substation)
+                        # Create a subnetwork object
+                        api_subnet = NetworkAttributes(model)
+                        api_subnet.name = _netID
+                        api_subnet.network_type = 'substation'
+                        api_subnet.headnode = _headnode
+                        self.network_names.append(_netID)
 
-                        if format_feeder is None:
-                            raise ValueError("No format for feeders.")
-
-                        # Get the feeder data (everything after the '=' symbol)
-                        feeder_data = line.split("=")[1].split(",")
-
-                        # Check that the data obtained have the same length as the format provided
-                        # otherwise, raise an error...
-                        if len(feeder_data) != len(format_feeder):
-                            raise ValueError(
-                                "Feeder/substation data length {a} does not match feeder format length {b}.".format(
-                                    a=len(feeder_data), b=len(format_feeder)
-                                )
-                            )
-
-                        # Check that we have a networkid in the format
-                        # otherwise, raise an error...
-                        if "networkid" not in format_feeder:
-                            raise ValueError(
-                                "Cannot find the networkid in format: "
-                                + str(format_feeder)
-                            )
-
-                        # Check that we have a sectionid in the format
-                        # otherwise, raise an error...
-                        if "sectionid" not in format_section:
-                            raise ValueError(
-                                "Cannot find the sectionid in format: "
-                                + str(format_section)
-                            )
-
-                        # We should be able to get the networkid from the feeder data.
-                        _netID = feeder_data[format_feeder.index("networkid")].lower()
-
-                        # First, we store all the feeder data in the network_data structure
-                        self.network_data[_netID] = {}
-                        for key, value in zip(format_feeder, feeder_data):
-                            self.network_data[_netID][key] = value
-
-                        # Then, we create a new entry in feeder_section_mapping
-                        self.feeder_section_mapping[_netID] = []
+                    # If we have a new secondary network declaration
+                    elif len(line) >= 17 and line[:17].lower() == "secondarynetwork=":
+                        _netID, _headnode = self.parse_network_data(line, format_secondarynetwork)
+                        # Create a subnetwork object
+                        api_subnet = NetworkAttributes(model)
+                        api_subnet.name = _netID
+                        api_subnet.network_type = 'secondarynetwork'
+                        api_subnet.headnode = _headnode
+                        self.network_names.append(_netID)
 
                     # Otherwise, we should have a new section...
                     else:
@@ -1515,31 +1628,19 @@ class Reader(AbstractReader):
                             raise ValueError(
                                 "No network ID available when reading line \n" + line
                             )
+
                         # Extract the data for this section
-                        section_data = list(map(lambda x: x.strip(), line.split(",")))
-
-                        # Check length coherence...
-                        if len(section_data) != len(format_section):
-                            raise ValueError(
-                                "Section data length {a} does not match section format length {b}.".format(
-                                    a=len(section_data), b=len(format_section)
-                                )
-                            )
-
-                        # Grab the sectionid
-                        _sectionID = section_data[
-                            format_section.index("sectionid")
-                        ].lower()
+                        _sectionID, _phase, _from, _to = self.parse_section_data(line, format_section)
 
                         # Create a new entry in section_phase_mapping
-                        self.section_phase_mapping[_sectionID] = {}
-
-                        # Populate this new entry
-                        for key, value in zip(format_section, section_data):
-                            self.section_phase_mapping[_sectionID][key] = value
+                        self.section_phase_mapping[_sectionID] = {'phase': _phase,
+                                                                  'fromnodeid': _from,
+                                                                  'tonodeid': _to}
+                        self.node_section_mapping[_from] = _sectionID
+                        self.node_section_mapping[_to] = _sectionID
 
                         # And finally, add a new entry to section_feeder_mapping
-                        self.section_feeder_mapping[_sectionID] = _netID
+                        self.section_network_mapping[_sectionID] = _netID
 
                     # Finally, move on to next line
                     line = next(self.content)
@@ -2243,7 +2344,7 @@ class Reader(AbstractReader):
             except:
                 pass
 
-            new_line["feeder_name"] = self.section_feeder_mapping[sectionID]
+            new_line["network_name"] = self.section_network_mapping[sectionID]
 
             # Set the position
             try:
@@ -3704,7 +3805,7 @@ class Reader(AbstractReader):
             except:
                 pass
 
-            api_capacitor.feeder_name = self.section_feeder_mapping[sectionID]
+            api_capacitor.network_name = self.section_network_mapping[sectionID]
 
             # Connection_type
             # (Only works with shunt capacitors)
@@ -4272,7 +4373,7 @@ class Reader(AbstractReader):
             except:
                 pass
 
-            api_transformer.feeder_name = self.section_feeder_mapping[sectionID]
+            api_transformer.network_name = self.section_network_mapping[sectionID]
 
             try:
                 phases = self.section_phase_mapping[sectionID]["phase"]
@@ -4442,7 +4543,7 @@ class Reader(AbstractReader):
                         api_regulator.name = "Reg_" + settings["sectionid"]
                     except:
                         pass
-                    api_regulator.feeder_name = self.section_feeder_mapping[sectionID]
+                    api_regulator.network_name = self.section_network_mapping[sectionID]
 
                     try:
                         api_regulator.connected_transformer = api_transformer.name
@@ -4793,7 +4894,7 @@ class Reader(AbstractReader):
                 except:
                     pass
 
-                api_regulator.feeder_name = self.section_feeder_mapping[sectionID]
+                api_regulator.network_name = self.section_network_mapping[sectionID]
 
                 try:
                     api_regulator.from_element = self.section_phase_mapping[sectionID][
@@ -5209,7 +5310,7 @@ class Reader(AbstractReader):
                     except:
                         pass
 
-                    api_load.feeder_name = self.section_feeder_mapping[sectionID]
+                    api_load.network_name = self.section_network_mapping[sectionID]
 
                     api_load.num_users = float(settings["numberofcustomer"])
 
