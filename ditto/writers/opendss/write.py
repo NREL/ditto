@@ -298,56 +298,45 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        feeder_text_map = {}
-        substation_text_map = {}
+        model.set_names()
+        feeder_text_map= {}
+        substation_text_map= {}
         self.all_buses = []
         # Loop over the DiTTo objects
         for i in model.models:
             # If we find a node
             if isinstance(i, Node):
 
-                # Extract the name and the coordinates
-                if (hasattr(i, "name") and i.name is not None) and (
-                    hasattr(i, "positions")
-                    and i.positions is not None
-                    and len(i.positions) > 0
-                ):
-                    if (
-                        self.separate_feeders
-                        and hasattr(i, "feeder_name")
-                        and i.feeder_name is not None
-                    ):
-                        feeder_name = i.feeder_name
+                #Extract the name and the coordinates
+                if ((hasattr(i, 'name') and i.name is not None) and (hasattr(i, 'positions') and i.positions is not None and len(i.positions) > 0)):
+                    if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                        net = model[i.network_name]
+                        network_name = net.name    
                     else:
-                        feeder_name = "DEFAULT"
-                    if (
-                        self.separate_substations
-                        and hasattr(i, "substation_name")
-                        and i.substation_name is not None
-                    ):
-                        substation_name = i.substation_name
+                        network_name = 'DEFAULT'
+                    if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                        net = model[i.network_name]
+                        substation_name = net.substation_name     
                     else:
                         substation_name = "DEFAULT"
 
                     if not substation_name in substation_text_map:
-                        substation_text_map[substation_name] = set([feeder_name])
+                        substation_text_map[substation_name] = set([network_name])
                     else:
-                        substation_text_map[substation_name].add(feeder_name)
-                    txt = ""
-                    if substation_name + "_" + feeder_name in feeder_text_map:
-                        txt = feeder_text_map[substation_name + "_" + feeder_name]
-
-                    txt += "{name} {X} {Y}\n".format(
-                        name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long
-                    )
-                    feeder_text_map[substation_name + "_" + feeder_name] = txt
+                        substation_text_map[substation_name].add(network_name)
+                    txt = ''
+                    if substation_name+'_'+network_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name+'_'+network_name]
+                    
+                    txt += '{name} {X} {Y}\n'.format(name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long)
+                    feeder_text_map[substation_name+'_'+network_name] = txt
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -362,8 +351,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -403,32 +392,27 @@ class Writer(AbstractWriter):
         for i in model.models:
             # If we get a transformer object...
             if isinstance(i, PowerTransformer):
-                # Write the data in the file
-                # Name
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                #Write the data in the file
+                #Name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name     
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name     
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
+                    
 
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Transformer." + i.name
@@ -813,15 +797,15 @@ class Writer(AbstractWriter):
                                 default_x[2],
                             )
 
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += '\n\n'
+                feeder_text_map[substation_name+'_'+network_name] = txt
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -836,8 +820,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -863,87 +847,75 @@ class Writer(AbstractWriter):
 
         .. todo:: Develop the docstring a little bit more...
         """
-
+        model.set_names()
         substation_text_map = {}
         feeder_text_map = {}
         for i in model.models:
             if isinstance(i, Storage):
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name     
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name     
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
+                    
 
-                # Name
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Storage.{name}".format(name=i.name)
+                #Name
+                if hasattr(i, 'name') and i.name is not None:
+                    txt += 'New Storage.{name}'.format(name=i.name)
 
-                # Phases
-                if hasattr(i, "phase_storages") and i.phase_storages is not None:
-                    txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
+                #Phases
+                if hasattr(i, 'phase_storages') and i.phase_storages is not None:
+                    txt += ' phases={N_phases}'.format(N_phases=len(i.phase_storages))
 
-                    # kW (Need to sum over the phase_storage elements)
-                    if sum([1 for phs in i.phase_storages if phs.p is None]) == 0:
-                        p_tot = sum([phs.p for phs in i.phase_storages])
-                        txt += " kW={kW}".format(kW=p_tot * 10 ** -3)  # DiTTo in watts
+                    #kW (Need to sum over the phase_storage elements)
+                    if sum([1 for phs in i.phase_storages if phs.p is None])==0:
+                        p_tot=sum([phs.p for phs in i.phase_storages])
+                        txt += ' kW={kW}'.format(kW=p_tot*10**-3) #DiTTo in watts
 
-                        # Power factor
-                        if sum([1 for phs in i.phase_storages if phs.q is None]) == 0:
-                            q_tot = sum([phs.q for phs in i.phase_storages])
-                            if q_tot != 0 and p_tot != 0:
-                                pf = float(p_tot) / math.sqrt(p_tot ** 2 + q_tot ** 2)
-                                txt += " pf={pf}".format(pf=pf)
+                        #Power factor
+                        if sum([1 for phs in i.phase_storages if phs.q is None])==0:
+                            q_tot=sum([phs.q for phs in i.phase_storages])
+                            if q_tot !=0 and p_tot!=0:
+                                pf=float(p_tot)/math.sqrt(p_tot**2+q_tot**2)
+                                txt += ' pf={pf}'.format(pf=pf)
 
-                # connecting_element
-                if (
-                    hasattr(i, "connecting_element")
-                    and i.connecting_element is not None
-                ):
-                    txt += " Bus1={elt}".format(elt=i.connecting_element)
+                #connecting_element
+                if hasattr(i, 'connecting_element') and i.connecting_element is not None:
+                    txt += ' Bus1={elt}'.format(elt=i.connecting_element)
 
-                # nominal_voltage
-                if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    txt += " kV={volt}".format(
-                        volt=i.nominal_voltage * 10 ** -3
-                    )  # DiTTo in volts
-                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                #nominal_voltage
+                if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
+                    txt += ' kV={volt}'.format(volt=i.nominal_voltage*10**-3) #DiTTo in volts
+                    self._baseKV_.add(i.nominal_voltage*10**-3)
 
-                # rated_power
-                if hasattr(i, "rated_power") and i.rated_power is not None:
-                    txt += " kWRated={kW}".format(
-                        kW=i.rated_power * 10 ** -3
-                    )  # DiTTo in watts
+                #rated_power
+                if hasattr(i, 'rated_power') and i.rated_power is not None:
+                    txt += ' kWRated={kW}'.format(kW=i.rated_power*10**-3) #DiTTo in watts
 
-                # rated_kWh
-                if hasattr(i, "rated_kWh") and i.rated_kWh is not None:
-                    txt += " kWhRated={kWh}".format(kWh=i.rated_kWh)
+                #rated_kWh
+                if hasattr(i, 'rated_kWh') and i.rated_kWh is not None:
+                    txt += ' kWhRated={kWh}'.format(kWh=i.rated_kWh)
 
-                # stored_kWh
-                if hasattr(i, "stored_kWh") and i.stored_kWh is not None:
-                    txt += " kWhStored={stored}".format(stored=i.stored_kWh)
+                #stored_kWh
+                if hasattr(i, 'stored_kWh') and i.stored_kWh is not None:
+                    txt += ' kWhStored={stored}'.format(stored=i.stored_kWh)
 
-                # state
-                if hasattr(i, "state") and i.state is not None:
-                    txt += " State={state}".format(state=i.state)
+                #state
+                if hasattr(i, 'state') and i.state is not None:
+                    txt += ' State={state}'.format(state=i.state)
                 else:
                     txt += " State=IDLING"  # Default value in OpenDSS
 
@@ -995,15 +967,15 @@ class Writer(AbstractWriter):
                 #
                 # TODO: See with Tarek and Elaine how we can support that
 
-                txt += "\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += '\n'
+                feeder_text_map[substation_name+'_'+network_name] = txt
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -1018,8 +990,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -1035,70 +1007,57 @@ class Writer(AbstractWriter):
 
     def write_PVs(self, model):
         """Write the PVs."""
-        feeder_text_map = {}
-        substation_text_map = {}
+        model.set_names()
+        feeder_text_map= {}
+        substation_text_map= {}
         for i in model.models:
             if isinstance(i, PowerSource):
-                # If is_sourcebus is set to 1, then the object represents a source and not a PV system
-                if hasattr(i, "is_sourcebus") and i.is_sourcebus == 0:
-                    if (
-                        self.separate_feeders
-                        and hasattr(i, "feeder_name")
-                        and i.feeder_name is not None
-                    ):
-                        feeder_name = i.feeder_name
+                #If is_sourcebus is set to 1, then the object represents a source and not a PV system
+                if hasattr(i, 'is_sourcebus') and i.is_sourcebus==0:
+                    if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                        net = model[i.network_name]
+                        network_name = net.name     
                     else:
-                        feeder_name = "DEFAULT"
-                    if (
-                        self.separate_substations
-                        and hasattr(i, "substation_name")
-                        and i.substation_name is not None
-                    ):
-                        substation_name = i.substation_name
+                        network_name = 'DEFAULT'
+                    if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                        net = model[i.network_name]
+                        substation_name = net.substation_name
                     else:
                         substation_name = "DEFAULT"
 
                     if not substation_name in substation_text_map:
-                        substation_text_map[substation_name] = set([feeder_name])
+                        substation_text_map[substation_name] = set([network_name])
                     else:
-                        substation_text_map[substation_name].add(feeder_name)
-                    txt = ""
-                    if substation_name + "_" + feeder_name in feeder_text_map:
-                        txt = feeder_text_map[substation_name + "_" + feeder_name]
+                        substation_text_map[substation_name].add(network_name)
+                    txt = ''
+                    if substation_name+'_'+network_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name+'_'+network_name]
+                    
 
-                    # Name
-                    if hasattr(i, "name") and i.name is not None:
-                        txt += "New PVSystem.{name}".format(name=i.name)
+                    #Name
+                    if hasattr(i, 'name') and i.name is not None:
+                        txt += 'New PVSystem.{name}'.format(name=i.name)
 
-                    # Phases
-                    if hasattr(i, "phases") and i.phases is not None:
-                        txt += " phases={n_phases}".format(n_phases=len(i.phases))
+                    #Phases
+                    if hasattr(i, 'phases') and i.phases is not None:
+                        txt += ' phases={n_phases}'.format(n_phases=len(i.phases))
 
-                    # connecting element
-                    if (
-                        hasattr(i, "connecting_element")
-                        and i.connecting_element is not None
-                    ):
-                        txt += " bus1={connecting_elt}".format(
-                            connecting_elt=i.connecting_element
-                        )
+                    #connecting element
+                    if hasattr(i, 'connecting_element') and i.connecting_element is not None:
+                        txt += ' bus1={connecting_elt}'.format(connecting_elt=i.connecting_element)
 
-                    # nominal voltage
-                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                        txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10 ** -3
-                        )  # DiTTo in volts
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                    #nominal voltage
+                    if hasattr(i, 'nominal_voltage') and i.nominal_voltage is not None:
+                        txt += ' kV={kV}'.format(kV=i.nominal_voltage*10**-3) #DiTTo in volts
+                        self._baseKV_.add(i.nominal_voltage*10**-3)
 
-                    # rated power
-                    if hasattr(i, "rated_power") and i.rated_power is not None:
-                        txt += " kVA={kVA}".format(
-                            kVA=i.rated_power * 10 ** -3
-                        )  # DiTTo in vars
+                    #rated power
+                    if hasattr(i, 'rated_power') and i.rated_power is not None:
+                        txt += ' kVA={kVA}'.format(kVA=i.rated_power*10**-3) #DiTTo in vars
 
-                    # connection type
-                    if hasattr(i, "connection_type") and i.connection_type is not None:
-                        mapps = {"D": "delta", "Y": "wye"}
+                    #connection type
+                    if hasattr(i, 'connection_type') and i.connection_type is not None:
+                        mapps={'D':'delta', 'Y':'wye'}
                         if i.connection_type in mapps:
                             txt += " conn={conn}".format(conn=mapps[i.connection_type])
                         else:
@@ -1136,15 +1095,15 @@ class Writer(AbstractWriter):
                     if hasattr(i, "power_factor") and i.power_factor is not None:
                         txt += " pf={power_factor}".format(power_factor=i.power_factor)
 
-                    txt += "\n"
-                    feeder_text_map[substation_name + "_" + feeder_name] = txt
+                    txt += '\n'
+                    feeder_text_map[substation_name+'_'+network_name] = txt
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -1159,8 +1118,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -1181,46 +1140,33 @@ class Writer(AbstractWriter):
         Currently all loadshapes are assumed to be yearly
         TODO: Add daily profiles as well
         """
-
+        model.set_names()
         substation_text_map = {}
         feeder_text_map = {}
         all_data = set()
         for i in model.models:
             if isinstance(i, Timeseries):
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name    
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name     
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
 
-                if (
-                    hasattr(i, "data_location")
-                    and i.data_location is not None
-                    and os.path.isfile(i.data_location)
-                    and (i.scale_factor is None or i.scale_factor == 1)
-                ):
-                    filename = i.data_location.split("/")[-1][
-                        :-4
-                    ]  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
+                if hasattr(i, 'data_location') and i.data_location is not None and os.path.isfile(i.data_location) and (i.scale_factor is None or i.scale_factor == 1):
+                    filename = i.data_location.split('/')[-1][:-4] # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
                     if i.data_location in self.timeseries_datasets:
                         continue
                     npoints = len(pd.read_csv(i.data_location))
@@ -1270,7 +1216,7 @@ class Writer(AbstractWriter):
                         data_location=scaled_data_location,
                     )
                     self.timeseries_datasets[i.data_location] = filename
-                    feeder_text_map[substation_name + "_" + feeder_name] = txt
+                    feeder_text_map[substation_name+'_'+network_name] = txt
 
                 # elif: In memory
                 #     pass
@@ -1280,11 +1226,11 @@ class Writer(AbstractWriter):
                     # pass #TODO: write the timeseries data if it's in memory
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -1299,8 +1245,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -1324,39 +1270,34 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-
+        model.set_names()
         substation_text_map = {}
         feeder_text_map = {}
         for i in model.models:
             if isinstance(i, Load):
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name     
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name     
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
+                    
 
-                # Name
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Load." + i.name
+                #Name
+                if hasattr(i, 'name') and i.name is not None:
+                    txt += 'New Load.' + i.name
                 else:
                     continue
 
@@ -1511,14 +1452,14 @@ class Writer(AbstractWriter):
                             pass
                             # TODO: manage the data correctly when it is only in memory
 
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += '\n\n'
+                feeder_text_map[substation_name+'_'+network_name] = txt
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -1533,8 +1474,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -1555,7 +1496,7 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-
+        model.set_names()
         substation_text_map = {}
         feeder_text_map = {}
         # It might be the case that we have to create new transformers from the regulators.
@@ -1565,31 +1506,25 @@ class Writer(AbstractWriter):
 
         for i in model.models:
             if isinstance(i, Regulator):
-
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name   
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name    
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
+                    
 
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New RegControl.{name}".format(name=i.name)
@@ -1844,15 +1779,16 @@ class Writer(AbstractWriter):
                                 r=list(self.compensator[i.name]["R"])[0]
                             )
 
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += '\n\n'
+                feeder_text_map[substation_name+'_'+network_name] = txt
+
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -1867,8 +1803,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -1905,37 +1841,30 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-
+        model.set_names()
         substation_text_map = {}
         feeder_text_map = {}
         for i in model.models:
 
             if isinstance(i, Capacitor):
-
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name     
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name    
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -2067,14 +1996,14 @@ class Writer(AbstractWriter):
                     if hasattr(i, "pt_phase") and i.pt_phase is not None:
                         txt += " PTPhase={PT}".format(PT=self.phase_mapping(i.pt_phase))
 
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += '\n\n'
+                feeder_text_map[substation_name+'_'+network_name] = txt
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -2089,8 +2018,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -2116,7 +2045,7 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-
+        model.set_names()
         substation_text_map = {}
         feeder_text_map = {}
         # First, we have to decide if we want to output using LineGeometries and WireData or using LineCodes
@@ -2155,30 +2084,25 @@ class Writer(AbstractWriter):
 
         for i in model.models:
             if isinstance(i, Line):
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+                if self.separate_feeders and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    network_name = net.name     
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    network_name = 'DEFAULT'
+                if self.separate_substations and hasattr(i,'network_name') and i.network_name is not None:
+                    net = model[i.network_name]
+                    substation_name = net.substation_name    
                 else:
                     substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
+                    substation_text_map[substation_name] = set([network_name])
                 else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_text_map[substation_name].add(network_name)
+                txt = ''
+                if substation_name+'_'+network_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name+'_'+network_name]
+                    
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -2270,14 +2194,14 @@ class Writer(AbstractWriter):
                     txt += fuse_line
                     txt += "\n\n"
 
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                feeder_text_map[substation_name+'_'+network_name] = txt
 
         for substation_name in substation_text_map:
-            for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
-                if txt != "":
+            for network_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name+'_'+network_name]
+                network_name = network_name.replace('>','-')
+                substation_name = substation_name.replace('>','-')
+                if txt != '':
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -2292,8 +2216,8 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if self.separate_feeders:
-                        output_folder = os.path.join(output_folder, feeder_name)
-                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        output_folder = os.path.join(output_folder,network_name)
+                        output_redirect = os.path.join(output_redirect,network_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
                     with open(
@@ -2306,7 +2230,7 @@ class Writer(AbstractWriter):
 
         return 1
 
-    def write_wiredata(self, list_of_lines, feeder_name=None, substation_name=None):
+    def write_wiredata(self, list_of_lines, network_name=None, substation_name=None):
         """
         Write the wires to an OpenDSS file (WireData.dss by default).
 
@@ -2365,9 +2289,9 @@ class Writer(AbstractWriter):
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
-            if self.separate_feeders and feeder_name is not None:
-                output_folder = os.path.join(output_folder, feeder_name)
-                output_redirect = os.path.join(output_redirect, feeder_name)
+            if self.separate_feeders and network_name is not None:
+                output_folder = os.path.join(output_folder,network_name)
+                output_redirect = os.path.join(output_redirect,network_name)
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
@@ -2385,7 +2309,7 @@ class Writer(AbstractWriter):
 
         return 1
 
-    def write_linegeometry(self, list_of_lines, feeder_name=None, substation_name=None):
+    def write_linegeometry(self, list_of_lines, network_name=None, substation_name=None):
         """
         Write the Line geometries to an OpenDSS file (LineGeometry.dss by default).
 
@@ -2438,9 +2362,9 @@ class Writer(AbstractWriter):
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
-            if self.separate_feeders and feeder_name is not None:
-                output_folder = os.path.join(output_folder, feeder_name)
-                output_redirect = os.path.join(output_redirect, feeder_name)
+            if self.separate_feeders and network_name is not None:
+                output_folder = os.path.join(output_folder,network_name)
+                output_redirect = os.path.join(output_redirect,network_name)
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
@@ -2469,7 +2393,7 @@ class Writer(AbstractWriter):
 
         return 1
 
-    def write_linecodes(self, list_of_lines, feeder_name=None, substation_name=None):
+    def write_linecodes(self, list_of_lines, network_name=None, substation_name=None):
         """Write the linecodes to an OpenDSS file (Linecodes.dss by default).
 
         :param model: DiTTo model
@@ -2560,9 +2484,9 @@ class Writer(AbstractWriter):
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
-            if self.separate_feeders and feeder_name is not None:
-                output_folder = os.path.join(output_folder, feeder_name)
-                output_redirect = os.path.join(output_redirect, feeder_name)
+            if self.separate_feeders and network_name is not None:
+                output_folder = os.path.join(output_folder,network_name)
+                output_redirect = os.path.join(output_redirect,network_name)
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
