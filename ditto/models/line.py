@@ -84,16 +84,8 @@ class Line(DiTToHasTraits):
         help="""This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
 
-    # Modification: Nicolas (December 2017)
-    # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
-    # I think we need both since a substation might have multiple feeders attached to it.
-    # These attributes are filled once the DiTTo model has been created using the Network module
-    substation_name = Unicode(
-        help="""The name of the substation to which the object is connected.""",
-        default_value=None,
-    )
-    feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default_value=None
+    network_name = Unicode(
+        help="""The name of the network the object is part of.""", default_value=None
     )
 
     # Modification: Nicolas (December 2017)
@@ -117,12 +109,6 @@ class Line(DiTToHasTraits):
 
     # Modification: Nicolas (March 2018)
     nameclass = Unicode(help="""Nameclass of the line object.""", default_value=None)
-
-    # Modification: Nicolas (May 2018)
-    is_substation = Int(
-        help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
-    )
 
     # Modification: Nicolas (June 2018)
     is_network_protector = Int(

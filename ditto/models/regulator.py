@@ -96,28 +96,14 @@ class Regulator(DiTToHasTraits):
         default_value=None,
     )
 
-    # Modification: Nicolas (December 2017)
-    # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
-    # I think we need both since a substation might have multiple feeders attached to it.
-    # These attributes are filled once the DiTTo model has been created using the Network module
-    substation_name = Unicode(
-        help="""The name of the substation to which the object is connected.""",
-        default=None,
-    )
-    feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
+    network_name = Unicode(
+        help="""The name of the network the object is part of.""", default=None
     )
 
     # Modification: Tarek (April 2018)
     setpoint = Float(
         help="""The percentage p.u. voltage setpoint of the regulator""",
         default_value=None,
-    )
-
-    # Modification: Nicolas (May 2018)
-    is_substation = Int(
-        help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
     )
 
     def build(self, model):

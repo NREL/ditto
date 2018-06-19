@@ -29,29 +29,13 @@ class Node(DiTToHasTraits):
         The positions are objects containing elements of long, lat and elevation.""",
     )
 
-    # Modification: Nicolas (December 2017)
-    # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
-    # I think we need both since a substation might have multiple feeders attached to it.
-    # These attributes are filled once the DiTTo model has been created using the Network module
-    substation_name = Unicode(
-        help="""The name of the substation to which the object is connected.""",
-        default=None,
-    )
-    feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
+    network_name = Unicode(
+        help="""The name of the network the object is part of.""", default=None
     )
 
-    # Modification: Tarek (April 2018)
-    # Support for substation connection points. These identify if the node connects the substation to a feeder or high voltage source
-    is_substation_connection = Int(
-        help="""1 if the node connects from inside a substation to outside, 0 otherwise.""",
+    is_subnetwork_connection = Int(
+        help="""1 if the node connects from inside a subnetwork to outside, 0 otherwise.""",
         default=None,
-    )
-
-    # Modification: Nicolas (May 2018)
-    is_substation = Int(
-        help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
     )
 
     def build(self, model, Asset=None, ConnectivityNode=None, Location=None):

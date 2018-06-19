@@ -11,10 +11,6 @@ class PowerTransformer(DiTToHasTraits):
 
     name = Unicode(help="""Name of the transformer object""", default_value="")
 
-    # Modification: Nicolas (August 2017)
-    # Moved the rated_power from the transformer down to the windings
-    # rated_power = Float(help='''The rated power of the entire transformer''', default_value=None)
-
     install_type = Unicode(
         help="""The mounting type of the transformer: one of {POLETOP, PADMOUNT, VAULT}""",
         default_value=None,
@@ -64,20 +60,12 @@ class PowerTransformer(DiTToHasTraits):
 
     # Modification: Nicolas (December 2017)
     is_substation = Int(
-        help="""Set to 1 if the transformer is a substation or is inside a substation""",
+        help="""Set to 1 if the transformer is a substation.""",
         default=0,
     )
 
-    # Modification: Nicolas (December 2017)
-    # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
-    # I think we need both since a substation might have multiple feeders attached to it.
-    # These attributes are filled once the DiTTo model has been created using the Network module
-    substation_name = Unicode(
-        help="""The name of the substation to which the object is connected.""",
-        default=None,
-    )
-    feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
+    network_name = Unicode(
+        help="""The name of the network the object is part of.""", default=None
     )
 
     def build(self, model):
