@@ -100,6 +100,7 @@ setup(
         "pandas",
         "pytest",
         "six",
+        "traitlets",
         "xlrd",
         "OpenDSSDirect.py",
         "XlsxWriter",
