@@ -106,6 +106,7 @@ setup(
         "XlsxWriter",
         "json_tricks",
         "scipy",
+        "numpy>=1.13.0",
     ],
     extras_require={
         "test": test_requires,
