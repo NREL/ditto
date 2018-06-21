@@ -132,16 +132,17 @@ Not implemented yet.
 
 ##### Step 1: Read the model into DiTTo
 
-We assume that we have a model in OpenDSS representing a single feeder, and that we want to compute all the available metrics on it. The first step is to read in the model (more information on reading capabilities in ```cli-examples.md```)
+We assume that we have a model in OpenDSS representing a single feeder, and that we want to compute all the available metrics on it. The first step is to read in the model (more information on reading capabilities in `cli-examples.md`)
 
 ```python
-from ditto.model.store import Store 
+
+from ditto.model.store import Store
 from ditto.readers.opendss.read import Reader
 
 model = Store() #Create a Store object
 
 #Initialize the reader with the master and coordinate files of our system
-dss_reader = Reader(master_file='./OpenDSS/master.dss', 
+dss_reader = Reader(master_file='./OpenDSS/master.dss',
                     buscoordinates_file='./OpenDSS/buscoords.dss')
 
 #Parse...
@@ -169,30 +170,30 @@ modifier.set_nominal_voltages_recur()
 modifier.set_nominal_voltages_recur_line()
 ```
 
- This example only shows one of the modification possibilities. More information on modifications and post-processing can be found in ```modifications.md```.
+ This example only shows one of the modification possibilities. More information on modifications and post-processing can be found in `modifications.md`
 
 ##### Step 3: Compute the metrics
 
-This step of the process creates a ```network_analyzer``` object with the modified model and compute the metrics on it:
+This step of the process creates a `NetworkAnalyzer` object with the modified model and compute the metrics on it:
 
 ```python
-from ditto.metrics.network_analysis import network_analyzer
+from ditto.metrics.network_analysis import NetworkAnalyzer
 
-#Instanciate the network_analyzer object
+#Instanciate the NetworkAnalyzer object
 #WARNING: In case the model was modified, we need to use modifier.model
 #If we did not do any changes, then simply pass model
 #Again, the name of the source can be provided to avoid the search
-network_analyst = network_analyzer(modifier.model)
+network_analyst = NetworkAnalyzer(modifier.model)
 
 #Compute all the metrics
 network_analyst.compute_all_metrics()
 ```
 
-In this example, we have a single feeder so we call the ```compute_all_metrics()``` method. It is also possible to compute metrics per feeder when we have a system with multiple feeders using the ```compute_all_metrics_per_feeder()``` method. The process might be a bit more complicated since the network has to be properly partitioned. More information for this process is available in the section "Advanced: Compute metrics for multiple feeders".
+In this example, we have a single feeder so we call the `compute_all_metrics()` method. It is also possible to compute metrics per feeder when we have a system with multiple feeders using the `compute_all_metrics_per_feeder()` method. The process might be a bit more complicated since the network has to be properly partitioned. More information for this process is available in the section "Advanced: Compute metrics for multiple feeders".
 
 ##### Step 4: View/export the results
 
-The final step of the process is obviously to have a look at the metrics. There are mainly two ways to do so. The first method is simply to look at the ```results``` attribute of the ```network_analyzer```:
+The final step of the process is obviously to have a look at the metrics. There are mainly two ways to do so. The first method is simply to look at the `results` attribute of the `NetworkAnalyzer`:
 
 ```python
 print(network_analyst.results)
@@ -226,7 +227,7 @@ The second method is to export the metrics first and look at the export. The met
 network_analyst.export('./output/metrics.xlsx')
 ```
 
-Note that this will not export distribution metrics. To export everything in ```network_analyst.results```, use the JSON export method:
+Note that this will not export distribution metrics. To export everything in `network_analyst.results` use the JSON export method:
 
 ```python
 network_analyst.export_json('./output/metrics.json')
@@ -247,21 +248,21 @@ It is also possible to extract metrics when we have a system composed of multipl
 -  compute the metrics on the whole system
 - compute the metrics for all feeders
 
-The first point is straightforward, just proceed as for the single feeder case. 
+The first point is straightforward, just proceed as for the single feeder case.
 
 ##### Step 1 and 2: Read and modify as before
 
 For computing metrics per feeder, we first read the model into DiTTo and apply, if needed, modifications to it (exactly as for the single feeder case):
 
 ```python
-from ditto.model.store import Store 
+from ditto.model.store import Store
 from ditto.readers.opendss.read import Reader
 from ditto.modify.system_structure import system_structure_modifier
 
 model = Store() #Create a Store object
 
 #Initialize the reader with the master and coordinate files of our system
-dss_reader = Reader(master_file='./OpenDSS/master.dss', 
+dss_reader = Reader(master_file='./OpenDSS/master.dss',
                     buscoordinates_file='./OpenDSS/buscoords.dss')
 
 #Parse...
@@ -281,23 +282,23 @@ modifier.set_nominal_voltages_recur_line()
 
 ##### Step 3: Create a network analyzer
 
-We then create a ```network_analyzer``` object as for the single feeder case:
+We then create a `NetworkAnalyzer` object as for the single feeder case:
 
 ```python
-from ditto.metrics.network_analysis import network_analyzer
+from ditto.metrics.network_analysis import NetworkAnalyzer
 
-#Instanciate the network_analyzer object
-network_analyst = network_analyzer(modifier.model)
+#Instanciate the NetworkAnalyzer object
+network_analyst = NetworkAnalyzer(modifier.model)
 ```
 
 ##### Step 4: Provide information on the feeder compositions
 
-Now, we need to provide feeder information to the ```network_analyzer``` using the ```add_feeder_information()```method wich takes the following inputs:
+Now, we need to provide feeder information to the `NetworkAnalyzer` using the `add_feeder_information()` method wich takes the following inputs:
 
-- ```feeder_names```: List of names for the feeders
-- ```feeder_nodes```: List of lists which contains all nodes in the feeders. Thats is, ```feeder_nodes[2]```is the full list of nodes belonging to ```feeder_names[2]```.
-- ```substations```: List of the substation names.
-- ```feeder_types```: This could be a list of strings to tag each feeder with a type (```industrial```, ```rural```,…) or a single string to tag all feeders with the same type. 
+- `feeder_names` List of names for the feeders
+- `feeder_nodes` List of lists which contains all nodes in the feeders. Thats is, `feeder_nodes[2]`is the full list of nodes belonging to `feeder_names[2]`
+- `substations` List of the substation names.
+- `feeder_types` This could be a list of strings to tag each feeder with a type (`industrial` `rural` or a single string to tag all feeders with the same type.
 
 Example:
 
