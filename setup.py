@@ -110,7 +110,7 @@ setup(
     extras_require={
         "extras": ["lxml"],
         "test": test_requires,
-        "dev": test_requires + ["black", "pre-commit"],
+        "dev": test_requires + ["pypandoc", "black", "pre-commit"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )
