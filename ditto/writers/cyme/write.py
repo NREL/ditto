@@ -9,13 +9,7 @@ import logging
 
 import networkx as nx
 
-try:
-    import numpy as np
-except ImportError as e:
-    print(
-        "NumPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
-    )
-    raise e
+import numpy as np
 
 # DiTTo imports
 from ditto.models.node import Node

@@ -4,20 +4,8 @@ import os
 import math
 import logging
 
-try:
-    import numpy as np
-except ImportError as e:
-    print(
-        "NumPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
-    )
-    raise e
-try:
-    import pandas as pd
-except ImportError as e:
-    print(
-        "Pandas is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
-    )
-    raise e
+import numpy as np
+import pandas as pd
 
 # from ditto.readers.gridlabd.read import Reader
 from ditto.store import Store

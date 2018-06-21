@@ -70,12 +70,17 @@ class Converter(object):
             self._to = None
 
         # Serialize the DiTTo model before writing it out.
-        if "json_path" in kwargs and "registered_json_writer_class" in kwargs:
+        if (
+            kwargs.get("json_path", None) is not None
+            and kwargs.get("registered_json_writer_class", None) is not None
+        ):
             self.jsonize = True
             self.json_path = kwargs["json_path"]
             self.json_writer_class = kwargs["registered_json_writer_class"]
         else:
             self.jsonize = False
+            self.json_path = False
+            self.json_writer_class = None
 
         self.verbose = verbose
 

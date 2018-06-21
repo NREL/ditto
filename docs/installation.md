@@ -33,3 +33,13 @@ $ pip install -e .[all]
 
 See the developer guide for instructions on how to add features to ditto.
 
+**Install specific packages alone**
+
+If you want specific packages alone, you will be able to do the following:
+
+```bash
+$ pip install git+https://github.com/NREL/ditto.git@master#egg=ditto
+$ ditto list --readers
+$ ditto list --writers
+$ pip install git+https://github.com/NREL/ditto.git@master#egg=ditto[opendss,gridlabd]
+```

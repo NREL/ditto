@@ -1,13 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-try:
-    import pandas as pd
-except ImportError as e:
-    print(
-        "Pandas is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
-    )
-    raise e
+import pandas as pd
 
 df = pd.read_csv("rnm_load.csv")
 df["Load.phase_loads[0].phase"] = ""
