@@ -29,6 +29,9 @@ from .network.network import Network
 from .core import DiTToBase, DiTToTypeError
 from .modify.modify import Modifier
 from .models.node import Node
+from .utils import reject_outliers
+from .models.position import Position
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +85,80 @@ class Store(object):
         for e in self.elements:
             if isinstance(e, type):
                 yield e
+
+    def compute_network_attributes_positions(self):
+        """
+        This function loops over the objects and update the coordinates of the NetworkAttributes objects.
+        """
+        #Set the names
+        self.set_names()
+
+        L = {}
+
+        #Loop over the objects stored
+        for obj in self.models:
+
+            #If we find a Node
+            if isinstance(obj,Node):
+
+                #And we have a Network information
+                if obj.network_name is not None:
+
+                    if obj.network_name not in L:
+                        L[obj.network_name] = []
+
+                    #Find the NetworkAttributes object
+                    try:
+                        net_obj = self.__getitem__(obj.network_name)
+                    except:
+                        raise ValueError("Unknown Network {name} for Node {n}.".format(name=obj.network_name, n=obj.name))
+
+                    #If we have some positions for the Node
+                    if obj.positions is not None and len(obj.positions)>0:
+
+                        #Then duplicate them and add them to the NetworkAttributes position list
+                        for position in obj.positions:
+                            if position.long is not None and position.lat is not None:
+                                dup = Position(self)
+                                dup.long = position.long
+                                dup.lat = position.lat
+                                dup.elevation = position.elevation
+                                net_obj.positions.append(dup)
+                                L[obj.network_name].append([position.long,position.lat])
+
+        #At this point, we should have a list with all Nodes' positions
+        #If some Nodes have strange positions like (0,0), this might cause plotting issues
+        #Here, we removed outliers positions from the list
+        for network_name,LL in L.items():
+            print("Network {net} has initially {n} positions.".format(net=network_name, n=len(LL)))
+            temp = np.array(LL)
+            _,_,idx_1 = reject_outliers(temp[:,0])
+            _,_,idx_2 = reject_outliers(temp[:,1])
+            idx = list(set(idx_1).union(set(idx_2)))
+            idx_tokeep = np.array([i for i in range(len(LL)) if i not in idx])
+
+            avg_pos_ = np.mean(temp[idx_tokeep], axis=0)
+            print(avg_pos_)
+            avg_pos = Position(self)
+            avg_pos.long = avg_pos_[0]
+            avg_pos.lat = avg_pos_[1]
+            
+            #Find the NetworkAttributes object
+            try:
+                net_obj = self.__getitem__(network_name)
+            except:
+                raise ValueError("Unknown Network {name}.".format(name=network_name))
+
+            new_position_list = []
+            for k,pos in enumerate(net_obj.positions):
+                if k in idx_tokeep:
+                    new_position_list.append(pos)
+            net_obj.positions = new_position_list
+            net_obj.average_position.append(avg_pos)
+            print("After removing outliers, network {net} has {n} positions.".format(net=network_name, n=len(new_position_list)))
+            print(net_obj.average_position[0].__dict__)
+
+
 
     @property
     def elements(self):
