@@ -44,7 +44,7 @@ from ..readers.abstract_reader import AbstractReader
 logger = logging.getLogger(__name__)
 
 
-class network_analyzer:
+class NetworkAnalyzer(object):
     """
     This class is used to compute validation metrics from the DiTTo representation itself.
 
