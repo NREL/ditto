@@ -13,7 +13,10 @@ import json
 import networkx as nx
 
 from ditto.compat import ModuleType
-from lxml import etree
+try:
+    from lxml import etree
+except ImportError:
+    from xml import etree
 
 from ditto.store import Store
 from ditto.models.node import Node
