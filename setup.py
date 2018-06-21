@@ -95,7 +95,6 @@ setup(
         "funcsigs",
         "future",
         "jinja2",
-        "lxml",
         "networkx",
         "pandas",
         "pytest",
@@ -109,6 +108,7 @@ setup(
         "numpy>=1.13.0",
     ],
     extras_require={
+        "extras": ["lxml"],
         "test": test_requires,
         "dev": test_requires + ["black", "pre-commit"],
     },
