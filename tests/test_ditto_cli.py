@@ -42,7 +42,7 @@ def test_metric_computation_cli():
     TODO: Add better tests that check the metric values and compare them with ground truth.
     '''
     output_path = tempfile.TemporaryDirectory()
-    p = subprocess.Popen(shlex.split(""" ditto-cli metric --from="dss" --to="xlsx" --input="./tests/read_dss_13node.json" --feeder=False --output="{}" """.format(output_path.name).strip()))
+    p = subprocess.Popen(shlex.split(""" ditto-cli metric --from="opendss" --to="xlsx" --input="./tests/read_dss_13node.json" --feeder=False --output="{}" """.format(output_path.name).strip()))
     p.wait()
     if p.returncode != 0:
         raise Exception("Error in ditto cli: {}".format(p.returncode))

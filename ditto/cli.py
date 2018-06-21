@@ -36,7 +36,6 @@ def _load(plugins, name):
     cls = plugins[name].load()
     # TODO: Hack! add format_name to actual reader instead
     cls.format_name = name
-
     return cls
 
 
