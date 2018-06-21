@@ -36,6 +36,9 @@ test_requires = [
     "ghp-import",
 ]
 
+extras_requires = ["lxml", "pandas", "scipy", "numpy>=1.13.0"]
+opendss_requires = ["OpenDSSDirect.py"]
+
 
 class PostDevelopCommand(develop):
 
@@ -96,19 +99,16 @@ setup(
         "future",
         "jinja2",
         "networkx",
-        "pandas",
         "pytest",
         "six",
         "traitlets",
         "xlrd",
-        "OpenDSSDirect.py",
         "XlsxWriter",
         "json_tricks",
-        "scipy",
-        "numpy>=1.13.0",
     ],
     extras_require={
-        "extras": ["lxml"],
+        "extras": extras_requires,
+        "all": extras_requires + opendss_requires,
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "black", "pre-commit"],
     },
