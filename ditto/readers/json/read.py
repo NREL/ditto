@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
 import json
-import numpy
 
 from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store

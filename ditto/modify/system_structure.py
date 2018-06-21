@@ -3,11 +3,20 @@ from builtins import super, range, zip, round, map
 
 import logging
 
-import networkx as nx
-import numpy as np
 import copy
 import time
 import random
+
+import networkx as nx
+
+try:
+    import numpy as np
+except ImportError as e:
+    print(
+        "NumPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
+    )
+    raise e
+
 
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.load import Load

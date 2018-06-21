@@ -5,9 +5,19 @@ from builtins import super, range, zip, round, map
 
 import sys
 import logging
-import numpy as np
+
 import cmath
+
 from six import string_types
+
+try:
+    import numpy as np
+except ImportError as e:
+    print(
+        "NumPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
+    )
+    raise e
+
 
 LOGGER = logging.getLogger(__name__)
 

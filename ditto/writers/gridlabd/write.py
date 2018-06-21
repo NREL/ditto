@@ -4,7 +4,6 @@ from builtins import super, range, zip, round, map
 import os
 import re
 import math
-import numpy as np
 import logging
 
 # DiTTo imports

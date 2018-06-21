@@ -8,7 +8,15 @@ import math
 import sys
 import os
 import json
-import numpy as np
+
+try:
+    import numpy as np
+except ImportError as e:
+    print(
+        "NumPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
+    )
+    raise e
+
 import logging
 import time
 from six import string_types
