@@ -5,6 +5,9 @@ from builtins import super, range, zip, round, map
 
 import json
 
+# TODO: remove numpy dependency here
+import numpy
+
 from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.power_source import PowerSource
@@ -134,6 +137,8 @@ class Reader(AbstractReader):
 
             # Use the klass to instantiate the proper DiTTo object
             # Ex: PowerTransformer
+
+            # TODO: Why is eval being using here?! Fix ASAP!
             api_object = eval(_object["klass"])(self.model)
 
             # Loop over the object properties.
