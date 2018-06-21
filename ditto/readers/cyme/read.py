@@ -818,6 +818,20 @@ class Reader(AbstractReader):
         logger.info("Parsing the subnetwork connections...")
         self.parse_subnetwork_connections(model)
 
+        #Finally, compute the positions of the Networks if any
+        model.compute_network_attributes_positions()
+
+        self.network_name_checks(model)
+
+    def network_name_checks(self, model):
+        """
+        Call at the end of parse.
+        Loop over the objects and gives a warning for every object without a network name.
+        """
+        for obj in model.models:
+            if hasattr(obj, "network_name") and obj.network_name is None:
+                print("Warning: Object {name} has no network name.".format(name=obj.name))
+
 
     def parse_header(self):
         """
@@ -890,6 +904,7 @@ class Reader(AbstractReader):
                 self.subnetwork_connections[key]["nodeid"]
             ].is_subnetwork_connection = 1
 
+
     def parse_head_nodes(self, model):
         """ This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes"""
         model.set_names()
@@ -914,6 +929,7 @@ class Reader(AbstractReader):
                     raise ValueError("Network {netID} already has a headnode {head1}. Cannot assign headnode {head2}...".format(netID=netw, 
                         head1=model[netw].headnode, head2=headnode["nodeid"].strip().lower()))
             model[netw].headnode = headnode["nodeid"].strip().lower()
+            import pdb;pdb.set_trace()
             
 
     def parse_sources(self, model):
