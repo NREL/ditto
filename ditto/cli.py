@@ -31,6 +31,15 @@ def _register():
         registered_writers[name] = cls
 
 
+def _load(plugins, name):
+
+    cls = plugins[name].load()
+    # TODO: Hack! add format_name to actual reader instead
+    cls.format_name = name
+
+    return cls
+
+
 @click.group()
 @click.version_option(version.__version__, "--version")
 @click.option("--verbose", "-v", is_flag=True)
@@ -96,7 +105,7 @@ def metric(ctx, **kwargs):
 
     try:
         MetricComputer(
-            registered_reader_class=registered_readers[from_reader_name].load(),
+            registered_reader_class=_load(registered_readers, from_reader_name),
             input_path=kwargs["input"],
             output_format=kwargs["to"],
             output_path=kwargs["output"],
@@ -147,8 +156,8 @@ def convert(ctx, **kwargs):
         registered_json_writer_class = None
 
     Converter(
-        registered_reader_class=registered_readers[from_reader_name].load(),
-        registered_writer_class=registered_writers[to_writer_name].load(),
+        registered_reader_class=_load(registered_readers, from_reader_name),
+        registered_writer_class=_load(registered_writers, to_writer_name),
         input_path=kwargs["input"],
         output_path=kwargs["output"],
         json_path=json_path,
