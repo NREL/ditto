@@ -11,17 +11,19 @@ class DiTToBase(object):
     def __init__(self, *args, **kwargs):
 
         self._register_callbacks(
-            kwargs.pop('init_callback', None),
-            kwargs.pop('get_callback', None),
-            kwargs.pop('set_callback', None),
-            kwargs.pop('del_callback', None),
+            kwargs.pop("init_callback", None),
+            kwargs.pop("get_callback", None),
+            kwargs.pop("set_callback", None),
+            kwargs.pop("del_callback", None),
         )
 
         for k, v in kwargs.items():
             if self._is_property(k):
                 setattr(self, k, v)
             else:
-                raise AttributeError('Unable to set "{}" on class {}.'.format(k, self.__class__.__name__, ))
+                raise AttributeError(
+                    'Unable to set "{}" on class {}.'.format(k, self.__class__.__name__)
+                )
 
         try:
             self._callback_init(**kwargs)

@@ -8,15 +8,16 @@ from .position import Position
 
 class LoadLayer(DiTToHasTraits):
 
-    name = Unicode(help='''Name of the load object''')
-    interval = Integer(help='''The time resolution (in seconds) for the measured data''')
-    current = Any(help='''The input data for the ZIP current measurements''')
-    impedance = Any(help='''The input data for the ZIP imedance measurements''')
-    power = Any(help='''The input data for the ZIP power measurements''')
+    name = Unicode(help="""Name of the load object""")
+    interval = Integer(
+        help="""The time resolution (in seconds) for the measured data"""
+    )
+    current = Any(help="""The input data for the ZIP current measurements""")
+    impedance = Any(help="""The input data for the ZIP imedance measurements""")
+    power = Any(help="""The input data for the ZIP power measurements""")
     positions = List(
         Instance(Position),
-        help=
-        '''This parameter is a list of positional points describing the load data. The positions are objects containing elements of long, lat and elevation (See Position object documentation).'''
+        help="""This parameter is a list of positional points describing the load data. The positions are objects containing elements of long, lat and elevation (See Position object documentation).""",
     )
 
     def build(self, model):

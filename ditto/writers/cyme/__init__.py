@@ -6,5 +6,5 @@ from builtins import super, range, zip, round, map
 from .write import Writer as CymeWriter
 
 __author__ = """Nicolas Gensollen"""
-__email__ = 'nicolas.gensollen@nrel.gov'
-__version__ = '0.1.0'
+__email__ = "nicolas.gensollen@nrel.gov"
+__version__ = "0.1.0"

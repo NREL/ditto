@@ -15,25 +15,34 @@ from .metric_computer import MetricComputer
 registered_readers = {}
 registered_writers = {}
 
+
 @click.group()
-@click.version_option(version.__version__, '--version')
-@click.option('--verbose', '-v', is_flag=True)
+@click.version_option(version.__version__, "--version")
+@click.option("--verbose", "-v", is_flag=True)
 @click.pass_context
 def cli(ctx, verbose):
     ctx.obj = {}
-    ctx.obj['verbose'] = verbose
+    ctx.obj["verbose"] = verbose
+
 
 @cli.command()
 @click.option("--input", type=click.Path(exists=True), help="Path to input file")
 @click.option("--from", help="Convert from OpenDSS, Cyme, Gridlab-D, Demo, JSON")
-@click.option("--output", type=click.Path(exists=True), help="Path to the metrics output file")
+@click.option(
+    "--output", type=click.Path(exists=True), help="Path to the metrics output file"
+)
 @click.option("--to", help="Format for the metrics output file. xlsx or json")
-@click.option("--feeder", default=True, type=bool, help="If True computes metrics per feeder. Otherwise, compute metrics at the system level.")
+@click.option(
+    "--feeder",
+    default=True,
+    type=bool,
+    help="If True computes metrics per feeder. Otherwise, compute metrics at the system level.",
+)
 @click.pass_context
 def metric(ctx, **kwargs):
     """Compute metrics"""
 
-    verbose = ctx.obj['verbose']
+    verbose = ctx.obj["verbose"]
 
     for entry_point in iter_entry_points("ditto.readers"):
         name, cls = entry_point.name, entry_point.load()
@@ -42,8 +51,10 @@ def metric(ctx, **kwargs):
         # TODO: Hack! add format_name to actual reader instead
         cls.format_name = name
 
-    if kwargs['from'] not in registered_readers.keys():
-        raise click.BadOptionUsage("Cannot read from format '{}'".format(kwargs["from"]))
+    if kwargs["from"] not in registered_readers.keys():
+        raise click.BadOptionUsage(
+            "Cannot read from format '{}'".format(kwargs["from"])
+        )
 
     if kwargs["input"] is None:
         raise click.BadOptionUsage("--input must be provided.")
@@ -51,23 +62,30 @@ def metric(ctx, **kwargs):
     from_reader_name = kwargs["from"]
 
     try:
-        MetricComputer(registered_reader_class=registered_readers[from_reader_name] ,
-                       input_path=kwargs["input"] ,
-                       output_format=kwargs["to"] ,
-                       output_path=kwargs["output"] ,
-                       by_feeder=kwargs["feeder"]).compute()
+        MetricComputer(
+            registered_reader_class=registered_readers[from_reader_name],
+            input_path=kwargs["input"],
+            output_format=kwargs["to"],
+            output_path=kwargs["output"],
+            by_feeder=kwargs["feeder"],
+        ).compute()
     except Exception as e:
         # TODO: discuss whether we should raise exception here?
-        sys.exit(1) # TODO: Set error code based on exception
+        sys.exit(1)  # TODO: Set error code based on exception
     else:
         sys.exit(0)
+
 
 @cli.command()
 @click.option("--input", type=click.Path(exists=True), help="Path to input file")
 @click.option("--output", type=click.Path(exists=True), help="Path to output file")
 @click.option("--from", help="Convert from OpenDSS, Cyme, GridLAB-D, Demo")
 @click.option("--to", help="Convert to OpenDSS, Cyme, GridLAB-D, Demo")
-@click.option("--jsonize", type=click.Path(exists=True), help="Serialize the DiTTo representation to the specified path")
+@click.option(
+    "--jsonize",
+    type=click.Path(exists=True),
+    help="Serialize the DiTTo representation to the specified path",
+)
 @click.pass_context
 def convert(ctx, **kwargs):
     """ Convert from one type to another"""
@@ -89,7 +107,9 @@ def convert(ctx, **kwargs):
         cls.format_name = name
 
     if kwargs["from"] not in registered_readers.keys():
-        raise click.BadOptionUsage("Cannot read from format '{}'".format(kwargs["from"]))
+        raise click.BadOptionUsage(
+            "Cannot read from format '{}'".format(kwargs["from"])
+        )
 
     if kwargs["to"] not in registered_writers.keys():
         raise click.BadOptionUsage("Cannot write to format '{}'".format(kwargs["to"]))
@@ -107,7 +127,7 @@ def convert(ctx, **kwargs):
             input_path=kwargs["input"],
             output_path=kwargs["output"],
             json_path=kwargs["jsonize"],
-            registered_json_writer_class=registered_writers['json']
+            registered_json_writer_class=registered_writers["json"],
         ).convert()
     else:
         Converter(
