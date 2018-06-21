@@ -9,7 +9,6 @@ import time
 import logging
 import json
 import json_tricks
-from scipy.spatial import ConvexHull
 from six import string_types
 
 import networkx as nx
@@ -29,6 +28,15 @@ except ImportError as e:
         "Pandas is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
     )
     raise e
+
+try:
+    from scipy.spatial import ConvexHull
+except ImportError as e:
+    print(
+        "SciPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information."
+    )
+    raise e
+
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
