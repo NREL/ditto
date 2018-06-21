@@ -411,12 +411,18 @@ class AbstractReader(object):
 
     def carson_equation_self(self, ri, GMRi):
         '''Carson's equation for self impedance.'''
-
+        if ri is None:
+            raise ValueError("Resistance is None. Cannot compute Carson's equation.")
+        if GMRi is None:
+            raise ValueError("GMR is None. Cannot compute Carson's equation.")
+        if GMRi == 0:
+            raise ValueError("GMR is zero. Cannot compute Carson's equation.")
         return complex(ri + .0953, .12134 * (np.log(1.0 / GMRi) + 7.93402))
 
     def carson_equation(self, Dij):
         '''Carson's equation for mutual impedance.'''
-
+        if Dij == 0:
+            raise ValueError("Distance Dij is zero. Cannot compute Carson's equation.")
         return complex(.09530, .12134 * (np.log(1.0 / Dij) + 7.93402))
 
     def get_primitive_impedance_matrix(self, dist_matrix, GMR_list, r_list):

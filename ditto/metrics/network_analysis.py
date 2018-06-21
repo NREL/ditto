@@ -356,7 +356,7 @@ class network_analyzer():
                         obj.substation_name = self.substations[obj.feeder_name]
                     else:
                         obj.feeder_name = 'subtransmission'
-                        obj.substation_name = self.source
+                        obj.substation_name = ''
                         logger.debug('Node {name} was not found in feeder mapping'.format(name=obj.name))
                         
                 elif hasattr(obj, 'connecting_element'):
@@ -365,7 +365,7 @@ class network_analyzer():
                         obj.substation_name = self.substations[obj.feeder_name]
                     else:
                         obj.feeder_name = 'subtransmission'
-                        obj.substation_name = self.source
+                        obj.substation_name = ''
 
                         logger.debug(
                             'Object {name} connecting element {namec} was not found in feeder mapping'.format(
@@ -378,7 +378,7 @@ class network_analyzer():
                         obj.substation_name = self.substations[obj.feeder_name]
                     else:
                         obj.feeder_name = 'subtransmission'
-                        obj.substation_name = self.source
+                        obj.substation_name = ''
 
                         logger.debug('Object {name} from element {namec} was not found in feeder mapping'.format(name=obj.name, namec=obj.from_element))
                 else:

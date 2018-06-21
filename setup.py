@@ -18,7 +18,7 @@ except ImportError:
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-with open("README.md") as readme_file:
+with open("README.md", encoding="utf-8") as readme_file:
     readme = convert_text(readme_file.read(), "rst", format="md")
 
 with open(os.path.join(here, "ditto", "version.py"), encoding="utf-8") as f:
@@ -95,20 +95,22 @@ setup(
         "funcsigs",
         "future",
         "jinja2",
-        "lxml",
         "networkx",
         "pandas",
         "pytest",
         "six",
+        "traitlets",
         "xlrd",
         "OpenDSSDirect.py",
         "XlsxWriter",
         "json_tricks",
         "scipy",
+        "numpy>=1.13.0",
     ],
     extras_require={
+        "extras": ["lxml"],
         "test": test_requires,
-        "dev": test_requires + ["black", "pre-commit"],
+        "dev": test_requires + ["pypandoc", "black", "pre-commit"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )
