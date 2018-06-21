@@ -6,7 +6,6 @@ from builtins import super, range, zip, round, map
 import logging
 import math
 import time
-import pandas as pd
 import logging
 import json
 import json_tricks
@@ -14,8 +13,18 @@ from scipy.spatial import ConvexHull
 from six import string_types
 
 import networkx as nx
-import numpy as np
-import pandas as pd
+
+try:
+    import numpy as np
+except ImportError as e:
+    print("NumPy is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information.")
+    raise e
+
+try:
+    import pandas as pd
+except ImportError as e:
+    print("Pandas is not installed, please ensure that you install all of DiTTo's dependencies. Check the documentation for more information.")
+    raise e
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
