@@ -1,11 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-from builtins import (bytes, str, open, super, range, zip, round, input, int, pow)
+from builtins import bytes, str, open, super, range, zip, round, input, int, pow
 
 from json import JSONEncoder
 import logging
 
 
 class DittoEncoder(JSONEncoder):
+
     def default(self, obj):
         return {k: getattr(obj, k) for k in obj._attrs}
 
@@ -16,7 +17,10 @@ def combine(*dicts):
     return super_dict
 
 
-def start_console_log(log_level=logging.WARN, log_format='%(asctime)s|%(levelname)s|%(name)s|\n    %(message)s'):
+def start_console_log(
+    log_level=logging.WARN,
+    log_format="%(asctime)s|%(levelname)s|%(name)s|\n    %(message)s",
+):
     console_handler = logging.StreamHandler()
     console_handler.setLevel(log_level)
     logformat = logging.Formatter(log_format)
@@ -25,7 +29,11 @@ def start_console_log(log_level=logging.WARN, log_format='%(asctime)s|%(levelnam
     logging.getLogger().addHandler(console_handler)
 
 
-def start_file_log(filename, log_level=logging.WARN, log_format='%(asctime)s|%(levelname)s|%(name)s|\n    %(message)s'):
+def start_file_log(
+    filename,
+    log_level=logging.WARN,
+    log_format="%(asctime)s|%(levelname)s|%(name)s|\n    %(message)s",
+):
     logfile = logging.FileHandler(filename=filename)
     logfile.setLevel(log_level)
     logformat = logging.Formatter(log_format)

@@ -8,15 +8,16 @@ from six import string_types
 
 LOGGER = logging.getLogger(__name__)
 
+
 class AbstractWriter(object):
-    '''Abstract class for DiTTo writers.
+    """Abstract class for DiTTo writers.
     author: Nicolas Gensollen. October 2017.
-    '''
+    """
 
     register_names = []
 
     def __init__(self, **kwargs):
-        '''Abstract class CONSTRUCTOR.'''
+        """Abstract class CONSTRUCTOR."""
 
         # create logger
         self.logger = LOGGER
@@ -28,15 +29,15 @@ class AbstractWriter(object):
         for name in cls.register_names:
             registration_dict[name] = cls
 
-    #@abstractmethod
+    # @abstractmethod
     def write(self, model, **kwargs):
-        '''Write abstract method.
+        """Write abstract method.
         .. note:: To be implemented in subclasses.
-        '''
+        """
         pass
 
     def convert_from_meters(self, quantity, unit, **kwargs):
-        '''Converts a distance in meters to a distance in given unit.
+        """Converts a distance in meters to a distance in given unit.
 
         :param quantity: Distance in meter to convert
         :type quantity: float
@@ -88,9 +89,9 @@ class AbstractWriter(object):
 
         .. seealso:: convert_to_meters, unit_conversion
 
-        '''
-        if 'inverse' in kwargs and isinstance(kwargs['inverse'], bool):
-            inverse = kwargs['inverse']
+        """
+        if "inverse" in kwargs and isinstance(kwargs["inverse"], bool):
+            inverse = kwargs["inverse"]
         else:
             inverse = False
 
@@ -98,46 +99,46 @@ class AbstractWriter(object):
             return None
 
         if not isinstance(unit, string_types):
-            self.logger.warning('convert_from_meters() expects a unit in string format')
+            self.logger.warning("convert_from_meters() expects a unit in string format")
             return None
 
         if quantity is None:
             return None
 
-        if unit.lower() == 'mi':
+        if unit.lower() == "mi":
             if inverse:
                 return quantity / 0.000621371
             else:
                 return 0.000621371 * quantity
 
-        elif unit.lower() == 'km':
+        elif unit.lower() == "km":
             if inverse:
-                return quantity / 10**-3
+                return quantity / 10 ** -3
             else:
-                return 10**-3 * quantity
+                return 10 ** -3 * quantity
 
-        elif unit.lower() == 'kft':
+        elif unit.lower() == "kft":
             if inverse:
                 return quantity / 0.00328084
             else:
                 return 0.00328084 * quantity
 
-        elif unit.lower() == 'm':
+        elif unit.lower() == "m":
             return quantity
 
-        elif unit.lower() == 'ft':
+        elif unit.lower() == "ft":
             if inverse:
                 return quantity / 3.28084
             else:
                 return 3.28084 * quantity
 
-        elif unit.lower() == 'in':
+        elif unit.lower() == "in":
             if inverse:
                 return quantity / 39.3701
             else:
                 return 39.3701 * quantity
 
-        elif unit.lower() == 'cm':
+        elif unit.lower() == "cm":
             if inverse:
                 return quantity / 100
             else:

@@ -14,15 +14,16 @@ import sys
 _ver = sys.version_info
 
 #: Python 2.x?
-is_py2 = (_ver[0] == 2)
+is_py2 = _ver[0] == 2
 
 #: Python 3.x?
-is_py3 = (_ver[0] == 3)
+is_py3 = _ver[0] == 3
 
 if is_py2:
 
     def ModuleType(m):
-        return types.ModuleType(m.encode('utf-8'))
+        return types.ModuleType(m.encode("utf-8"))
+
 
 else:
 
@@ -32,6 +33,6 @@ else:
 
 def common_str(string):
     if not sys.version_info >= (3, 0):
-        return string.encode('utf-8')
+        return string.encode("utf-8")
     else:
         return string
