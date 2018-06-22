@@ -11,8 +11,9 @@ import math
 import sys
 import os
 import json
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 from ditto.store import Store
 from ditto.models.node import Node

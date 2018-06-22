@@ -7,7 +7,7 @@ import logging
 
 from .store import Store
 from .converter import Converter
-from .metrics.network_analysis import network_analyzer
+from .metrics.network_analysis import NetworkAnalyzer as network_analyzer
 
 logger = logging.getLogger(__name__)
 

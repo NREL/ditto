@@ -5,9 +5,12 @@ from builtins import super, range, zip, round, map
 
 import sys
 import logging
-import numpy as np
+
 import cmath
+
 from six import string_types
+
+import numpy as np
 
 LOGGER = logging.getLogger(__name__)
 

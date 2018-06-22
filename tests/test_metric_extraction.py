@@ -21,14 +21,14 @@ logger = logging.getLogger(__name__)
 
 def test_metric_extraction():
     '''
-        This test reads all small OpenDSS test cases, set the nominal voltages using a 
-        system_structure_modifier object and compute all metrics using a network analyzer object. 
+        This test reads all small OpenDSS test cases, set the nominal voltages using a
+        system_structure_modifier object and compute all metrics using a network analyzer object.
         Finally, it exports the metrics to excel and Json formats.
     '''
     from ditto.readers.opendss.read import Reader
     from ditto.store import Store
     from ditto.modify.system_structure import system_structure_modifier
-    from ditto.metrics.network_analysis import network_analyzer
+    from ditto.metrics.network_analysis import NetworkAnalyzer as network_analyzer
 
     opendss_models=[f for f in os.listdir(os.path.join(current_directory,'data/small_cases/opendss/')) if not f.startswith('.')]
     opendss_models.remove('storage_test')

@@ -5,9 +5,11 @@ from builtins import super, range, zip, round, map
 
 import os
 import math
-import numpy as np
 import logging
+
+import numpy as np
 import pandas as pd
+
 from functools import reduce
 
 # DiTTo imports

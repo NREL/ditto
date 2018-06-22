@@ -36,6 +36,16 @@ test_requires = [
     "ghp-import",
 ]
 
+numpy_dependency = "numpy>=1.13.0"
+
+extras_requires = ["lxml", "pandas", "scipy", numpy_dependency, "XlsxWriter"]
+
+opendss_requires = ["OpenDSSDirect.py", "pandas", numpy_dependency]
+dew_requires = [numpy_dependency, "xlrd"]
+gridlabd_requires = [numpy_dependency]
+cyme_requires = [numpy_dependency]
+ephasor_requires = [numpy_dependency]
+
 
 class PostDevelopCommand(develop):
 
@@ -89,26 +99,27 @@ setup(
     ],
     test_suite="tests",
     install_requires=[
-        "aenum",
         "click",
         "croniter",
-        "funcsigs",
         "future",
-        "jinja2",
         "networkx",
-        "pandas",
-        "pytest",
         "six",
         "traitlets",
-        "xlrd",
-        "OpenDSSDirect.py",
-        "XlsxWriter",
         "json_tricks",
-        "scipy",
-        "numpy>=1.13.0",
     ],
     extras_require={
-        "extras": ["lxml"],
+        "all": extras_requires
+        + opendss_requires
+        + dew_requires
+        + gridlabd_requires
+        + ephasor_requires
+        + cyme_requires,
+        "extras": extras_requires,
+        "cyme": cyme_requires,
+        "dew": dew_requires,
+        "ephasor": ephasor_requires,
+        "gridlabd": gridlabd_requires,
+        "opendss": opendss_requires,
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "black", "pre-commit"],
     },

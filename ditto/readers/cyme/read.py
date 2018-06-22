@@ -1,11 +1,12 @@
 
 import logging
-import numpy as np
 import math
 import cmath
 import os
 from functools import reduce
 from six import string_types
+
+import numpy as np
 
 # Ditto imports
 from ditto.readers.abstract_reader import AbstractReader

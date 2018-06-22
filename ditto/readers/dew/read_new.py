@@ -14,8 +14,11 @@ from builtins import super, range, zip, round, map
 
 import logging
 import os
-import xlrd
 import math
+
+import numpy as np
+import xlrd
+
 from ditto.store import Store
 from ditto.models.node import Node
 from ditto.models.regulator import Regulator
@@ -30,7 +33,6 @@ from ditto.models.line import Line
 from ditto.models.load import Load
 from ditto.models.phase_load import PhaseLoad
 from ditto.models.position import Position
-import numpy as np
 
 logger = logging.getLogger(__name__)
 

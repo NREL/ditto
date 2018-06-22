@@ -8,7 +8,9 @@ import math
 import sys
 import os
 import json
+
 import numpy as np
+
 import logging
 import time
 from six import string_types

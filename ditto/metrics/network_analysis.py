@@ -6,16 +6,16 @@ from builtins import super, range, zip, round, map
 import logging
 import math
 import time
-import pandas as pd
 import logging
 import json
 import json_tricks
-from scipy.spatial import ConvexHull
 from six import string_types
 
 import networkx as nx
+
 import numpy as np
 import pandas as pd
+from scipy.spatial import ConvexHull
 
 from ditto.network.network import Network
 from ditto.models.regulator import Regulator
@@ -31,7 +31,7 @@ from ..readers.abstract_reader import AbstractReader
 logger = logging.getLogger(__name__)
 
 
-class network_analyzer:
+class NetworkAnalyzer(object):
     """
     This class is used to compute validation metrics from the DiTTo representation itself.
 

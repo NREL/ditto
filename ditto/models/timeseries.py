@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-import pandas as pd
 from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
 
 from .position import Position
@@ -10,7 +9,7 @@ from .position import Position
 class Timeseries(DiTToHasTraits):
 
     data = Instance(
-        pd.DataFrame,
+        "pandas.DataFrame",
         help="""This is the data that is stored in the timeseries object.""",
         default_value=None,
     )

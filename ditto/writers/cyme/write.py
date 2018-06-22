@@ -1,13 +1,15 @@
 # coding: utf8
 
-import numpy as np
 import math
 import cmath
 from datetime import datetime
 import copy
-import networkx as nx
 from functools import reduce
 import logging
+
+import networkx as nx
+
+import numpy as np
 
 # DiTTo imports
 from ditto.models.node import Node

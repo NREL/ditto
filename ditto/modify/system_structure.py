@@ -3,11 +3,14 @@ from builtins import super, range, zip, round, map
 
 import logging
 
-import networkx as nx
-import numpy as np
 import copy
 import time
 import random
+
+import networkx as nx
+
+import numpy as np
+
 
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.load import Load

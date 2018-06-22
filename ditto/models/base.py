@@ -10,7 +10,6 @@ from traitlets.traitlets import (
 )
 import traitlets as T
 from builtins import super
-import pandas as pd
 
 import logging
 

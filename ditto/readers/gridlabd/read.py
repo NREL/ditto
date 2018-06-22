@@ -5,20 +5,21 @@ from datetime import datetime
 from datetime import timedelta
 from croniter import croniter
 import logging
-import numpy as np
 import math
 import sys
 import os
 import json
+
 import networkx as nx
 
-from ditto.compat import ModuleType
+import numpy as np
 
 try:
     from lxml import etree
 except ImportError:
     from xml import etree
 
+from ditto.compat import ModuleType
 from ditto.store import Store
 from ditto.models.node import Node
 from ditto.models.power_source import PowerSource
