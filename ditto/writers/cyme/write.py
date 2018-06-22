@@ -246,7 +246,8 @@ class Writer(AbstractWriter):
         if hasattr(_object,'network_name') and _object.network_name is not None and _object.network_name != '':
             net_name = _object.network_name
         else:
-            logger.warning("Object {name} has no Network!".format(name=_object.name))
+            import pdb;pdb.set_trace()
+            raise ValueError("Object {name} has no Network!".format(name=_object.name))
             net_name = None
 
         if net_name is not None:
@@ -1626,7 +1627,7 @@ class Writer(AbstractWriter):
 
                             if new_trans_section is not None and new_trans_section not in self.section_line_list:
                                 self.section_line_list.append(new_trans_section)
-                                self.add_section_to_mapping(new_section, i)
+                                self.add_section_to_mapping(new_trans_section, i)
 
                             if hasattr(winding1,'phase_windings') and winding1.phase_windings is not None:
                                 try:
@@ -2831,10 +2832,10 @@ class Writer(AbstractWriter):
                     except KeyError:
                         raise ValueError("Unknown Network {name}.".format(name=f_name))
 
-                    if net_obj.headnode is not None:
-                        f.write('{nodeID},{NetID}\n'.format(nodeID=net_obj.headnode, NetID=f_name))
-                    else:
-                        raise ValueError("Network {name} has no headnode.".format(name=f_name))
+                    if net_obj.headnode is not None and net_obj.headnode != '':
+                        f.write('{nodeID},{NetID}\n'.format(nodeID=net_obj.headnode, NetID=f_name.strip("net_")))
+                    #else:
+                    #    raise ValueError("Network {name} has no headnode.".format(name=f_name))
 
             #Source equivalent
             #
@@ -2895,12 +2896,11 @@ class Writer(AbstractWriter):
                         angle2 = angle1 - 120.0
                         angle3 = angle1 + 120.
 
-                    else:
-                        import pdb;pdb.set_trace()
-
-                    f.write('{node_id},{voltage},{angle1},{angle2},{angle3},{R1},{X1},{R0},{X0},{R2},{X2},{voltage},{voltage},{voltage},0\n'.format(
+                        f.write('{node_id},{voltage},{angle1},{angle2},{angle3},{R1},{X1},{R0},{X0},{R2},{X2},{voltage},{voltage},{voltage},0\n'.format(
                             node_id=net_obj.headnode, voltage=volt, angle1=angle1, angle2=angle2,
                             angle3=angle3, R1=R1, X1=X1, R0=R0, X0=X0, R2=R0, X2=X0))
+
+                    
 
             #Sections
             #
@@ -2943,19 +2943,19 @@ class Writer(AbstractWriter):
                     raise ValueError("Could not find network {net} in the models.".format(net=f_name))
 
                 if net_obj.network_type in ['transmission', 'subtransmission']:
-                    f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,
+                    f.write('TRANSMISSIONLINE={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.strip("net_"),
                         HeadNodeID=net_obj.headnode, coordset=1))
                     subnetID = ''
                 elif net_obj.network_type == 'substation':
-                    f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.split('ation_')[1],
+                    f.write('SUBSTATION={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.strip("net_"),
                         HeadNodeID=net_obj.headnode, coordset=1))
-                    subnetID = f_name.split('ation_')[1]
+                    subnetID = f_name.strip("net_")
                 elif net_obj.network_type == 'feeder':
-                    f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,
+                    f.write('FEEDER={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.strip("net_"),
                         HeadNodeID=net_obj.headnode, coordset=1))
                     subnetID = ''
                 elif net_obj.network_type == 'secondarynetwork':
-                    f.write('SECONDARYNETWORK={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name,
+                    f.write('SECONDARYNETWORK={NetID},{HeadNodeID},{coordset}\n'.format(NetID=f_name.strip("net_"),
                         HeadNodeID=net_obj.headnode, coordset=1))
                     subnetID = ''
                 else:
@@ -2982,7 +2982,7 @@ class Writer(AbstractWriter):
                         else:
                             X=net_obj.average_position[0].long
                             Y=net_obj.average_position[0].lat
-                        f.write('{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n'.format(NetID=f_name.split('ation_')[1], X=X,Y=Y,Height=125.00,Length=125.00))
+                        f.write('{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n'.format(NetID=f_name.strip("net_"), X=X,Y=Y,Height=125.00,Length=125.00))
 
             #Subnetwork Connections
             #
@@ -3000,7 +3000,7 @@ class Writer(AbstractWriter):
                         #
                         # TODO: Better way to do this???
                         for obj in model.models:
-                            if isinstance(obj,Node) and obj.is_subnetwork_connection == 1 and obj.network_name == f_name.split('ation_')[1]:
+                            if isinstance(obj,Node) and obj.is_subnetwork_connection == 1 and obj.network_name == f_name:
                                 #We also need the coordinates of this connection.
                                 #Use the coordinates of the Node
                                 if obj.positions is not None and len(obj.positions)>0:
@@ -3012,7 +3012,7 @@ class Writer(AbstractWriter):
                                     Y = 0
                                 f.write(
                                     "{NetID},{NodeID},{X},{Y}\n".format(
-                                        NetID=f_name.split("ation_")[1],
+                                        NetID=f_name.strip("net_"),
                                         NodeID=obj.name,
                                         X=X,
                                         Y=Y,
@@ -3660,6 +3660,8 @@ class Writer(AbstractWriter):
                                 self.section_line_feeder_mapping[i.network_name].append(new_section)
                             else:
                                 self.section_line_feeder_mapping[i.network_name]=[new_section]
+                        else:
+                            raise ValueError("Object {i} has not Network name.".format(i=i.name))
 
             f.write("[GENERAL]\n")
             current_date = datetime.now().strftime("%B %d, %Y at %H:%M:%S")
