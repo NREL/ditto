@@ -2711,25 +2711,26 @@ class Writer(AbstractWriter):
 
             # Sources
             #
-            f.write("\n[SOURCE]\n")
-            f.write("FORMAT_SOURCE=SourceID,DeviceNumber,NodeID,NetworkID\n")
-            k = 0
-            self.substation_IDs = {}
+            if len(self.sources)>0:
+                f.write("\n[SOURCE]\n")
+                f.write("FORMAT_SOURCE=SourceID,DeviceNumber,NodeID,NetworkID\n")
+                k = 0
+                self.substation_IDs = {}
 
-            for _source,_voltage in self.sources.items():
-                #_source should be the name of the headnode for one network object
-                # TODO: Find a better way to find it
-                for obj in model.models:
-                    if isinstance(obj,NetworkAttributes) and obj.headnode==_source:
-                        sourceID = obj.headnode + '_src'
-                        nodeID = obj.headnode
-                        NetworkID = obj.name
-                k+=1
-                for j,sub in enumerate(self.substations):
-                    if sub['connecting_element']==_source:
-                        self.substations[j]['sub_ID']='sub_'+str(k)
-                self.substation_IDs[_source]='sub{}'.format(k)
-                f.write('{sourceID},sub_{k},{nodeID},{NetID}\n'.format(sourceID=sourceID, k=k, nodeID=nodeID, NetID=NetworkID))
+                for _source,_voltage in self.sources.items():
+                    #_source should be the name of the headnode for one network object
+                    # TODO: Find a better way to find it
+                    for obj in model.models:
+                        if isinstance(obj,NetworkAttributes) and obj.headnode==_source:
+                            sourceID = obj.headnode + '_src'
+                            nodeID = obj.headnode
+                            NetworkID = obj.name
+                    k+=1
+                    for j,sub in enumerate(self.substations):
+                        if sub['connecting_element']==_source:
+                            self.substations[j]['sub_ID']='sub_'+str(k)
+                    self.substation_IDs[_source]='sub{}'.format(k)
+                    f.write('{sourceID},sub_{k},{nodeID},{NetID}\n'.format(sourceID=sourceID, k=k, nodeID=nodeID, NetID=NetworkID))
 
             f.write('\n[HEADNODES]\n')
             f.write('FORMAT_HEADNODES=NodeID,NetworkID\n')
