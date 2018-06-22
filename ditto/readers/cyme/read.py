@@ -806,14 +806,14 @@ class Reader(AbstractReader):
         logger.info("Parsing the sections...")
         self.parse_sections(model)
 
+        logger.info("Parsing the Headnodes...")
+        self.parse_head_nodes(model)
+
         logger.info("Parsing the sources...")
         self.parse_sources(model)
 
         # Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
-
-        logger.info("Parsing the Headnodes...")
-        self.parse_head_nodes(model)
 
         logger.info("Parsing the subnetwork connections...")
         self.parse_subnetwork_connections(model)
@@ -926,11 +926,20 @@ class Reader(AbstractReader):
                 raise ValueError('Unknown network {net} for headnode {head}.'.format(net=netw, head=sid))
             if model[netw].headnode is not None:
                 if model[netw].headnode != headnode["nodeid"].strip().lower() and model[netw].headnode != '':
-                    raise ValueError("Network {netID} already has a headnode {head1}. Cannot assign headnode {head2}...".format(netID=netw, 
+                    raise ValueError("Network {netID} already has a headnode {head1}. Cannot assign headnode {head2}...".format(netID=netw,
                         head1=model[netw].headnode, head2=headnode["nodeid"].strip().lower()))
             model[netw].headnode = headnode["nodeid"].strip().lower()
-            import pdb;pdb.set_trace()
-            
+
+            #If the network has no valid source at this point,
+            #try to use the headnode to look for a source object.
+            #if model[netw].sourceID is None:
+            #    import pdb;pdb.set_trace()
+            #    try:
+            #        src_obj = model[headnode["nodeid"].strip().lower()+'_src']
+            #        model[netw].sourceID = src_obj.name
+            #    except:
+            #        pass
+
 
     def parse_sources(self, model):
         """Parse the sources."""
@@ -996,50 +1005,62 @@ class Reader(AbstractReader):
                     line, ["substation"], ["id", "mva", "kvll", "conn"], mapp_sub
                 )
             )
+        subs = {"sub_"+k.lower():v for k,v in subs.items()}
+        #Get the networks
+        net_objs = [m for m in model.models if isinstance(m,NetworkAttributes)]
+        net_heads = [n.headnode for n in net_objs]
         if len(sources.items()) == 0:
             for sid, source_equivalent_data in source_equivalents.items():
-                if source_equivalent_data["loadmodelname"].lower() != "default":
-                    continue  # Want to only use the default source equivalent configuration
-                for k, v in self.section_phase_mapping.items():
-                    #import pdb;pdb.set_trace()
-                    if v["fromnodeid"] == source_equivalent_data["nodeid"].lower():
-                        sectionID = k
-                        _from = v["fromnodeid"]
-                        _to = v["tonodeid"]
-                        phases = list(v["phase"])
-                    if (
-                        v["tonodeid"] == source_equivalent_data["nodeid"]
-                    ):  # In case the edge is connected backwards
-                        sectionID = k
-                        _from = v["tonodeid"]
-                        _to = v["fromnodeid"]
-                        phases = list(v["phase"])
-                try:
-                    api_source = PowerSource(model)
-                except:
-                    pass
+                # sectionID = None
+                # if source_equivalent_data["loadmodelname"].lower() != "default":
+                #     continue  # Want to only use the default source equivalent configuration
+                # for k, v in self.section_phase_mapping.items():
+                #     if v["fromnodeid"] == source_equivalent_data["nodeid"].lower():
+                #         sectionID = k
+                #         _from = v["fromnodeid"]
+                #         _to = v["tonodeid"]
+                #         phases = list(v["phase"])
+                # if sectionID is None:
+                #     for k, v in self.section_phase_mapping.items():
+                #         if v["tonodeid"] == source_equivalent_data["nodeid"].lower():
+                #             sectionID = k
+                #             _from = v["fromnodeid"]
+                #             _to = v["tonodeid"]
+                #             phases = list(v["phase"])
 
-                api_source.name = _from + "_src"
+                # if sectionID is None:
+                #     raise ValueError("Cannot find node {n} in the section mapping.".format(n=source_equivalent_data["nodeid"].lower()))
+                sid=sid.lower()
+                if sid.lower() in net_heads:
+                    idx = net_heads.index(sid)
+                else:
+                    raise ValueError("Source ID {sid} cannot be found in the network headnodes.".format(sid=sid))
+
+                api_source = PowerSource(model)
+                api_source.name = sid + "_src"
 
                 subID = None
                 if sid in subs:
                     subID = subs[sid]["id"]
 
+                _net_obj = net_objs[idx]
+
+
                 #Set the sourceID of the network object
-                if sectionID in self.section_network_mapping:
-                    _netID = self.section_network_mapping[sectionID]
-                    if model[_netID].sourceID is None:
-                        model[_netID].sourceID = api_source.name
-                    else:
-                        if model[_netID].sourceID != api_source.name:
-                            raise ValueError("Network {netID} has already a source {sID1}. Cannot add {sID2}...".format(netID=_netID,
-                                sID1=model[_netID].sourceID, sID2=api_source.name))
-                    if model[_netID].substation_name is None:
-                        model[_netID].substation_name = subID
-                    else:
-                        if model[_netID].substation_name != subID:
-                            raise ValueError("Network {netID} has already a substation name {sID1}. Cannot add {sID2}...".format(netID=_netID,
-                                sID1=model[_netID].substation_name, sID2=subID))
+                #if sectionID in self.section_network_mapping:
+                #    _netID = self.section_network_mapping[sectionID]
+                if _net_obj.sourceID is None:
+                    _net_obj.sourceID = api_source.name
+                else:
+                    if _net_obj.sourceID != api_source.name:
+                        raise ValueError("Network {netID} has already a source {sID1}. Cannot add {sID2}...".format(netID=_net_obj.name,
+                            sID1=_net_obj.sourceID, sID2=api_source.name))
+                if _net_obj.substation_name is None:
+                    _net_obj.substation_name = subID
+                else:
+                    if _net_obj.substation_name != subID:
+                        raise ValueError("Network {netID} has already a substation name {sID1}. Cannot add {sID2}...".format(netID=_net_obj.name,
+                            sID1=_net_obj.substation_name, sID2=subID))
 
 
                 try:
@@ -1078,13 +1099,13 @@ class Reader(AbstractReader):
                 # except:
                 # pass
 
-                try:
-                    api_source.zero_sequence_impedance = complex(
-                        source_equivalent_data["zerosequenceresistance"],
-                        source_equivalent_data["zerosequencereactance"],
-                    )
-                except:
-                    pass
+                #try:
+                api_source.zero_sequence_impedance = complex(
+                    float(source_equivalent_data["zerosequenceresistance"]),
+                    float(source_equivalent_data["zerosequencereactance"]),
+                )
+                #except:
+                #    pass
 
                 try:
                     api_source.connecting_element = _from
@@ -1505,7 +1526,7 @@ class Reader(AbstractReader):
         #Grab the phase
         _phase = section_data[
             _format.index("phase")
-        ].lower()
+        ]
 
         #Grab the from node
         _from = section_data[
@@ -1557,7 +1578,7 @@ class Reader(AbstractReader):
         self.section_phase_mapping = {}
         self.node_section_mapping = {}
         self.network_names = []
-       
+
         format_section = None
         format_feeder = None
         format_substation = None
