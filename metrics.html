@@ -1,0 +1,1551 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metrics documentation &mdash; DiTTo  documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/DiTTo_Logo.png"/>
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DiTTo
+          
+
+          
+            
+            <img src="_static/DiTTo_Logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli-examples.html">DiTTo examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli-examples.html#basic-usage-converting-from-one-format-to-another">Basic usage: Converting from one format to another</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cli-examples.html#method-1-through-the-command-line">Method 1: Through the command line</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#the-convert-command">The convert command</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#from-and-to">From and To</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#input">Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cli-examples.html#examples">Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#convert-the-ieee-4-node-from-gridlabd-to-opendss">Convert the IEEE 4 node from GridlabD to OpenDSS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#convert-the-ieee-13-node-from-opendss-to-cyme">Convert the IEEE 13 node from OpenDSS to CYME</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cli-examples.html#method-2-writing-a-script">Method 2: Writing a script</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#step-1-import-the-required-modules">Step 1: Import the required modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#step-2-instanciate-an-empty-store">Step 2: Instanciate an empty store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#step-3-instanciate-a-reader">Step 3: Instanciate a reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#step-4-parse">Step 4: Parse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#step-5-instanciate-the-writer">Step 5: Instanciate the writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cli-examples.html#step-6-write">Step 6: Write</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="notes.html">Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="notes.html#tips-to-use-ditto">Tips to use DiTTo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="notes.html#developing-ditto">Developing DiTTo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#report-bugs">Report Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#fix-bugs">Fix Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#implement-features">Implement Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#write-documentation">Write Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#submit-feedback">Submit Feedback</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developer-guide/index.html">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="developer-guide/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer-guide/style.html">Style Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="developer-guide/style.html#naming-conventions">Naming Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="developer-guide/docs.html">Generating Documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-team">Development Team</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DiTTo</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Metrics documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/metrics.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="section" id="metrics-documentation">
+<h1>Metrics documentation<a class="headerlink" href="#metrics-documentation" title="Permalink to this headline">¶</a></h1>
+<p>DiTTo has the capability to extract metrics from a system once parsed in
+the core representation. This enables the user to compute metrics when
+doing a conversion from one format to another.</p>
+<p>The advantage compared to computing metrics on a given format is that no
+conversion is needed prior to the caculation.</p>
+<div class="section" id="list-of-available-metrics">
+<h2>List of available metrics<a class="headerlink" href="#list-of-available-metrics" title="Permalink to this headline">¶</a></h2>
+<p>Here is the list of implemented metrics with their description. The list
+is organized in different sections to ease the search.</p>
+<div class="section" id="realistic-electrical-design-and-equipment-parameters-mv">
+<h3>Realistic electrical design and equipment parameters (MV)<a class="headerlink" href="#realistic-electrical-design-and-equipment-parameters-mv" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="5%" />
+<col width="5%" />
+<col width="38%" />
+<col width="28%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Ty
+pe</th>
+<th class="head">Un
+it</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>mv_len_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-odd"><td><a href="#id1"><span class="problematic" id="id2">*</span></a>mv_3ph_len_mi
+*</td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage, 3 phase lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-even"><td><em>mv_oh_3ph_len
+_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage, overhead, 3 phase
+lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-odd"><td><a href="#id3"><span class="problematic" id="id4">*</span></a>mv_2ph_len_mi
+*</td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage, 2 phase lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-even"><td><em>mv_oh_2ph_len
+_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage, overhead, 2 phase
+lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-odd"><td><a href="#id5"><span class="problematic" id="id6">*</span></a>mv_1ph_len_mi
+*</td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage, 1 phase lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-even"><td><em>mv_oh_1ph_len
+_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of medium
+voltage, overhead, 1 phase
+lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-odd"><td><em>perct_mv_oh_l
+en</em></td>
+<td>Fl
+oa
+t</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Percentage of MV lines that
+are overhead lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-even"><td><em>ratio_mv_len_
+to_num_cust</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>mv_length_miles devided by
+the number of customers.</td>
+<td>Needs nominal
+voltages and load
+information.</td>
+</tr>
+<tr class="row-odd"><td><em>max_sub_node_
+distance_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>Maximum distance between the
+substation and any node of
+the network.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>nominal_medium_voltage_class</em></td>
+<td>Fl
+oa
+t</td>
+<td>Vo
+lt
+s</td>
+<td>Nominal voltage of medium
+voltage.</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="realistic-electrical-design-and-equipment-parameters-lv">
+<h3>Realistic electrical design and equipment parameters (LV)<a class="headerlink" href="#realistic-electrical-design-and-equipment-parameters-lv" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="5%" />
+<col width="5%" />
+<col width="38%" />
+<col width="28%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Ty
+pe</th>
+<th class="head">Un
+it</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>lv_len_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-odd"><td><a href="#id7"><span class="problematic" id="id8">*</span></a>lv_3ph_len_mi
+*</td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage, 3 phase lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-even"><td><em>lv_oh_3ph_len
+_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage, overhead, 3 phase
+lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-odd"><td><a href="#id9"><span class="problematic" id="id10">*</span></a>lv_1ph_len_mi
+*</td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage, 1 phase lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-even"><td><em>lv_oh_1ph_len
+_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage, overhead, 1 phase
+lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-odd"><td><em>max_lv_line:</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The maximum length between a
+distribution transformer and
+a low voltage customer.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-even"><td><a href="#id11"><span class="problematic" id="id12">*</span></a>lv_2ph_len_mi
+*</td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage, 2 phase lines.</td>
+<td>Needs the nominal
+voltages</td>
+</tr>
+<tr class="row-odd"><td><em>lv_oh_2ph_len
+_mi</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>The total length of low
+voltage, overhead, 2 phase
+lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-even"><td><em>perct_lv_oh_l
+en</em></td>
+<td>Fl
+oa
+t</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Percentage of LV lines that
+are overhead lines.</td>
+<td>Needs the nominal
+voltages and
+line_type.</td>
+</tr>
+<tr class="row-odd"><td><em>ratio_lv_len_
+to_num_cust</em></td>
+<td>Fl
+oa
+t</td>
+<td>mi
+le
+s</td>
+<td>lv_length_miles devided by
+the number of customers.</td>
+<td>Needs nominal
+voltages and load
+information.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="voltage-control-schemes">
+<h3>Voltage control schemes<a class="headerlink" href="#voltage-control-schemes" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="6%" />
+<col width="5%" />
+<col width="37%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Typ
+e</th>
+<th class="head">Un
+it</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>num_regulator
+s</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>The number of regulator
+objects.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_capacitor
+s</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>The number of capacitor
+banks.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>num_boosters</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>The number of boosters.</td>
+<td>Boosters are not
+currently implemented
+in DiTTo.</td>
+</tr>
+<tr class="row-odd"><td><em>avg_regulator
+_sub_distance
+_mi</em></td>
+<td>Flo
+at</td>
+<td>mi
+le
+s</td>
+<td>Mean distance between the
+substation and regulator
+objects.</td>
+<td>If no regulator, this
+metric is Nan.</td>
+</tr>
+<tr class="row-even"><td><em>avg_capacitor
+_sub_distance
+_mi</em></td>
+<td>Flo
+at</td>
+<td>mi
+le
+s</td>
+<td>Mean distance between the
+substation and capacitor
+bank objects.</td>
+<td>If no capacitor, this
+metric is Nan.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="basic-protection">
+<h3>Basic protection<a class="headerlink" href="#basic-protection" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="8%" />
+<col width="6%" />
+<col width="40%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Type</th>
+<th class="head">Uni
+t</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>num_fuses</em></td>
+<td>Inte
+ger</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of Fuses.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_reclosers</em></td>
+<td>Inte
+ger</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of Reclosers.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>num_sectionali
+zers</em></td>
+<td>Inte
+ger</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of Sectionalizers.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_sectionali
+zers_per_reclo
+ser</em></td>
+<td>Floa
+t</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td><em>No_of_Sectionalizers</em>
+divided by
+<em>No_of_Reclosers</em>.</td>
+<td>If no recloser,
+this metric is
+Nan</td>
+</tr>
+<tr class="row-even"><td><em>avg_recloser_
+sub_distance_m
+i</em></td>
+<td>Floa
+t</td>
+<td>mil
+es</td>
+<td>Mean distance between the
+substation and recloser
+objects.</td>
+<td>If no recloser,
+this metric is
+Nan</td>
+</tr>
+<tr class="row-odd"><td><em>num_breakers</em></td>
+<td>Inte
+ger</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of Breakers.</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="reconfiguration-options">
+<h3>Reconfiguration Options<a class="headerlink" href="#reconfiguration-options" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="6%" />
+<col width="5%" />
+<col width="34%" />
+<col width="34%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Typ
+e</th>
+<th class="head">Un
+it</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>num_switches</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of switches.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_interrupt
+ors</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of interruptors.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><a href="#id13"><span class="problematic" id="id14">*</span></a>num_links_ad
+jacent_feeders
+*</td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of links between
+the current feeder and
+other feeders.</td>
+<td>This metrics only works
+when computing metrics
+per feeder on a system
+with multiple feeders.</td>
+</tr>
+<tr class="row-odd"><td><em>num_loops</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of loops within
+the feeder.</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="transformers">
+<h3>Transformers<a class="headerlink" href="#transformers" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="6%" />
+<col width="5%" />
+<col width="32%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Typ
+e</th>
+<th class="head">Un
+it</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>num_distribution
+_transformers</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of distribution
+transformers.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_overloaded_
+transformers</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of distribution
+transformers where its
+secondary KVA rating is
+smaller than the sum of
+downstream load KVA.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><a href="#id15"><span class="problematic" id="id16">*</span></a>sum_distribution
+_transformer_mva
+*</td>
+<td>Flo
+at</td>
+<td>MV
+A</td>
+<td>Sum of distribution
+transformer total
+capacity (sum of ratings
+accross the windings)</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_1ph_transfo
+rmers</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of one phase
+transformers.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>num_3ph_transfo
+rmers</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of three phase
+transformers.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>ratio_1ph_to_3
+ph_transformers</em></td>
+<td>Flo
+at</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td><em>nb_1ph_Xfrm</em> divided
+by <em>nb_3ph_Xfrm</em></td>
+<td>if there is no three
+phase transformer, this
+metric is Nan.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="substations">
+<h3>Substations<a class="headerlink" href="#substations" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="11%" />
+<col width="9%" />
+<col width="39%" />
+<col width="13%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Type</th>
+<th class="head">Unit</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>substation_name</em></td>
+<td>String</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>The name of the substation.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>sub_capacity_mva</em></td>
+<td>Float</td>
+<td>MVA</td>
+<td>The capacity of the substation.</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="load-specification">
+<h3>Load specification<a class="headerlink" href="#load-specification" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="6%" />
+<col width="13%" />
+<col width="39%" />
+<col width="19%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Typ
+e</th>
+<th class="head">Unit</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>sum_load_kw</em></td>
+<td>Flo
+at</td>
+<td>Watts</td>
+<td>Total active power demand.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>sum_load_pha_kw</em></td>
+<td>Flo
+at</td>
+<td>Watts</td>
+<td>Total active power demand on
+phase A.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>sum_load_phb_kw</em></td>
+<td>Flo
+at</td>
+<td>Watts</td>
+<td>Total active power demand on
+phase B.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>sum_load_phc_kw</em></td>
+<td>Flo
+at</td>
+<td>Watts</td>
+<td>Total active power demand on
+phase C.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><a href="#id17"><span class="problematic" id="id18">*</span></a>sum_load_kvar
+*</td>
+<td>Flo
+at</td>
+<td>Vars</td>
+<td>Total reactive power demand.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>perct_lv_pha_load_kw</em></td>
+<td>Flo
+at</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Percentage of low voltage
+active power demand on phase
+A.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>perct_lv_phb_load_kw</em></td>
+<td>Flo
+at</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Percentage of low voltage
+active power demand on phase
+B.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>perct_lv_phc_load_kw</em></td>
+<td>Flo
+at</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Percentage of low voltage
+active power demand on phase
+C.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>num_lv_1ph_l
+oads</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of low voltage, 1
+phase loads</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>num_lv_3ph_l
+oads</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of low voltage, 3
+phase loads</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>num_mv_3ph_l
+oads</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of medium voltage, 3
+phase loads</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>avg_num_load_per_transforme
+r</em></td>
+<td>Flo
+at</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Average number of loads per
+distribution transformer.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>avg_load_pf</em></td>
+<td>Flo
+at</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Average power factor for
+loads.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><a href="#id19"><span class="problematic" id="id20">*</span></a>avg_load_imba
+lance_by_phase
+*</td>
+<td>Flo
+at</td>
+<td>Watts</td>
+<td>TODO</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>num_customers</em></td>
+<td>Int
+ege
+r</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Number of customers.</td>
+<td>Need customer
+information.</td>
+</tr>
+<tr class="row-odd"><td><em>customer_densi
+ty</em></td>
+<td>Flo
+at</td>
+<td>per
+square
+miles</td>
+<td><em>No_of_Customers</em> divided
+by the convex Hull surface of
+the feeder.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>load_density_
+kw</em></td>
+<td>Flo
+at</td>
+<td>per
+square
+miles</td>
+<td><em>Total_Demand_kW</em> divided
+by the convex Hull surface of
+the feeder.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>load_density_
+kvar</em></td>
+<td>Flo
+at</td>
+<td>per
+square
+miles</td>
+<td><a href="#id21"><span class="problematic" id="id22">*</span></a>Total_Reactive_Power_kVar
+*
+divided by the convex Hull
+surface of the feeder.</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="graph-topology">
+<h3>Graph Topology<a class="headerlink" href="#graph-topology" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="11%" />
+<col width="10%" />
+<col width="33%" />
+<col width="15%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Metric name</th>
+<th class="head">Type</th>
+<th class="head">Unit</th>
+<th class="head">Metric description</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><em>avg_degree</em></td>
+<td>Float</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Mean degree.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><em>Char_path_Length</em></td>
+<td>Float</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Average path length.</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><em>diameter</em></td>
+<td>Float</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>Diameter of the graph.</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="how-to-compute-the-metrics">
+<h2>How to compute the metrics<a class="headerlink" href="#how-to-compute-the-metrics" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="easy-situation-compute-metrics-on-a-single-feeder">
+<h3>Easy situation: compute metrics on a single feeder<a class="headerlink" href="#easy-situation-compute-metrics-on-a-single-feeder" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="method-1-command-line-interface">
+<h4>Method 1: Command Line Interface<a class="headerlink" href="#method-1-command-line-interface" title="Permalink to this headline">¶</a></h4>
+<p>Not implemented yet.</p>
+</div>
+<div class="section" id="method-2-using-a-python-script">
+<h4>Method 2: Using a Python script<a class="headerlink" href="#method-2-using-a-python-script" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="step-1-read-the-model-into-ditto">
+<h5>Step 1: Read the model into DiTTo<a class="headerlink" href="#step-1-read-the-model-into-ditto" title="Permalink to this headline">¶</a></h5>
+<p>We assume that we have a model in OpenDSS representing a single feeder,
+and that we want to compute all the available metrics on it. The first
+step is to read in the model (more information on reading capabilities
+in <code class="docutils literal notranslate"><span class="pre">cli-examples.md</span></code>)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ditto.model.store</span> <span class="kn">import</span> <span class="n">Store</span>
+<span class="kn">from</span> <span class="nn">ditto.readers.opendss.read</span> <span class="kn">import</span> <span class="n">Reader</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Store</span><span class="p">()</span> <span class="c1">#Create a Store object</span>
+
+<span class="c1">#Initialize the reader with the master and coordinate files of our system</span>
+<span class="n">dss_reader</span> <span class="o">=</span> <span class="n">Reader</span><span class="p">(</span><span class="n">master_file</span><span class="o">=</span><span class="s1">&#39;./OpenDSS/master.dss&#39;</span><span class="p">,</span>
+                    <span class="n">buscoordinates_file</span><span class="o">=</span><span class="s1">&#39;./OpenDSS/buscoords.dss&#39;</span><span class="p">)</span>
+
+<span class="c1">#Parse...</span>
+<span class="n">dss_reader</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-2-modify-the-model-optional">
+<h5>Step 2: Modify the model (optional)<a class="headerlink" href="#step-2-modify-the-model-optional" title="Permalink to this headline">¶</a></h5>
+<p>This step is optional but most of the time needed. In our example, since
+we are reading from OpenDSS, we do not have information on the nominal
+voltages for <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">Lines</span></code>. Since a lot of metrics are divided
+according to low voltage (LV) and medium voltage (MV), we need to add
+this information.</p>
+<p>In this situation, we have the nominal voltage of the source as well as
+the nominal voltage of the transformers (primary and secondary). We can
+use the following approach that will go from the source down to the
+customers and set the nominal voltages of the equipments:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ditto.modify.system_structure</span> <span class="kn">import</span> <span class="n">system_structure_modifier</span>
+
+<span class="c1">#Create a system_structure_modifier object</span>
+<span class="c1">#We can specify the name of the source and its voltage</span>
+<span class="c1">#Otherwise, the source and its voltage will be search in the model</span>
+<span class="n">modifier</span> <span class="o">=</span> <span class="n">system_structure_modifier</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1">#Set the nominal voltages of all nodes in the system</span>
+<span class="n">modifier</span><span class="o">.</span><span class="n">set_nominal_voltages_recur</span><span class="p">()</span>
+
+<span class="c1">#Use the nodes voltages to set the nominal voltages of the lines</span>
+<span class="n">modifier</span><span class="o">.</span><span class="n">set_nominal_voltages_recur_line</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This example only shows one of the modification possibilities. More
+information on modifications and post-processing can be found in
+<code class="docutils literal notranslate"><span class="pre">modifications.md</span></code></p>
+</div>
+<div class="section" id="step-3-compute-the-metrics">
+<h5>Step 3: Compute the metrics<a class="headerlink" href="#step-3-compute-the-metrics" title="Permalink to this headline">¶</a></h5>
+<p>This step of the process creates a <code class="docutils literal notranslate"><span class="pre">NetworkAnalyzer</span></code> object with the
+modified model and compute the metrics on it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ditto.metrics.network_analysis</span> <span class="kn">import</span> <span class="n">NetworkAnalyzer</span>
+
+<span class="c1">#Instanciate the NetworkAnalyzer object</span>
+<span class="c1">#WARNING: In case the model was modified, we need to use modifier.model</span>
+<span class="c1">#If we did not do any changes, then simply pass model</span>
+<span class="c1">#Again, the name of the source can be provided to avoid the search</span>
+<span class="n">network_analyst</span> <span class="o">=</span> <span class="n">NetworkAnalyzer</span><span class="p">(</span><span class="n">modifier</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1">#Compute all the metrics</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">compute_all_metrics</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this example, we have a single feeder so we call the
+<code class="docutils literal notranslate"><span class="pre">compute_all_metrics()</span></code> method. It is also possible to compute metrics
+per feeder when we have a system with multiple feeders using the
+<code class="docutils literal notranslate"><span class="pre">compute_all_metrics_per_feeder()</span></code> method. The process might be a bit
+more complicated since the network has to be properly partitioned. More
+information for this process is available in the section “Advanced:
+Compute metrics for multiple feeders”.</p>
+</div>
+<div class="section" id="step-4-view-export-the-results">
+<h5>Step 4: View/export the results<a class="headerlink" href="#step-4-view-export-the-results" title="Permalink to this headline">¶</a></h5>
+<p>The final step of the process is obviously to have a look at the
+metrics. There are mainly two ways to do so. The first method is simply
+to look at the <code class="docutils literal notranslate"><span class="pre">results</span></code> attribute of the <code class="docutils literal notranslate"><span class="pre">NetworkAnalyzer</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="n">network_analyst</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This prints a dictionary where the keys are the feeder names (in our
+case we have only one key since we have only one feeder), and the values
+are dictionaries holding the metrics:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>{&#39;name_of_feeder1&#39;: {&#39;name_of_metric1&#39;: value1,
+                     &#39;name_of_metric2&#39;: value2,
+                     ...
+                    }
+&#39;name_of_feeder2&#39;: {&#39;name_of_metric1&#39;: value1,
+                    &#39;name_of_metric2&#39;: value2,
+                     ...
+                    }
+ ...
+}
+</pre></div>
+</div>
+<p>Getting a the value of a specific metric for a given feeder:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="n">network_analyst</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;name_of_feeder1&#39;</span><span class="p">][</span><span class="s1">&#39;name_of_metric2&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The second method is to export the metrics first and look at the export.
+The metrics can be exported to Excel using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#Provide the path to the file</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s1">&#39;./output/metrics.xlsx&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that this will not export distribution metrics. To export
+everything in <code class="docutils literal notranslate"><span class="pre">network_analyst.results</span></code> use the JSON export method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">network_analyst</span><span class="o">.</span><span class="n">export_json</span><span class="p">(</span><span class="s1">&#39;./output/metrics.json&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="advanced-compute-metrics-for-multiple-feeders">
+<h3>Advanced: compute metrics for multiple feeders<a class="headerlink" href="#advanced-compute-metrics-for-multiple-feeders" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id23">
+<h4>Method 1: Command Line Interface<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h4>
+<p>Not implemented yet.</p>
+</div>
+<div class="section" id="id24">
+<h4>Method 2: Using a Python script<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h4>
+<p>It is also possible to extract metrics when we have a system composed of
+multiple feeders. In this situation, we might want to:</p>
+<ul class="simple">
+<li>compute the metrics on the whole system</li>
+<li>compute the metrics for all feeders</li>
+</ul>
+<p>The first point is straightforward, just proceed as for the single
+feeder case.</p>
+<div class="section" id="step-1-and-2-read-and-modify-as-before">
+<h5>Step 1 and 2: Read and modify as before<a class="headerlink" href="#step-1-and-2-read-and-modify-as-before" title="Permalink to this headline">¶</a></h5>
+<p>For computing metrics per feeder, we first read the model into DiTTo and
+apply, if needed, modifications to it (exactly as for the single feeder
+case):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ditto.model.store</span> <span class="kn">import</span> <span class="n">Store</span>
+<span class="kn">from</span> <span class="nn">ditto.readers.opendss.read</span> <span class="kn">import</span> <span class="n">Reader</span>
+<span class="kn">from</span> <span class="nn">ditto.modify.system_structure</span> <span class="kn">import</span> <span class="n">system_structure_modifier</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Store</span><span class="p">()</span> <span class="c1">#Create a Store object</span>
+
+<span class="c1">#Initialize the reader with the master and coordinate files of our system</span>
+<span class="n">dss_reader</span> <span class="o">=</span> <span class="n">Reader</span><span class="p">(</span><span class="n">master_file</span><span class="o">=</span><span class="s1">&#39;./OpenDSS/master.dss&#39;</span><span class="p">,</span>
+                    <span class="n">buscoordinates_file</span><span class="o">=</span><span class="s1">&#39;./OpenDSS/buscoords.dss&#39;</span><span class="p">)</span>
+
+<span class="c1">#Parse...</span>
+<span class="n">dss_reader</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1">#Create a system_structure_modifier object</span>
+<span class="c1">#We can specify the name of the source and its voltage</span>
+<span class="c1">#Otherwise, the source and its voltage will be search in the model</span>
+<span class="n">modifier</span> <span class="o">=</span> <span class="n">system_structure_modifier</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1">#Set the nominal voltages of all nodes in the system</span>
+<span class="n">modifier</span><span class="o">.</span><span class="n">set_nominal_voltages_recur</span><span class="p">()</span>
+
+<span class="c1">#Use the nodes voltages to set the nominal voltages of the lines</span>
+<span class="n">modifier</span><span class="o">.</span><span class="n">set_nominal_voltages_recur_line</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-3-create-a-network-analyzer">
+<h5>Step 3: Create a network analyzer<a class="headerlink" href="#step-3-create-a-network-analyzer" title="Permalink to this headline">¶</a></h5>
+<p>We then create a <code class="docutils literal notranslate"><span class="pre">NetworkAnalyzer</span></code> object as for the single feeder
+case:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ditto.metrics.network_analysis</span> <span class="kn">import</span> <span class="n">NetworkAnalyzer</span>
+
+<span class="c1">#Instanciate the NetworkAnalyzer object</span>
+<span class="n">network_analyst</span> <span class="o">=</span> <span class="n">NetworkAnalyzer</span><span class="p">(</span><span class="n">modifier</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-4-provide-information-on-the-feeder-compositions">
+<h5>Step 4: Provide information on the feeder compositions<a class="headerlink" href="#step-4-provide-information-on-the-feeder-compositions" title="Permalink to this headline">¶</a></h5>
+<p>Now, we need to provide feeder information to the <code class="docutils literal notranslate"><span class="pre">NetworkAnalyzer</span></code>
+using the <code class="docutils literal notranslate"><span class="pre">add_feeder_information()</span></code> method wich takes the following
+inputs:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">feeder_names</span></code> List of names for the feeders</li>
+<li><code class="docutils literal notranslate"><span class="pre">feeder_nodes</span></code> List of lists which contains all nodes in the
+feeders. Thats is, <code class="docutils literal notranslate"><span class="pre">feeder_nodes[2]</span></code>is the full list of nodes
+belonging to <code class="docutils literal notranslate"><span class="pre">feeder_names[2]</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">substations</span></code> List of the substation names.</li>
+<li><code class="docutils literal notranslate"><span class="pre">feeder_types</span></code> This could be a list of strings to tag each feeder
+with a type (<code class="docutils literal notranslate"><span class="pre">industrial</span></code> <code class="docutils literal notranslate"><span class="pre">rural</span></code> or a single string to tag all
+feeders with the same type.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#Fake feeder information</span>
+<span class="n">feeder_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;feeder_1&#39;</span><span class="p">,</span> <span class="s1">&#39;feeder_2&#39;</span><span class="p">,</span> <span class="s1">&#39;feeder_3&#39;</span><span class="p">]</span>
+<span class="n">feeder_nodes</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">,</span><span class="s1">&#39;E&#39;</span><span class="p">,</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;G&#39;</span><span class="p">,</span><span class="s1">&#39;H&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span><span class="s1">&#39;J&#39;</span><span class="p">,</span><span class="s1">&#39;K&#39;</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">]]</span>
+<span class="n">substations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;sub_1&#39;</span><span class="p">,</span> <span class="s1">&#39;sub2&#39;</span><span class="p">,</span> <span class="s1">&#39;sub3&#39;</span><span class="p">]</span>
+<span class="n">feeder_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;industrial&#39;</span><span class="p">,</span> <span class="s1">&#39;rural&#39;</span><span class="p">,</span> <span class="s1">&#39;urban&#39;</span><span class="p">]</span>
+
+<span class="c1">#Add the feeder information to the network analyzer</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">add_feeder_information</span><span class="p">(</span><span class="n">feeder_names</span><span class="p">,</span> <span class="n">feeder_nodes</span><span class="p">,</span> <span class="n">substations</span><span class="p">,</span> <span class="n">feeder_types</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This means that you currently have to generate the 4 arguments yourself.
+Algorithms to automatically split a given network into multiple feeders
+are currently tested yet but none has been released yet.</p>
+</div>
+<div class="section" id="step-5-split-the-network-and-compute-the-metrics">
+<h5>Step 5: Split the network and compute the metrics<a class="headerlink" href="#step-5-split-the-network-and-compute-the-metrics" title="Permalink to this headline">¶</a></h5>
+<p>Once this is done, we simply have to call the following methods:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#Split the network representation into multiple subnetworks</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">split_network_into_feeders</span><span class="p">()</span>
+
+<span class="c1">#Loop over the DiTTo objects and set the feeder_name attribute</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">tag_objects</span><span class="p">()</span>
+
+<span class="c1">#Set the names</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">set_names</span><span class="p">()</span>
+
+<span class="c1">#Compute the metrics per feeders</span>
+<span class="n">network_analyst</span><span class="o">.</span><span class="n">compute_all_metrics_per_feeder</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="step-6-export-the-metrics">
+<h4>Step 6: Export the metrics<a class="headerlink" href="#step-6-export-the-metrics" title="Permalink to this headline">¶</a></h4>
+<p>This works exactly as for the single feeder case.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Alliance for Sustainable Energy.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

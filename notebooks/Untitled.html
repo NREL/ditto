@@ -1,0 +1,1206 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; DiTTo  documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/DiTTo_Logo.png"/>
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DiTTo
+          
+
+          
+            
+            <img src="../_static/DiTTo_Logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli-examples.html">DiTTo examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../cli-examples.html#basic-usage-converting-from-one-format-to-another">Basic usage: Converting from one format to another</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../cli-examples.html#method-1-through-the-command-line">Method 1: Through the command line</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#the-convert-command">The convert command</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#from-and-to">From and To</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#input">Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../cli-examples.html#examples">Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#convert-the-ieee-4-node-from-gridlabd-to-opendss">Convert the IEEE 4 node from GridlabD to OpenDSS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#convert-the-ieee-13-node-from-opendss-to-cyme">Convert the IEEE 13 node from OpenDSS to CYME</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../cli-examples.html#method-2-writing-a-script">Method 2: Writing a script</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#step-1-import-the-required-modules">Step 1: Import the required modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#step-2-instanciate-an-empty-store">Step 2: Instanciate an empty store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#step-3-instanciate-a-reader">Step 3: Instanciate a reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#step-4-parse">Step 4: Parse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#step-5-instanciate-the-writer">Step 5: Instanciate the writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../cli-examples.html#step-6-write">Step 6: Write</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../notes.html">Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notes.html#tips-to-use-ditto">Tips to use DiTTo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../notes.html#developing-ditto">Developing DiTTo</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html#types-of-contributions">Types of Contributions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../contributing.html#report-bugs">Report Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../contributing.html#fix-bugs">Fix Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../contributing.html#implement-features">Implement Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../contributing.html#write-documentation">Write Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../contributing.html#submit-feedback">Submit Feedback</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html#tips">Tips</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developer-guide/index.html">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/style.html">Style Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../developer-guide/style.html#naming-conventions">Naming Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../developer-guide/docs.html">Generating Documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../authors.html#development-team">Development Team</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DiTTo</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>&lt;no title&gt;</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/notebooks/Untitled.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput,
+div.nbinput div.prompt,
+div.nbinput div.input_area,
+div.nbinput div[class*=highlight],
+div.nbinput div[class*=highlight] pre,
+div.nboutput,
+div.nbinput div.prompt,
+div.nbinput div.output_area,
+div.nboutput div[class*=highlight],
+div.nboutput div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput,
+div.nboutput {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput,
+    div.nboutput {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput div.prompt pre {
+    color: #303F9F;
+}
+
+/* output prompt */
+div.nboutput div.prompt pre {
+    color: #D84315;
+}
+
+/* all prompts */
+div.nbinput div.prompt,
+div.nboutput div.prompt {
+    min-width: 8ex;
+    padding-top: 0.4em;
+    padding-right: 0.4em;
+    text-align: right;
+    flex: 0;
+}
+@media (max-width: 540px) {
+    div.nbinput div.prompt,
+    div.nboutput div.prompt {
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput div.prompt.empty {
+        padding: 0;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput div.prompt pre,
+div.nboutput div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput div.input_area,
+div.nboutput div.output_area {
+    padding: 0.4em;
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput div.input_area,
+    div.nboutput div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput div.input_area {
+    border: 1px solid #cfcfcf;
+    border-radius: 2px;
+    background: #f7f7f7;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.pngmath center alignment in output cells */
+div.nboutput div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+</style>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="o">%</span><span class="k">pylab</span> inline
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Populating the interactive namespace from numpy and matplotlib
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">cmath</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [138]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">get_zero_sequence_impedance</span><span class="p">(</span><span class="n">sequence_impedance_matrix</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sequence_impedance_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence_impedance_matrix is not valid.&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_positive_sequence_impedance</span><span class="p">(</span><span class="n">sequence_impedance_matrix</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sequence_impedance_matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence_impedance_matrix is not valid.&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_negative_sequence_impedance</span><span class="p">(</span><span class="n">sequence_impedance_matrix</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sequence_impedance_matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;sequence_impedance_matrix is not valid.&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_sequence_impedance_matrix</span><span class="p">(</span><span class="n">phase_impedance_matrix</span><span class="p">):</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">cmath</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">2.</span><span class="o">/</span><span class="mi">3</span><span class="o">*</span><span class="n">cmath</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+    <span class="n">A</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span>
+                <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">a</span><span class="p">],</span>
+                <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">a</span><span class="p">,</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">]])</span>
+    <span class="n">A_inv</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span>
+                           <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">a</span><span class="p">,</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span>
+                           <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">a</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A_inv</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">phase_impedance_matrix</span><span class="p">,</span><span class="n">A</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">kron_reduction</span><span class="p">(</span><span class="n">primitive_impedance_matrix</span><span class="p">):</span>
+    <span class="n">zij</span><span class="o">=</span><span class="n">primitive_impedance_matrix</span><span class="p">[:</span><span class="mi">3</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">zin</span><span class="o">=</span><span class="n">primitive_impedance_matrix</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">][:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="n">znn</span><span class="o">=</span><span class="n">primitive_impedance_matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">znj</span><span class="o">=</span><span class="n">primitive_impedance_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">zij</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">zin</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">znn</span><span class="p">,</span><span class="n">znj</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">carson_equation_self</span><span class="p">(</span><span class="n">ri</span><span class="p">,</span><span class="n">GMRi</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">ri</span><span class="o">+.</span><span class="mi">0953</span><span class="p">,</span><span class="o">.</span><span class="mi">12134</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">GMRi</span><span class="p">)</span><span class="o">+</span><span class="mf">7.93402</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">carson_equation</span><span class="p">(</span><span class="n">Dij</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="o">.</span><span class="mi">09530</span><span class="p">,</span> <span class="o">.</span><span class="mi">12134</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">Dij</span><span class="p">)</span><span class="o">+</span><span class="mf">7.93402</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">get_primitive_impedance_matrix</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">,</span> <span class="n">GMR_list</span><span class="p">,</span> <span class="n">r_list</span><span class="p">):</span>
+    <span class="n">primitive_impedance_matrix</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">n_rows</span><span class="p">,</span><span class="n">n_cols</span><span class="o">=</span><span class="n">dist_matrix</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_rows</span><span class="p">):</span>
+        <span class="n">primitive_impedance_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cols</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="n">j</span><span class="p">:</span>
+                <span class="n">primitive_impedance_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">carson_equation_self</span><span class="p">(</span><span class="n">r_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">GMR_list</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">primitive_impedance_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">carson_equation</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">primitive_impedance_matrix</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_sequence_impedances</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">,</span> <span class="n">GMR_list</span><span class="p">,</span> <span class="n">r_list</span><span class="p">):</span>
+    <span class="n">prim</span><span class="o">=</span><span class="n">get_primitive_impedance_matrix</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">,</span> <span class="n">GMR_list</span><span class="p">,</span> <span class="n">r_list</span><span class="p">)</span>
+    <span class="n">phase</span><span class="o">=</span><span class="n">kron_reduction</span><span class="p">(</span><span class="n">prim</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">phase</span>
+    <span class="n">seq</span><span class="o">=</span><span class="n">get_sequence_impedance_matrix</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_zero_sequence_impedance</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">get_positive_sequence_impedance</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">get_negative_sequence_impedance</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [139]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dist_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">7.0</span><span class="p">,</span><span class="mf">5.6569</span><span class="p">],</span>
+                      <span class="p">[</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">4.5</span><span class="p">,</span><span class="mf">4.272</span><span class="p">],</span>
+                      <span class="p">[</span><span class="mf">7.0</span><span class="p">,</span><span class="mf">4.5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">5.0</span><span class="p">],</span>
+                      <span class="p">[</span><span class="mf">5.6569</span><span class="p">,</span><span class="mf">4.272</span><span class="p">,</span><span class="mf">5.0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
+<span class="n">GMR_list</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0244</span><span class="p">,</span><span class="mf">0.0244</span><span class="p">,</span><span class="mf">0.0244</span><span class="p">,</span><span class="mf">0.00814</span><span class="p">]</span>
+<span class="n">r_list</span><span class="o">=</span><span class="p">[</span><span class="mf">0.306</span><span class="p">,</span><span class="mf">0.306</span><span class="p">,</span><span class="mf">0.306</span><span class="p">,</span><span class="mf">0.592</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [140]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">get_sequence_impedances</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">,</span> <span class="n">GMR_list</span><span class="p">,</span> <span class="n">r_list</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[[ 0.45755083+1.07803538j  0.15594993+0.50167375j  0.15348470+0.38493418j]
+ [ 0.15594993+0.50167375j  0.46662762+1.04816333j  0.15800626+0.423648j  ]
+ [ 0.15348470+0.38493418j  0.15800626+0.423648j    0.46147239+1.06505793j]]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[140]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>((0.77351087368443594+1.9372561657931306j),
+ (0.30606998553726722+0.6270002376486794j),
+ (0.30606998553726722+0.6270002376486794j))
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [126]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">opendssdirect</span> <span class="kn">as</span> <span class="nn">dss</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [127]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dss</span><span class="o">.</span><span class="n">dss_lib</span><span class="o">.</span><span class="n">DSSPut_Command</span><span class="p">(</span><span class="s1">&#39;new circuit.IEEE13Nodeckt basekv=115 pu=1.0001 phases=3 bus1=SourceBus Angle=30 MVAsc3=20000 MVASC1=21000 &#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[127]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>&#39;&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [128]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dss</span><span class="o">.</span><span class="n">dss_lib</span><span class="o">.</span><span class="n">DSSPut_Command</span><span class="p">(</span><span class="s1">&#39;New Line.650632 Phases=3 Bus1=RG60.1.2.3 Bus2=632.1.2.3 R1=0.30606998553726722 R0=0.77351087368443594 X0=1.9372561657931306 X1=0.6270002376486794 Length=2000 units=ft&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[128]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>&#39;&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [129]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dss</span><span class="o">.</span><span class="n">Lines</span><span class="o">.</span><span class="n">First</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[129]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>1
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [137]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dss</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">lines_to_dataframe</span><span class="p">()[</span><span class="s1">&#39;RMatrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[137]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>array([ list([0.09813333333333332, 0.04013333333333333, 0.04013333333333333, 0.04013333333333333, 0.09813333333333332, 0.04013333333333333, 0.04013333333333333, 0.04013333333333333, 0.09813333333333332])], dtype=object)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [142]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dss</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">lines_to_dataframe</span><span class="p">()[</span><span class="s1">&#39;XMatrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[142]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>array([ list([0.2153, 0.0947, 0.0947, 0.0947, 0.2153, 0.0947, 0.0947, 0.0947, 0.2153])], dtype=object)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [146]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="mf">0.30606998553726722</span><span class="o">+</span><span class="mf">0.77351087368443594</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[146]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>0.4618836149196568
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [147]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="p">(</span><span class="mf">0.77351087368443594</span><span class="o">-</span><span class="mf">0.30606998553726722</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[147]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>0.15581362938238957
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [148]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="p">(</span><span class="mf">1.9372561657931306</span><span class="o">-</span><span class="mf">0.6270002376486794</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[148]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>0.4367519760481504
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [150]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">print</span> <span class="n">dss</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">lines_to_dataframe</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+              Bus1       Bus2   C0   C1  \
+650632  rg60.1.2.3  632.1.2.3  1.6  3.4
+
+                                                  CMatrix Count EmergAmps  \
+650632  [2.8, -0.6, -0.6, -0.6, 2.8, -0.6, -0.6, -0.6,...     1       600
+
+       Geometry Length LineCode  ...    \
+650632            2000           ...
+
+                                                  RMatrix       Rg  Rho  \
+650632  [0.0981333333333, 0.0401333333333, 0.040133333...  0.01805  100
+
+       Spacing Units       X0     X1  \
+650632             5  1.93726  0.627
+
+                                                  XMatrix        Xg  Yprim
+650632  [0.2153, 0.0947, 0.0947, 0.0947, 0.2153, 0.094...  0.155081  [0.0]
+
+[1 rows x 27 columns]
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [152]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="s1">&#39;c&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [153]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">a</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[153]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>&#39;a&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [187]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">a</span><span class="o">=</span><span class="p">{}</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;test&#39;</span><span class="p">:</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [188]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">a</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[188]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>{0: {&#39;test&#39;: 0},
+ 1: {&#39;test&#39;: 1},
+ 2: {&#39;test&#39;: 4},
+ 3: {&#39;test&#39;: 9},
+ 4: {&#39;test&#39;: 16},
+ 5: {&#39;test&#39;: 25},
+ 6: {&#39;test&#39;: 36},
+ 7: {&#39;test&#39;: 49},
+ 8: {&#39;test&#39;: 64},
+ 9: {&#39;test&#39;: 81}}
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [189]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">b</span><span class="o">=</span><span class="p">{}</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">16</span><span class="p">):</span>
+    <span class="n">b</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;biscotte&#39;</span><span class="p">:</span><span class="n">k</span><span class="o">-</span><span class="mi">2</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [190]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">b</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[190]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>{4: {&#39;biscotte&#39;: 2},
+ 5: {&#39;biscotte&#39;: 3},
+ 6: {&#39;biscotte&#39;: 4},
+ 7: {&#39;biscotte&#39;: 5},
+ 8: {&#39;biscotte&#39;: 6},
+ 9: {&#39;biscotte&#39;: 7},
+ 10: {&#39;biscotte&#39;: 8},
+ 11: {&#39;biscotte&#39;: 9},
+ 12: {&#39;biscotte&#39;: 10},
+ 13: {&#39;biscotte&#39;: 11},
+ 14: {&#39;biscotte&#39;: 12},
+ 15: {&#39;biscotte&#39;: 13}}
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [194]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+
+<span></span><span class="k">def</span> <span class="nf">merge_dict</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k2</span><span class="p">,</span><span class="n">v2</span> <span class="ow">in</span> <span class="n">d2</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">d1</span><span class="p">:</span>
+            <span class="n">d1</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d1</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span><span class="o">=</span><span class="n">v2</span>
+    <span class="k">return</span> <span class="n">d1</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [195]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">merge_dict</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[195]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>{0: {&#39;test&#39;: 0},
+ 1: {&#39;test&#39;: 1},
+ 2: {&#39;test&#39;: 4},
+ 3: {&#39;test&#39;: 9},
+ 4: {&#39;biscotte&#39;: 2, &#39;test&#39;: 16},
+ 5: {&#39;biscotte&#39;: 3, &#39;test&#39;: 25},
+ 6: {&#39;biscotte&#39;: 4, &#39;test&#39;: 36},
+ 7: {&#39;biscotte&#39;: 5, &#39;test&#39;: 49},
+ 8: {&#39;biscotte&#39;: 6, &#39;test&#39;: 64},
+ 9: {&#39;biscotte&#39;: 7, &#39;test&#39;: 81},
+ 10: {&#39;biscotte&#39;: 8},
+ 11: {&#39;biscotte&#39;: 9},
+ 12: {&#39;biscotte&#39;: 10},
+ 13: {&#39;biscotte&#39;: 11},
+ 14: {&#39;biscotte&#39;: 12},
+ 15: {&#39;biscotte&#39;: 13}}
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [185]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">a</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [186]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">a</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[186]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>{0: {&#39;test&#39;: 0},
+ 1: {&#39;test&#39;: 1},
+ 2: {&#39;test&#39;: 4},
+ 3: {&#39;test&#39;: 9},
+ 4: {&#39;biscotte&#39;: 2},
+ 5: {&#39;biscotte&#39;: 3},
+ 6: {&#39;biscotte&#39;: 4},
+ 7: {&#39;biscotte&#39;: 5},
+ 8: {&#39;biscotte&#39;: 6},
+ 9: {&#39;biscotte&#39;: 7},
+ 10: {&#39;biscotte&#39;: 8},
+ 11: {&#39;biscotte&#39;: 9},
+ 12: {&#39;biscotte&#39;: 10},
+ 13: {&#39;biscotte&#39;: 11},
+ 14: {&#39;biscotte&#39;: 12},
+ 15: {&#39;biscotte&#39;: 13}}
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [168]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">b</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[168]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>{9: {&#39;test&#39;: 729},
+ 10: {&#39;test&#39;: 1000},
+ 11: {&#39;test&#39;: 1331},
+ 12: {&#39;test&#39;: 1728},
+ 13: {&#39;test&#39;: 2197},
+ 14: {&#39;test&#39;: 2744},
+ 15: {&#39;test&#39;: 3375}}
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [197]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">class</span> <span class="nc">test</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">=</span><span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">=</span><span class="mi">3</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [198]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">tt</span><span class="o">=</span><span class="n">test</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [199]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">dd</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">:</span><span class="mi">9</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [200]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">dd</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">tt</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [204]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">tt</span><span class="o">.</span><span class="n">c</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[204]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>3
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [205]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mat</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="bp">None</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="bp">None</span><span class="p">],[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [207]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [208]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mat</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[208]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>array([[0, 1, None],
+       [1, 0, None],
+       [None, None, 0]], dtype=object)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [212]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mat</span><span class="p">[</span><span class="n">mat</span><span class="o">!=</span><span class="bp">None</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[212]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>array([0, 1, 1, 0, 0], dtype=object)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [214]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">],[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>In [217]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">pos</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre>
+<span></span>Out[217]:
+</pre></div>
+</div>
+<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>array([[False, False],
+       [ True,  True],
+       [False, False],
+       [ True,  True]], dtype=bool)
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Alliance for Sustainable Energy.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,787 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Populating the interactive namespace from numpy and matplotlib\n"
+     ]
+    }
+   ],
+   "source": [
+    "%pylab inline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "import cmath"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 138,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "def get_zero_sequence_impedance(sequence_impedance_matrix):\n",
+    "    try:\n",
+    "        return sequence_impedance_matrix[0,0]\n",
+    "    except:\n",
+    "        raise ValueError('sequence_impedance_matrix is not valid.')\n",
+    "        \n",
+    "def get_positive_sequence_impedance(sequence_impedance_matrix):\n",
+    "    try:\n",
+    "        return sequence_impedance_matrix[1,1]\n",
+    "    except:\n",
+    "        raise ValueError('sequence_impedance_matrix is not valid.')\n",
+    "        \n",
+    "def get_negative_sequence_impedance(sequence_impedance_matrix):\n",
+    "    try:\n",
+    "        return sequence_impedance_matrix[2,2]\n",
+    "    except:\n",
+    "        raise ValueError('sequence_impedance_matrix is not valid.')\n",
+    "        \n",
+    "def get_sequence_impedance_matrix(phase_impedance_matrix):\n",
+    "    a=cmath.exp(complex(0,2./3*cmath.pi))\n",
+    "    A=np.array([[complex(1.0,0),complex(1.0,0),complex(1.0,0)],\n",
+    "                [complex(1.0,0),a**2,a],\n",
+    "                [complex(1.0,0),a,a**2]])\n",
+    "    A_inv=1./3.0*np.array([[complex(1.0,0),complex(1.0,0),complex(1.0,0)],\n",
+    "                           [complex(1.0,0),a,a**2],\n",
+    "                           [complex(1.0,0),a**2,a]])\n",
+    "    return np.dot(A_inv,np.dot(phase_impedance_matrix,A))\n",
+    "\n",
+    "def kron_reduction(primitive_impedance_matrix):\n",
+    "    zij=primitive_impedance_matrix[:3,:3]\n",
+    "    zin=primitive_impedance_matrix[:3,-1][:,np.newaxis]\n",
+    "    znn=primitive_impedance_matrix[3,3]\n",
+    "    znj=primitive_impedance_matrix[-1,:3]\n",
+    "    return zij-np.dot(zin,np.dot(1.0/znn,znj)[np.newaxis])\n",
+    "\n",
+    "def carson_equation_self(ri,GMRi):\n",
+    "    return complex(ri+.0953,.12134*(np.log(1.0/GMRi)+7.93402))\n",
+    "\n",
+    "def carson_equation(Dij):\n",
+    "    return complex(.09530, .12134*(np.log(1.0/Dij)+7.93402))\n",
+    "\n",
+    "def get_primitive_impedance_matrix(dist_matrix, GMR_list, r_list):\n",
+    "    primitive_impedance_matrix=[]\n",
+    "    n_rows,n_cols=dist_matrix.shape\n",
+    "    for i in range(n_rows):\n",
+    "        primitive_impedance_matrix.append([])\n",
+    "        for j in range(n_cols):\n",
+    "            if i==j:\n",
+    "                primitive_impedance_matrix[-1].append(carson_equation_self(r_list[i],GMR_list[i]))\n",
+    "            else:\n",
+    "                primitive_impedance_matrix[-1].append(carson_equation(dist_matrix[i,j]))\n",
+    "    return np.array(primitive_impedance_matrix)\n",
+    "\n",
+    "def get_sequence_impedances(dist_matrix, GMR_list, r_list):\n",
+    "    prim=get_primitive_impedance_matrix(dist_matrix, GMR_list, r_list)\n",
+    "    phase=kron_reduction(prim)\n",
+    "    print phase\n",
+    "    seq=get_sequence_impedance_matrix(phase)\n",
+    "    return get_zero_sequence_impedance(seq), get_positive_sequence_impedance(seq), get_negative_sequence_impedance(seq)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 139,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "dist_matrix=np.array([[0,2.5,7.0,5.6569],\n",
+    "                      [2.5,0,4.5,4.272],\n",
+    "                      [7.0,4.5,0,5.0],\n",
+    "                      [5.6569,4.272,5.0,0]])\n",
+    "GMR_list=[0.0244,0.0244,0.0244,0.00814]\n",
+    "r_list=[0.306,0.306,0.306,0.592]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 140,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[ 0.45755083+1.07803538j  0.15594993+0.50167375j  0.15348470+0.38493418j]\n",
+      " [ 0.15594993+0.50167375j  0.46662762+1.04816333j  0.15800626+0.423648j  ]\n",
+      " [ 0.15348470+0.38493418j  0.15800626+0.423648j    0.46147239+1.06505793j]]\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "((0.77351087368443594+1.9372561657931306j),\n",
+       " (0.30606998553726722+0.6270002376486794j),\n",
+       " (0.30606998553726722+0.6270002376486794j))"
+      ]
+     },
+     "execution_count": 140,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "get_sequence_impedances(dist_matrix, GMR_list, r_list)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 126,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "import opendssdirect as dss"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 127,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "''"
+      ]
+     },
+     "execution_count": 127,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dss.dss_lib.DSSPut_Command('new circuit.IEEE13Nodeckt basekv=115 pu=1.0001 phases=3 bus1=SourceBus Angle=30 MVAsc3=20000 MVASC1=21000 ')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 128,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "''"
+      ]
+     },
+     "execution_count": 128,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dss.dss_lib.DSSPut_Command('New Line.650632 Phases=3 Bus1=RG60.1.2.3 Bus2=632.1.2.3 R1=0.30606998553726722 R0=0.77351087368443594 X0=1.9372561657931306 X1=0.6270002376486794 Length=2000 units=ft')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 129,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "1"
+      ]
+     },
+     "execution_count": 129,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dss.Lines.First()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 137,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([ list([0.09813333333333332, 0.04013333333333333, 0.04013333333333333, 0.04013333333333333, 0.09813333333333332, 0.04013333333333333, 0.04013333333333333, 0.04013333333333333, 0.09813333333333332])], dtype=object)"
+      ]
+     },
+     "execution_count": 137,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dss.utils.lines_to_dataframe()['RMatrix'].values"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 142,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([ list([0.2153, 0.0947, 0.0947, 0.0947, 0.2153, 0.0947, 0.0947, 0.0947, 0.2153])], dtype=object)"
+      ]
+     },
+     "execution_count": 142,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dss.utils.lines_to_dataframe()['XMatrix'].values"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 146,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.4618836149196568"
+      ]
+     },
+     "execution_count": 146,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "1.0/3.0*(2*0.30606998553726722+0.77351087368443594)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 147,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.15581362938238957"
+      ]
+     },
+     "execution_count": 147,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "1.0/3.0*(0.77351087368443594-0.30606998553726722)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 148,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.4367519760481504"
+      ]
+     },
+     "execution_count": 148,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "1.0/3.0*(1.9372561657931306-0.6270002376486794)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 150,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "              Bus1       Bus2   C0   C1  \\\n",
+      "650632  rg60.1.2.3  632.1.2.3  1.6  3.4   \n",
+      "\n",
+      "                                                  CMatrix Count EmergAmps  \\\n",
+      "650632  [2.8, -0.6, -0.6, -0.6, 2.8, -0.6, -0.6, -0.6,...     1       600   \n",
+      "\n",
+      "       Geometry Length LineCode  ...    \\\n",
+      "650632            2000           ...     \n",
+      "\n",
+      "                                                  RMatrix       Rg  Rho  \\\n",
+      "650632  [0.0981333333333, 0.0401333333333, 0.040133333...  0.01805  100   \n",
+      "\n",
+      "       Spacing Units       X0     X1  \\\n",
+      "650632             5  1.93726  0.627   \n",
+      "\n",
+      "                                                  XMatrix        Xg  Yprim  \n",
+      "650632  [0.2153, 0.0947, 0.0947, 0.0947, 0.2153, 0.094...  0.155081  [0.0]  \n",
+      "\n",
+      "[1 rows x 27 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print dss.utils.lines_to_dataframe()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 152,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "a,b,c=sorted(['b','a','c'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 153,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'a'"
+      ]
+     },
+     "execution_count": 153,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "a"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 187,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "a={}\n",
+    "for k in range(10):\n",
+    "    a[k]={'test':k**2}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 188,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{0: {'test': 0},\n",
+       " 1: {'test': 1},\n",
+       " 2: {'test': 4},\n",
+       " 3: {'test': 9},\n",
+       " 4: {'test': 16},\n",
+       " 5: {'test': 25},\n",
+       " 6: {'test': 36},\n",
+       " 7: {'test': 49},\n",
+       " 8: {'test': 64},\n",
+       " 9: {'test': 81}}"
+      ]
+     },
+     "execution_count": 188,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "a"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 189,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "b={}\n",
+    "for k in range(4,16):\n",
+    "    b[k]={ 'biscotte':k-2}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 190,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{4: {'biscotte': 2},\n",
+       " 5: {'biscotte': 3},\n",
+       " 6: {'biscotte': 4},\n",
+       " 7: {'biscotte': 5},\n",
+       " 8: {'biscotte': 6},\n",
+       " 9: {'biscotte': 7},\n",
+       " 10: {'biscotte': 8},\n",
+       " 11: {'biscotte': 9},\n",
+       " 12: {'biscotte': 10},\n",
+       " 13: {'biscotte': 11},\n",
+       " 14: {'biscotte': 12},\n",
+       " 15: {'biscotte': 13}}"
+      ]
+     },
+     "execution_count": 190,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "b"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 194,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "\n",
+    "def merge_dict(d1,d2):\n",
+    "    for k2,v2 in d2.iteritems():\n",
+    "        if k2 in d1:\n",
+    "            d1[k2].update(v2)\n",
+    "        else:\n",
+    "            d1[k2]=v2\n",
+    "    return d1\n",
+    "            "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 195,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{0: {'test': 0},\n",
+       " 1: {'test': 1},\n",
+       " 2: {'test': 4},\n",
+       " 3: {'test': 9},\n",
+       " 4: {'biscotte': 2, 'test': 16},\n",
+       " 5: {'biscotte': 3, 'test': 25},\n",
+       " 6: {'biscotte': 4, 'test': 36},\n",
+       " 7: {'biscotte': 5, 'test': 49},\n",
+       " 8: {'biscotte': 6, 'test': 64},\n",
+       " 9: {'biscotte': 7, 'test': 81},\n",
+       " 10: {'biscotte': 8},\n",
+       " 11: {'biscotte': 9},\n",
+       " 12: {'biscotte': 10},\n",
+       " 13: {'biscotte': 11},\n",
+       " 14: {'biscotte': 12},\n",
+       " 15: {'biscotte': 13}}"
+      ]
+     },
+     "execution_count": 195,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "merge_dict(a,b)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 185,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "a.update(b)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 186,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{0: {'test': 0},\n",
+       " 1: {'test': 1},\n",
+       " 2: {'test': 4},\n",
+       " 3: {'test': 9},\n",
+       " 4: {'biscotte': 2},\n",
+       " 5: {'biscotte': 3},\n",
+       " 6: {'biscotte': 4},\n",
+       " 7: {'biscotte': 5},\n",
+       " 8: {'biscotte': 6},\n",
+       " 9: {'biscotte': 7},\n",
+       " 10: {'biscotte': 8},\n",
+       " 11: {'biscotte': 9},\n",
+       " 12: {'biscotte': 10},\n",
+       " 13: {'biscotte': 11},\n",
+       " 14: {'biscotte': 12},\n",
+       " 15: {'biscotte': 13}}"
+      ]
+     },
+     "execution_count": 186,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "a"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 168,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{9: {'test': 729},\n",
+       " 10: {'test': 1000},\n",
+       " 11: {'test': 1331},\n",
+       " 12: {'test': 1728},\n",
+       " 13: {'test': 2197},\n",
+       " 14: {'test': 2744},\n",
+       " 15: {'test': 3375}}"
+      ]
+     },
+     "execution_count": 168,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "b"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 197,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "class test:\n",
+    "   \n",
+    "    def __init__(self):\n",
+    "        self.a=1\n",
+    "        self.b=2\n",
+    "        self.c=3"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 198,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "tt=test()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 199,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "dd={'a':3,'b':9}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 200,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "for k,v in dd.iteritems():\n",
+    "    setattr(tt,k,v)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 204,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "3"
+      ]
+     },
+     "execution_count": 204,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "tt.c"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 205,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "mat=[[0,1,None],[1,0,None],[None,None,0]]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 207,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mat=np.array(mat)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 208,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[0, 1, None],\n",
+       "       [1, 0, None],\n",
+       "       [None, None, 0]], dtype=object)"
+      ]
+     },
+     "execution_count": 208,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "mat"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 212,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([0, 1, 1, 0, 0], dtype=object)"
+      ]
+     },
+     "execution_count": 212,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "mat[mat!=None]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 214,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "pos=np.array([[1,1],[None,None],[4,4],[None,None]])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 217,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[False, False],\n",
+       "       [ True,  True],\n",
+       "       [False, False],\n",
+       "       [ True,  True]], dtype=bool)"
+      ]
+     },
+     "execution_count": 217,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "pos==np.array([None,None])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
