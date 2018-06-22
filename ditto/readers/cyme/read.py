@@ -982,6 +982,11 @@ class Reader(AbstractReader):
                         _from = v["fromnodeid"]
                         _to = v["tonodeid"]
                         phases = list(v["phase"])
+                    if v["tonodeid"] == source_equivalent_data["nodeid"]: # In case the edge is connected backwards
+                        sectionID = k
+                        _from = v["tonodeid"]
+                        _to = v["fromnodeid"]
+                        phases = list(v["phase"])
                 try:
                     api_source = PowerSource(model)
                 except:
@@ -1710,6 +1715,7 @@ class Reader(AbstractReader):
             "6": "BC",
             "7": "ABC",
             "none": "none",
+            "NONE": "none",
             "A": "A",
             "B": "B",
             "C": "C",
@@ -3922,6 +3928,7 @@ class Reader(AbstractReader):
             "secondarytap": 11,
             "primarybasevoltage": 17,
             "secondarybasevoltage": 18,
+            "setpoint":21,
             "maxbuck": 29,
             "maxboost": 30,
             "ct": 31,
@@ -4086,6 +4093,7 @@ class Reader(AbstractReader):
                         "primarybasevoltage",
                         "secondarybasevoltage",
                         "tertiarybasevoltage",
+                        "setpoint",
                         "maxbuck",
                         "maxboost",
                         "ct",
