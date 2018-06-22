@@ -281,6 +281,7 @@ class Writer(AbstractWriter):
         two_windings_transformer_string_list = []
         three_windings_transformer_string_list = []
         regulator_string_list = []
+        network_protector_string_list = []
 
         # The linecodes dictionary is used to group lines which have the same properties
         # (impedance matrix, ampacity...)
@@ -303,6 +304,7 @@ class Writer(AbstractWriter):
         self.fusecodes = {}
         self.reclosercodes = {}
         self.breakercodes = {}
+        self.network_protectorcodes = {}
 
         intermediate_nodes = []
 
@@ -492,6 +494,7 @@ class Writer(AbstractWriter):
                         "fuse": fuse_string_list,
                         "recloser": recloser_string_list,
                         "breaker": breaker_string_list,
+                        "network_protector": network_protector_string_list,
                     }
 
                     # Empty new strings for sections and overhead lines
@@ -536,6 +539,9 @@ class Writer(AbstractWriter):
 
                         elif hasattr(i, "is_breaker") and i.is_breaker == 1:
                             line_type = "breaker"
+
+                        elif hasattr(i, "is_network_protector") and i.is_network_protector == 1:
+                            line_type = "network_protector"
 
                         # ONLY if line is not a fuse nor a recloser, but is a switch do we output a switch...
                         elif hasattr(i, "is_switch") and i.is_switch == 1:
@@ -973,6 +979,87 @@ class Writer(AbstractWriter):
                             else:
                                 new_line_string += ",DEFAULT"
 
+                        elif line_type == "network_protector":
+                            #import pdb;pdb.set_trace()
+                            if (
+                                i.nameclass is not None
+                                and i.nameclass != ""
+                                and i.wires[0].ampacity is not None
+                                and i.nominal_voltage is not None
+                            ):
+                                new_code2 = "{amps},{amps},{amps},{amps},{amps},{kvll},1,600.000000,,,,,,,,0,0,0,0,0,".format(
+                                    amps=i.wires[0].ampacity,
+                                    kvll=i.nominal_voltage * 10 ** -3,
+                                )
+
+                                if (
+                                    i.nameclass
+                                    + "_"
+                                    + str(int(i.nominal_voltage))
+                                    + "_"
+                                    + str(int(i.wires[0].ampacity))
+                                    not in self.network_protectorcodes
+                                ):
+                                    self.network_protectorcodes[
+                                        i.nameclass
+                                        + "_"
+                                        + str(int(i.nominal_voltage))
+                                        + "_"
+                                        + str(int(i.wires[0].ampacity))
+                                    ] = new_code2
+                                    new_line_string += (
+                                        ","
+                                        + i.nameclass
+                                        + "_"
+                                        + str(int(i.nominal_voltage))
+                                        + "_"
+                                        + str(int(i.wires[0].ampacity))
+                                    )
+
+                                elif (
+                                    self.network_protectorcodes[
+                                        i.nameclass
+                                        + "_"
+                                        + str(int(i.nominal_voltage))
+                                        + "_"
+                                        + str(int(i.wires[0].ampacity))
+                                    ]
+                                    != new_code2
+                                ):
+                                    found = False
+                                    for k, v in self.network_protectorcodes.items():
+                                        if new_code2 == v:
+                                            new_line_string += "," + str(k)
+                                            found = True
+                                    if not found:
+                                        self.network_protectorcodes[
+                                            i.nameclass
+                                            + "_"
+                                            + str(int(i.nominal_voltage))
+                                            + "_"
+                                            + str(int(i.wires[0].ampacity))
+                                        ] = new_code2
+                                        new_line_string += (
+                                            ","
+                                            + i.nameclass
+                                            + "_"
+                                            + str(int(i.nominal_voltage))
+                                            + "_"
+                                            + str(int(i.wires[0].ampacity))
+                                        )
+                                else:
+                                    new_line_string += (
+                                        ","
+                                        + i.nameclass
+                                        + "_"
+                                        + str(int(i.nominal_voltage))
+                                        + "_"
+                                        + str(int(i.wires[0].ampacity))
+                                    )
+
+                            else:
+                                new_line_string += ",DEFAULT"
+
                         elif line_type == "underground":
                             tt = {}
                             if (
@@ -1227,6 +1314,7 @@ class Writer(AbstractWriter):
                                 and line_type != "fuse"
                                 and line_type != "recloser"
                                 and line_type != "breaker"
+                                and line_type != "network_protector"
                             ):
                                 try:
                                     new_line_string += "," + str(i.length)
@@ -1239,10 +1327,11 @@ class Writer(AbstractWriter):
                                 and line_type != "fuse"
                                 and line_type != "recloser"
                                 and line_type != "breaker"
+                                and line_type != "network_protector"
                             ):
                                 new_line_string += ","
 
-                        if line_type == "switch" or line_type == "breaker":
+                        if line_type == "switch" or line_type == "breaker" or line_type=="network_protector":
                             closed_phase = np.sort(
                                 [
                                     wire.phase
@@ -1281,6 +1370,7 @@ class Writer(AbstractWriter):
                             or line_type == "fuse"
                             or line_type == "recloser"
                             or line_type == "breaker"
+                            or line_type == "network_protector"
                         ):
                             new_line_string += "," + new_sectionID
 
@@ -2999,6 +3089,16 @@ class Writer(AbstractWriter):
                 for breaker_string in breaker_string_list:
                     f.write(breaker_string + "\n")
 
+            # Network Protectors
+            #
+            if len(network_protector_string_list) > 0:
+                f.write("\n[NETWORKPROTECTOR SETTING]\n")
+                f.write(
+                    "FORMAT_NETWORKPROTECTORSETTING=SectionID,EqID,Location,ClosedPhase,Locked,ConnectionStatus,DeviceNumber\n"
+                )
+                for net_prot_string in network_protector_string_list:
+                    f.write(net_prot_string + "\n")
+
             # Capacitors
             #
             if len(capacitor_string_list) > 0:
@@ -3186,6 +3286,22 @@ class Writer(AbstractWriter):
                 "DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,0,600.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,0,0,0,\n"
             )
             for ID, data in self.breakercodes.items():
+                f.write(str(ID) + ",")
+                f.write(data)
+                f.write("\n")
+
+            # Network Protectors
+            #
+            # Writing default values for Network Protectors
+            #
+            f.write("\n[NETWORKPROTECTOR]\n")
+            f.write(
+                "FORMAT_NETWORKPROTECTOR=ID,Amps,Amps_1,Amps_2,Amps_3,Amps_4,KVLL,Reversible,InterruptingRating,FailRate,TmpFailRate,MajorRepairTime,MinorRepairTime,MajorFailureProportion,StuckProbability,SwitchTime,SymbolOpenID,SymbolCloseID,SinglePhaseLocking,Comments\n"
+            )
+            f.write(
+                "DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,1,600.000000,,,,,,,,0,0,0,\n"
+            )
+            for ID, data in self.network_protectorcodes.items():
                 f.write(str(ID) + ",")
                 f.write(data)
                 f.write("\n")
