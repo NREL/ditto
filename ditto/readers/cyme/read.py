@@ -2439,6 +2439,8 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         switch_data["nameclass"] = new_line["nameclass"]
 
+                    new_line["nominal_voltage"] = float(self.switches[settings["eqid"]]["kvll"]) * 10**3
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2509,6 +2511,8 @@ class Reader(AbstractReader):
                         sectionalizer_data = self.sectionalizers[settings["eqid"]]
                     else:
                         sectionalizer_data = {}
+
+                    new_line["nominal_voltage"] = float(self.sectionalizers[settings["eqid"]]["kvll"]) * 10**3
 
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
@@ -2585,6 +2589,8 @@ class Reader(AbstractReader):
                     else:
                         fuse_data = {}
 
+                    new_line["nominal_voltage"] = float(self.fuses[settings["eqid"]]["kvll"]) * 10**3
+
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         fuse_data["nameclass"] = new_line["nameclass"]
@@ -2654,6 +2660,8 @@ class Reader(AbstractReader):
                         closedphase = (
                             "ABC"
                         )  # If no info, then everything is closed by default...
+
+                    new_line["nominal_voltage"] = float(self.reclosers[settings["eqid"]]["kvll"]) * 10**3
 
                     # Get the recloser equipment data
                     if "eqid" in settings and settings["eqid"] in self.reclosers:
@@ -2736,6 +2744,8 @@ class Reader(AbstractReader):
                     else:
                         breaker_data = {}
 
+                    new_line["nominal_voltage"] = float(self.breakers[settings["eqid"]]["kvll"]) * 10**3
+
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         breaker_data["nameclass"] = new_line["nameclass"]
@@ -2805,6 +2815,8 @@ class Reader(AbstractReader):
                         closedphase = (
                             "ABC"
                         )  # If no info, then everything is closed by default...
+
+                    new_line["nominal_voltage"] = float(self.network_protectors[settings["eqid"]]["kvll"]) * 10**3
 
                     # Get the network protector equipment data
                     if (
