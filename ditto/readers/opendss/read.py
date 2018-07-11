@@ -1456,7 +1456,7 @@ class Reader(AbstractReader):
                 # rated_power removed from powerTransformer and added to Winding by Nicolas
                 try:
                     windings[w].rated_power = (
-                        float(data["kVAs"][w]) * 10 ** 3
+                        float(data["kVAs"][w]) * 10 ** 3 / float(N_windings)
                     )  # DiTTo in volt ampere
                 except:
                     windings[w].rated_power = None
@@ -1466,7 +1466,7 @@ class Reader(AbstractReader):
                 # emergency_power removed from powerTransformer and added to Winding by Tarek
                 try:
                     windings[w].emergency_power = (
-                        float(data["emerghkVA"]) * 10 ** 3
+                        float(data["emerghkVA"]) * 10 ** 3 / float(N_windings)
                     )  # DiTTo in volt ampere
                 except:
                     windings[w].emergency_power = None
@@ -1628,7 +1628,7 @@ class Reader(AbstractReader):
                     if "kVAs" in trans:
                         try:
                             api_regulator.windings[w].rated_power = (
-                                float(trans["kVAs"][w]) * 10 ** 3
+                                float(trans["kVAs"][w]) * 10 ** 3 / float(N_windings)
                             )  # DiTTo in volt ampere
                         except:
                             pass
@@ -1638,7 +1638,9 @@ class Reader(AbstractReader):
                     if "emerghkVA" in trans:
                         try:
                             api_regulator.windings[w].emergency_power = (
-                                float(trans["emerghkVA"][w]) * 10 ** 3
+                                float(trans["emerghkVA"][w])
+                                * 10 ** 3
+                                / float(N_windings)
                             )  # DiTTo in volt ampere
                         except:
                             pass
