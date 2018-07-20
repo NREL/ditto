@@ -118,8 +118,16 @@ class Load(DiTToHasTraits):
         help="""Flag that indicates whether the element is a center tap load or not.""",
         default_value=0,
     )
-    center_tap_perct = Float(
-        help="""Percentage of the load between active 1 and neutral. Should be a float between 0 and 1. The percentage of the load between neutral and active 2 will be 1 - center_tap_perct.""",
+    center_tap_perct_1_N = Float(
+        help="""Percentage of the load between active 1 and neutral. Should be a float between 0 and 1.""",
+        default_value=None,
+    )
+    center_tap_perct_N_2 = Float(
+        help="""Percentage of the load between neutal and active 2. Should be a float between 0 and 1.""",
+        default_value=None,
+    )
+    center_tap_perct_1_2 = Float(
+        help="""Percentage of the load between active 1 and active 2. Should be a float between 0 and 1.""",
         default_value=None,
     )
 
