@@ -3798,8 +3798,36 @@ class Writer(AbstractWriter):
                     # Location
                     new_load_string += ",0"
 
-                    # CustomerNumber, CustomerType, ConnectionStatus
-                    new_customer_load_string += ",0,PQ,0"
+                    # CustomerNumber, CustomerType
+                    new_customer_load_string += ",0,PQ"
+
+                    # CenterTapPercent and values
+                    # Only fill these fields if the load is a center tap load and
+                    # if we have the information we need to split the load
+                    #
+                    if (
+                        hasattr(i, "is_center_tap")
+                        and i.is_center_tap == 1
+                        and hasattr(i, "center_tap_perct_1_N")
+                        and i.center_tap_perct_1_N is not None
+                        and hasattr(i, "center_tap_perct_N_2")
+                        and i.center_tap_perct_N_2 is not None
+                        and hasattr(i, "center_tap_perct_1_2")
+                        and i.center_tap_perct_1_2 is not None
+                    ):
+                        new_customer_load_string += ",{p1},{p2},{PP},{QQ},{PPP},{QQQ}".format(
+                            p1=i.center_tap_perct_1_N * 100,
+                            p2=i.center_tap_perct_N_2 * 100,
+                            PP=P * i.center_tap_perct_1_N,
+                            QQ=Q * i.center_tap_perct_1_N,
+                            PPP=P * i.center_tap_perct_N_2,
+                            QQQ=Q * i.center_tap_perct_N_2,
+                        )
+                    else:
+                        new_customer_load_string += ",,,,,,"
+
+                    # ConnectionStatus
+                    new_customer_load_string += ",0"
 
                     if new_customer_load_string != "":
                         customer_load_string_list.append(new_customer_load_string)
@@ -3835,7 +3863,7 @@ class Writer(AbstractWriter):
 
             f.write("\n[CUSTOMER LOADS]\n")
             f.write(
-                "FORMAT_CUSTOMERLOADS=SectionID,DeviceNumber,LoadType,ValueType,LoadPhase,Value1,Value2,CustomerNumber,CustomerType,ConnectionStatus\n"
+                "FORMAT_CUSTOMERLOADS=SectionID,DeviceNumber,LoadType,ValueType,LoadPhase,Value1,Value2,CustomerNumber,CustomerType,CenterTapPercent,CenterTapPercent2,LoadValue1N1,LoadValue1N2,LoadValue2N1,LoadValue2N2,ConnectionStatus\n"
             )
 
             for customer_load_string in customer_load_string_list:
