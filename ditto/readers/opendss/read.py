@@ -46,7 +46,6 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
-
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -583,44 +582,46 @@ class Reader(AbstractReader):
                 buses[b2_name]["phases"] += b2_phases
                 buses[b2_name]["phases"] = np.unique(buses[b2_name]["phases"]).tolist()
 
-        #Extract the transformer data
-        transformers = dss.utils.class_to_dataframe('transformer')
-        #Loop over the transformers to get the phases
+        # Extract the transformer data
+        transformers = dss.utils.class_to_dataframe("transformer")
+        # Loop over the transformers to get the phases
         for name, data in transformers.items():
 
-            #Parse bus1 data
-            for bus in data['buses']:
-                if '.' in bus:
-                    temp = bus.split('.')
+            # Parse bus1 data
+            for bus in data["buses"]:
+                if "." in bus:
+                    temp = bus.split(".")
                     b_name = temp[0].strip()
                     b_phases = list(map(lambda x: int(x), temp[1:]))
-                elif data['phases'] == '3':
+                elif data["phases"] == "3":
                     b_name = bus.strip()
                     b_phases = [1, 2, 3]
                 else:
                     b_name = None
                     b_phases = None
 
-            
-                #Update the buses dictionary
+                # Update the buses dictionary
                 if b_name is not None and not b_name in buses:
                     if b_name not in self.all_object_names:
                         self.all_object_names.append(b_name)
                     else:
-                        self.logger.warning('Duplicate object Node {name}'.format(name=b_name))
+                        self.logger.warning(
+                            "Duplicate object Node {name}".format(name=b_name)
+                        )
                     buses[b_name] = {}
-                    buses[b_name]['positions'] = None
-                    buses[b_name]['phases'] = b_phases
-                elif not 'phases' in buses[b_name]:
-                    buses[b_name]['phases'] = b_phases
+                    buses[b_name]["positions"] = None
+                    buses[b_name]["phases"] = b_phases
+                elif not "phases" in buses[b_name]:
+                    buses[b_name]["phases"] = b_phases
                 else:
-                    buses[b_name]['phases'] += b_phases
-                    buses[b_name]['phases'] = np.unique(buses[b_name]['phases']).tolist()
+                    buses[b_name]["phases"] += b_phases
+                    buses[b_name]["phases"] = np.unique(
+                        buses[b_name]["phases"]
+                    ).tolist()
 
-
-        #Extract the load data
-        loads = dss.utils.class_to_dataframe('load')
-        #Loop over the loads to get the phases
+        # Extract the load data
+        loads = dss.utils.class_to_dataframe("load")
+        # Loop over the loads to get the phases
         for name, data in loads.items():
             # Parse bus1 data
             if "." in data["bus1"]:
@@ -698,19 +699,17 @@ class Reader(AbstractReader):
 
         # In OpenDSS, fuses are attached to line objects
         # Here, we get all the line names which have a fuse
-        #Even if a fuse is disabled we identify it as a fuse. 
-        #If the line is disabled we ignore it unless it's a switch
+        # Even if a fuse is disabled we identify it as a fuse.
+        # If the line is disabled we ignore it unless it's a switch
         fuses = dss.utils.class_to_dataframe("Fuse")
         fuses_names = [
-            d["MonitoredObj"][0].lower().split(".")[1]
-            for name, d in fuses.items()
+            d["MonitoredObj"][0].lower().split(".")[1] for name, d in fuses.items()
         ]
 
         # In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe("recloser")
         reclosers_names = [
-            d["MonitoredObj"][0].lower().split(".")[1]
-            for name, d in reclosers.items()
+            d["MonitoredObj"][0].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
         start = time.time()

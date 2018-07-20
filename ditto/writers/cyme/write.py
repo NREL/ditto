@@ -594,7 +594,7 @@ class Writer(AbstractWriter):
                                 if (
                                     hasattr(wire, "nameclass")
                                     and wire.nameclass is not None
-                                    and wire.nameclass !=''
+                                    and wire.nameclass != ""
                                 ):
                                     wire_name = wire.nameclass
                                     # If not already in the conductors dictionary, add it
@@ -993,7 +993,7 @@ class Writer(AbstractWriter):
                                 if (
                                     hasattr(i.wires[0], "nameclass")
                                     and i.wires[0].nameclass is not None
-                                    and i.wires[0].nameclass!=''
+                                    and i.wires[0].nameclass != ""
                                 ):
                                     cable_name = i.wires[0].nameclass
                                     self.cablecodes[cable_name] = tt
@@ -1115,7 +1115,11 @@ class Writer(AbstractWriter):
                                                     * 10 ** 3
                                                 )
 
-                                if hasattr(i, "nameclass") and i.nameclass is not None and i.nameclass!='':
+                                if (
+                                    hasattr(i, "nameclass")
+                                    and i.nameclass is not None
+                                    and i.nameclass != ""
+                                ):
                                     line_nameclass = i.nameclass
                                     self.linecodes_overhead[line_nameclass] = tt
                                     new_line_string += "," + line_nameclass
@@ -3371,36 +3375,36 @@ class Writer(AbstractWriter):
                         #
                         # TODO: automatically detect if default or real values should be used for source impedance
                         #
-                        if 'R1' in sub:
-                            f.write(sub['R1']+',')
+                        if "R1" in sub:
+                            f.write(sub["R1"] + ",")
                         else:
-                            f.write('DEFAULT,')
-                        if 'X1' in sub:
-                            f.write(sub['X1']+',')
+                            f.write("DEFAULT,")
+                        if "X1" in sub:
+                            f.write(sub["X1"] + ",")
                         else:
-                            f.write('DEFAULT,')
-                        if 'R0' in sub:
-                            f.write(sub['R0']+',')
+                            f.write("DEFAULT,")
+                        if "R0" in sub:
+                            f.write(sub["R0"] + ",")
                         else:
-                            f.write('DEFAULT,')
-                        if 'X0' in sub:
-                            f.write(sub['X0']+',')
+                            f.write("DEFAULT,")
+                        if "X0" in sub:
+                            f.write(sub["X0"] + ",")
                         else:
-                            f.write('DEFAULT,')
-                        if 'R2' in sub:
-                            f.write(sub['R2']+',')
-                        elif 'R0' in sub:
-                            f.write(sub['R0']+',')
+                            f.write("DEFAULT,")
+                        if "R2" in sub:
+                            f.write(sub["R2"] + ",")
+                        elif "R0" in sub:
+                            f.write(sub["R0"] + ",")
                         else:
-                            f.write('DEFAULT,')
-                        if 'X2' in sub:
-                            f.write(sub['X2']+',')
-                        elif 'X0' in sub:
-                            f.write(sub['X0']+',')
+                            f.write("DEFAULT,")
+                        if "X2" in sub:
+                            f.write(sub["X2"] + ",")
+                        elif "X0" in sub:
+                            f.write(sub["X0"] + ",")
                         else:
-                            f.write('DEFAULT,')
-                        if 'phase_angle' in sub:
-                            f.write(sub['phase_angle']+',')
+                            f.write("DEFAULT,")
+                        if "phase_angle" in sub:
+                            f.write(sub["phase_angle"] + ",")
                         else:
                             f.write(",")
 
