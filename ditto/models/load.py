@@ -113,5 +113,23 @@ class Load(DiTToHasTraits):
         default_value=0,
     )
 
+    # Modification: Nicolas (July 2018)
+    is_center_tap = Int(
+        help="""Flag that indicates whether the element is a center tap load or not.""",
+        default_value=0,
+    )
+    center_tap_perct_1_N = Float(
+        help="""Percentage of the load between active 1 and neutral. Should be a float between 0 and 1.""",
+        default_value=None,
+    )
+    center_tap_perct_N_2 = Float(
+        help="""Percentage of the load between neutal and active 2. Should be a float between 0 and 1.""",
+        default_value=None,
+    )
+    center_tap_perct_1_2 = Float(
+        help="""Percentage of the load between active 1 and active 2. Should be a float between 0 and 1.""",
+        default_value=None,
+    )
+
     def build(self, model):
         self._model = model
