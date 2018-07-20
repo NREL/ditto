@@ -594,6 +594,7 @@ class Writer(AbstractWriter):
                                 if (
                                     hasattr(wire, "nameclass")
                                     and wire.nameclass is not None
+                                    and wire.nameclass != ""
                                 ):
                                     wire_name = wire.nameclass
                                     # If not already in the conductors dictionary, add it
@@ -992,6 +993,7 @@ class Writer(AbstractWriter):
                                 if (
                                     hasattr(i.wires[0], "nameclass")
                                     and i.wires[0].nameclass is not None
+                                    and i.wires[0].nameclass != ""
                                 ):
                                     cable_name = i.wires[0].nameclass
                                     self.cablecodes[cable_name] = tt
@@ -1113,7 +1115,11 @@ class Writer(AbstractWriter):
                                                     * 10 ** 3
                                                 )
 
-                                if hasattr(i, "nameclass") and i.nameclass is not None:
+                                if (
+                                    hasattr(i, "nameclass")
+                                    and i.nameclass is not None
+                                    and i.nameclass != ""
+                                ):
                                     line_nameclass = i.nameclass
                                     self.linecodes_overhead[line_nameclass] = tt
                                     new_line_string += "," + line_nameclass
@@ -1129,7 +1135,7 @@ class Writer(AbstractWriter):
                                         found = False
                                         for k, v in self.linecodes_overhead.items():
                                             if v == tt:
-                                                new_line_string += ",line_" + str(k)
+                                                new_line_string += "," + str(k)
                                                 found = True
                                         if not found:
                                             ID += 1
@@ -2920,7 +2926,7 @@ class Writer(AbstractWriter):
                         self.substations[j]["sub_ID"] = "sub_" + str(k)
                 self.substation_IDs[_source] = "sub{}".format(k)
                 f.write(
-                    "{sourceID},sub_{k},{nodeID},{NetID}\n".format(
+                    "sub_{k},sub_{k},{nodeID},{NetID}\n".format(
                         sourceID=sourceID, k=k, nodeID=nodeID, NetID=NetworkID
                     )
                 )
@@ -3162,7 +3168,7 @@ class Writer(AbstractWriter):
                             X = 0
                             Y = 0
                         f.write(
-                            "{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,20.631826,6.877275,1\n".format(
+                            "{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,0.755872,0.251957,1\n".format(
                                 NetID=f_name.split("ation_")[1],
                                 X=X,
                                 Y=Y,
@@ -3369,40 +3375,34 @@ class Writer(AbstractWriter):
                         #
                         # TODO: automatically detect if default or real values should be used for source impedance
                         #
-                        # if sub.has_key('R1'):
-                        # f.write(sub['R1']+',')
-                        f.write("DEFAULT,")
-                        # else:
-                        #    f.write(',')
-                        # if sub.has_key('X1'):
-                        #    f.write(sub['X1']+',')
-                        f.write("DEFAULT,")
-                        # else:
-                        #    f.write(',')
-                        # if sub.has_key('R0'):
-                        #    f.write(sub['R0']+',')
-                        f.write("DEFAULT,")
-                        # else:
-                        #    f.write(',')
-                        # if sub.has_key('X0'):
-                        #    f.write(sub['X0']+',')
-                        f.write("DEFAULT,")
-                        # else:
-                        #    f.write(',')
-                        # if sub.has_key('R2'):
-                        #    f.write(sub['R2']+',')
-                        f.write("DEFAULT,")
-                        # elif sub.has_key('R0'):
-                        #    f.write(sub['R0']+',')
-                        # else:
-                        #    f.write(',')
-                        # if sub.has_key('X2'):
-                        #    f.write(sub['X2']+',')
-                        f.write("DEFAULT,")
-                        # elif sub.has_key('X0'):
-                        #    f.write(sub['X0']+',')
-                        # else:
-                        #    f.write(',')
+                        if "R1" in sub:
+                            f.write(sub["R1"] + ",")
+                        else:
+                            f.write("DEFAULT,")
+                        if "X1" in sub:
+                            f.write(sub["X1"] + ",")
+                        else:
+                            f.write("DEFAULT,")
+                        if "R0" in sub:
+                            f.write(sub["R0"] + ",")
+                        else:
+                            f.write("DEFAULT,")
+                        if "X0" in sub:
+                            f.write(sub["X0"] + ",")
+                        else:
+                            f.write("DEFAULT,")
+                        if "R2" in sub:
+                            f.write(sub["R2"] + ",")
+                        elif "R0" in sub:
+                            f.write(sub["R0"] + ",")
+                        else:
+                            f.write("DEFAULT,")
+                        if "X2" in sub:
+                            f.write(sub["X2"] + ",")
+                        elif "X0" in sub:
+                            f.write(sub["X0"] + ",")
+                        else:
+                            f.write("DEFAULT,")
                         if "phase_angle" in sub:
                             f.write(sub["phase_angle"] + ",")
                         else:
