@@ -41,9 +41,7 @@ def test_center_tap_load_writing():
     with open(os.path.join(current_directory, "loads.txt"), "r") as fp:
         lines = fp.readlines()
 
-    assert (
-        lines[-1] == ",SPOT,0,C,0.01,0.008,0,PQ,50.0,50.0,0.005,0.004,0.005,0.004,0\n"
-    )
+    assert lines[-1] == ",SPOT,0,C,,,0,PQ,50.0,50.0,0.005,0.004,0.005,0.004,0\n"
 
     # Cleaning
     os.remove(os.path.join(current_directory, "loads.txt"))
