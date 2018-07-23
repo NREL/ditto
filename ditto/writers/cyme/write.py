@@ -3709,16 +3709,19 @@ class Writer(AbstractWriter):
                     new_load_string += ",SPOT"
 
                     if hasattr(i, "connection_type") and i.connection_type is not None:
-                        try:
-                            new_load_string += (
-                                ","
-                                + self.connection_configuration_mapping(
-                                    i.connection_type
+                        if i.is_center_tap == 1:
+                            new_load_string += ",6"
+                        else:
+                            try:
+                                new_load_string += (
+                                    ","
+                                    + self.connection_configuration_mapping(
+                                        i.connection_type
+                                    )
                                 )
-                            )
-                        except:
-                            new_load_string += ","
-                            pass
+                            except:
+                                new_load_string += ","
+                                pass
 
                     phases = ""
                     if hasattr(i, "phase_loads") and i.phase_loads is not None:
