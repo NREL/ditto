@@ -3783,7 +3783,7 @@ class Writer(AbstractWriter):
 
                         # Value1=P
                         try:
-                            if hasattr(i, "is_center_tap") and i.is_center_tap == 0:
+                            if hasattr(i, "is_center_tap") and i.is_center_tap != 1:
                                 new_customer_load_string += "," + str(P)
                             else:
                                 new_customer_load_string += ","
@@ -3793,7 +3793,7 @@ class Writer(AbstractWriter):
 
                         # Value2=P
                         try:
-                            if hasattr(i, "is_center_tap") and i.is_center_tap == 0:
+                            if hasattr(i, "is_center_tap") and i.is_center_tap != 1:
                                 new_customer_load_string += "," + str(Q)
                             else:
                                 new_customer_load_string += ","
