@@ -3783,14 +3783,20 @@ class Writer(AbstractWriter):
 
                         # Value1=P
                         try:
-                            new_customer_load_string += "," + str(P)
+                            if hasattr(i, "is_center_tap") and i.is_center_tap == 0:
+                                new_customer_load_string += "," + str(P)
+                            else:
+                                new_customer_load_string += ","
                         except:
                             new_customer_load_string += ","
                             pass
 
                         # Value2=P
                         try:
-                            new_customer_load_string += "," + str(Q)
+                            if hasattr(i, "is_center_tap") and i.is_center_tap == 0:
+                                new_customer_load_string += "," + str(Q)
+                            else:
+                                new_customer_load_string += ","
                         except:
                             new_customer_load_string += ","
                             pass
