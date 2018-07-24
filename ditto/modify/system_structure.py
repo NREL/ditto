@@ -847,7 +847,24 @@ class system_structure_modifier(Modifier):
         #
         # TODO: Discuss this choice and change the implementation if needed
         #
-        for load, lines, phase in zip(load_list, line_names, phases):
+        for idx, load, lines, phase in zip(
+            range(len(load_list)), load_list, line_names, phases
+        ):
+
+            # If the transformer upstream is a center tap transformer,
+            # then tag this load as a center tap load
+            #
+            if self.model[transformer_names[idx]].is_center_tap == 1:
+                # Tag the load as a center tap load
+                load.is_center_tap = 1
+
+                # Set the percentage to distribute the load between the actives and the neutral
+                # Here we place 50% of the load between active 1 and neutral, and 50% between
+                # neutral and active 2
+                load.center_tap_perct_1_N = .5
+                load.center_tap_perct_N_2 = .5
+                load.center_tap_perct_1_2 = 0
+
             total_P = sum([pl.p for pl in load.phase_loads])
             total_Q = sum([pl.q for pl in load.phase_loads])
             # Take care of the loads first....
