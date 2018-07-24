@@ -70,7 +70,9 @@ class Writer(AbstractWriter):
         else:
             raise ValueError("Unknown configuration {}".format(value))
 
-    def transformer_connection_configuration_mapping(self, value1, value2):
+    def transformer_connection_configuration_mapping(
+        self, value1, value2, transformer_table="transformer"
+    ):
         """
         Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
 
@@ -83,38 +85,58 @@ class Writer(AbstractWriter):
 
         **Mapping:**
 
-        +----------+----------------+------------+
-        |   Value  |       CYME     |  DiTTo     |
-        +----------+----------------+-----+------+
-        |          |                | 1st | 2nd  |
-        +==========+================+=====+======+
-        | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
-        +----------+----------------+-----+------+
-        | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
-        +----------+----------------+-----+------+
-        | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
-        +----------+----------------+-----+------+
-        | 4 or '4' |      'D_D'     | 'D' | 'D'  |
-        +----------+----------------+-----+------+
-        |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
-        +----------+----------------+-----+------+
-        |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
-        +----------+----------------+-----+------+
+        +---------------------+-------------+----------------+------------+
+        | Transformer Setting | Transformer |       CYME     |  DiTTo     |
+        +---------------------+-------------+----------------+-----+------+
+        |                     |             |                | 1st | 2nd  |
+        +=====================+=============+================+=====+======+
+        |      3 or '3'       |  0 or '0'   |      'Y_Y'     | 'Y' | 'Y'  |
+        +---------------------+-------------+----------------+-----+------+
+        |      7 or '7'       |  1 or '1'   |      'D_Y'     | 'D' | 'Y'  |
+        +---------------------+-------------+----------------+-----+------+
+        |      8 or '8'       |  2 or '2'   |      'Y_D'     | 'Y' | 'D'  |
+        +---------------------+-------------+----------------+-----+------+
+        |      2 or '2'       |  4 or '4'   |      'D_D'     | 'D' | 'D'  |
+        +---------------------+-------------+----------------+-----+------+
+        |     11 or '11'      | 11 or '11'  |     'Yg_Zg'    | 'Y' | 'Z'  |
+        +---------------------+-------------+----------------+-----+------+
+        |     12 or '12'      | 12 or '12'  |     'D_Zg'     | 'D' | 'Z'  |
+        +---------------------+-------------+----------------+-----+------+
         """
+        transformer_setting_map = {
+            "Y_Y": "3",
+            "D_Y": "7",
+            "Y_D": "8",
+            "D_D": "2",
+            "Yg_Zg": "11",
+            "D_Zg": "12",
+        }
+        transformer_map = {
+            "Y_Y": "0",
+            "D_Y": "1",
+            "Y_D": "2",
+            "D_D": "4",
+            "Yg_Zg": "11",
+            "D_Zg": "12",
+        }
+        if transformer_table == "transformer_settings":
+            return_map = transformer_setting_map
+        else:
+            return_map = transformer_map
         # if 'Z' not in value1 and 'Z' not in value2:
         #    return value1+'_'+value2
         if value1 == "Y" and value2 == "Y":
-            return "0"
+            return return_map["Y_Y"]
         elif value1 == "D" and value2 == "Y":
-            return "1"
+            return return_map["D_Y"]
         elif value1 == "Y" and value2 == "D":
-            return "2"
+            return return_map["Y_D"]
         elif value1 == "D" and value2 == "D":
-            return "4"
+            return return_map["D_D"]
         elif value1 == "Y" and value2 == "Z":
-            return "11"  # return 'Yg_Zg'
+            return return_map["Y_Z"]
         elif value1 == "D" and value2 == "Z":
-            return "12"  # return 'D_Zg'
+            return return_map["D_Z"]
         else:
             raise ValueError(
                 "Unknown connection configuration for {v1} (wdg1) and {v2} (wdg2)".format(
@@ -1700,6 +1722,7 @@ class Writer(AbstractWriter):
                                     + self.transformer_connection_configuration_mapping(
                                         winding1.connection_type,
                                         winding2.connection_type,
+                                        "transformer_settings",
                                     )
                                 )
                                 CONN = self.transformer_connection_configuration_mapping(
@@ -2248,7 +2271,9 @@ class Writer(AbstractWriter):
                             CONN = ""
                             try:
                                 if TYPE == 4:
-                                    CONN = "15"  # Yg_CT
+                                    CONN = (
+                                        "0"
+                                    )  # Center Tap not a configuration for transformer object. Leave as Y-Y
                                     new_transformer_line += ",15"
                                 else:
                                     new_transformer_line += (
@@ -2260,6 +2285,7 @@ class Writer(AbstractWriter):
                                             transformer_object.windings[
                                                 1
                                             ].connection_type,
+                                            "transformer_settings",
                                         )
                                     )
                                     CONN = self.transformer_connection_configuration_mapping(
