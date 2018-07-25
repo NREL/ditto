@@ -232,13 +232,15 @@ class Reader:
         SectionPhases01 = []
         tt = 0
         for obj in SectionPhases:
-            SectionPhases_thisline = list(SectionPhases[tt])
-            SectionPhases_thisline1 = [
-                s.encode("ascii") for s in SectionPhases_thisline
-            ]
-            SectionPhases_thisline2 = filter(str.strip, SectionPhases_thisline1)
+            SectionPhases_thisline1 = list(SectionPhases[tt])
+            # SectionPhases_thisline1 = [
+            #    s.encode("ascii") for s in SectionPhases_thisline
+            # ]
+            SectionPhases_thisline2 = [s for s in SectionPhases_thisline1 if s != " "]
             SectionPhases01.append(SectionPhases_thisline2)
             tt = tt + 1
+
+        SectionPhases01 = np.array(SectionPhases01)
 
         ## Get the good lines
         i = 0
@@ -246,11 +248,13 @@ class Reader:
         for obj in LineID:
             if IsToEndOpen[i] == 0 and IsFromEndOpen[i] == 0:
                 FromNodeID1 = FromNodeId[i]
-                FromNodeID2 = [s.encode("ascii") for s in FromNodeID1]
-                FromNodeID3 = "".join(FromNodeID2)
+                # FromNodeID2 = [s.encode("ascii") for s in FromNodeID1]
+                # FromNodeID3 = "".join(FromNodeID2)
+                FromNodeID3 = FromNodeID1  # .encode("ascii")
                 ToNodeID1 = ToNodeId[i]
-                ToNodeID2 = [s.encode("ascii") for s in ToNodeID1]
-                ToNodeID3 = "".join(ToNodeID2)
+                # ToNodeID2 = [s.encode("ascii") for s in ToNodeID1]
+                # ToNodeID3 = "".join(ToNodeID2)
+                ToNodeID3 = ToNodeID1  # .encode("ascii")
                 NodeIDgood.append(FromNodeID3)
                 NodeIDgood.append(ToNodeID3)
             i = i + 1
@@ -260,8 +264,9 @@ class Reader:
         NodeID3 = []
         for obj in NodeID:
             NodeID1 = NodeID[i]
-            NodeID2 = [s.encode("ascii") for s in NodeID1]
-            NodeID3.append("".join(NodeID2))
+            # NodeID2 = [s.encode("ascii") for s in NodeID1]
+            # NodeID3.append("".join(NodeID2))
+            NodeID3 = NodeID1  # .encode("ascii")
             i = i + 1
 
         i = 0
@@ -295,6 +300,8 @@ class Reader:
                         CountFrom.append(tt)
                     tt = tt + 1
 
+                CountFrom = np.array(CountFrom)
+
                 ## Search in the nodes in ToNodeID
                 tt = 0
                 CountTo = []
@@ -304,15 +311,17 @@ class Reader:
                         CountTo.append(tt)
                     tt = tt + 1
 
+                CountTo = np.array(CountTo)
+
                 PotentialNodePhases = []
                 ttt = 0
-                if CountFrom:
+                if len(CountFrom) > 0:
                     for obj in CountFrom:
                         PotentialNodePhases.append(SectionPhases01[CountFrom[ttt]])
                         tt = tt + 1
                         ttt = ttt + 1
 
-                if CountTo:
+                if len(CountTo) > 0:
                     ttt = 0
                     for obj in CountTo:
                         PotentialNodePhases.append(SectionPhases01[CountTo[ttt]])
@@ -324,25 +333,31 @@ class Reader:
                     PhaseLength.append(len(PotentialNodePhases[tt]))
                     tt = tt + 1
 
-                index, value = max(enumerate(PhaseLength), key=operator.itemgetter(1))
+                PhaseLength = np.array(PhaseLength)
+
+                index = np.argmax(PhaseLength).flatten()[0]
+                value = np.max(PhaseLength)
+
+                # index, value = max(enumerate(PhaseLength), key=operator.itemgetter(1))
 
                 # SectionPhases_thisline = list(PotentialNodePhases[index])
                 # SectionPhases_thisline1 = [s.encode('ascii') for s in SectionPhases_thisline]
                 # SectionPhases_thisline2 = filter(str.strip, SectionPhases_thisline1)
 
                 # SectionPhases_thisline = [s.decode('utf-8') for s in SectionPhases_thisline2]
-                api_node.phases = PotentialNodePhases[index]
+                for p in PotentialNodePhases[index]:
+                    api_node.phases.append(p)
 
                 ########### Creat Recorder in  Ditto##############################################
 
-                recorderphases = list(PotentialNodePhases[index])
+                # recorderphases = list(PotentialNodePhases[index])
 
-                api_recorder = Recorder(model)
-                api_recorder.name = "recorder" + NodeID[i].lower()
-                api_recorder.parent = NodeID[i].lower()
-                api_recorder.property = "voltage_" + recorderphases[0] + "[kV]"
-                api_recorder.file = "n" + NodeID[i] + ".csv"
-                api_recorder.interval = 50
+                # api_recorder = Recorder(model)
+                # api_recorder.name = "recorder" + NodeID[i].lower()
+                # api_recorder.parent = NodeID[i].lower()
+                # api_recorder.property = "voltage_" + recorderphases[0] + "[kV]"
+                # api_recorder.file = "n" + NodeID[i] + ".csv"
+                # api_recorder.interval = 50
 
             i = i + 1
 
@@ -376,15 +391,18 @@ class Reader:
                 api_line.to_element = ToNodeId[i].lower()
 
                 ### Line Phases##################
-                SectionPhases_thisline = list(SectionPhases[i])
-                SectionPhases_thisline1 = [
-                    s.encode("ascii") for s in SectionPhases_thisline
-                ]
-                SectionPhases_thisline2 = filter(str.strip, SectionPhases_thisline1)
-
+                SectionPhases_thisline1 = list(SectionPhases[i])
+                # SectionPhases_thisline1 = [
+                #    s.encode("ascii") for s in SectionPhases_thisline
+                # ]
                 SectionPhases_thisline = [
-                    s.decode("utf-8") for s in SectionPhases_thisline2
+                    s for s in SectionPhases_thisline1 if s != " "
                 ]
+                # SectionPhases_thisline2 = filter(str.strip, SectionPhases_thisline1)
+
+                # SectionPhases_thisline = [
+                #    s.decode("utf-8") for s in SectionPhases_thisline2
+                # ]
                 NPhase = len(SectionPhases_thisline)
 
                 ## The wires belong to this line
@@ -402,131 +420,151 @@ class Reader:
 
                 tt = 0
                 Count = 0
-                for obj in ConductorName:
-                    Flag = PhaseConductorIDthisline == ConductorName[tt]
+                impedance_matrix = None
+
+                if ConductorName is not None:
+                    for obj in ConductorName:
+                        Flag = PhaseConductorIDthisline == ConductorName[tt]
+                        if Flag == True:
+                            Count = tt
+                        tt = tt + 1
+
+                    r1 = PosSequenceResistance_PerLUL[Count]
+                    x1 = PosSequenceReactance_PerLUL[Count]
+                    r0 = ZeroSequenceResistance_PerLUL[Count]
+                    x0 = ZeroSequenceReactance_PerLUL[Count]
+
+                    # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
+                    #         __________________________
+                    #        | Z0+2*Z+  Z0-Z+   Z0-Z+   |
+                    # Z= 1/3 | Z0-Z+    Z0+2*Z+ Z0-Z+   |
+                    #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
+                    #         --------------------------
+
+                    coeff = 10 ** -3
+                    if NPhase == 2:
+                        impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
+                    if NPhase == 3:
+
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+
+                        if b1 < 0:
+                            b1 = -b1
+                        if b1 == 0:
+                            b1 = float(r1)
+                        if b2 < 0:
+                            b2 = -b2
+                        if b2 == 0:
+                            b2 = float(x1)
+
+                        b = coeff * complex(b1, b2)
+
+                        a = coeff * complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+
+                        impedance_matrix = [[a, b], [b, a]]
+
+                    if NPhase == 4:
+                        a = coeff * complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+
+                        if b1 < 0:
+                            b1 = -b1
+                        if b1 == 0:
+                            b1 = float(r1)
+                        if b2 < 0:
+                            b2 = -b2
+                        if b2 == 0:
+                            b2 = float(x1)
+
+                        b = coeff * complex(b1, b2)
+
+                        impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
+
+                api_line.wires = wires
+
+                if impedance_matrix is not None:
+                    api_line.impedance_matrix = impedance_matrix
+                else:
+                    print("No impedance matrix for line {}".format(api_line.name))
+
+            i = i + 1
+
+        ######### Converting transformer  into Ditto###############
+        i = 0
+        for obj in TransformerId:
+
+            api_transformer = PowerTransformer(model)
+            api_transformer.name = TransformerId[i]
+
+            TransformerTypethisone = TransformerType[i]
+            TransformerSectionIdthisone = TransformerSectionId[i]
+
+            TransformerTypethisone01 = TransformerTypethisone.encode("ascii")
+            TransformerSectionIdthisone01 = TransformerSectionIdthisone.encode("ascii")
+
+            # Find out the from and to elements
+            tt = 0
+            Count = 0
+            for obj in LineID:
+                Flag = TransformerSectionId[i] == LineID[tt]
+                if Flag == True:
+                    Count = tt
+                tt = tt + 1
+            api_transformer.to_element = ToNodeId[Count]
+            api_transformer.from_element = FromNodeId[Count]
+
+            ## Phase of the transformer
+            api_transformer.phases = SectionPhases[Count]
+
+            tt = 0
+            Count = 0
+
+            if TransformerTypesinStock is not None:
+
+                for obj in TransformerTypesinStock:
+                    Flag = TransformerType[i] == TransformerTypesinStock[tt]
                     if Flag == True:
                         Count = tt
                     tt = tt + 1
 
-                r1 = PosSequenceResistance_PerLUL[Count]
-                x1 = PosSequenceReactance_PerLUL[Count]
-                r0 = ZeroSequenceResistance_PerLUL[Count]
-                x0 = ZeroSequenceReactance_PerLUL[Count]
+                TransformerRatedKvathisone = TransformerRatedKva[Count]
+                api_transformer.powerrating = TransformerRatedKvathisone * 1000
+                api_transformer.primaryvoltage = HighSideRatedKv[Count] * 1000
+                api_transformer.secondaryvoltage = LowSideRatedKv[Count] * 1000
 
-                # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
-                #         __________________________
-                #        | Z0+2*Z+  Z0-Z+   Z0-Z+   |
-                # Z= 1/3 | Z0-Z+    Z0+2*Z+ Z0-Z+   |
-                #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
-                #         --------------------------
+                HighSideRatedKvthisone = HighSideRatedKv[Count]
+                PercentImpedancethisone = PercentImpedance[Count]
+                PercentResistancethisone = PercentResistance[Count]
 
-                coeff = 10 ** -3
-                if NPhase == 2:
-                    impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
-                if NPhase == 3:
+                ## Calculate the impedance of this transformer
+                Resistancethisone = (
+                    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
+                    * PercentResistancethisone
+                    / 100
+                )
+                Reactancethisone = (
+                    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
+                    * (PercentImpedancethisone - PercentResistancethisone)
+                    / 100
+                )
 
-                    b1 = float(r0) - float(r1)
-                    b2 = float(x0) - float(x1)
+                transformerimpedance = complex(Resistancethisone, Reactancethisone)
+                #            api_transformer.impedance=repr(transformerimpedance)[1:-1]
+                api_transformer.impedance = transformerimpedance
 
-                    if b1 < 0:
-                        b1 = -b1
-                    if b1 == 0:
-                        b1 = float(r1)
-                    if b2 < 0:
-                        b2 = -b2
-                    if b2 == 0:
-                        b2 = float(x1)
+                ## Connection type of the transformer
+                api_transformer.connectiontype = (
+                    HighVoltageConnectionCode[Count] + LowVoltageConnectionCode[Count]
+                )
 
-                    b = coeff * complex(b1, b2)
-
-                    a = coeff * complex(
-                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                    )
-
-                    impedance_matrix = [[a, b], [b, a]]
-
-                if NPhase == 4:
-                    a = coeff * complex(
-                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                    )
-                    b1 = float(r0) - float(r1)
-                    b2 = float(x0) - float(x1)
-
-                    if b1 < 0:
-                        b1 = -b1
-                    if b1 == 0:
-                        b1 = float(r1)
-                    if b2 < 0:
-                        b2 = -b2
-                    if b2 == 0:
-                        b2 = float(x1)
-
-                    b = coeff * complex(b1, b2)
-
-                    impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-
-                api_line.wires = wires
-                api_line.impedance_matrix = impedance_matrix
             i = i + 1
 
-        ######### Converting transformer  into Ditto###############
-        #         i=0
-        #         for obj in TransformerId:
-        #
-        #             api_transformer=PowerTransformer(model)
-        #             api_transformer.name=TransformerId[i]
-        #
-        #             TransformerTypethisone = TransformerType[i]
-        #             TransformerSectionIdthisone=TransformerSectionId[i]
-        #
-        #             TransformerTypethisone01 = TransformerTypethisone.encode('ascii')
-        #             TransformerSectionIdthisone01 = TransformerSectionIdthisone.encode('ascii')
-        #
-        #
-        #             # Find out the from and to elements
-        #             tt = 0
-        #             Count = 0
-        #             for obj in LineID:
-        #                 Flag = (TransformerSectionId[i] == LineID[tt])
-        #                 if Flag == True:
-        #                     Count = tt
-        #                 tt = tt + 1
-        #             api_transformer.to_element = ToNodeId[Count]
-        #             api_transformer.from_element = FromNodeId[Count]
-        #
-        #             ## Phase of the transformer
-        #             api_transformer.phases = SectionPhases[Count]
-        #
-        #             tt = 0
-        #             Count = 0
-        #             for obj in TransformerTypesinStock:
-        #                 Flag = (TransformerType[i] == TransformerTypesinStock[tt])
-        #                 if Flag == True:
-        #                     Count = tt
-        #                 tt=tt+1
-        #
-        #             TransformerRatedKvathisone=TransformerRatedKva[Count]
-        #             api_transformer.powerrating=TransformerRatedKvathisone*1000
-        #             api_transformer.primaryvoltage=HighSideRatedKv[Count]*1000
-        #             api_transformer.secondaryvoltage=LowSideRatedKv[Count]*1000
-        #
-        #
-        #             HighSideRatedKvthisone = HighSideRatedKv[Count]
-        #             PercentImpedancethisone = PercentImpedance[Count]
-        #             PercentResistancethisone = PercentResistance[Count]
-        #
-        #             ## Calculate the impedance of this transformer
-        #             Resistancethisone = (HighSideRatedKvthisone ** 2/TransformerRatedKvathisone*1000)*PercentResistancethisone/100
-        #             Reactancethisone = (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000) * (PercentImpedancethisone-PercentResistancethisone)/100
-        #
-        #             transformerimpedance=complex(Resistancethisone, Reactancethisone)
-        # #            api_transformer.impedance=repr(transformerimpedance)[1:-1]
-        #             api_transformer.impedance = transformerimpedance
-        #
-        #             ## Connection type of the transformer
-        #             api_transformer.connectiontype = HighVoltageConnectionCode[Count]+LowVoltageConnectionCode[Count]
-        #
-        #             i=i+1
         ######### Convert load into Ditto ##############
         N = len(LoadName)
         i = 0
@@ -612,161 +650,170 @@ class Reader:
             i = i + 1
 
         ########## Convert regulator into Ditto #########
-        # i = 0
-        # for obj in RegulatorId:
-        #     api_regulator = Regulator(model)
-        #     api_regulator.name = RegulatorId[i]
-        #     api_regulator.delay= RegulatorTimeDelay[i]
-        #     api_regulator.highstep = int(RegulatorTapLimiterHighSetting[i])
-        #     api_regulator.lowstep=-int(RegulatorTapLimiterLowSetting[i])
-        #
-        #     ## Regulator phases
-        #     RegulagorPhases_this = list(RegulagorPhases[i])
-        #     RegulagorPhases_this01 = [s.encode('ascii') for s in RegulagorPhases_this]
-        #     RegulagorPhases_this02 = filter(str.strip, RegulagorPhases_this01)
-        #     api_regulator.phases=''.join(RegulagorPhases_this02)
-        #     #api_regulator.pt_phase=RegulagorPhases[i]
-        #
-        #     Flag=(RegulagorPhases[i]=='A')
-        #     if Flag==True:
-        #         api_regulator.bandwidth = RegulatrorForwardBWDialPhase1[i]
-        #         api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase1[i]
-        #
-        #     Flag = (RegulagorPhases[i] == 'B')
-        #     if Flag == True:
-        #         api_regulator.bandwidth = RegulatrorForwardBWDialPhase2[i]
-        #         api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase2[i]
-        #
-        #     Flag = (RegulagorPhases[i] == 'C')
-        #     if Flag == True:
-        #         api_regulator.bandwidth = RegulatrorForwardBWDialPhase3[i]
-        #         api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase3[i]
-        #
-        #     RegulatorTypethisone=RegulatorTypes[i]
-        #
-        #     ## Find out pt ratio and ct rating
-        #     tt = 0
-        #     Count = 0
-        #     for obj in RegulatrorNames :
-        #         Flag = (RegulatorTypethisone == RegulatrorNames[tt])
-        #         if Flag == True:
-        #             Count = tt
-        #         tt = tt + 1
-        #
-        #     api_regulator.pt_ratio=RegulatorPTRatio[Count]
-        #     api_regulator.ct_ratio=RegulatorCTRating[Count]
-        #
-        #
-        #     ## Find out the from and to elements
-        #     tt = 0
-        #     Count = 0
-        #     for obj in LineID:
-        #         Flag = (RegulatrorSectionId[i] == LineID[tt])
-        #         if Flag == True:
-        #             Count = tt
-        #         tt = tt + 1
-        #
-        #     if RegulatorNearFromNode[i]==0:
-        #         RegualatorFromNodeID=ToNodeId[Count]+'_1'
-        #         RegualatorToNodeID = ToNodeId[Count]
-        #         DummyNodeID=ToNodeId[Count]+'_1'
-        #
-        #     if RegulatorNearFromNode[i]==1:
-        #         RegualatorFromNodeID = FromNodeId[Count]
-        #         RegualatorToNodeID = FromNodeId[Count]+'_1'
-        #         DummyNodeID = FromNodeId[Count]+'_1'
-        #
-        #     api_regulator.from_element = RegualatorFromNodeID
-        #     api_regulator.to_element = RegualatorToNodeID
-        #
-        #     ## Create the dummy node connecting the regulators
-        #     api_node = Node(model)
-        #     api_node.name = DummyNodeID
-        #     api_node.phases=SectionPhases01[Count]
-        #
-        #
-        #     ## Create a line to put regulator in lines
-        #     api_line = Line(model)
-        #     api_line.name = LineID[Count]
-        #     api_line.length = LineLength[Count] * 0.3048
-        #     api_line.from_element = FromNodeId[Count]
-        #     api_line.to_element = ToNodeId[Count]
-        #
-        #     ### Line Phases##################
-        #     SectionPhases_thisline = SectionPhases01[Count]
-        #     NPhase = len(SectionPhases_thisline)
-        #
-        #     ## The wires belong to this line
-        #     t = 0
-        #     wires = []
-        #     for obj in SectionPhases_thisline:
-        #         api_wire = Wire(model)
-        #         api_wire.phase = SectionPhases_thisline[t]
-        #         wires.append(api_wire)
-        #         t = t + 1
-        #
-        #     ## Calculating the impedance matrix of this line
-        #
-        #     PhaseConductorIDthisline = PhaseConductorID[Count]
-        #
-        #     tt = 0
-        #     Count_Conductor = 0
-        #     for obj in ConductorName:
-        #         Flag = (PhaseConductorIDthisline == ConductorName[tt])
-        #         if Flag == True:
-        #             Count_Conductor = tt
-        #         tt = tt + 1
-        #
-        #     r1 = PosSequenceResistance_PerLUL[Count_Conductor]
-        #     x1 = PosSequenceReactance_PerLUL[Count_Conductor]
-        #     r0 = ZeroSequenceResistance_PerLUL[Count_Conductor]
-        #     x0 = ZeroSequenceReactance_PerLUL[Count_Conductor]
-        #
-        #     coeff = 10 ** -3
-        #     if NPhase == 2:
-        #         impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
-        #     if NPhase == 3:
-        #         a = coeff * complex(2 * float(r1) + float(r0),
-        #                             2 * float(x1) + float(x0))
-        #
-        #         b1 = float(r0) - float(r1)
-        #         b2 = float(x0) - float(x1)
-        #
-        #         if b1 < 0:
-        #             b1 = -b1
-        #         if b1 == 0:
-        #             b1 = float(r1)
-        #         if b2 < 0:
-        #             b2 = -b2
-        #         if b2 == 0:
-        #             b2 = float(x1)
-        #
-        #         b = coeff * complex(b1, b2)
-        #         impedance_matrix = [[a, b], [b, a]]
-        #
-        #     if NPhase == 4:
-        #         a = coeff * complex(2 * float(r1) + float(r0),
-        #                             2 * float(x1) + float(x0))
-        #
-        #         b1 = float(r0) - float(r1)
-        #         b2 = float(x0) - float(x1)
-        #
-        #         if b1 < 0:
-        #             b1 = -b1
-        #         if b1 == 0:
-        #             b1 = float(r1)
-        #         if b2 < 0:
-        #             b2 = -b2
-        #         if b2 == 0:
-        #             b2 = float(x1)
-        #
-        #         b = coeff * complex(b1, b2)
-        #
-        #         impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-        #
-        #     api_line.wires = wires
-        #     api_line.impedance_matrix = impedance_matrix
-        #     i = i + 1
+        i = 0
+        for obj in RegulatorId:
+            api_regulator = Regulator(model)
+            api_regulator.name = RegulatorId[i]
+            api_regulator.delay = RegulatorTimeDelay[i]
+            api_regulator.highstep = int(RegulatorTapLimiterHighSetting[i])
+            api_regulator.lowstep = -int(RegulatorTapLimiterLowSetting[i])
+
+            ## Regulator phases
+            # RegulagorPhases_this = list(RegulagorPhases[i])
+            # RegulagorPhases_this01 = [s.encode('ascii') for s in RegulagorPhases_this]
+            # RegulagorPhases_this02 = filter(str.strip, RegulagorPhases_this01)
+            # api_regulator.phases=''.join(RegulagorPhases_this02)
+            # api_regulator.pt_phase=RegulagorPhases[i]
+            api_regulator.pt_phase = RegulagorPhases[i]
+
+            Flag = RegulagorPhases[i] == "A"
+            if Flag == True:
+                api_regulator.bandwidth = RegulatrorForwardBWDialPhase1[i]
+                api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase1[i]
+
+            Flag = RegulagorPhases[i] == "B"
+            if Flag == True:
+                api_regulator.bandwidth = RegulatrorForwardBWDialPhase2[i]
+                api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase2[i]
+
+            Flag = RegulagorPhases[i] == "C"
+            if Flag == True:
+                api_regulator.bandwidth = RegulatrorForwardBWDialPhase3[i]
+                api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase3[i]
+
+            RegulatorTypethisone = RegulatorTypes[i]
+
+            ## Find out pt ratio and ct rating
+            tt = 0
+            Count = 0
+            if RegulatrorNames is not None:
+                for obj in RegulatrorNames:
+                    Flag = RegulatorTypethisone == RegulatrorNames[tt]
+                    if Flag == True:
+                        Count = tt
+                    tt = tt + 1
+
+                api_regulator.pt_ratio = RegulatorPTRatio[Count]
+                api_regulator.ct_ratio = RegulatorCTRating[Count]
+
+            ## Find out the from and to elements
+            tt = 0
+            Count = 0
+            for obj in LineID:
+                Flag = RegulatrorSectionId[i] == LineID[tt]
+                if Flag == True:
+                    Count = tt
+                tt = tt + 1
+
+            if RegulatorNearFromNode[i] == 0:
+                RegualatorFromNodeID = ToNodeId[Count] + "_1"
+                RegualatorToNodeID = ToNodeId[Count]
+                DummyNodeID = ToNodeId[Count] + "_1"
+
+            if RegulatorNearFromNode[i] == 1:
+                RegualatorFromNodeID = FromNodeId[Count]
+                RegualatorToNodeID = FromNodeId[Count] + "_1"
+                DummyNodeID = FromNodeId[Count] + "_1"
+
+            api_regulator.from_element = RegualatorFromNodeID
+            api_regulator.to_element = RegualatorToNodeID
+
+            ## Create the dummy node connecting the regulators
+            api_node = Node(model)
+            api_node.name = DummyNodeID
+            for p in SectionPhases01[Count]:
+                api_node.phases.append(p)
+
+            ## Create a line to put regulator in lines
+            api_line = Line(model)
+            api_line.name = LineID[Count]
+            api_line.length = LineLength[Count] * 0.3048
+            api_line.from_element = FromNodeId[Count]
+            api_line.to_element = ToNodeId[Count]
+
+            ### Line Phases##################
+            SectionPhases_thisline = SectionPhases01[Count]
+            NPhase = len(SectionPhases_thisline)
+
+            ## The wires belong to this line
+            t = 0
+            wires = []
+            for obj in SectionPhases_thisline:
+                api_wire = Wire(model)
+                api_wire.phase = SectionPhases_thisline[t]
+                wires.append(api_wire)
+                t = t + 1
+
+            ## Calculating the impedance matrix of this line
+
+            PhaseConductorIDthisline = PhaseConductorID[Count]
+
+            tt = 0
+            Count_Conductor = 0
+            impedance_matrix = None
+
+            if ConductorName is not None:
+                for obj in ConductorName:
+                    Flag = PhaseConductorIDthisline == ConductorName[tt]
+                    if Flag == True:
+                        Count_Conductor = tt
+                    tt = tt + 1
+
+                r1 = PosSequenceResistance_PerLUL[Count_Conductor]
+                x1 = PosSequenceReactance_PerLUL[Count_Conductor]
+                r0 = ZeroSequenceResistance_PerLUL[Count_Conductor]
+                x0 = ZeroSequenceReactance_PerLUL[Count_Conductor]
+
+                coeff = 10 ** -3
+                if NPhase == 2:
+                    impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
+                if NPhase == 3:
+                    a = coeff * complex(
+                        2 * float(r1) + float(r0), 2 * float(x1) + float(x0)
+                    )
+
+                    b1 = float(r0) - float(r1)
+                    b2 = float(x0) - float(x1)
+
+                    if b1 < 0:
+                        b1 = -b1
+                    if b1 == 0:
+                        b1 = float(r1)
+                    if b2 < 0:
+                        b2 = -b2
+                    if b2 == 0:
+                        b2 = float(x1)
+
+                    b = coeff * complex(b1, b2)
+                    impedance_matrix = [[a, b], [b, a]]
+
+                if NPhase == 4:
+                    a = coeff * complex(
+                        2 * float(r1) + float(r0), 2 * float(x1) + float(x0)
+                    )
+
+                    b1 = float(r0) - float(r1)
+                    b2 = float(x0) - float(x1)
+
+                    if b1 < 0:
+                        b1 = -b1
+                    if b1 == 0:
+                        b1 = float(r1)
+                    if b2 < 0:
+                        b2 = -b2
+                    if b2 == 0:
+                        b2 = float(x1)
+
+                    b = coeff * complex(b1, b2)
+
+                    impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
+
+            api_line.wires = wires
+            if impedance_matrix is not None:
+                api_line.impedance_matrix = impedance_matrix
+            else:
+                print("No impedance matrix for line {}".format(api_line.name))
+            i = i + 1
 
         ##### Convert PV to Ditto###################################
 
