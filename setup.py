@@ -45,7 +45,10 @@ dew_requires = [numpy_dependency, "xlrd"]
 gridlabd_requires = ["croniter", numpy_dependency]
 cyme_requires = [numpy_dependency]
 ephasor_requires = [numpy_dependency, "pandas"]
-
+synergi_requires = [
+    numpy_dependency,
+    "pandas_access",
+]  # Need pandas_access to convert the MDB tables to Pandas DataFrame
 
 class PostDevelopCommand(develop):
 
@@ -75,6 +78,7 @@ setup(
             "cyme=ditto.readers.cyme:CymeReader",
             "demo=ditto.readers.demo:DemoReader",
             "json=ditto.readers.json:JsonReader",
+            "synergi=ditto.readers.synergi:SynergiReader",
         ],
         "ditto.writers": [
             "gridlabd=ditto.writers.gridlabd:GridLABDWriter",
@@ -106,11 +110,13 @@ setup(
         + dew_requires
         + gridlabd_requires
         + ephasor_requires
-        + cyme_requires,
+        + cyme_requires
+        + synergi_requires,
         "extras": extras_requires,
         "cyme": cyme_requires,
         "dew": dew_requires,
         "ephasor": ephasor_requires,
+        "synergi": synergi_requires,
         "gridlabd": gridlabd_requires,
         "opendss": opendss_requires,
         "test": test_requires,

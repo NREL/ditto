@@ -96,7 +96,9 @@ class Converter(object):
             return self.config
         # Otherwise...
         # Inputs are different accross the format:
+        #
         # OpenDSS
+        #
         if self._from == "opendss":
             inputs = {
                 "master_file": os.path.abspath(feeder),
@@ -106,7 +108,7 @@ class Converter(object):
             }
 
         # CYME
-
+        #
         elif self._from == "cyme":
             inputs = {
                 "data_folder_path": os.path.abspath(feeder),
@@ -116,12 +118,18 @@ class Converter(object):
             }
 
         # GRIDLABD
-
+        #
         elif self._from == "gridlabd":
             inputs = {"input_file": os.path.abspath(feeder)}
 
         # Demo Case
+        #
         elif self._from == "demo":
+            inputs = {"input_file": os.path.abspath(feeder)}
+
+        # SYNERGI
+        #
+        elif self._from == "synergi":
             inputs = {"input_file": os.path.abspath(feeder)}
 
         # DEW

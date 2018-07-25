@@ -38,7 +38,7 @@ from ditto.models.base import Unicode
 logger = logging.getLogger(__name__)
 
 
-class Reader:
+class Reader(AbstractReader):
     """
     Synergi Reader class.
     """
