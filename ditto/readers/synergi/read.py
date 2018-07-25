@@ -33,7 +33,7 @@ from ditto.models.position import Position
 
 from ditto.models.base import Unicode
 
-from ditto.models.recorder import Recorder
+# from ditto.models.recorder import Recorder
 
 logger = logging.getLogger(__name__)
 
@@ -56,215 +56,169 @@ class Reader:
             if len(mdb_files) == 1:
                 self.input_file = mdb_files[0]
 
+        self.SynergiData = None
+
+    def get_data(self, key1, key2):
+        """
+
+        """
+        if (
+            key1 in self.SynergiData.SynergiDictionary
+            and key2 in self.SynergiData.SynergiDictionary[key1]
+        ):
+            return self.SynergiData.SynergiDictionary[key1][key2]
+        else:
+            print("Could not retrieve data for <{k1}><{k2}>.".format(k1=key1, k2=key2))
+            return None
+
     def parse(self, model):
         """
         Synergi --> DiTTo parse method.
         """
-        ProjectFiles = {"Synegi Circuit Database": self.input_file}
-        SynergiData = DbParser(ProjectFiles)
+        # ProjectFiles = {"Synegi Circuit Database": self.input_file}
+        self.SynergiData = DbParser(self.input_file)
 
         ############ Get the data in #################################################
 
         ## Feeder ID ##########
         ## This is used to separate different feeders ##
-        FeederId = SynergiData.SynergiDictionary["InstFeeders"]["FeederId"]
+        FeederId = self.get_data("InstFeeders", "FeederId")
 
         ## Node ###########
-        NodeID = SynergiData.SynergiDictionary["Node"]["NodeId"]
+        NodeID = self.get_data("Node", "NodeId")
 
         ###### Transformer ##################
-        TransformerId = SynergiData.SynergiDictionary["InstPrimaryTransformers"][
-            "UniqueDeviceId"
-        ]
-        TransformerSectionId = SynergiData.SynergiDictionary["InstPrimaryTransformers"][
-            "SectionId"
-        ]
-        TransformerType = SynergiData.SynergiDictionary["InstPrimaryTransformers"][
-            "TransformerType"
-        ]
+        TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
+        TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
+        TransformerType = self.get_data("InstPrimaryTransformers", "TransformerType")
 
         ## Substration Transformers ##
-        SubstationTransformerV = SynergiData.SynergiDictionary[
-            "InstSubstationTransformers"
-        ]["NominalKvll"]
+        SubstationTransformerV = self.get_data(
+            "InstSubstationTransformers", "NominalKvll"
+        )
 
         ## Transformer Setting ##
-        TransformerTypesinStock = SynergiData.SynergiDictionary["DevTransformers"][
-            "TransformerName"
-        ]
-        HighSideRatedKv = SynergiData.SynergiDictionary["DevTransformers"][
-            "HighSideRatedKv"
-        ]
-        LowSideRatedKv = SynergiData.SynergiDictionary["DevTransformers"][
-            "LowSideRatedKv"
-        ]
-        TransformerRatedKva = SynergiData.SynergiDictionary["DevTransformers"][
-            "TransformerRatedKva"
-        ]
-        PercentImpedance = SynergiData.SynergiDictionary["DevTransformers"][
-            "PercentImpedance"
-        ]
-        PercentResistance = SynergiData.SynergiDictionary["DevTransformers"][
-            "PercentResistance"
-        ]
-        HighVoltageConnectionCode = SynergiData.SynergiDictionary["DevTransformers"][
-            "HighVoltageConnectionCode"
-        ]
-        LowVoltageConnectionCode = SynergiData.SynergiDictionary["DevTransformers"][
-            "LowVoltageConnectionCode"
-        ]
+        TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
+        HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
+        LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
+        TransformerRatedKva = self.get_data("DevTransformers", "TransformerRatedKva")
+        PercentImpedance = self.get_data("DevTransformers", "PercentImpedance")
+        PercentResistance = self.get_data("DevTransformers", "PercentResistance")
+        HighVoltageConnectionCode = self.get_data(
+            "DevTransformers", "HighVoltageConnectionCode"
+        )
+        LowVoltageConnectionCode = self.get_data(
+            "DevTransformers", "LowVoltageConnectionCode"
+        )
 
         ########## Line #####################
-        LineID = SynergiData.SynergiDictionary["InstSection"]["SectionId"]
-        LineLength = SynergiData.SynergiDictionary["InstSection"]["SectionLength_MUL"]
-        PhaseConductorID = SynergiData.SynergiDictionary["InstSection"][
-            "PhaseConductorId"
-        ]
-        NeutralConductorID = SynergiData.SynergiDictionary["InstSection"][
-            "NeutralConductorId"
-        ]
-        SectionPhases = SynergiData.SynergiDictionary["InstSection"]["SectionPhases"]
-        LineFeederId = SynergiData.SynergiDictionary["InstSection"]["FeederId"]
-        FromNodeId = SynergiData.SynergiDictionary["InstSection"]["FromNodeId"]
-        ToNodeId = SynergiData.SynergiDictionary["InstSection"]["ToNodeId"]
-        IsFromEndOpen = SynergiData.SynergiDictionary["InstSection"]["IsFromEndOpen"]
-        IsToEndOpen = SynergiData.SynergiDictionary["InstSection"]["IsToEndOpen"]
+        LineID = self.get_data("InstSection", "SectionId")
+        LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
+        NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
+        SectionPhases = self.get_data("InstSection", "SectionPhases")
+        LineFeederId = self.get_data("InstSection", "FeederId")
+        FromNodeId = self.get_data("InstSection", "FromNodeId")
+        ToNodeId = self.get_data("InstSection", "ToNodeId")
+        IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
+        IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
 
         ## Wires ###########
-        CableGMR = SynergiData.SynergiDictionary["DevConductors"]["CableGMR_MUL"]
-        CableDiamOutside = SynergiData.SynergiDictionary["DevConductors"][
-            "CableDiamOutside_SUL"
-        ]
-        CableResistance = SynergiData.SynergiDictionary["DevConductors"][
-            "CableResistance_PerLUL"
-        ]
-        ConductorName = SynergiData.SynergiDictionary["DevConductors"]["ConductorName"]
-        PosSequenceResistance_PerLUL = SynergiData.SynergiDictionary["DevConductors"][
-            "PosSequenceResistance_PerLUL"
-        ]
-        PosSequenceReactance_PerLUL = SynergiData.SynergiDictionary["DevConductors"][
-            "PosSequenceReactance_PerLUL"
-        ]
-        ZeroSequenceResistance_PerLUL = SynergiData.SynergiDictionary["DevConductors"][
-            "ZeroSequenceResistance_PerLUL"
-        ]
-        ZeroSequenceReactance_PerLUL = SynergiData.SynergiDictionary["DevConductors"][
-            "ZeroSequenceReactance_PerLUL"
-        ]
+        CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
+        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
+        ConductorName = self.get_data("DevConductors", "ConductorName")
+        PosSequenceResistance_PerLUL = self.get_data(
+            "DevConductors", "PosSequenceResistance_PerLUL"
+        )
+        PosSequenceReactance_PerLUL = self.get_data(
+            "DevConductors", "PosSequenceReactance_PerLUL"
+        )
+        ZeroSequenceResistance_PerLUL = self.get_data(
+            "DevConductors", "ZeroSequenceResistance_PerLUL"
+        )
+        ZeroSequenceReactance_PerLUL = self.get_data(
+            "DevConductors", "ZeroSequenceReactance_PerLUL"
+        )
 
         ## Loads #############
-        LoadName = SynergiData.SynergiDictionary["Loads"]["SectionId"]
-        Phase1Kw = SynergiData.SynergiDictionary["Loads"]["Phase1Kw"]
-        Phase2Kw = SynergiData.SynergiDictionary["Loads"]["Phase2Kw"]
-        Phase3Kw = SynergiData.SynergiDictionary["Loads"]["Phase3Kw"]
-        Phase1Kvar = SynergiData.SynergiDictionary["Loads"]["Phase1Kvar"]
-        Phase2Kvar = SynergiData.SynergiDictionary["Loads"]["Phase2Kvar"]
-        Phase3Kvar = SynergiData.SynergiDictionary["Loads"]["Phase3Kvar"]
+        LoadName = self.get_data("Loads", "SectionId")
+        Phase1Kw = self.get_data("Loads", "Phase1Kw")
+        Phase2Kw = self.get_data("Loads", "Phase2Kw")
+        Phase3Kw = self.get_data("Loads", "Phase3Kw")
+        Phase1Kvar = self.get_data("Loads", "Phase1Kvar")
+        Phase2Kvar = self.get_data("Loads", "Phase2Kvar")
+        Phase3Kvar = self.get_data("Loads", "Phase3Kvar")
 
         ## Capacitors ################
-        CapacitorName = SynergiData.SynergiDictionary["InstCapacitors"][
-            "UniqueDeviceId"
-        ]
-        CapacitorVoltage = SynergiData.SynergiDictionary["InstCapacitors"]["RatedKv"]
-        CapacitorConnectionType = SynergiData.SynergiDictionary["InstCapacitors"][
-            "ConnectionType"
-        ]
-        CapacitorTimeDelaySec = SynergiData.SynergiDictionary["InstCapacitors"][
-            "TimeDelaySec"
-        ]
-        CapacitorPrimaryControlMode = SynergiData.SynergiDictionary["InstCapacitors"][
-            "PrimaryControlMode"
-        ]
-        CapacitorModule1CapSwitchCloseValue = SynergiData.SynergiDictionary[
-            "InstCapacitors"
-        ]["Module1CapSwitchCloseValue"]
-        CapacitorModule1CapSwitchTripValue = SynergiData.SynergiDictionary[
-            "InstCapacitors"
-        ]["Module1CapSwitchTripValue"]
-        CapacitorPTRatio = SynergiData.SynergiDictionary["InstCapacitors"][
-            "CapacitorPTRatio"
-        ]
-        CapacitorCTRating = SynergiData.SynergiDictionary["InstCapacitors"][
-            "CapacitorCTRating"
-        ]
-        CapacitorSectionId = SynergiData.SynergiDictionary["InstCapacitors"][
-            "SectionId"
-        ]
-
-        CapacitorFixedKvarPhase1 = SynergiData.SynergiDictionary["InstCapacitors"][
-            "FixedKvarPhase1"
-        ]
-        CapacitorFixedKvarPhase2 = SynergiData.SynergiDictionary["InstCapacitors"][
-            "FixedKvarPhase2"
-        ]
-        CapacitorFixedKvarPhase3 = SynergiData.SynergiDictionary["InstCapacitors"][
-            "FixedKvarPhase3"
-        ]
+        CapacitorName = self.get_data("InstCapacitors", "UniqueDeviceId")
+        CapacitorVoltage = self.get_data("InstCapacitors", "RatedKv")
+        CapacitorConnectionType = self.get_data("InstCapacitors", "ConnectionType")
+        CapacitorTimeDelaySec = self.get_data("InstCapacitors", "TimeDelaySec")
+        CapacitorPrimaryControlMode = self.get_data(
+            "InstCapacitors", "PrimaryControlMode"
+        )
+        CapacitorModule1CapSwitchCloseValue = self.get_data(
+            "InstCapacitors", "Module1CapSwitchCloseValue"
+        )
+        CapacitorModule1CapSwitchTripValue = self.get_data(
+            "InstCapacitors", "Module1CapSwitchTripValue"
+        )
+        CapacitorPTRatio = self.get_data("InstCapacitors", "CapacitorPTRatio")
+        CapacitorCTRating = self.get_data("InstCapacitors", "CapacitorCTRating")
+        CapacitorSectionId = self.get_data("InstCapacitors", "SectionId")
+        CapacitorFixedKvarPhase1 = self.get_data("InstCapacitors", "FixedKvarPhase1")
+        CapacitorFixedKvarPhase2 = self.get_data("InstCapacitors", "FixedKvarPhase2")
+        CapacitorFixedKvarPhase3 = self.get_data("InstCapacitors", "FixedKvarPhase3")
 
         ## Regulators ###################
-        RegulatorId = SynergiData.SynergiDictionary["InstRegulators"]["UniqueDeviceId"]
-        RegulatorTimeDelay = SynergiData.SynergiDictionary["InstRegulators"][
-            "TimeDelaySec"
-        ]
-        RegulatorTapLimiterHighSetting = SynergiData.SynergiDictionary[
-            "InstRegulators"
-        ]["TapLimiterHighSetting"]
-        RegulatorTapLimiterLowSetting = SynergiData.SynergiDictionary["InstRegulators"][
-            "TapLimiterLowSetting"
-        ]
-        RegulatorTapLimiterLowSetting = SynergiData.SynergiDictionary["InstRegulators"][
-            "TapLimiterLowSetting"
-        ]
-        RegulatrorForwardBWDialPhase1 = SynergiData.SynergiDictionary["InstRegulators"][
-            "ForwardBWDialPhase1"
-        ]
-        RegulatrorForwardBWDialPhase2 = SynergiData.SynergiDictionary["InstRegulators"][
-            "ForwardBWDialPhase2"
-        ]
-        RegulatrorForwardBWDialPhase3 = SynergiData.SynergiDictionary["InstRegulators"][
-            "ForwardBWDialPhase3"
-        ]
-        RegulatrorForwardVoltageSettingPhase1 = SynergiData.SynergiDictionary[
-            "InstRegulators"
-        ]["ForwardVoltageSettingPhase1"]
-        RegulatrorForwardVoltageSettingPhase1 = SynergiData.SynergiDictionary[
-            "InstRegulators"
-        ]["ForwardVoltageSettingPhase1"]
-        RegulatrorForwardVoltageSettingPhase2 = SynergiData.SynergiDictionary[
-            "InstRegulators"
-        ]["ForwardVoltageSettingPhase2"]
-        RegulatrorForwardVoltageSettingPhase3 = SynergiData.SynergiDictionary[
-            "InstRegulators"
-        ]["ForwardVoltageSettingPhase3"]
-        RegulatrorSectionId = SynergiData.SynergiDictionary["InstRegulators"][
-            "SectionId"
-        ]
-        RegulagorPhases = SynergiData.SynergiDictionary["InstRegulators"][
-            "ConnectedPhases"
-        ]
-        RegulatorTypes = SynergiData.SynergiDictionary["InstRegulators"][
-            "RegulatorType"
-        ]
-
-        RegulatrorNames = SynergiData.SynergiDictionary["DevRegulators"][
-            "RegulatorName"
-        ]
-        RegulatorPTRatio = SynergiData.SynergiDictionary["DevRegulators"]["PTRatio"]
-        RegulatorCTRating = SynergiData.SynergiDictionary["DevRegulators"]["CTRating"]
-
-        RegulatorNearFromNode = SynergiData.SynergiDictionary["InstRegulators"][
-            "NearFromNode"
-        ]
+        RegulatorId = self.get_data("InstRegulators", "UniqueDeviceId")
+        RegulatorTimeDelay = self.get_data("InstRegulators", "TimeDelaySec")
+        RegulatorTapLimiterHighSetting = self.get_data(
+            "InstRegulators", "TapLimiterHighSetting"
+        )
+        RegulatorTapLimiterLowSetting = self.get_data(
+            "InstRegulators", "TapLimiterLowSetting"
+        )
+        RegulatorTapLimiterLowSetting = self.get_data(
+            "InstRegulators", "TapLimiterLowSetting"
+        )
+        RegulatrorForwardBWDialPhase1 = self.get_data(
+            "InstRegulators", "ForwardBWDialPhase1"
+        )
+        RegulatrorForwardBWDialPhase2 = self.get_data(
+            "InstRegulators", "ForwardBWDialPhase2"
+        )
+        RegulatrorForwardBWDialPhase3 = self.get_data(
+            "InstRegulators", "ForwardBWDialPhase3"
+        )
+        RegulatrorForwardVoltageSettingPhase1 = self.get_data(
+            "InstRegulators", "ForwardVoltageSettingPhase1"
+        )
+        RegulatrorForwardVoltageSettingPhase1 = self.get_data(
+            "InstRegulators", "ForwardVoltageSettingPhase1"
+        )
+        RegulatrorForwardVoltageSettingPhase2 = self.get_data(
+            "InstRegulators", "ForwardVoltageSettingPhase2"
+        )
+        RegulatrorForwardVoltageSettingPhase3 = self.get_data(
+            "InstRegulators", "ForwardVoltageSettingPhase3"
+        )
+        RegulatrorSectionId = self.get_data("InstRegulators", "SectionId")
+        RegulagorPhases = self.get_data("InstRegulators", "ConnectedPhases")
+        RegulatorTypes = self.get_data("InstRegulators", "RegulatorType")
+        RegulatrorNames = self.get_data("DevRegulators", "RegulatorName")
+        RegulatorPTRatio = self.get_data("DevRegulators", "PTRatio")
+        RegulatorCTRating = self.get_data("DevRegulators", "CTRating")
+        RegulatorNearFromNode = self.get_data("InstRegulators", "NearFromNode")
 
         ##### PV ##################################
-        PVUniqueDeviceId = SynergiData.SynergiDictionary["InstLargeCust"][
-            "UniqueDeviceId"
-        ]
-        PVSectionId = SynergiData.SynergiDictionary["InstLargeCust"]["SectionId"]
-        PVGenType = SynergiData.SynergiDictionary["InstLargeCust"]["GenType"]
-        PVGenPhase1Kw = SynergiData.SynergiDictionary["InstLargeCust"]["GenPhase1Kw"]
-        PVGenPhase2Kw = SynergiData.SynergiDictionary["InstLargeCust"]["GenPhase2Kw"]
-        PVGenPhase3Kw = SynergiData.SynergiDictionary["InstLargeCust"]["GenPhase3Kw"]
+        PVUniqueDeviceId = self.get_data("InstLargeCust", "UniqueDeviceId")
+        PVSectionId = self.get_data("InstLargeCust", "SectionId")
+        PVGenType = self.get_data("InstLargeCust", "GenType")
+        PVGenPhase1Kw = self.get_data("InstLargeCust", "GenPhase1Kw")
+        PVGenPhase2Kw = self.get_data("InstLargeCust", "GenPhase2Kw")
+        PVGenPhase3Kw = self.get_data("InstLargeCust", "GenPhase3Kw")
 
         ######################### Converting to Ditto #################################################
 
