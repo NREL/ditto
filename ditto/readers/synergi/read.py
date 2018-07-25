@@ -1,6 +1,7 @@
+# coding: utf8
 
 ###### Read  in the synergi database #######
-import SynergiReader
+from .db_parser import DbParser
 
 # Python import
 import math
@@ -34,12 +35,33 @@ from ditto.models.base import Unicode
 
 from ditto.models.recorder import Recorder
 
+logger = logging.getLogger(__name__)
 
-class reader:
+
+class Reader:
+    """
+    Synergi Reader class.
+    """
+
+    register_names = ["synergi", "Synergi", "syn"]
+
+    def __init__(self, **kwargs):
+        """Constructor for the Synergi reader."""
+
+        self.input_file = None
+        if "input_file" in kwargs:
+            self.input_file = kwargs["input_file"]
+        else:
+            mdb_files = [f for f in os.listdir(".") if f.endswith(".mdb")]
+            if len(mdb_files) == 1:
+                self.input_file = mdb_files[0]
 
     def parse(self, model):
-        ProjectFiles = {"Synegi Circuit Database": "Mikilua.mdb"}
-        SynergiData = SynergiReader.Read(ProjectFiles)
+        """
+        Synergi --> DiTTo parse method.
+        """
+        ProjectFiles = {"Synegi Circuit Database": self.input_file}
+        SynergiData = DbParser(ProjectFiles)
 
         ############ Get the data in #################################################
 
