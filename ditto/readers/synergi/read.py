@@ -15,7 +15,7 @@ import operator
 
 # Ditto imports #
 
-from ditto.readers.abstract_reader import abstract_reader
+from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.node import Node
 from ditto.models.line import Line
