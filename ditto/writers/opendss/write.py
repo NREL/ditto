@@ -2812,7 +2812,10 @@ class Writer(AbstractWriter):
             ):
                 result["conductor_list"][-1]["Emergamps"] = wire.emergency_ampacity
 
-        result["Reduce"] = "n"
+        if len(phase_wires) != len(wire_list):
+            result["Reduce"] = "y"
+        else:
+            result["Reduce"] = "n"
 
         return result
 
