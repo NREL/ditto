@@ -1,8 +1,11 @@
 
-import win32com.client
+# Remove this import since it works only for Windows...
+# import win32com.client
+#
+# Use Pandas_access instead
+import pandas_access as mdb
 
 import pandas as pd
-import pyodbc
 import os
 
 
@@ -23,7 +26,20 @@ class DbParser:
 
     def __ParseSynergiDatabase(self, dataFile):
         """
-        TODO
+        Use Pandas Access to convert the MDB tables to Pandas DataFrames.
+        """
+        print("Opening synergie database - ", self.__Paths["Synergi File"])
+        table_list = mdb.list_tables(self.__Paths["Synergi File"])
+        for table in table_list:
+            self.SynergiDictionary[table] = mdb.read_table(
+                self.__Paths["Synergi File"], table
+            )
+        return
+
+    def __ParseSynergiDatabase_deprecated(self, dataFile):
+        """
+        This only works on Windows.
+        Deprecated.
         """
         print("Opening synergie database - ", self.__Paths["Synergi File"])
         databaseFile = os.getcwd() + "\\" + dataFile
