@@ -105,6 +105,40 @@ def test_write_wiredata():
     w.write_wiredata([line])
 
 
+def get_property_from_dss_string(string, property):
+    """Get the value of the given property within the dss string."""
+    L = string.split(" ")
+    result = []
+    for l in L:
+        if "=" in l:
+            ll = [x.strip() for x in l.split("=")]
+            if ll[0].lower() == property.lower():
+                result.append(ll[1].lower())
+    if len(result) == 1:
+        return result[0]
+    elif len(result) == 0:
+        return None
+    else:
+        return result
+
+
+def test_get_property_from_dss_string():
+    """Tests the get_property_from_dss_string function."""
+    string = (
+        "New LineGeometry.Geometry_1 Nconds=4 Nphases=3 Units=km Cond=1 Wire=wire_test_phase Normamps=500.0 Emergamps=1000.0 Cond=2 Wire=wire_test_phase Normamps=500.0 Emergamps=1000.0 Cond=3 Wire=wire_test_phase_1 Normamps=500.0 Emergamps=1000.0 Cond=4 Wire=wire_test_neutral Normamps=500.0 Emergamps=1000.0 Reduce=y\n"
+    )
+    assert get_property_from_dss_string(string, "reduce") == "y"
+    assert get_property_from_dss_string(string, "Nconds") == "4"
+    assert get_property_from_dss_string(string, "nphases") == "3"
+    assert get_property_from_dss_string(string, "Emergamps") == [
+        "1000.0",
+        "1000.0",
+        "1000.0",
+        "1000.0",
+    ]
+    assert get_property_from_dss_string(string, "crazy_property") is None
+
+
 def test_write_linegeometry():
     """Test the write_linegeometry() method."""
     from ditto.writers.opendss.write import Writer
@@ -116,10 +150,22 @@ def test_write_linegeometry():
     w.write_linegeometry([line])
     with open(os.path.join(output_path, "LineGeometry.dss"), "r") as fp:
         lines = fp.readlines()
-    assert (
-        lines[0]
-        == "New LineGeometry.Geometry_1 Nconds=4 Nphases=3 Units=km Cond=1 Wire=wire_test_phase Normamps=500.0 Emergamps=1000.0 Cond=2 Wire=wire_test_phase Normamps=500.0 Emergamps=1000.0 Cond=3 Wire=wire_test_phase_1 Normamps=500.0 Emergamps=1000.0 Cond=4 Wire=wire_test_neutral Normamps=500.0 Emergamps=1000.0 Reduce=y\n"
-    )
+    assert get_property_from_dss_string(lines[0], "reduce") == "y"
+    assert get_property_from_dss_string(lines[0], "nconds") == "4"
+    assert get_property_from_dss_string(lines[0], "nphases") == "3"
+    assert get_property_from_dss_string(lines[0], "units") == "km"
+    assert get_property_from_dss_string(lines[0], "normamps") == [
+        "500.0",
+        "500.0",
+        "500.0",
+        "500.0",
+    ]
+    assert get_property_from_dss_string(lines[0], "Emergamps") == [
+        "1000.0",
+        "1000.0",
+        "1000.0",
+        "1000.0",
+    ]
 
 
 def test_write_linecodes():
