@@ -67,6 +67,7 @@ class Writer(AbstractWriter):
     +-----------------+--------------------+
 
     """
+    register_names = ["ephasor", "eph", "Ephasor"]
 
     def __init__(self, **kwargs):
         """Constructor for the ePhasor writer."""
@@ -93,7 +94,7 @@ class Writer(AbstractWriter):
         # Call super
         super(Writer, self).__init__(**kwargs)
 
-    def write_bus_coordinates(self):
+    def write_bus_coordinates(self, **kwargs):
         """Write the bus coordinates to a CSV file ('buscoords.csv' by default), with the following format:
 
         >>> bus_name,coordinate_X,coordinate_Y
@@ -1190,7 +1191,7 @@ class Writer(AbstractWriter):
 
         return df3
 
-    def write(self, m):
+    def write(self, m, **kwargs):
         """ Write model to file
 
         >>> write, model

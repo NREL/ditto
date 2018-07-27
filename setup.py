@@ -44,7 +44,7 @@ opendss_requires = ["OpenDSSDirect.py", "pandas", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd"]
 gridlabd_requires = [numpy_dependency]
 cyme_requires = [numpy_dependency]
-ephasor_requires = [numpy_dependency]
+ephasor_requires = [numpy_dependency, "pandas"]
 
 
 class PostDevelopCommand(develop):
@@ -82,6 +82,7 @@ setup(
             "cyme=ditto.writers.cyme:CymeWriter",
             "demo=ditto.writers.demo:DemoWriter",
             "json=ditto.writers.json:JsonWriter",
+            "ephasor=ditto.writers.ephasor:EphasorWriter",
         ],
     },
     include_package_data=True,
