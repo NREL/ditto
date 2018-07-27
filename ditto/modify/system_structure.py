@@ -190,7 +190,7 @@ class system_structure_modifier(Modifier):
                         name_cleaned
                     )  # This should not be the case because of name conflicts
                 else:
-                    cleaned_headnodes = [h.strip("%") for h in headnodes]
+                    cleaned_headnodes = [h.strip("x") for h in headnodes]
 
                     if name_cleaned in cleaned_headnodes:
                         obj.headnode = headnodes[cleaned_headnodes.index(name_cleaned)]
