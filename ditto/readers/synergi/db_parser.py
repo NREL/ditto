@@ -14,13 +14,17 @@ class DbParser:
     Class implementing the reading of the MDB tables used by Synergi.
     """
 
-    def __init__(self, input_file):
+    def __init__(self, input_file, **kwargs):
         """
         Class constructor.
         """
         self.SynergiDictionary = {}
         self.paths = {}
         self.paths["Synergi File"] = input_file
+
+        if "warehouse" in kwargs:
+            self.paths["warehouse"] = kwargs["warehouse"]
+
         self.ParseSynergiDatabase()
 
     def ParseSynergiDatabase(self):
@@ -29,9 +33,20 @@ class DbParser:
         """
         print("Opening synergie database - ", self.paths["Synergi File"])
         table_list = mdb.list_tables(self.paths["Synergi File"])
+
+        table_list_warehouse = []
+        if "warehouse" in self.paths:
+            print("Opening warehouse database - ", self.paths["warehouse"])
+            table_list_warehouse = mdb.list_tables(self.paths["warehouse"])
+
         for table in table_list:
             self.SynergiDictionary[table] = mdb.read_table(
                 self.paths["Synergi File"], table
+            )
+
+        for table in table_list_warehouse:
+            self.SynergiDictionary[table] = mdb.read_table(
+                self.paths["warehouse"], table
             )
         return
 

@@ -56,6 +56,12 @@ class Reader(AbstractReader):
             if len(mdb_files) == 1:
                 self.input_file = mdb_files[0]
 
+        # Can provide a ware house database seperated from the main database
+        if "warehouse" in kwargs:
+            self.ware_house_input_file = kwargs["warehouse"]
+        else:
+            self.ware_house_input_file = None
+
         self.SynergiData = None
 
     def get_data(self, key1, key2):
@@ -76,7 +82,12 @@ class Reader(AbstractReader):
         Synergi --> DiTTo parse method.
         """
         # ProjectFiles = {"Synegi Circuit Database": self.input_file}
-        self.SynergiData = DbParser(self.input_file)
+        if self.ware_house_input_file is not None:
+            self.SynergiData = DbParser(
+                self.input_file, warehouse=self.ware_house_input_file
+            )
+        else:
+            self.SynergiData = DbParser(self.input_file)
 
         ############ Get the data in #################################################
 
