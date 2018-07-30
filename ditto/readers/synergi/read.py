@@ -38,14 +38,17 @@ from ditto.models.base import Unicode
 logger = logging.getLogger(__name__)
 
 
-def create_mapping(keys, values):
+def create_mapping(keys, values, remove_spaces=False):
     if len(keys) != len(values):
         raise ValueError(
             "create_mapping expects keys and values to have the same length."
         )
     if len(keys) != len(np.unique(keys)):
         raise ValueError("create_mapping expects unique keys.")
-    return {k: v for k, v in zip(keys, values)}
+    if remove_spaces:
+        return {k: v.replace(" ", "_") for k, v in zip(keys, values)}
+    else:
+        return {k: v for k, v in zip(keys, values)}
 
 
 class Reader(AbstractReader):
@@ -107,6 +110,8 @@ class Reader(AbstractReader):
 
         ## Node ###########
         NodeID = self.get_data("Node", "NodeId")
+        NodeX = self.get_data("Node", "X")
+        NodeY = self.get_data("Node", "Y")
 
         ###### Transformer ##################
         TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
@@ -183,7 +188,9 @@ class Reader(AbstractReader):
         AmpRating = self.get_data("InstSection", "AmpRating")
 
         # Create mapping between section IDs and Feeder Ids
-        self.section_feeder_mapping = create_mapping(LineID, LineFeederId)
+        self.section_feeder_mapping = create_mapping(
+            LineID, LineFeederId, remove_spaces=True
+        )
 
         ## Wires ###########
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
@@ -213,6 +220,7 @@ class Reader(AbstractReader):
         Phase3Kvar = self.get_data("Loads", "Phase3Kvar")
 
         ## Capacitors ################
+        CapacitorSectionID = self.get_data("InstCapacitors", "SectionId")
         CapacitorName = self.get_data("InstCapacitors", "UniqueDeviceId")
         CapacitorVoltage = self.get_data("InstCapacitors", "RatedKv")
         CapacitorConnectionType = self.get_data("InstCapacitors", "ConnectionType")
@@ -358,6 +366,11 @@ class Reader(AbstractReader):
                     api_node.feeder_name = self.section_feeder_mapping[NodeID[i]]
                 except:
                     pass
+
+                pos = Position(model)
+                pos.long = NodeY[i]
+                pos.lat = NodeX[i]
+                api_node.positions.append(pos)
 
                 if NodeID[i] == "mikilua 2 tsf":
                     api_node.bustype = "SWING"
@@ -584,7 +597,13 @@ class Reader(AbstractReader):
                     TransformerSectionId[i]
                 ]
             except:
-                pass
+                cleaned_id = TransformerSectionId[i].replace("Tran", "").strip()
+                try:
+                    api_transformer.feeder_name = self.section_feeder_mapping[
+                        cleaned_id
+                    ]
+                except:
+                    pass
 
             TransformerTypethisone = TransformerType[i]
             TransformerSectionIdthisone = TransformerSectionId[i]
@@ -785,7 +804,7 @@ class Reader(AbstractReader):
             api_cap.name = CapacitorName[i].replace(" ", "_")
 
             try:
-                api_cap.feeder_name = self.section_feeder_mapping[CapacitorName[i]]
+                api_cap.feeder_name = self.section_feeder_mapping[CapacitorSectionId[i]]
             except:
                 pass
 
@@ -837,7 +856,11 @@ class Reader(AbstractReader):
             try:
                 api_regulator.feeder_name = self.section_feeder_mapping[RegulatorId[i]]
             except:
-                pass
+                cleaned_id = RegulatorId[i].replace("Reg", "").strip()
+                try:
+                    api_regulator.feeder_name = self.section_feeder_mapping[cleaned_id]
+                except:
+                    pass
 
             api_regulator.delay = RegulatorTimeDelay[i]
             api_regulator.highstep = int(RegulatorTapLimiterHighSetting[i])
