@@ -38,6 +38,16 @@ from ditto.models.base import Unicode
 logger = logging.getLogger(__name__)
 
 
+def create_mapping(keys, values):
+    if len(keys) != len(values):
+        raise ValueError(
+            "create_mapping expects keys and values to have the same length."
+        )
+    if len(keys) != len(np.unique(keys)):
+        raise ValueError("create_mapping expects unique keys.")
+    return {k: v for k, v in zip(keys, values)}
+
+
 class Reader(AbstractReader):
     """
     Synergi Reader class.
@@ -156,15 +166,23 @@ class Reader(AbstractReader):
 
         ########## Line #####################
         LineID = self.get_data("InstSection", "SectionId")
+        # FeederId = self.get_data("InstSection", "FeederId")
         LineLength = self.get_data("InstSection", "SectionLength_MUL")
         PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
+        PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
+        PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
         NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
+        ConfigurationId = self.get_data("InstSection", "ConfigurationId")
         SectionPhases = self.get_data("InstSection", "SectionPhases")
         LineFeederId = self.get_data("InstSection", "FeederId")
         FromNodeId = self.get_data("InstSection", "FromNodeId")
         ToNodeId = self.get_data("InstSection", "ToNodeId")
         IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
         IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
+        AmpRating = self.get_data("InstSection", "AmpRating")
+
+        # Create mapping between section IDs and Feeder Ids
+        self.section_feeder_mapping = create_mapping(LineID, LineFeederId)
 
         ## Wires ###########
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
@@ -334,7 +352,11 @@ class Reader(AbstractReader):
 
                 api_node = Node(model)
                 api_node.name = NodeID[i].lower()
-                # print(NodeID[i])
+
+                try:
+                    api_node.feeder_name = self.section_feeder_mapping[NodeID[i]]
+                except:
+                    pass
 
                 if NodeID[i] == "mikilua 2 tsf":
                     api_node.bustype = "SWING"
@@ -434,6 +456,12 @@ class Reader(AbstractReader):
                 #   if IsToEndOpen[i] ==0 and IsFromEndOpen[i]==0:
                 api_line = Line(model)
                 api_line.name = LineID[i].lower()
+
+                try:
+                    api_line.feeder_name = self.section_feeder_mapping[LineID[i]]
+                except:
+                    pass
+
                 api_line.length = LineLength[i]
                 api_line.from_element = FromNodeId[i].lower()
                 api_line.to_element = ToNodeId[i].lower()
@@ -549,6 +577,13 @@ class Reader(AbstractReader):
 
             api_transformer = PowerTransformer(model)
             api_transformer.name = TransformerId[i].replace(" ", "_")
+
+            try:
+                api_transformer.feeder_name = self.section_feeder_mapping[
+                    TransformerSectionId[i]
+                ]
+            except:
+                pass
 
             TransformerTypethisone = TransformerType[i]
             TransformerSectionIdthisone = TransformerSectionId[i]
@@ -714,6 +749,11 @@ class Reader(AbstractReader):
             api_load = Load(model)
             api_load.name = "Load" + LoadName[i]
 
+            try:
+                api_load.feeder_name = self.section_feeder_mapping[LoadName[i]]
+            except:
+                pass
+
             tt = 0
             Count = 0
             for obj in LineID:
@@ -752,6 +792,12 @@ class Reader(AbstractReader):
         for obj in CapacitorName:
             api_cap = Capacitor(model)
             api_cap.name = CapacitorName[i]
+
+            try:
+                api_cap.feeder_name = self.section_feeder_mapping[CapacitorName[i]]
+            except:
+                pass
+
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
             api_cap.connection_type = CapacitorConnectionType[i]
             api_cap.delay = CapacitorTimeDelaySec[i]
@@ -796,6 +842,12 @@ class Reader(AbstractReader):
         for obj in RegulatorId:
             api_regulator = Regulator(model)
             api_regulator.name = RegulatorId[i]
+
+            try:
+                api_regulator.feeder_name = self.section_feeder_mapping[RegulatorId[i]]
+            except:
+                pass
+
             api_regulator.delay = RegulatorTimeDelay[i]
             api_regulator.highstep = int(RegulatorTapLimiterHighSetting[i])
             api_regulator.lowstep = -int(RegulatorTapLimiterLowSetting[i])
@@ -982,6 +1034,14 @@ class Reader(AbstractReader):
             if Flag == True:
                 api_PV = PowerSource(model)
                 api_PV.name = PVUniqueDeviceId[i]
+
+                try:
+                    api_PV.feeder_name = self.section_feeder_mapping[
+                        PVUniqueDeviceId[i]
+                    ]
+                except:
+                    pass
+
                 if PVGenPhase1Kw[i] != 0:
                     api_PV.phases = ["A"]
                     api_PV.rated_power = PVGenPhase1Kw[i]
