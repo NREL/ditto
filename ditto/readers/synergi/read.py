@@ -132,6 +132,7 @@ class Reader(AbstractReader):
         TertiaryRatedKv = self.get_data("DevTransformers", "TertiaryRatedKv")
         PercentImpedance = self.get_data("DevTransformers", "PercentImpedance")
         PercentResistance = self.get_data("DevTransformers", "PercentResistance")
+        ConnectedPhases = self.get_data("InstPrimaryTransformers", "ConnectedPhases")
 
         # NOTE: When the same information is given in the database and in the warehouse,
         # both are stored and the priority will be given to the information from the
@@ -351,7 +352,7 @@ class Reader(AbstractReader):
             if NodeFlag == 1:
 
                 api_node = Node(model)
-                api_node.name = NodeID[i].lower()
+                api_node.name = NodeID[i].lower().replace(" ", "_")
 
                 try:
                     api_node.feeder_name = self.section_feeder_mapping[NodeID[i]]
@@ -599,8 +600,8 @@ class Reader(AbstractReader):
                 if Flag == True:
                     Count = tt
                 tt = tt + 1
-            api_transformer.to_element = ToNodeId[Count]
-            api_transformer.from_element = FromNodeId[Count]
+            api_transformer.to_element = ToNodeId[Count].replace(" ", "_")
+            api_transformer.from_element = FromNodeId[Count].replace(" ", "_")
 
             tt = 0
             Count = 0
@@ -647,12 +648,7 @@ class Reader(AbstractReader):
             api_transformer.pt_ratio = PTRatio[Count]
 
             # NoLoadLosses
-            try:
-                api_transformer.noload_loss = NoLoadLosses[Count]
-            except:
-                import pdb
-
-                pdb.set_trace()
+            api_transformer.noload_loss = NoLoadLosses[Count]
 
             # Number of windings
             # TODO: IS THIS RIGHT???
@@ -662,7 +658,8 @@ class Reader(AbstractReader):
             else:
                 n_windings = 2
 
-            phases = SectionPhases[Count]
+            phases = SectionPhases[Count].strip()
+
             for winding in range(n_windings):
 
                 # Create a new Windign object
@@ -747,7 +744,7 @@ class Reader(AbstractReader):
         i = 0
         for obj in LoadName:
             api_load = Load(model)
-            api_load.name = "Load" + LoadName[i]
+            api_load.name = "Load_" + LoadName[i].replace(" ", "_")
 
             try:
                 api_load.feeder_name = self.section_feeder_mapping[LoadName[i]]
@@ -785,7 +782,7 @@ class Reader(AbstractReader):
         i = 0
         for obj in CapacitorName:
             api_cap = Capacitor(model)
-            api_cap.name = CapacitorName[i]
+            api_cap.name = CapacitorName[i].replace(" ", "_")
 
             try:
                 api_cap.feeder_name = self.section_feeder_mapping[CapacitorName[i]]
@@ -835,7 +832,7 @@ class Reader(AbstractReader):
         i = 0
         for obj in RegulatorId:
             api_regulator = Regulator(model)
-            api_regulator.name = RegulatorId[i]
+            api_regulator.name = RegulatorId[i].replace(" ", "_")
 
             try:
                 api_regulator.feeder_name = self.section_feeder_mapping[RegulatorId[i]]
@@ -1027,7 +1024,7 @@ class Reader(AbstractReader):
             Flag = PVGenType[i] == "PhotoVoltaic"
             if Flag == True:
                 api_PV = PowerSource(model)
-                api_PV.name = PVUniqueDeviceId[i]
+                api_PV.name = PVUniqueDeviceId[i].replace(" ", "_")
 
                 try:
                     api_PV.feeder_name = self.section_feeder_mapping[
