@@ -765,26 +765,20 @@ class Reader(AbstractReader):
             api_load.connecting_element = ToNodeId[Count].lower()
 
             ## Load at each phase
-            PLoad = [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
-            PLoad1 = []
-            for obj in PLoad:
-                PLoad1.append(obj * 1000)
-            QLoad = [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
-            QLoad1 = []
-            for obj in QLoad:
-                QLoad1.append(obj * 1000)
-            t = 0
-            loads = []
-            PhasesthisLoad = ["A", "B", "C"]
-            for obj in PhasesthisLoad:
-                phase_loads = PhaseLoad(model)
-                phase_loads.phase = PhasesthisLoad[t]
-                phase_loads.p = PLoad1[t]
-                phase_loads.q = QLoad1[t]
-                loads.append(phase_loads)
-                t = t + 1
-            api_load.phase_loads = loads
-            i = i + 1
+            PLoad = map(lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]])
+            QLoad = map(
+                lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
+            )
+
+            for P, Q, phase in zip(PLoad, QLoad, ["A", "B", "C"]):
+                if P != 0 or Q != 0:
+                    phase_load = PhaseLoad(model)
+                    phase_load.phase = phase
+                    phase_load.p = P
+                    phase_load.q = Q
+                    api_load.phase_loads.append(phase_load)
+
+            i += 1
 
         ####### Convert the capacitor data into Ditto ##########
 
