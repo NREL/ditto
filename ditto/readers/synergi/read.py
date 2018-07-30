@@ -113,13 +113,45 @@ class Reader(AbstractReader):
         HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
         LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
         TransformerRatedKva = self.get_data("DevTransformers", "TransformerRatedKva")
+        EmergencyKvaRating = self.get_data("DevTransformers", "EmergencyKvaRating")
+        IsThreePhaseUnit = self.get_data("DevTransformers", "IsThreePhaseUnit")
+        NoLoadLosses = self.get_data("DevTransformers", "NoLoadLosses")
+        PTRatio = self.get_data("DevTransformers", "PTRatio")
+        EnableTertiary = self.get_data("DevTransformers", "EnableTertiary")
+        TertiaryKva = self.get_data("DevTransformers", "TertiaryKva")
+        TertiaryRatedKv = self.get_data("DevTransformers", "TertiaryRatedKv")
         PercentImpedance = self.get_data("DevTransformers", "PercentImpedance")
         PercentResistance = self.get_data("DevTransformers", "PercentResistance")
-        HighVoltageConnectionCode = self.get_data(
+
+        # NOTE: When the same information is given in the database and in the warehouse,
+        # both are stored and the priority will be given to the information from the
+        # network over the one form the warehouse
+        #
+        # TODO: Check that this is indeed how Synergi works...
+        #
+        # High side connection code from network
+        HighVoltageConnectionCode_N = self.get_data(
+            "InstPrimaryTransformers", "HighSideConnectionCode"
+        )
+        # High side connection code from warehouse
+        HighVoltageConnectionCode_W = self.get_data(
             "DevTransformers", "HighVoltageConnectionCode"
         )
-        LowVoltageConnectionCode = self.get_data(
+
+        # Low side connection code from network
+        LowVoltageConnectionCode_N = self.get_data(
+            "InstPrimaryTransformers", "LowSideConnectionCode"
+        )
+        # Low side connection code from warehouse
+        LowVoltageConnectionCode_W = self.get_data(
             "DevTransformers", "LowVoltageConnectionCode"
+        )
+
+        # Tertiary connection code from network
+        TertConnectCode = self.get_data("InstPrimaryTransformers", "TertConnectCode")
+        # Tertiary connection code from warehouse
+        TertiaryConnectionCode = self.get_data(
+            "DevTransformers", "TertiaryConnectionCode"
         )
 
         ########## Line #####################
@@ -511,7 +543,7 @@ class Reader(AbstractReader):
         for obj in TransformerId:
 
             api_transformer = PowerTransformer(model)
-            api_transformer.name = TransformerId[i]
+            api_transformer.name = TransformerId[i].replace(" ", "_")
 
             TransformerTypethisone = TransformerType[i]
             TransformerSectionIdthisone = TransformerSectionId[i]
@@ -530,9 +562,6 @@ class Reader(AbstractReader):
             api_transformer.to_element = ToNodeId[Count]
             api_transformer.from_element = FromNodeId[Count]
 
-            ## Phase of the transformer
-            api_transformer.phases = SectionPhases[Count]
-
             tt = 0
             Count = 0
 
@@ -544,37 +573,134 @@ class Reader(AbstractReader):
                         Count = tt
                     tt = tt + 1
 
-                TransformerRatedKvathisone = TransformerRatedKva[Count]
-                api_transformer.powerrating = TransformerRatedKvathisone * 1000
-                api_transformer.primaryvoltage = HighSideRatedKv[Count] * 1000
-                api_transformer.secondaryvoltage = LowSideRatedKv[Count] * 1000
+                # TransformerRatedKvathisone = TransformerRatedKva[Count]
+                # api_transformer.powerrating = TransformerRatedKvathisone * 1000
+                # api_transformer.primaryvoltage = HighSideRatedKv[Count] * 1000
+                # api_transformer.secondaryvoltage = LowSideRatedKv[Count] * 1000
 
-                HighSideRatedKvthisone = HighSideRatedKv[Count]
-                PercentImpedancethisone = PercentImpedance[Count]
-                PercentResistancethisone = PercentResistance[Count]
+                # HighSideRatedKvthisone = HighSideRatedKv[Count]
+                # PercentImpedancethisone = PercentImpedance[Count]
+                # PercentResistancethisone = PercentResistance[Count]
 
                 ## Calculate the impedance of this transformer
-                Resistancethisone = (
-                    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
-                    * PercentResistancethisone
-                    / 100
-                )
-                Reactancethisone = (
-                    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
-                    * (PercentImpedancethisone - PercentResistancethisone)
-                    / 100
-                )
+                # Resistancethisone = (
+                #    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
+                #    * PercentResistancethisone
+                #    / 100
+                # )
+                # Reactancethisone = (
+                #    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
+                #    * (PercentImpedancethisone - PercentResistancethisone)
+                #    / 100
+                # )
 
-                transformerimpedance = complex(Resistancethisone, Reactancethisone)
+                # transformerimpedance = complex(Resistancethisone, Reactancethisone)
                 #            api_transformer.impedance=repr(transformerimpedance)[1:-1]
-                api_transformer.impedance = transformerimpedance
+                # api_transformer.impedance = transformerimpedance
 
                 ## Connection type of the transformer
-                api_transformer.connectiontype = (
-                    HighVoltageConnectionCode[Count] + LowVoltageConnectionCode[Count]
-                )
+                # api_transformer.connectiontype = (
+                #    HighVoltageConnectionCode[Count] + LowVoltageConnectionCode[Count]
+                # )
 
-            i = i + 1
+            # PT Ratio
+            api_transformer.pt_ratio = PTRatio[Count]
+
+            # NoLoadLosses
+            try:
+                api_transformer.noload_loss = NoLoadLosses[Count]
+            except:
+                import pdb
+
+                pdb.set_trace()
+
+            # Number of windings
+            # TODO: IS THIS RIGHT???
+            #
+            if IsThreePhaseUnit[Count] == 1 and EnableTertiary[Count] == 1:
+                n_windings = 3
+            else:
+                n_windings = 2
+
+            phases = SectionPhases[Count]
+            for winding in range(n_windings):
+
+                # Create a new Windign object
+                w = Winding(model)
+
+                # Primary
+                if winding == 0:
+
+                    # Connection_type
+                    if (
+                        HighVoltageConnectionCode_N is not None
+                        and len(HighVoltageConnectionCode_N[i]) > 0
+                    ):
+                        w.connection_type = HighVoltageConnectionCode_N[i]
+                    elif HighVoltageConnectionCode_W is not None:
+                        w.connection_type = HighVoltageConnectionCode_W[Count]
+
+                    # Nominal voltage
+                    w.nominal_voltage = (
+                        HighSideRatedKv[Count] * 10 ** 3
+                    )  # DiTTo in volts
+
+                # Secondary
+                elif winding == 1:
+
+                    # Connection_type
+                    if (
+                        LowVoltageConnectionCode_N is not None
+                        and len(LowVoltageConnectionCode_N[i]) > 0
+                    ):
+                        w.connection_type = LowVoltageConnectionCode_N[i]
+                    elif LowVoltageConnectionCode_W is not None:
+                        w.connection_type = LowVoltageConnectionCode_W[Count]
+
+                    # Nominal voltage
+                    w.nominal_voltage = (
+                        LowSideRatedKv[Count] * 10 ** 3
+                    )  # DiTTo in volts
+
+                # Tertiary
+                elif winding == 2:
+
+                    # Connection_type
+                    if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
+                        w.connection_type = TertConnectCode[i]
+                    elif TertiaryConnectionCode is not None:
+                        w.connection_type = TertiaryConnectionCode[Count]
+
+                    # Nominal voltage
+                    w.nominal_voltage = (
+                        TertiaryRatedKv[Count] * 10 ** 3
+                    )  # DiTTo in volts
+
+                # rated power
+                if winding == 0 or winding == 1:
+                    w.rated_power = (
+                        TransformerRatedKva[Count] / float(n_windings) * 10 ** 3
+                    )  # DiTTo in Vars
+                elif winding == 2:
+                    w.rated_power = (
+                        TertiaryKva * 10 ** 3
+                    )  # TODO: Check that this is correct...
+
+                # emergency power
+                w.emergency_power = (
+                    EmergencyKvaRating[Count] / float(n_windings) * 10 ** 3
+                )  # DiTTo in Vars
+
+                # Create the PhaseWindings
+                for phase in phases:
+                    pw = PhaseWinding(model)
+                    pw.phase = phase
+                    w.phase_windings.append(pw)
+
+                # Append the Winding to the Transformer
+                api_transformer.windings.append(w)
+
+            i += 1
 
         ######### Convert load into Ditto ##############
         N = len(LoadName)
