@@ -118,6 +118,12 @@ class Reader(AbstractReader):
         TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
         TransformerType = self.get_data("InstPrimaryTransformers", "TransformerType")
 
+        DTranId = self.get_data("InstDTrans", "DTranId")
+        DTransformerSectionId = self.get_data("InstDTrans", "SectionId")
+        HighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
+        LowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
+        ConnPhases = self.get_data("InstDTrans", "ConnPhases")
+
         ## Substration Transformers ##
         SubstationTransformerV = self.get_data(
             "InstSubstationTransformers", "NominalKvll"
@@ -192,6 +198,30 @@ class Reader(AbstractReader):
             LineID, LineFeederId, remove_spaces=True
         )
 
+        ## Configuration ########
+        ConfigName = self.get_data("DevConfig", "ConfigName")
+        Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
+        Position1_Y_MUL = self.get_data("DevConfig", "Position1_Y_MUL")
+        Position2_X_MUL = self.get_data("DevConfig", "Position2_X_MUL")
+        Position2_Y_MUL = self.get_data("DevConfig", "Position2_Y_MUL")
+        Position3_X_MUL = self.get_data("DevConfig", "Position3_X_MUL")
+        Position3_Y_MUL = self.get_data("DevConfig", "Position3_Y_MUL")
+        Neutral_X_MUL = self.get_data("DevConfig", "Neutral_X_MUL")
+        Neutral_Y_MUL = self.get_data("DevConfig", "Neutral_Y_MUL")
+
+        config_mapping = {}
+        for idx, conf in enumerate(ConfigName):
+            config_mapping[conf] = {
+                "Position1_X_MUL": Position1_X_MUL[idx],
+                "Position1_Y_MUL": Position1_Y_MUL[idx],
+                "Position2_X_MUL": Position2_X_MUL[idx],
+                "Position2_Y_MUL": Position2_Y_MUL[idx],
+                "Position3_X_MUL": Position3_X_MUL[idx],
+                "Position3_Y_MUL": Position3_Y_MUL[idx],
+                "Neutral_X_MUL": Neutral_X_MUL[idx],
+                "Neutral_Y_MUL": Neutral_Y_MUL[idx],
+            }
+
         ## Wires ###########
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
         CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
@@ -209,6 +239,26 @@ class Reader(AbstractReader):
         ZeroSequenceReactance_PerLUL = self.get_data(
             "DevConductors", "ZeroSequenceReactance_PerLUL"
         )
+        ContinuousCurrentRating = self.get_data(
+            "DevConductors", "ContinuousCurrentRating"
+        )
+        InterruptCurrentRating = self.get_data(
+            "DevConductors", "InterruptCurrentRating"
+        )
+
+        conductor_mapping = {}
+        for idx, cond in enumerate(ConductorName):
+            conductor_mapping[cond] = {
+                "CableGMR": CableGMR[idx],
+                "CableDiamOutside": CableDiamOutside[idx],
+                "CableResistance": CableResistance[idx],
+                "PosSequenceResistance_PerLUL": PosSequenceResistance_PerLUL[idx],
+                "PosSequenceReactance_PerLUL": PosSequenceReactance_PerLUL[idx],
+                "ZeroSequenceResistance_PerLUL": ZeroSequenceResistance_PerLUL[idx],
+                "ZeroSequenceReactance_PerLUL": ZeroSequenceReactance_PerLUL[idx],
+                "ContinuousCurrentRating": ContinuousCurrentRating[idx],
+                "InterruptCurrentRating": InterruptCurrentRating[idx],
+            }
 
         ## Loads #############
         LoadName = self.get_data("Loads", "SectionId")
@@ -476,6 +526,17 @@ class Reader(AbstractReader):
                 except:
                     pass
 
+                # Cache configuration
+                if ConfigurationId is not None:
+                    if (
+                        isinstance(ConfigurationId[i], str)
+                        and len(ConfigurationId[i]) > 0
+                        and ConfigurationId[i] in config_mapping
+                    ):
+                        config = config_mapping[ConfigurationId[i]]
+                    else:
+                        config = {}
+
                 api_line.length = LineLength[i]
                 api_line.from_element = FromNodeId[i].lower()
                 api_line.to_element = ToNodeId[i].lower()
@@ -496,13 +557,132 @@ class Reader(AbstractReader):
                 NPhase = len(SectionPhases_thisline)
 
                 ## The wires belong to this line
-                t = 0
-                wires = []
-                for obj in SectionPhases_thisline:
+
+                for idx, phase in enumerate(SectionPhases_thisline):
+
                     api_wire = Wire(model)
-                    api_wire.phase = SectionPhases_thisline[t]
-                    wires.append(api_wire)
-                    t = t + 1
+                    api_wire.phase = phase
+
+                    if (
+                        idx == 0
+                        and phase != "N"
+                        and "Position1_X_MUL" in config
+                        and "Position1_Y_MUL" in config
+                    ):
+                        api_wire.X = config["Position1_X_MUL"]
+                        api_wire.Y = config["Position1_Y_MUL"]
+                    if (
+                        idx == 1
+                        and phase != "N"
+                        and "Position2_X_MUL" in config
+                        and "Position2_Y_MUL" in config
+                    ):
+                        api_wire.X = config["Position2_X_MUL"]
+                        api_wire.Y = config["Position2_Y_MUL"]
+                    if (
+                        idx == 2
+                        and phase != "N"
+                        and "Position3_X_MUL" in config
+                        and "Position3_Y_MUL" in config
+                    ):
+                        api_wire.X = config["Position3_X_MUL"]
+                        api_wire.Y = config["Position3_Y_MUL"]
+
+                    # First wire, use PhaseConductorID
+                    if (
+                        idx == 0
+                        and PhaseConductorID is not None
+                        and isinstance(PhaseConductorID[i], str)
+                        and len(PhaseConductorID[i]) > 0
+                    ):
+                        api_wire.nameclass = PhaseConductorID[i]
+
+                    # Second wire, if PhaseConductor2Id is provided, use it
+                    # Otherwise, assume the phase wires are the same
+                    if idx == 1:
+                        if (
+                            PhaseConductor2Id is not None
+                            and isinstance(PhaseConductor2Id[i], str)
+                            and len(PhaseConductor2Id[i]) > 0
+                        ):
+                            api_wire.nameclass = PhaseConductor2Id[i]
+                        else:
+                            try:
+                                api_wire.nameclass = PhaseConductorID[i]
+                            except:
+                                pass
+
+                    # Same for third wire
+                    if idx == 2:
+                        if (
+                            PhaseConductor3Id is not None
+                            and isinstance(PhaseConductor3Id[i], str)
+                            and len(PhaseConductor3Id[i]) > 0
+                        ):
+                            api_wire.nameclass = PhaseConductor3Id[i]
+                        else:
+                            try:
+                                api_wire.nameclass = PhaseConductorID[i]
+                            except:
+                                pass
+
+                    if (
+                        api_wire.nameclass is not None
+                        and api_wire.nameclass in conductor_mapping
+                    ):
+                        api_wire.gmr = conductor_mapping[api_wire.nameclass]["CableGMR"]
+                        api_wire.diameter = conductor_mapping[api_wire.nameclass][
+                            "CableDiamOutside"
+                        ]
+                        api_wire.ampacity = conductor_mapping[api_wire.nameclass][
+                            "ContinuousCurrentRating"
+                        ]
+                        api_wire.emergency_ampacity = conductor_mapping[
+                            api_wire.nameclass
+                        ]["InterruptCurrentRating"]
+                        if api_line.length is not None:
+                            api_wire.resistance = (
+                                conductor_mapping[api_wire.nameclass]["CableResistance"]
+                                * api_line.length
+                            )
+
+                    api_line.wires.append(api_wire)
+
+                # Neutral wire
+                # Create a neutral wire if the information is present
+                #
+                if (
+                    NeutralConductorID is not None
+                    and isinstance(NeutralConductorID[i], str)
+                    and len(NeutralConductorID[i]) > 0
+                ):
+                    api_wire = Wire(model)
+                    api_wire.phase = "N"
+                    api_wire.nameclass = NeutralConductorID[i]
+                    if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
+                        api_wire.X = config["Neutral_X_MUL"]
+                        api_wire.Y = config["Neutral_Y_MUL"]
+
+                    if (
+                        api_wire.nameclass is not None
+                        and api_wire.nameclass in conductor_mapping
+                    ):
+                        api_wire.gmr = conductor_mapping[api_wire.nameclass]["CableGMR"]
+                        api_wire.diameter = conductor_mapping[api_wire.nameclass][
+                            "CableDiamOutside"
+                        ]
+                        api_wire.ampacity = conductor_mapping[api_wire.nameclass][
+                            "ContinuousCurrentRating"
+                        ]
+                        api_wire.emergency_ampacity = conductor_mapping[
+                            api_wire.nameclass
+                        ]["InterruptCurrentRating"]
+                        if api_line.length is not None:
+                            api_wire.resistance = (
+                                conductor_mapping[api_wire.nameclass]["CableResistance"]
+                                * api_line.length
+                            )
+                    api_line.wires.append(api_wire)
 
                 ## Calculating the impedance matrix of this line
 
@@ -575,8 +755,6 @@ class Reader(AbstractReader):
                         b = coeff * complex(b1, b2)
 
                         impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-
-                api_line.wires = wires
 
                 if impedance_matrix is not None:
                     api_line.impedance_matrix = impedance_matrix
