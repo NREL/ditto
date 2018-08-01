@@ -203,6 +203,8 @@ class Reader(AbstractReader):
             LineID, LineFeederId, remove_spaces=True
         )
 
+        self.section_phase_mapping = create_mapping(LineID, SectionPhases)
+
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
         Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
@@ -875,7 +877,7 @@ class Reader(AbstractReader):
             else:
                 n_windings = 2
 
-            phases = SectionPhases[Count].strip()
+            phases = self.section_phase_mapping[TransformerSectionId[i]]
 
             for winding in range(n_windings):
 
