@@ -113,6 +113,11 @@ class Reader(AbstractReader):
         NodeX = self.get_data("Node", "X")
         NodeY = self.get_data("Node", "Y")
 
+        ## Preferences ########
+        LengthUnits = self.get_data("SAI_Equ_Control", "LengthUnits")
+        if LengthUnits is not None and len(LengthUnits) == 1:
+            LengthUnits = LengthUnits[0]
+
         ###### Transformer ##################
         TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
         TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
@@ -711,7 +716,23 @@ class Reader(AbstractReader):
                     #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
                     #         --------------------------
 
-                    coeff = 10 ** -3
+                    # TODO: Check that the following is correct...
+                    # If LengthUnits is set to English2 or not defined , then assume miles
+                    if LengthUnits == "English2" or LengthUnits is None:
+                        coeff = 0.000621371
+                    # Else, if LengthUnits is set to English1, assume kft
+                    elif LengthUnits == "English1":
+                        coeff = 3.28084 * 10 ** -3
+                    # Else, if LengthUnits is set to Metric, assume km
+                    elif LengthUnits == "Metric":
+                        coeff = 10 ** -3
+                    else:
+                        raise ValueError(
+                            "LengthUnits <{}> is not valid.".format(LengthUnits)
+                        )
+
+                    coeff *= 1.0 / 3.0
+
                     if NPhase == 2:
                         impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
                     if NPhase == 3:
@@ -755,7 +776,6 @@ class Reader(AbstractReader):
                         b = coeff * complex(b1, b2)
 
                         impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-
                 if impedance_matrix is not None:
                     api_line.impedance_matrix = impedance_matrix
                 else:
