@@ -297,6 +297,8 @@ class Reader(AbstractReader):
         CapacitorFixedKvarPhase1 = self.get_data("InstCapacitors", "FixedKvarPhase1")
         CapacitorFixedKvarPhase2 = self.get_data("InstCapacitors", "FixedKvarPhase2")
         CapacitorFixedKvarPhase3 = self.get_data("InstCapacitors", "FixedKvarPhase3")
+        MeteringPhase = self.get_data("InstCapacitors", "MeteringPhase")
+        CapacitorConnectedPhases = self.get_data("InstCapacitors", "ConnectedPhases")
 
         ## Regulators ###################
         RegulatorId = self.get_data("InstRegulators", "UniqueDeviceId")
@@ -790,7 +792,7 @@ class Reader(AbstractReader):
         for obj in TransformerId:
 
             api_transformer = PowerTransformer(model)
-            api_transformer.name = TransformerId[i].replace(" ", "_")
+            api_transformer.name = TransformerId[i].replace(" ", "_").lower()
 
             try:
                 api_transformer.feeder_name = self.section_feeder_mapping[
@@ -819,8 +821,8 @@ class Reader(AbstractReader):
                 if Flag == True:
                     Count = tt
                 tt = tt + 1
-            api_transformer.to_element = ToNodeId[Count].replace(" ", "_")
-            api_transformer.from_element = FromNodeId[Count].replace(" ", "_")
+            api_transformer.to_element = ToNodeId[Count].replace(" ", "_").lower()
+            api_transformer.from_element = FromNodeId[Count].replace(" ", "_").lower()
 
             tt = 0
             Count = 0
@@ -949,9 +951,10 @@ class Reader(AbstractReader):
 
                 # Create the PhaseWindings
                 for phase in phases:
-                    pw = PhaseWinding(model)
-                    pw.phase = phase
-                    w.phase_windings.append(pw)
+                    if phase != "N":
+                        pw = PhaseWinding(model)
+                        pw.phase = phase
+                        w.phase_windings.append(pw)
 
                 # Append the Winding to the Transformer
                 api_transformer.windings.append(w)
@@ -963,7 +966,7 @@ class Reader(AbstractReader):
         i = 0
         for obj in LoadName:
             api_load = Load(model)
-            api_load.name = "Load_" + LoadName[i].replace(" ", "_")
+            api_load.name = "Load_" + LoadName[i].replace(" ", "_").lower()
 
             try:
                 api_load.feeder_name = self.section_feeder_mapping[LoadName[i]]
@@ -1001,21 +1004,34 @@ class Reader(AbstractReader):
         i = 0
         for obj in CapacitorName:
             api_cap = Capacitor(model)
-            api_cap.name = CapacitorName[i].replace(" ", "_")
+            api_cap.name = CapacitorName[i].replace(" ", "_").lower()
 
             try:
                 api_cap.feeder_name = self.section_feeder_mapping[CapacitorSectionId[i]]
             except:
                 pass
 
+            control_mode_mapping = {
+                "VOLTS": "voltage"
+            }  # TODO: Complete the mapping with other control modes
+
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
             api_cap.connection_type = CapacitorConnectionType[i]
             api_cap.delay = CapacitorTimeDelaySec[i]
-            api_cap.mode = "VOLT"
+            if CapacitorPrimaryControlMode[i] in control_mode_mapping:
+                api_cap.mode = control_mode_mapping[CapacitorPrimaryControlMode[i]]
+            else:
+                api_cap.mode = "voltage"  # Default sets to voltage
             api_cap.low = CapacitorModule1CapSwitchCloseValue[i]
             api_cap.high = CapacitorModule1CapSwitchTripValue[i]
             api_cap.pt_ratio = CapacitorPTRatio[i]
             api_cap.ct_ratio = CapacitorCTRating[i]
+
+            # Measuring element
+            api_cap.measuring_element = "Line." + CapacitorSectionID[i].lower()
+
+            # PT phase
+            api_cap.pt_phase = MeteringPhase[i]
 
             ## Find out the connecting bus
             tt = 0
@@ -1026,7 +1042,7 @@ class Reader(AbstractReader):
                     Count = tt
                 tt = tt + 1
 
-            api_cap.connecting_element = ToNodeId[Count]
+            api_cap.connecting_element = ToNodeId[Count].lower()
 
             QCap = [
                 float(CapacitorFixedKvarPhase1[i]),
@@ -1036,7 +1052,10 @@ class Reader(AbstractReader):
 
             t = 0
             Caps = []
-            PhasesthisCap = ["A", "B", "C"]
+            if len(CapacitorConnectedPhases[i]) > 0:
+                PhasesthisCap = CapacitorConnectedPhases[i]
+            else:
+                PhasesthisCap = ["A", "B", "C"]
             for obj in PhasesthisCap:
                 phase_caps = PhaseCapacitor(model)
                 phase_caps.phase = PhasesthisCap[t]
@@ -1051,7 +1070,7 @@ class Reader(AbstractReader):
         i = 0
         for obj in RegulatorId:
             api_regulator = Regulator(model)
-            api_regulator.name = RegulatorId[i].replace(" ", "_")
+            api_regulator.name = RegulatorId[i].replace(" ", "_").lower()
 
             try:
                 api_regulator.feeder_name = self.section_feeder_mapping[RegulatorId[i]]
@@ -1114,11 +1133,12 @@ class Reader(AbstractReader):
                     )
 
                 for phase in RegulagorPhases[i]:
-                    pw = PhaseWinding(model)
-                    pw.phase = phase
+                    if phase != "N":
+                        pw = PhaseWinding(model)
+                        pw.phase = phase
 
-                    # Add PhaseWinding to the winding
-                    w.phase_windings.append(pw)
+                        # Add PhaseWinding to the winding
+                        w.phase_windings.append(pw)
 
                 # Add winding to the regulator
                 api_regulator.windings.append(w)
@@ -1131,30 +1151,30 @@ class Reader(AbstractReader):
 
             if Count is not None:
                 if RegulatorNearFromNode[i] == 0:
-                    RegualatorFromNodeID = ToNodeId[Count] + "_1"
-                    RegualatorToNodeID = ToNodeId[Count]
-                    DummyNodeID = ToNodeId[Count] + "_1"
+                    RegualatorFromNodeID = ToNodeId[Count].lower() + "_1"
+                    RegualatorToNodeID = ToNodeId[Count].lower()
+                    DummyNodeID = ToNodeId[Count].lower() + "_1"
 
                 if RegulatorNearFromNode[i] == 1:
-                    RegualatorFromNodeID = FromNodeId[Count]
-                    RegualatorToNodeID = FromNodeId[Count] + "_1"
-                    DummyNodeID = FromNodeId[Count] + "_1"
+                    RegualatorFromNodeID = FromNodeId[Count].lower()
+                    RegualatorToNodeID = FromNodeId[Count].lower() + "_1"
+                    DummyNodeID = FromNodeId[Count].lower() + "_1"
 
                 api_regulator.from_element = RegualatorFromNodeID
                 api_regulator.to_element = RegualatorToNodeID
 
                 ## Create the dummy node connecting the regulators
                 api_node = Node(model)
-                api_node.name = DummyNodeID
+                api_node.name = DummyNodeID.lower()
                 for p in SectionPhases01[Count]:
                     api_node.phases.append(p)
 
                 ## Create a line to put regulator in lines
                 api_line = Line(model)
-                api_line.name = LineID[Count]
+                api_line.name = LineID[Count].lower()
                 api_line.length = LineLength[Count] * 0.3048
-                api_line.from_element = FromNodeId[Count]
-                api_line.to_element = ToNodeId[Count]
+                api_line.from_element = FromNodeId[Count].lower()
+                api_line.to_element = ToNodeId[Count].lower()
 
                 ### Line Phases##################
                 SectionPhases_thisline = SectionPhases01[Count]
@@ -1247,7 +1267,7 @@ class Reader(AbstractReader):
             Flag = PVGenType[i] == "PhotoVoltaic"
             if Flag == True:
                 api_PV = PowerSource(model)
-                api_PV.name = PVUniqueDeviceId[i].replace(" ", "_")
+                api_PV.name = PVUniqueDeviceId[i].replace(" ", "_").lower()
 
                 try:
                     api_PV.feeder_name = self.section_feeder_mapping[
