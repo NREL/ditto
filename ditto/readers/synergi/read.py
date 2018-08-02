@@ -354,6 +354,27 @@ class Reader(AbstractReader):
         PVGenPhase2Kw = self.get_data("InstLargeCust", "GenPhase2Kw")
         PVGenPhase3Kw = self.get_data("InstLargeCust", "GenPhase3Kw")
 
+        ## Generators ###############################
+        GeneratorSectionID = self.get_data("InstGenerators", "SectionId")
+        GeneratorID = self.get_data("InstGenerators", "UniqueDeviceId")
+        GeneratorConnectedPhases = self.get_data("InstGenerators", "ConnectedPhases")
+        GeneratorMeteringPhase = self.get_data("InstGenerators", "MeteringPhase")
+        GeneratorType = self.get_data("InstGenerators", "GeneratorType")
+        GeneratorVoltageSetting = self.get_data("InstGenerators", "VoltageSetting")
+        GeneratorPF = self.get_data("InstGenerators", "PQPowerFactorPercentage")
+        GenPhase1Kw = self.get_data("InstGenerators", "GenPhase1Kw")
+        GenPhase1Kvar = self.get_data("InstGenerators", "GenPhase1Kvar")
+        GenPhase2Kw = self.get_data("InstGenerators", "GenPhase2Kw")
+        GenPhase2Kvar = self.get_data("InstGenerators", "GenPhase2Kvar")
+        GenPhase3Kw = self.get_data("InstGenerators", "GenPhase3Kw")
+        GenPhase3Kvar = self.get_data("InstGenerators", "GenPhase3Kvar")
+
+        GeneratorName = self.get_data("DevGenerators", "GeneratorName")
+        GeneratorTypeDev = self.get_data("DevGenerators", "GeneratorType")
+        GeneratorKvRating = self.get_data("DevGenerators", "KvRating")
+        GeneratorKwRating = self.get_data("DevGenerators", "KwRating")
+        GeneratorPercentPFRating = self.get_data("DevGenerators", "PercentPFRating")
+
         ######################### Converting to Ditto #################################################
 
         ## Feeder ID###########
@@ -1304,3 +1325,34 @@ class Reader(AbstractReader):
                     Count = tt
                 tt = tt + 1
             api_PV.connecting_element = ToNodeId[Count]
+
+        for idx, obj in enumerate(GeneratorSectionID):
+            Count = None
+            for k, obj in enumerate(GeneratorName):
+                if GeneratorType[i] == obj:
+                    Count = k
+            if Count is not None and GeneratorTypeDev[Count] == "PV":
+                api_PV = PowerSource(model)
+
+                # PV name
+                api_PV.name = GeneratorSectionID[i].lower()
+
+                # Rated Power
+                api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
+
+                # Connecting element
+                Count = None
+                for k, obj in enumerate(LineID):
+                    if GeneratorSectionID[i] == obj:
+                        Count = k
+                api_PV.connecting_element = ToNodeId[Count].lower()
+
+                # Nominal voltage
+                api_PV.nominal_voltage = GeneratorVoltageSetting[i] * 10 ** 3
+
+                # Phases
+                for phase in GeneratorConnectedPhases[i].strip():
+                    api_PV.phases.append(phase)
+
+                # Power Factor
+                api_PV.power_factor = GeneratorPF[i]
