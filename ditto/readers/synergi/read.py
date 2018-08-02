@@ -597,6 +597,12 @@ class Reader(AbstractReader):
                         api_wire.X = config["Position3_X_MUL"]
                         api_wire.Y = config["Position3_Y_MUL"]
 
+                    # Looks like zero-height wires are possible in Synergi but not
+                    # in some other formats like OpenDSS
+                    #
+                    if api_wire.Y == 0:
+                        api_wire.Y += 0.01
+
                     # First wire, use PhaseConductorID
                     if (
                         idx == 0
@@ -691,6 +697,10 @@ class Reader(AbstractReader):
                                 conductor_mapping[api_wire.nameclass]["CableResistance"]
                                 * api_line.length
                             )
+
+                    if api_wire.Y == 0:
+                        api_wire.Y += 0.01
+
                     api_line.wires.append(api_wire)
 
                 ## Calculating the impedance matrix of this line
