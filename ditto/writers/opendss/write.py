@@ -2857,6 +2857,23 @@ class Writer(AbstractWriter):
                 )  # Currently line geometry is in the base folder
                 self.files_to_redirect.remove(self.output_filenames["linegeometry"])
 
+            # Write LineCodes.dss then if it exists
+            if self.output_filenames["linecodes"] in self.files_to_redirect:
+                fp.write("Redirect {f}\n".format(f=self.output_filenames["linecodes"]))
+                self.files_to_redirect.remove(self.output_filenames["linecodes"])
+
+            # Write Lines.dss then if it exists
+            if self.output_filenames["lines"] in self.files_to_redirect:
+                fp.write("Redirect {f}\n".format(f=self.output_filenames["lines"]))
+                self.files_to_redirect.remove(self.output_filenames["lines"])
+
+            # Write Transformers.dss then if it exists
+            if self.output_filenames["transformers"] in self.files_to_redirect:
+                fp.write(
+                    "Redirect {f}\n".format(f=self.output_filenames["transformers"])
+                )
+                self.files_to_redirect.remove(self.output_filenames["transformers"])
+
             # Then, redirect the rest (the order should not matter anymore)
             # Buscoords is not included here, only the combined buscoords file is included in the master file
             for file in self.files_to_redirect:
