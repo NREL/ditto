@@ -567,8 +567,15 @@ class Reader(AbstractReader):
                     else:
                         config = {}
 
-                api_line.length = LineLength[i]
+                # Assumes MUL is medium unit length and this is feets
+                # Converts to meters then
+                #
+                api_line.length = LineLength[i] * 0.3048
+
+                # From element
                 api_line.from_element = FromNodeId[i].lower()
+
+                # To element
                 api_line.to_element = ToNodeId[i].lower()
 
                 ### Line Phases##################
@@ -593,30 +600,46 @@ class Reader(AbstractReader):
                     api_wire = Wire(model)
                     api_wire.phase = phase
 
+                    # Assumes MUL is medium unit length = ft
+                    # Convert to meters
+                    #
+                    coeff = 0.3048
                     if (
                         idx == 0
                         and phase != "N"
                         and "Position1_X_MUL" in config
                         and "Position1_Y_MUL" in config
                     ):
-                        api_wire.X = config["Position1_X_MUL"]
-                        api_wire.Y = config["Position1_Y_MUL"]
+                        api_wire.X = (
+                            config["Position1_X_MUL"] * coeff
+                        )  # DiTTo is in meters
+                        api_wire.Y = (
+                            config["Position1_Y_MUL"] * coeff
+                        )  # DiTTo is in meters
                     if (
                         idx == 1
                         and phase != "N"
                         and "Position2_X_MUL" in config
                         and "Position2_Y_MUL" in config
                     ):
-                        api_wire.X = config["Position2_X_MUL"]
-                        api_wire.Y = config["Position2_Y_MUL"]
+                        api_wire.X = (
+                            config["Position2_X_MUL"] * coeff
+                        )  # DiTTo is in meters
+                        api_wire.Y = (
+                            config["Position2_Y_MUL"] * coeff
+                        )  # DiTTo is in meters
                     if (
                         idx == 2
                         and phase != "N"
                         and "Position3_X_MUL" in config
                         and "Position3_Y_MUL" in config
                     ):
-                        api_wire.X = config["Position3_X_MUL"]
-                        api_wire.Y = config["Position3_Y_MUL"]
+                        api_wire.X = (
+                            config["Position3_X_MUL"] * coeff
+                        )  # DiTTo is in meters
+                        api_wire.Y = (
+                            config["Position3_Y_MUL"] * coeff
+                        )  # DiTTo is in meters
 
                     # Looks like zero-height wires are possible in Synergi but not
                     # in some other formats like OpenDSS
@@ -666,20 +689,33 @@ class Reader(AbstractReader):
                         api_wire.nameclass is not None
                         and api_wire.nameclass in conductor_mapping
                     ):
-                        api_wire.gmr = conductor_mapping[api_wire.nameclass]["CableGMR"]
-                        api_wire.diameter = conductor_mapping[api_wire.nameclass][
-                            "CableDiamOutside"
-                        ]
+                        api_wire.gmr = (
+                            conductor_mapping[api_wire.nameclass]["CableGMR"] * 0.3048
+                        )  # DiTTo is in meters and GMR is assumed to be given in feets
+
+                        # Diameter is assumed to be given in inches and is converted to meters here
+                        api_wire.diameter = (
+                            conductor_mapping[api_wire.nameclass]["CableDiamOutside"]
+                            * 0.0254
+                        )
+
+                        # Ampacity
                         api_wire.ampacity = conductor_mapping[api_wire.nameclass][
                             "ContinuousCurrentRating"
                         ]
+
+                        # Emergency ampacity
                         api_wire.emergency_ampacity = conductor_mapping[
                             api_wire.nameclass
                         ]["InterruptCurrentRating"]
+
+                        # TODO: Change this once resistance is the per unit length resistance
                         if api_line.length is not None:
                             api_wire.resistance = (
                                 conductor_mapping[api_wire.nameclass]["CableResistance"]
                                 * api_line.length
+                                * 1.0
+                                / 1609.34
                             )
 
                     api_line.wires.append(api_wire)
@@ -693,30 +729,59 @@ class Reader(AbstractReader):
                     and len(NeutralConductorID[i]) > 0
                 ):
                     api_wire = Wire(model)
+
+                    # Phase
                     api_wire.phase = "N"
+
+                    # Nameclass
                     api_wire.nameclass = NeutralConductorID[i]
+
+                    # Spacing
+                    coeff = 0.3048
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
-                        api_wire.X = config["Neutral_X_MUL"]
-                        api_wire.Y = config["Neutral_Y_MUL"]
+                        api_wire.X = (
+                            config["Neutral_X_MUL"] * coeff
+                        )  # DiTTo is in meters
+                        api_wire.Y = (
+                            config["Neutral_Y_MUL"] * coeff
+                        )  # DiTTo is in meters
 
                     if (
                         api_wire.nameclass is not None
                         and api_wire.nameclass in conductor_mapping
                     ):
-                        api_wire.gmr = conductor_mapping[api_wire.nameclass]["CableGMR"]
-                        api_wire.diameter = conductor_mapping[api_wire.nameclass][
-                            "CableDiamOutside"
-                        ]
+                        # GMR
+                        api_wire.gmr = (
+                            conductor_mapping[api_wire.nameclass]["CableGMR"] * 0.3048
+                        )
+
+                        # Diameter
+                        api_wire.diameter = (
+                            conductor_mapping[api_wire.nameclass]["CableDiamOutside"]
+                            * 0.0254
+                        )
+
+                        # Ampacity
                         api_wire.ampacity = conductor_mapping[api_wire.nameclass][
                             "ContinuousCurrentRating"
                         ]
+
+                        # Emergency ampacity
                         api_wire.emergency_ampacity = conductor_mapping[
                             api_wire.nameclass
                         ]["InterruptCurrentRating"]
+
+                        # Resistance
                         if api_line.length is not None:
                             api_wire.resistance = (
-                                conductor_mapping[api_wire.nameclass]["CableResistance"]
-                                * api_line.length
+                                (
+                                    conductor_mapping[api_wire.nameclass][
+                                        "CableResistance"
+                                    ]
+                                    * api_line.length
+                                )
+                                * 1.0
+                                / 1609.34
                             )
 
                     if api_wire.Y == 0:
@@ -852,7 +917,11 @@ class Reader(AbstractReader):
                 if Flag == True:
                     Count = tt
                 tt = tt + 1
+
+            # To element
             api_transformer.to_element = ToNodeId[Count].replace(" ", "_").lower()
+
+            # From element
             api_transformer.from_element = FromNodeId[Count].replace(" ", "_").lower()
 
             tt = 0
