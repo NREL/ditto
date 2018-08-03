@@ -42,7 +42,7 @@ extras_requires = ["lxml", "pandas", "scipy", numpy_dependency, "XlsxWriter"]
 
 opendss_requires = ["OpenDSSDirect.py", "pandas", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd"]
-gridlabd_requires = [numpy_dependency]
+gridlabd_requires = ["croniter", numpy_dependency]
 cyme_requires = [numpy_dependency]
 ephasor_requires = [numpy_dependency, "pandas"]
 
@@ -99,15 +99,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=[
-        "click",
-        "croniter",
-        "future",
-        "networkx",
-        "six",
-        "traitlets",
-        "json_tricks",
-    ],
+    install_requires=["click", "future", "networkx", "six", "traitlets", "json_tricks"],
     extras_require={
         "all": extras_requires
         + opendss_requires
