@@ -834,7 +834,12 @@ class Reader(AbstractReader):
                     coeff *= 1.0 / 3.0
 
                     if NPhase == 2:
-                        impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
+                        impedance_matrix = [
+                            [
+                                coeff
+                                * complex(float(r0) + float(r1), float(x0) + float(x1))
+                            ]
+                        ]
                     if NPhase == 3:
 
                         b1 = float(r0) - float(r1)
