@@ -549,7 +549,7 @@ class Reader(AbstractReader):
             if LineFlag == 0:
                 #   if IsToEndOpen[i] ==0 and IsFromEndOpen[i]==0:
                 api_line = Line(model)
-                api_line.name = LineID[i].lower()
+                api_line.name = LineID[i].lower().replace(" ", "_")
 
                 try:
                     api_line.feeder_name = self.section_feeder_mapping[LineID[i]]
@@ -573,10 +573,10 @@ class Reader(AbstractReader):
                 api_line.length = LineLength[i] * 0.3048
 
                 # From element
-                api_line.from_element = FromNodeId[i].lower()
+                api_line.from_element = FromNodeId[i].lower().replace(" ", "_")
 
                 # To element
-                api_line.to_element = ToNodeId[i].lower()
+                api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
 
                 ### Line Phases##################
                 SectionPhases_thisline1 = list(SectionPhases[i])
@@ -1081,7 +1081,7 @@ class Reader(AbstractReader):
                     Count = tt
                 tt = tt + 1
 
-            api_load.connecting_element = ToNodeId[Count].lower()
+            api_load.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
 
             ## Load at each phase
             PLoad = map(lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]])
@@ -1142,7 +1142,7 @@ class Reader(AbstractReader):
                     Count = tt
                 tt = tt + 1
 
-            api_cap.connecting_element = ToNodeId[Count].lower()
+            api_cap.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
 
             QCap = [
                 float(CapacitorFixedKvarPhase1[i]),
@@ -1260,21 +1260,21 @@ class Reader(AbstractReader):
                     RegualatorToNodeID = FromNodeId[Count].lower() + "_1"
                     DummyNodeID = FromNodeId[Count].lower() + "_1"
 
-                api_regulator.from_element = RegualatorFromNodeID
-                api_regulator.to_element = RegualatorToNodeID
+                api_regulator.from_element = RegualatorFromNodeID.replace(" ", "_")
+                api_regulator.to_element = RegualatorToNodeID.replace(" ", "_")
 
                 ## Create the dummy node connecting the regulators
                 api_node = Node(model)
-                api_node.name = DummyNodeID.lower()
+                api_node.name = DummyNodeID.lower().replace(" ", "_")
                 for p in SectionPhases01[Count]:
                     api_node.phases.append(p)
 
                 ## Create a line to put regulator in lines
                 api_line = Line(model)
-                api_line.name = LineID[Count].lower()
+                api_line.name = LineID[Count].lower().replace(" ", "_")
                 api_line.length = LineLength[Count] * 0.3048
-                api_line.from_element = FromNodeId[Count].lower()
-                api_line.to_element = ToNodeId[Count].lower()
+                api_line.from_element = FromNodeId[Count].lower().replace(" ", "_")
+                api_line.to_element = ToNodeId[Count].lower().replace(" ", "_")
 
                 ### Line Phases##################
                 SectionPhases_thisline = SectionPhases01[Count]
@@ -1393,7 +1393,7 @@ class Reader(AbstractReader):
                 if Flag == True:
                     Count = tt
                 tt = tt + 1
-            api_PV.connecting_element = ToNodeId[Count]
+            api_PV.connecting_element = ToNodeId[Count].replace(" ", "_")
 
         for idx, obj in enumerate(GeneratorSectionID):
             Count = None
@@ -1404,7 +1404,7 @@ class Reader(AbstractReader):
                 api_PV = PowerSource(model)
 
                 # PV name
-                api_PV.name = GeneratorSectionID[i].lower()
+                api_PV.name = GeneratorSectionID[i].lower().replace(" ", "_")
 
                 # Rated Power
                 api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
@@ -1414,7 +1414,7 @@ class Reader(AbstractReader):
                 for k, obj in enumerate(LineID):
                     if GeneratorSectionID[i] == obj:
                         Count = k
-                api_PV.connecting_element = ToNodeId[Count].lower()
+                api_PV.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
 
                 # Nominal voltage
                 api_PV.nominal_voltage = GeneratorVoltageSetting[i] * 10 ** 3
