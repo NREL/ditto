@@ -1,0 +1,11 @@
+[GENERAL]
+DATE=June 04, 2018 at 12:08:21
+CYME_VERSION=8.00
+CYMDIST_REVISION=8
+
+[SI]
+
+[NETWORKPROTECTOR]
+FORMAT_NETWORKPROTECTOR=ID,Amps,Amps_1,Amps_2,Amps_3,Amps_4,KVLL,Reversible,InterruptingRating,FailRate,TmpFailRate,MajorRepairTime,MinorRepairTime,MajorFailureProportion,StuckProbability,SwitchTime,SymbolOpenID,SymbolCloseID,SinglePhaseLocking,Favorite,Flags,Comments
+DEFAULT,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,1,600.000000,,,,,,,,0,0,0,0,0,
+NETWORK_PROTECTOR,100.000000,100.000000,100.000000,100.000000,100.000000,25.000000,1,600.000000,,,,,,,,0,0,0,0,0,

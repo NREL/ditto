@@ -12,7 +12,7 @@ Readers and writers are then implemented to perform the translation from a given
 ## Quick Start
 
 ```bash
-pip install git+https://github.com/NREL/ditto.git@master#egg=ditto
+pip install git+https://github.com/NREL/ditto.git@master#egg=ditto[all]
 ```
 
 More documentation can be found on [here](https://nrel.github.io/ditto).

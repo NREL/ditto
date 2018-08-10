@@ -1,0 +1,32 @@
+[GENERAL]
+DATE=June 04, 2018 at 12:08:21
+CYME_VERSION=8.00
+CYMDIST_REVISION=8
+
+[SI]
+
+[NODE]
+FORMAT_NODE=NodeID,CoordX,CoordY,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,ZoneID,ExposedCircuitType,BusGap,WorkingDistance,UseUserDefinedFaultCurrent,UserDefinedFaultCurrent,OpeningTimeMode,UserDefinedOpeningTime,EnclosureWidth,EnclosureHeight,EnclosureDepth,CoefficientA,CoefficientK,UserDefinedTimeConstant,TimeConstant,OverrideLFVoltageLimit,HighVoltageLimit,LowVoltageLimit,LoadSheddingActive,MaximumLoadShed,ShedLoadCost,UserDefinedBaseVoltage,Installation,RatedVoltage,RatedCurrent,ANSISymCurrent,ANSIAsymCurrent,PeakCurrent,Standard,TestCircuitPowerFactor
+0,,,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+1,,,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+2,,,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+
+[HEADNODES]
+FORMAT_HEADNODES=NodeID,NetworkID,ConnectorIndex,StructureID,HarmonicEnveloppe,EquivalentSourceConfiguration,EquivalentSourceSinglePhaseCT,EquivSourceCenterTapPhase,BackgroundHarmonicVoltage
+0,FEEDER1,0,,0,0,0,0,0
+
+[SOURCE EQUIVALENT]
+FORMAT_SOURCEEQUIVALENT=NodeID,LoadModelName,Voltage,OperatingAngle1,OperatingAngle2,OperatingAngle3,PositiveSequenceResistance,PositiveSequenceReactance,NegativeSequenceResistance,NegativeSequenceReactance,ZeroSequenceResistance,ZeroSequenceReactance,OperatingVoltage1,OperatingVoltage2,OperatingVoltage3,BaseMVA,ImpedanceUnit
+0,DEFAULT,13.800000,0.000000,-120.000000,120.000000,0.100000,0.600000,0.100000,0.600000,0.500000,2.000000,7.200000,7.200000,7.200000,100.000000,0
+
+[SECTION]
+FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,ZoneID,SubNetworkId,EnvironmentID
+FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version,EnvironmentID
+FEEDER=FEEDER1,0,1,1527698586,,255,1.000000,0.150000,,,,,16387,13.026886,-18.900939,0.000000,0,2,0,-1,-1,-1,0,Arial,2.000000,0.330000,-1,0
+A,0,,1,,ABC,,,
+B,1,,2,,AC,,,
+
+[BREAKER SETTING]
+FORMAT_BREAKERSETTING=SectionID,Location,EqID,DeviceNumber,DeviceStage,Flags,InitFromEquipFlags,CoordX,CoordY,ClosedPhase,Locked,RC,NStatus,TCCID,PhPickup,GrdPickup,Alternate,PhAltPickup,GrdAltPickup,FromNodeID,EnableReclosing,FaultIndicator,EnableFuseSaving,MinRatedCurrentForFuseSaving,Automated,SensorMode,Strategic,RestorationMode,ConnectionStatus,ByPassOnRestoration,Speed,SeqOpFirstPhase,SeqOpFirstGround,SeqOpLockoutPhase,SeqOpLockoutGround,SeqResetTime,SeqReclosingTime1,SeqReclosingTime2,SeqReclosingTime3,Reversible
+A,M,BREAKER_1,P46,,0,0,,,ABC,0,0,0,BREAKER_1,0.000000,0.000000,0,0.000000,0.000000,P45,1,1,0,0.000000,0,0,0,0,0,0,0.000000,2,2,4,4,30.000000,2.000000,2.000000,2.000000,1
+B,M,BREAKER_2,P12,,0,0,3116.710000,-2193.592126,C,0,0,0,BREAKER_2,0.000000,0.000000,0,0.000000,0.000000,P11,1,1,0,0.000000,0,0,0,0,0,0,0.000000,2,2,4,4,30.000000,2.000000,2.000000,2.000000,1

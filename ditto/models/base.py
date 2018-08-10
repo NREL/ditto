@@ -2,10 +2,14 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
 import warnings
-from traitlets.traitlets import ObserveHandler, _deprecated_method, _CallbackWrapper, EventHandler
+from traitlets.traitlets import (
+    ObserveHandler,
+    _deprecated_method,
+    _CallbackWrapper,
+    EventHandler,
+)
 import traitlets as T
 from builtins import super
-import pandas as pd
 
 import logging
 
@@ -14,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class DiTToHasTraits(T.HasTraits):
 
-    response = T.Any(allow_none=True, help='default trait for managing return values')
+    response = T.Any(allow_none=True, help="default trait for managing return values")
 
     def __init__(self, model, *args, **kwargs):
         model.model_store.append(self)
@@ -33,7 +37,9 @@ class DiTToHasTraits(T.HasTraits):
             pass
 
     def build(self, model):
-        raise NotImplementedError("Build function must be implemented by derived classes")
+        raise NotImplementedError(
+            "Build function must be implemented by derived classes"
+        )
 
     def notify_access(self, bunch):
         if not isinstance(bunch, T.Bunch):
@@ -74,19 +80,22 @@ class DiTToTraitType(T.TraitType):
         # This return value is saved as the current value in obj._trait_values
         # Then call super get
         try:
-            r = obj.notify_access(T.Bunch(
-                name=self.name,
-                value=obj._trait_values[self.name],
-                owner=self,
-                type='fetch',
-            ))
+            r = obj.notify_access(
+                T.Bunch(
+                    name=self.name,
+                    value=obj._trait_values[self.name],
+                    owner=self,
+                    type="fetch",
+                )
+            )
 
             old_value = obj._trait_values[self.name]
 
             if r is not None and r != old_value:
                 logger.debug(
-                    "Response from callback event 'fetch' on property {} does not match previous value. Overloading existing value {} with new value {}".
-                    format(self.name, old_value, r)
+                    "Response from callback event 'fetch' on property {} does not match previous value. Overloading existing value {} with new value {}".format(
+                        self.name, old_value, r
+                    )
                 )
                 obj._trait_values[self.name] = r
         except KeyError:

@@ -18,7 +18,7 @@ except ImportError:
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-with open("README.md") as readme_file:
+with open("README.md", encoding="utf-8") as readme_file:
     readme = convert_text(readme_file.read(), "rst", format="md")
 
 with open(os.path.join(here, "ditto", "version.py"), encoding="utf-8") as f:
@@ -36,6 +36,19 @@ test_requires = [
     "ghp-import",
 ]
 
+numpy_dependency = "numpy>=1.13.0"
+
+extras_requires = ["lxml", "pandas", "scipy", numpy_dependency, "XlsxWriter"]
+
+opendss_requires = ["OpenDSSDirect.py", "pandas", numpy_dependency]
+dew_requires = [numpy_dependency, "xlrd"]
+gridlabd_requires = ["croniter", numpy_dependency]
+cyme_requires = [numpy_dependency]
+ephasor_requires = [numpy_dependency, "pandas"]
+synergi_requires = [
+    numpy_dependency,
+    "pandas_access",
+]  # Need pandas_access to convert the MDB tables to Pandas DataFrame
 
 class PostDevelopCommand(develop):
 
@@ -65,6 +78,7 @@ setup(
             "cyme=ditto.readers.cyme:CymeReader",
             "demo=ditto.readers.demo:DemoReader",
             "json=ditto.readers.json:JsonReader",
+            "synergi=ditto.readers.synergi:SynergiReader",
         ],
         "ditto.writers": [
             "gridlabd=ditto.writers.gridlabd:GridLABDWriter",
@@ -72,6 +86,7 @@ setup(
             "cyme=ditto.writers.cyme:CymeWriter",
             "demo=ditto.writers.demo:DemoWriter",
             "json=ditto.writers.json:JsonWriter",
+            "ephasor=ditto.writers.ephasor:EphasorWriter",
         ],
     },
     include_package_data=True,
@@ -88,27 +103,24 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=[
-        "aenum",
-        "click",
-        "croniter",
-        "funcsigs",
-        "future",
-        "jinja2",
-        "lxml",
-        "networkx",
-        "pandas",
-        "pytest",
-        "six",
-        "xlrd",
-        "OpenDSSDirect.py",
-        "XlsxWriter",
-        "json_tricks",
-        "scipy",
-    ],
+    install_requires=["click", "future", "networkx", "six", "traitlets", "json_tricks"],
     extras_require={
+        "all": extras_requires
+        + opendss_requires
+        + dew_requires
+        + gridlabd_requires
+        + ephasor_requires
+        + cyme_requires
+        + synergi_requires,
+        "extras": extras_requires,
+        "cyme": cyme_requires,
+        "dew": dew_requires,
+        "ephasor": ephasor_requires,
+        "synergi": synergi_requires,
+        "gridlabd": gridlabd_requires,
+        "opendss": opendss_requires,
         "test": test_requires,
-        "dev": test_requires + ["black", "pre-commit"],
+        "dev": test_requires + ["pypandoc", "black", "pre-commit"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )

@@ -21,11 +21,15 @@ class GridLABDBase(object):
 
     def __getitem__(self, k):
         try:
-            return getattr(self, '_{}'.format(k))
+            return getattr(self, "_{}".format(k))
         except AttributeError as e:
-            raise AttributeError("{} not found in {}".format(k, self.__class__.__name__))
+            raise AttributeError(
+                "{} not found in {}".format(k, self.__class__.__name__)
+            )
 
     def __setitem__(self, k, v):
-        if k not in [p['name'] for p in self._properties]:
-            raise AttributeError("Unable to set {} with {} on {}".format(k, v, self.__class__.__name__))
-        return setattr(self, '_{}'.format(k), v)
+        if k not in [p["name"] for p in self._properties]:
+            raise AttributeError(
+                "Unable to set {} with {} on {}".format(k, v, self.__class__.__name__)
+            )
+        return setattr(self, "_{}".format(k), v)
