@@ -22,6 +22,7 @@ class wm2graph:
         self.tables = {}
         try:
             file_list = os.listdir(project_folder)
+            #print(file_list)
             for file in file_list:
                 if file.lower().endswith('.asm'):
                     self.files['Assemblies'] = os.path.join(project_folder, file)
@@ -43,10 +44,6 @@ class wm2graph:
                     self.files['Structure Locations'] = os.path.join(project_folder, file)
                 elif file.lower().endswith('.mpt'):
                     self.files['Map Points'] = os.path.join(project_folder, file)
-                elif file.lower().endswith('.stdlib'):
-                    self.files['Equipment Data Headings'] = os.path.join(project_folder, file)
-                elif file.lower().endswith('.seqlib'):
-                    self.files['Equipment Lib Headings'] = os.path.join(project_folder, file)
             if len(self.files) == 0:
                 raise ValueError('Folder path "{}" does not contain project files'.format(project_folder))
         except:
@@ -68,6 +65,8 @@ class wm2graph:
                 self.tables[table_name] = pd.read_csv(table_path, skiprows=skiplines, header=table_header, low_memory=False)
             except:
                 logging.warning('File at ".{}" was not read correctly.'.format(table_path))
+        self.tables['Equipment Data Headings'] = pd.DataFrame(std_file_headings)
+        self.tables['Equipment Lib Headings'] = pd.DataFrame(seq_file_headings)
         self.create_graph()
 
     def create_graph(self):
@@ -102,9 +101,9 @@ class wm2graph:
             self.create_nodes()
             self.create_loads()
             self.create_capacitors()
-            self.create_generators()
+            #self.create_generators()
             #self.create_motors()
-            #self.get_base_kv()
+            self.get_base_kv()
             self.get_graph_metrics()
             self.create_plot(True)
         else:
@@ -114,26 +113,12 @@ class wm2graph:
         for node1, node2 in self.nxGraph.edges():
             if 'kv' not in self.nxGraph[node1][node2]:
                 self.get_edge_attribute(node1, node2, 'kv')
-        for node1, node2 in self.nxGraph.edges():
-            if 'kv' not in self.nxGraph[node1][node2]:
-                self.nxGraph[node1][node2]['kv'] = self.nxGraph.graph['kvBase']
-                self.nxGraph.node[node1]['kv'] = self.nxGraph.graph['kvBase']
-                self.nxGraph.node[node2]['kv'] = self.nxGraph.graph['kvBase']
 
     def get_edge_attribute(self,Node1, Node2, Ppty):
         self.EdgePath = []
         Value = self.iterate_nodes(Node1, Node2, Ppty)
-        #print(Node1, Node2, Value)
-        if isinstance(Value, str):
-            for Edge in self.EdgePath:
-                self.nxGraph[Edge[0]][Edge[1]][Ppty] = Value
-                self.nxGraph.node[Edge[0]]['kv'] = Value
-                self.nxGraph.node[Edge[1]]['kv'] = Value
-        elif isinstance(Value, list):
-            for Edge in self.EdgePath:
-                self.nxGraph[Edge[0]][Edge[1]][Ppty] = min(Value)
-                self.nxGraph.node[Edge[0]]['kv'] = min(Value)
-                self.nxGraph.node[Edge[1]]['kv'] = min(Value)
+        for Edge in self.EdgePath:
+            self.nxGraph[Edge[0]][Edge[1]][Ppty] = Value
         return
 
     def iterate_nodes(self, Node1, Node2, Ppty):
@@ -237,7 +222,8 @@ class wm2graph:
         # plot substation
         Xs, Ys = self.get_class_type_locations('substation')
         plot.circle_x(x=Xs, y=Ys, size=14, legend='Substation', fill_color='red', line_color='black')
-
+        Xs, Ys = self.get_class_type_locations('regulator')
+        plot.hex(x=Xs, y=Ys, size=14, legend='Regulators', fill_color='lightgreen', line_color='black')
         plot.multi_line(xs=load_lines_xs, ys=load_lines_ys, line_width=2, legend='Drop lines', line_color='black')
 
         plot.legend.location = "top_left"
@@ -467,7 +453,7 @@ class wm2graph:
                 'class'       : 'regulator',
                 'phases'      : reg['Phase Configuration'],
                 'reg type'    : reg['Regulator Type'],
-                'conn'        : reg['Regulator Winding Connection'],
+                'conn'        : xfmr_conn[int(reg['Regulator Winding Connection'])],
                 'contrl ph'   : reg['Controlling Phase'],
                 'equipment'   : [reg['Regulator Description, Phase A'],
                                  reg['Regulator Description, Phase B'],
@@ -524,7 +510,7 @@ class wm2graph:
                 'kvIn'             : xfmr['Rated Input Voltage (Src Side)'],
                 'kvOut'            : xfmr['Rated Output Voltage (Load Side)'],
                 'kvTer'            : xfmr['Rated Tertiary Output Voltage'],
-                'mounting'         : xfmr_mounting[int(xfmr['Transformer Mounting '])],
+                'mounting'         : xfmr_mounting[int(xfmr['Transformer Mounting'])],
                 'hasTertiary'      : xfmr['Tertiary Child Identifier'],
                 'unom'             : xfmr['Nominal Output Voltage In kV.'],
                 'kva'              : [xfmr['Tran kVA A'],

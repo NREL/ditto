@@ -1,14 +1,9 @@
-
-import pandas as pd
 import numpy as np
 import logging
-import os
-
-import xmltodict
-
 
 from ditto.readers.abstract_reader import AbstractReader
-from ditto.store import Store
+
+from ditto.models.regulator import Regulator
 from ditto.models.node import Node
 from ditto.models.line import Line
 from ditto.models.wire import Wire
@@ -21,9 +16,11 @@ from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.position import Position
 from ditto.readers.windmil_ascii.wm_reader import wm2graph
-
-
+from ditto.models.power_source import PowerSource
 logger = logging.getLogger(__name__)
+
+from traitlets import Unicode
+
 class Reader(AbstractReader):
     '''
         Author: Aadil Latif
@@ -109,6 +106,8 @@ class Reader(AbstractReader):
                 self.create_switch(model, node1, node2)
             elif self.nxGraph[node1][node2]['class'] == 'device':
                 self.create_device(model, node1, node2, Devices)
+        self.parse_feeder_metadata(model)
+        return
 
     def create_device(self, model, node1, node2, Devices):
         device = Line(model)
@@ -183,7 +182,7 @@ class Reader(AbstractReader):
             phase_sw.is_fuse = False
             phase_sw.is_recloser = False
             phase_sw.is_breaker = False
-            #print(phase_sw.is_open)
+
             switch.wires.append(phase_sw)
 
         for node_name in [node1, node2]:
@@ -403,8 +402,8 @@ class Reader(AbstractReader):
                 nPhases = len(phases)
                 nwdgs = 2 if np.isnan(self.nxGraph[node1][node2]['hasTertiary']) else 3
 
-                X_R_ratio = float(winding_data['X/R Ratio, Phase A'].iloc[0])
-                Zpercentage = float(winding_data['Percent Impedance, Zps'].iloc[0])
+                X_R_ratio = float(winding_data['X/R Ratio- Phase A'].iloc[0])
+                Zpercentage = float(winding_data['Percent Impedance- Zps'].iloc[0])
                 x_percent = np.sqrt(Zpercentage ** 2 / (X_R_ratio ** 2 + 1))
                 r_percent = np.sqrt(Zpercentage ** 2 - x_percent ** 2)
 
@@ -416,10 +415,10 @@ class Reader(AbstractReader):
                     self.nxGraph[node1][node2]['feeder']
                 tr.from_element = node1
                 tr.to_element = node2
-                tr.normhkva = sum([float(winding_data['Single Phase Base kVA, Zps'].iloc[0]),
-                                   float(winding_data['Single Phase Base kVA, Zpt'].iloc[0]),
-                                   float(winding_data['Single Phase Base kVA, Zst'].iloc[0])])
-                tr.noload_loss = float(winding_data['Percent Impedance, Zps'].iloc[0])  * 100
+                tr.normhkva = sum([float(winding_data['Single Phase Base kVA- Zps'].iloc[0]),
+                                   float(winding_data['Single Phase Base kVA- Zpt'].iloc[0]),
+                                   float(winding_data['Single Phase Base kVA- Zst'].iloc[0])])
+                tr.noload_loss = float(winding_data['Percent Impedance- Zps'].iloc[0])  * 100
                 tr.install_type = 'PADMOUNT' if bool(winding_data['Is Pad Mounted Transformer'].iloc[0]) else 'POLEMOUNT'
                 tr.reactances.append(float(x_percent))
                 tr.phase_shift = 0
@@ -429,17 +428,18 @@ class Reader(AbstractReader):
                 node_pos.long = float(self.nxGraph.node[node2]['x'])
                 node_pos.lat = float(self.nxGraph.node[node2]['y'])
                 tr.positions.append(node_pos)
-                print('Wingings ', nwdgs)
+
                 for i in range(nwdgs):
+
                     wdg = Winding(model)
                     wdg.resistance = r_percent / nPhases
-                    wdg.nominal_voltage = float(self.nxGraph[node1][node2]['kv'][i])
-                    print('Voltages ', self.nxGraph[node1][node2]['conn'])
+                    kV = float(self.nxGraph[node1][node2]['kv'][i]) * 1000
+                    wdg.nominal_voltage = kV if nPhases == 1 else 1.732 * kV
                     wdg.connection_type = self.nxGraph[node1][node2]['conn'][i]
-                    wdg.rated_power = float(winding_data['Single Phase Rated kVA, Zps'])
+                    wdg.rated_power = float(winding_data['Single Phase Rated kVA- Zps']) * 1000
                     wdg.voltage_type = 0 if i == 0 else 2
                     for j, phase in enumerate(phases):
-                        print('Phase ', phase)
+
                         phswdg = PhaseWinding(model)
                         ix = self.phase_2_index[phase][0]
                         phswdg.phase = phase
@@ -449,4 +449,110 @@ class Reader(AbstractReader):
                         wdg.phase_windings.append(phswdg)
 
                     tr.windings.append(wdg)
+
+    def parse_regulators(self, model):
+        regulators = self.filter_edges_by_class('regulator')
+        rg_types = self.nxGraph.graph['Regulator']
+        for reg in regulators:
+            node1, node2 = reg
+
+            print(self.nxGraph[node1][node2]['kv'])
+            reg_data = self.nxGraph[node1][node2]
+
+            regulator_types = set(self.nxGraph[node1][node2]['equipment'])
+            regulator_types.discard('NONE')
+            if regulator_types:
+                reg_type = list(regulator_types)[0]
+                reg_type_data = rg_types[rg_types['Equipment Identifier'] == reg_type]
+                #print(reg_type_data)
+                Regu = Regulator(model)
+                Regu.name = reg_data['name']
+                Regu.from_element = node1
+                Regu.to_element = node2
+                Regu.bandwidth = float(reg_type_data.iloc[-1]['Bandwidth'])
+                Regu.ltc = 1
+
+                XFMRname = self.CreateRegXfmr(model, node1, node2, reg_data, reg_type_data)
+
+                Regu.connected_transformer = XFMRname
+                Regu.feeder_name = reg_data['feeder']
+                Regu.substation_name = reg_data['substation']
+
+
+                node_pos = Position(model)
+                node_pos.long = float(self.nxGraph.node[node2]['x'])
+                node_pos.lat = float(self.nxGraph.node[node2]['y'])
+                Regu.positions.append(node_pos)
+        return
+
+    def parse_feeder_metadata(self, model):
+        PowerSources = self.filter_edges_by_class('substation')
+
+        for node1, node2 in PowerSources:
+            print(self.nxGraph[node1][node2])
+            Source = PowerSource(model)
+            Source.name = self.nxGraph[node1][node2]['name']
+            Source.connecting_element = node1
+            Source.nominal_voltage = 1.732 * float(self.nxGraph[node1][node2]['kv']) * 1000
+            Source.operating_voltage = float(self.nxGraph[node1][node2]['Vpu'])
+            Source.substation = True
+            Source.transformer = False
+            Source.is_sourcebus = True
+            Source.connection_type = 'Y' if self.nxGraph[node1][node2]['conn'] == 'W' else 'D'
+            #Source.phases = [Unicode(default_value=x) for x in self.nxGraph[node1][node2]['phases']]
+
+
+        print('Feeder')
+
+    def CreateRegXfmr(self, model, node1 , node2, reg_data, reg_type_data):
+        print(reg_type_data)
+        tr = PowerTransformer(model)
+        tr.name = 'xfmr_' + reg_data['name']
+        tr.substation_name = '' if not isinstance(reg_data['substation'], str) else reg_data['substation']
+        tr.feeder_name = '' if not isinstance(reg_data['feeder'], str) else reg_data['feeder']
+        tr.from_element = node1
+        tr.to_element = node2
+        tr.normhkva = float(reg_data['kv'][0]) * float(reg_type_data.iloc[-1]['Ampacity']) * 3
+        tr.loadloss = float(1)
+        tr.noload_loss = float(0.1)   #TODO fix the noload losses here
+        tr.install_type = 'PADMOUNT'
+        tr.reactances.append([10.0])
+        tr.phase_shift = 0
+        tr.is_center_tap =0
+        # Set transformer position
+        node_pos = Position(model)
+        node_pos.long = float(self.nxGraph.node[node2]['x'])
+        node_pos.lat = float(self.nxGraph.node[node2]['y'])
+        tr.positions.append(node_pos)
+        for i in range(2):
+            nPhases = len(reg_data['phases'])
+            wdg = Winding(model)
+            kV = float(self.nxGraph[node1][node2]['kv'][0]) * 1000
+            wdg.resistance = 0.5
+            wdg.nominal_voltage = kV if nPhases == 1 else 1.732 * kV
+            wdg.connection_type = self.nxGraph[node1][node2]['conn'][i]
+            wdg.rated_power = float(reg_data['kv'][0]) * float(reg_type_data.iloc[-1]['Ampacity']) * 1000
+            wdg.voltage_type = 0 if i == 0 else 2
+            phases = reg_data['phases']
+            LDCr = reg_data['LDCr']
+            LDCx = reg_data['LDCx']
+            Vset = reg_data['Vpu']
+            Vub = reg_data['fhhp']
+            Vlb = reg_data['fhlp']
+            for j, ZippedData  in enumerate(zip(phases, LDCr, LDCx, Vlb, Vub, Vset)):
+                phase, r, x, vu, vl, vs = ZippedData
+                nSteps = 33
+                vPerStep = (float(vu) - float(vl)) / nSteps
+                Tap = int((float(vs) - 1) / vPerStep)
+                print('Tap: ', Tap)
+
+                phswdg = PhaseWinding(model)
+                ix = self.phase_2_index[phase][0]
+                phswdg.phase = phase
+                phswdg.tap_position = float(Tap)
+                phswdg.compensator_r = float(r)
+                phswdg.compensator_x = float(x)
+                wdg.phase_windings.append(phswdg)
+            tr.windings.append(wdg)
+        return tr.name
 
