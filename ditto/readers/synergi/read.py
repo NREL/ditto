@@ -30,15 +30,16 @@ from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
-
 from ditto.models.base import Unicode
-
-# from ditto.models.recorder import Recorder
 
 logger = logging.getLogger(__name__)
 
 
 def create_mapping(keys, values, remove_spaces=False):
+    """
+    Helper function for parse.
+    Creates a mapping using given keys and values.
+    """
     if len(keys) != len(values):
         raise ValueError(
             "create_mapping expects keys and values to have the same length."
@@ -54,6 +55,19 @@ def create_mapping(keys, values, remove_spaces=False):
 class Reader(AbstractReader):
     """
     Synergi Reader class.
+
+    **Usage:**
+    - With only one MDB database holding everything:
+        >>> r = Reader(input_file="path_to_your_mdb_file")
+        >>> r.parse(m)
+
+    - With an additional MDB database for the Warehouse:
+        >>> r = Reader(input_file="path_to_your_mdb_file", warehouse="path_to_your_warehouse_mdb_file")
+        >>> r.parse(m)
+
+    **Authors:**
+    - Xiangqi Zhu
+    - Nicolas Gensollen
     """
 
     register_names = ["synergi", "Synergi", "syn"]
@@ -79,7 +93,14 @@ class Reader(AbstractReader):
 
     def get_data(self, key1, key2):
         """
+        Helper function for parse.
 
+        **Inputs:**
+        - key1: <string>. Name of the table.
+        - key2: <string>. Name of the column.
+
+        **Output:**
+        None but update the SynergiData.SynergiDictionary attribute of the Reader.
         """
         if (
             key1 in self.SynergiData.SynergiDictionary
@@ -94,7 +115,6 @@ class Reader(AbstractReader):
         """
         Synergi --> DiTTo parse method.
         """
-        # ProjectFiles = {"Synegi Circuit Database": self.input_file}
         if self.ware_house_input_file is not None:
             self.SynergiData = DbParser(
                 self.input_file, warehouse=self.ware_house_input_file
@@ -102,7 +122,15 @@ class Reader(AbstractReader):
         else:
             self.SynergiData = DbParser(self.input_file)
 
-        ############ Get the data in #################################################
+        ####################################################################################
+        ####################################################################################
+        ######                                                                        ######
+        ######                         PARSING THE DATA                               ######
+        ######                                                                        ######
+        ####################################################################################
+        ####################################################################################
+
+        print("--> Parsing the data from the database...")
 
         ## Feeder ID ##########
         ## This is used to separate different feeders ##
@@ -204,6 +232,10 @@ class Reader(AbstractReader):
         )
 
         self.section_phase_mapping = create_mapping(LineID, SectionPhases)
+
+        self.section_from_to_mapping = {}
+        for idx, section in enumerate(LineID):
+            self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
 
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
@@ -333,10 +365,10 @@ class Reader(AbstractReader):
         RegulatrorForwardVoltageSettingPhase3 = self.get_data(
             "InstRegulators", "ForwardVoltageSettingPhase3"
         )
-        RegulatrorSectionId = self.get_data("InstRegulators", "SectionId")
+        RegulatorSectionId = self.get_data("InstRegulators", "SectionId")
         RegulagorPhases = self.get_data("InstRegulators", "ConnectedPhases")
         RegulatorTypes = self.get_data("InstRegulators", "RegulatorType")
-        RegulatrorNames = self.get_data("DevRegulators", "RegulatorName")
+        RegulatorNames = self.get_data("DevRegulators", "RegulatorName")
         RegulatorPTRatio = self.get_data("DevRegulators", "PTRatio")
         RegulatorCTRating = self.get_data("DevRegulators", "CTRating")
         RegulatorNearFromNode = self.get_data("InstRegulators", "NearFromNode")
@@ -375,866 +407,956 @@ class Reader(AbstractReader):
         GeneratorKwRating = self.get_data("DevGenerators", "KwRating")
         GeneratorPercentPFRating = self.get_data("DevGenerators", "PercentPFRating")
 
-        ######################### Converting to Ditto #################################################
+        ####################################################################################
+        ####################################################################################
+        ######                                                                        ######
+        ######                       CONVERTING TO DITTO                              ######
+        ######                                                                        ######
+        ####################################################################################
+        ####################################################################################
 
-        ## Feeder ID###########
-        NFeeder = len(FeederId)
+        print("--> Converting to DiTTo objects...")
 
-        ######## Converting Node into Ditto##############
-        # N = len(NodeID)
-        ## Delete the blank spaces in the phases
+        ####################################################################################
+        #                                                                                  #
+        #                                     NODES                                        #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Nodes...")
+        for i, obj in enumerate(NodeID):
 
-        SectionPhases01 = []
-        tt = 0
-        for obj in SectionPhases:
-            SectionPhases_thisline1 = list(SectionPhases[tt])
-            # SectionPhases_thisline1 = [
-            #    s.encode("ascii") for s in SectionPhases_thisline
-            # ]
-            SectionPhases_thisline2 = [s for s in SectionPhases_thisline1 if s != " "]
-            SectionPhases01.append(SectionPhases_thisline2)
-            tt = tt + 1
+            # Create a DiTTo Node object
+            api_node = Node(model)
 
-        SectionPhases01 = np.array(SectionPhases01)
+            # Set the name
+            api_node.name = obj.lower().replace(" ", "_")
 
-        ## Get the good lines
-        i = 0
-        NodeIDgood = []
-        for obj in LineID:
-            if IsToEndOpen[i] == 0 and IsFromEndOpen[i] == 0:
-                FromNodeID1 = FromNodeId[i]
-                # FromNodeID2 = [s.encode("ascii") for s in FromNodeID1]
-                # FromNodeID3 = "".join(FromNodeID2)
-                FromNodeID3 = FromNodeID1  # .encode("ascii")
-                ToNodeID1 = ToNodeId[i]
-                # ToNodeID2 = [s.encode("ascii") for s in ToNodeID1]
-                # ToNodeID3 = "".join(ToNodeID2)
-                ToNodeID3 = ToNodeID1  # .encode("ascii")
-                NodeIDgood.append(FromNodeID3)
-                NodeIDgood.append(ToNodeID3)
-            i = i + 1
+            # Set the feeder name if in mapping
+            if obj in self.section_feeder_mapping:
+                api_node.feeder_name = self.section_feeder_mapping[obj]
 
-        # Convert NodeID to ascii code
-        i = 0
-        NodeID3 = []
-        for obj in NodeID:
-            NodeID1 = NodeID[i]
-            # NodeID2 = [s.encode("ascii") for s in NodeID1]
-            # NodeID3.append("".join(NodeID2))
-            NodeID3 = NodeID1  # .encode("ascii")
-            i = i + 1
-
-        i = 0
-        for obj in NodeID:
-
-            ## Find out if this node is a necessary node
-            t = 0
-            NodeFlag = 1
-            # for obj in NodeIDgood:
+            # Set the Position of the Node
+            # Create a Position object
             #
-            #     if NodeID3[i]==NodeIDgood[t]:
-            #         NodeFlag=1
-            #         break
-            #     t=t+1
+            pos = Position(model)
 
-            if NodeFlag == 1:
+            # Set the coordinates
+            pos.long = NodeY[i]
+            pos.lat = NodeX[i]
 
-                api_node = Node(model)
-                api_node.name = NodeID[i].lower().replace(" ", "_")
+            # Add the Position to the node's positions
+            api_node.positions.append(pos)
 
-                try:
-                    api_node.feeder_name = self.section_feeder_mapping[NodeID[i]]
-                except:
-                    pass
+            # Look for the phases at this node
+            phases = set()
+            for section, t in self.section_from_to_mapping.items():
+                if obj == t[0] or obj == t[1]:
+                    phases.add(self.section_phase_mapping[section])
 
-                pos = Position(model)
-                pos.long = NodeY[i]
-                pos.lat = NodeX[i]
-                api_node.positions.append(pos)
+            # Convert to a list and sort to have the phases in the A, B, C order
+            phases = sorted(list(phases))
 
-                if NodeID[i] == "mikilua 2 tsf":
-                    api_node.bustype = "SWING"
+            # Set the phases for this node.
+            for phase in phases:
+                api_node.phases.append(phase)
 
-                ## Search the nodes in FromNodeID
-                tt = 0
-                CountFrom = []
-                for obj in FromNodeId:
-                    Flag = NodeID[i] == FromNodeId[tt]
-                    if Flag == True:
-                        CountFrom.append(tt)
-                    tt = tt + 1
+        ####################################################################################
+        #                                                                                  #
+        #                                     LINES                                        #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Lines...")
+        for i, obj in enumerate(LineID):
 
-                CountFrom = np.array(CountFrom)
+            ## Do not parse sections with regulators or Transformers to Lines
+            if obj in RegulatorSectionId or obj in TransformerSectionId:
+                continue
 
-                ## Search in the nodes in ToNodeID
-                tt = 0
-                CountTo = []
-                for obj in ToNodeId:
-                    Flag = NodeID[i] == ToNodeId[tt]
-                    if Flag == True:
-                        CountTo.append(tt)
-                    tt = tt + 1
+            # Create a DiTTo Line object
+            api_line = Line(model)
 
-                CountTo = np.array(CountTo)
+            # Set the name as the SectionID
+            # Since this could contain spaces, replace them with "_"
+            #
+            api_line.name = obj.lower().replace(" ", "_")
 
-                PotentialNodePhases = []
-                ttt = 0
-                if len(CountFrom) > 0:
-                    for obj in CountFrom:
-                        PotentialNodePhases.append(SectionPhases01[CountFrom[ttt]])
-                        tt = tt + 1
-                        ttt = ttt + 1
+            # Set the feeder_name if it exists in the mapping
+            if obj in self.section_feeder_mapping:
+                api_line.feeder_name = self.section_feeder_mapping[obj]
 
-                if len(CountTo) > 0:
-                    ttt = 0
-                    for obj in CountTo:
-                        PotentialNodePhases.append(SectionPhases01[CountTo[ttt]])
-                        ttt = ttt + 1
+            # Cache configuration
+            if ConfigurationId is not None:
+                if (
+                    isinstance(ConfigurationId[i], str)
+                    and len(ConfigurationId[i]) > 0
+                    and ConfigurationId[i] in config_mapping
+                ):
+                    config = config_mapping[ConfigurationId[i]]
+                else:
+                    config = {}
 
-                PhaseLength = []
-                tt = 0
-                for obj in PotentialNodePhases:
-                    PhaseLength.append(len(PotentialNodePhases[tt]))
-                    tt = tt + 1
+            # Assumes MUL is medium unit length and this is feets
+            # Converts to meters then
+            #
+            api_line.length = LineLength[i] * 0.3048
 
-                PhaseLength = np.array(PhaseLength)
+            # From element
+            # Replace spaces with "_"
+            #
+            api_line.from_element = FromNodeId[i].lower().replace(" ", "_")
 
-                index = np.argmax(PhaseLength).flatten()[0]
-                value = np.max(PhaseLength)
+            # To element
+            # Replace spaces with "_"
+            #
+            api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
 
-                # index, value = max(enumerate(PhaseLength), key=operator.itemgetter(1))
+            ### Line Phases##################
+            #
+            # Phases are given as a string "A B C N"
+            # Convert this string to a list of characters
+            #
+            SectionPhases_thisline1 = list(SectionPhases[i])
 
-                # SectionPhases_thisline = list(PotentialNodePhases[index])
-                # SectionPhases_thisline1 = [s.encode('ascii') for s in SectionPhases_thisline]
-                # SectionPhases_thisline2 = filter(str.strip, SectionPhases_thisline1)
+            # Remove the spaces from the list
+            SectionPhases_thisline = [s for s in SectionPhases_thisline1 if s != " "]
 
-                # SectionPhases_thisline = [s.decode('utf-8') for s in SectionPhases_thisline2]
-                for p in PotentialNodePhases[index]:
-                    api_node.phases.append(p)
+            # Get the number of phases as the length of this list
+            # Warning: Neutral will be included in this number
+            #
+            NPhase = len(SectionPhases_thisline)
 
-                ########### Creat Recorder in  Ditto##############################################
+            ############################################################
+            # BEGINING OF WIRES SECTION
+            ############################################################
 
-                # recorderphases = list(PotentialNodePhases[index])
+            # Create the Wire DiTTo objects
+            for idx, phase in enumerate(SectionPhases_thisline):
 
-                # api_recorder = Recorder(model)
-                # api_recorder.name = "recorder" + NodeID[i].lower()
-                # api_recorder.parent = NodeID[i].lower()
-                # api_recorder.property = "voltage_" + recorderphases[0] + "[kV]"
-                # api_recorder.file = "n" + NodeID[i] + ".csv"
-                # api_recorder.interval = 50
+                # Create a Wire DiTTo object
+                api_wire = Wire(model)
 
-            i = i + 1
+                # Set the phase
+                api_wire.phase = phase
 
-        ########### Converting Line into Ditto##############################################
-        i = 0
-        for obj in LineID:
-
-            ## Exclude the line with regulators
-            # ii=0
-            LineFlag = 0
-            # for obj in RegulatrorSectionId:
-            #     if LineID[i]==RegulatrorSectionId[ii]:
-            #         LineFlag=1
-            #         break
-            #     ii=ii+1
-
-            ## Exclude the line with transformers
-            # ii = 0
-            # for obj in TransformerSectionId:
-            #     if LineID[i] == TransformerSectionId[ii]:
-            #         LineFlag = 1
-            #         break
-            #     ii = ii + 1
-
-            if LineFlag == 0:
-                #   if IsToEndOpen[i] ==0 and IsFromEndOpen[i]==0:
-                api_line = Line(model)
-                api_line.name = LineID[i].lower()
-
-                try:
-                    api_line.feeder_name = self.section_feeder_mapping[LineID[i]]
-                except:
-                    pass
-
-                # Cache configuration
-                if ConfigurationId is not None:
-                    if (
-                        isinstance(ConfigurationId[i], str)
-                        and len(ConfigurationId[i]) > 0
-                        and ConfigurationId[i] in config_mapping
-                    ):
-                        config = config_mapping[ConfigurationId[i]]
-                    else:
-                        config = {}
-
-                # Assumes MUL is medium unit length and this is feets
-                # Converts to meters then
-                #
-                api_line.length = LineLength[i] * 0.3048
-
-                # From element
-                api_line.from_element = FromNodeId[i].lower()
-
-                # To element
-                api_line.to_element = ToNodeId[i].lower()
-
-                ### Line Phases##################
-                SectionPhases_thisline1 = list(SectionPhases[i])
-                # SectionPhases_thisline1 = [
-                #    s.encode("ascii") for s in SectionPhases_thisline
-                # ]
-                SectionPhases_thisline = [
-                    s for s in SectionPhases_thisline1 if s != " "
-                ]
-                # SectionPhases_thisline2 = filter(str.strip, SectionPhases_thisline1)
-
-                # SectionPhases_thisline = [
-                #    s.decode("utf-8") for s in SectionPhases_thisline2
-                # ]
-                NPhase = len(SectionPhases_thisline)
-
-                ## The wires belong to this line
-
-                for idx, phase in enumerate(SectionPhases_thisline):
-
-                    api_wire = Wire(model)
-                    api_wire.phase = phase
+                # The Neutral will be handled seperately
+                if phase != "N":
 
                     # Assumes MUL is medium unit length = ft
                     # Convert to meters
                     #
                     coeff = 0.3048
+
+                    # Set the position of the first wire
                     if (
                         idx == 0
                         and phase != "N"
                         and "Position1_X_MUL" in config
                         and "Position1_Y_MUL" in config
                     ):
+                        # Set X
                         api_wire.X = (
                             config["Position1_X_MUL"] * coeff
                         )  # DiTTo is in meters
+
+                        # Set Y
                         api_wire.Y = (
                             config["Position1_Y_MUL"] * coeff
                         )  # DiTTo is in meters
+
+                    # Set the position of the second wire
                     if (
                         idx == 1
                         and phase != "N"
                         and "Position2_X_MUL" in config
                         and "Position2_Y_MUL" in config
                     ):
+                        # Set X
                         api_wire.X = (
                             config["Position2_X_MUL"] * coeff
                         )  # DiTTo is in meters
+
+                        # Set Y
                         api_wire.Y = (
                             config["Position2_Y_MUL"] * coeff
                         )  # DiTTo is in meters
+
+                    # Set the position of the third wire
                     if (
                         idx == 2
                         and phase != "N"
                         and "Position3_X_MUL" in config
                         and "Position3_Y_MUL" in config
                     ):
+                        # Set X
                         api_wire.X = (
                             config["Position3_X_MUL"] * coeff
                         )  # DiTTo is in meters
+
+                        # Set Y
                         api_wire.Y = (
                             config["Position3_Y_MUL"] * coeff
                         )  # DiTTo is in meters
 
-                    # Looks like zero-height wires are possible in Synergi but not
-                    # in some other formats like OpenDSS
+                    # Set the characteristics of the first wire. Use PhaseConductorID
                     #
-                    if api_wire.Y == 0:
-                        api_wire.Y += 0.01
+                    # Cache the raw nameclass of the conductor in conductor_name_raw
+                    # api_wire.nameclass needs to be cleaned from spaces
+                    #
+                    conductor_name_raw = None
 
-                    # First wire, use PhaseConductorID
                     if (
                         idx == 0
                         and PhaseConductorID is not None
                         and isinstance(PhaseConductorID[i], str)
                         and len(PhaseConductorID[i]) > 0
                     ):
-                        api_wire.nameclass = PhaseConductorID[i]
+                        # Set the Nameclass of the Wire
+                        # The name can contain spaces. Replace them with "_"
+                        #
+                        api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
 
-                    # Second wire, if PhaseConductor2Id is provided, use it
+                        # Cache the conductor name
+                        conductor_name_raw = PhaseConductorID[i]
+
+                    # Set the characteristics of the second wire.
+                    # If PhaseConductor2Id is provided, use it
                     # Otherwise, assume the phase wires are the same
+                    #
                     if idx == 1:
                         if (
                             PhaseConductor2Id is not None
                             and isinstance(PhaseConductor2Id[i], str)
                             and len(PhaseConductor2Id[i]) > 0
+                            and PhaseConductor2Id[i].lower() != "unknown"
                         ):
-                            api_wire.nameclass = PhaseConductor2Id[i]
+                            # Set the nameclass
+                            # Replace spaces with "_"
+                            #
+                            api_wire.nameclass = PhaseConductor2Id[i].replace(" ", "_")
+
+                            # Cache the conductor name
+                            conductor_name_raw = PhaseConductor2Id[i]
                         else:
                             try:
-                                api_wire.nameclass = PhaseConductorID[i]
+                                api_wire.nameclass = PhaseConductorID[i].replace(
+                                    " ", "_"
+                                )
+                                conductor_name_raw = PhaseConductorID[i]
                             except:
                                 pass
 
-                    # Same for third wire
+                    # Set the characteristics of the third wire in the same way
                     if idx == 2:
                         if (
                             PhaseConductor3Id is not None
                             and isinstance(PhaseConductor3Id[i], str)
                             and len(PhaseConductor3Id[i]) > 0
+                            and PhaseConductor3Id[i].lower() != "unknown"
                         ):
-                            api_wire.nameclass = PhaseConductor3Id[i]
+                            # Set the nameclass
+                            # Replace spaces with "_"
+                            #
+                            api_wire.nameclass = PhaseConductor3Id[i].replace(" ", "_")
+
+                            # Cache the conductor name
+                            conductor_name_raw = PhaseConductor3Id[i]
                         else:
                             try:
-                                api_wire.nameclass = PhaseConductorID[i]
+                                api_wire.nameclass = PhaseConductorID[i].replace(
+                                    " ", "_"
+                                )
+                                conductor_name_raw = PhaseConductorID[i]
                             except:
                                 pass
 
+                if phase == "N":
                     if (
-                        api_wire.nameclass is not None
-                        and api_wire.nameclass in conductor_mapping
+                        NeutralConductorID is not None
+                        and isinstance(NeutralConductorID[i], str)
+                        and len(NeutralConductorID[i]) > 0
                     ):
-                        api_wire.gmr = (
-                            conductor_mapping[api_wire.nameclass]["CableGMR"] * 0.3048
-                        )  # DiTTo is in meters and GMR is assumed to be given in feets
 
-                        # Diameter is assumed to be given in inches and is converted to meters here
-                        api_wire.diameter = (
-                            conductor_mapping[api_wire.nameclass]["CableDiamOutside"]
-                            * 0.0254
-                        )
+                        # Set the nameclass
+                        api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
 
-                        # Ampacity
-                        api_wire.ampacity = conductor_mapping[api_wire.nameclass][
-                            "ContinuousCurrentRating"
-                        ]
+                        # Cache the conductor name
+                        conductor_name_raw = NeutralConductorID[i]
 
-                        # Emergency ampacity
-                        api_wire.emergency_ampacity = conductor_mapping[
-                            api_wire.nameclass
-                        ]["InterruptCurrentRating"]
-
-                        # TODO: Change this once resistance is the per unit length resistance
-                        if api_line.length is not None:
-                            api_wire.resistance = (
-                                conductor_mapping[api_wire.nameclass]["CableResistance"]
-                                * api_line.length
-                                * 1.0
-                                / 1609.34
-                            )
-
-                    api_line.wires.append(api_wire)
-
-                # Neutral wire
-                # Create a neutral wire if the information is present
-                #
-                if (
-                    NeutralConductorID is not None
-                    and isinstance(NeutralConductorID[i], str)
-                    and len(NeutralConductorID[i]) > 0
-                ):
-                    api_wire = Wire(model)
-
-                    # Phase
-                    api_wire.phase = "N"
-
-                    # Nameclass
-                    api_wire.nameclass = NeutralConductorID[i]
-
-                    # Spacing
+                    # Set the Spacing of the neutral
+                    #
+                    # Assumes MUL is medium unit length = ft
+                    # Convert to meters
+                    #
                     coeff = 0.3048
+
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
+
+                        # Set X
                         api_wire.X = (
                             config["Neutral_X_MUL"] * coeff
                         )  # DiTTo is in meters
+
+                        # Set Y
                         api_wire.Y = (
                             config["Neutral_Y_MUL"] * coeff
                         )  # DiTTo is in meters
 
-                    if (
-                        api_wire.nameclass is not None
-                        and api_wire.nameclass in conductor_mapping
-                    ):
-                        # GMR
-                        api_wire.gmr = (
-                            conductor_mapping[api_wire.nameclass]["CableGMR"] * 0.3048
+                # Looks like zero-height wires are possible in Synergi but not
+                # in some other formats like OpenDSS
+                #
+                if api_wire.Y == 0:
+                    api_wire.Y += 0.01
+
+                # Set the characteristics of the wire:
+                # - GMR
+                # - Diameter
+                # - Ampacity
+                # - Emergency Ampacity
+                # - Resistance
+                #
+                if (
+                    conductor_name_raw is not None
+                    and conductor_name_raw in conductor_mapping
+                ):
+                    # Set the GMR of the conductor
+                    # DiTTo is in meters and GMR is assumed to be given in feets
+                    #
+                    api_wire.gmr = (
+                        conductor_mapping[conductor_name_raw]["CableGMR"] * 0.3048
+                    )
+
+                    # Set the Diameter of the conductor
+                    # Diameter is assumed to be given in inches and is converted to meters here
+                    #
+                    api_wire.diameter = (
+                        conductor_mapping[conductor_name_raw]["CableDiamOutside"]
+                        * 0.0254
+                    )
+
+                    # Set the Ampacity of the conductor
+                    #
+                    api_wire.ampacity = conductor_mapping[conductor_name_raw][
+                        "ContinuousCurrentRating"
+                    ]
+
+                    # Set the Emergency ampacity of the conductor
+                    #
+                    api_wire.emergency_ampacity = conductor_mapping[conductor_name_raw][
+                        "InterruptCurrentRating"
+                    ]
+
+                    # Set the resistance of the conductor
+                    # TODO: Change this once resistance is the per unit length resistance
+                    #
+                    if api_line.length is not None:
+                        api_wire.resistance = (
+                            conductor_mapping[conductor_name_raw]["CableResistance"]
+                            * api_line.length
+                            * 1.0
+                            / 1609.34
                         )
 
-                        # Diameter
-                        api_wire.diameter = (
-                            conductor_mapping[api_wire.nameclass]["CableDiamOutside"]
-                            * 0.0254
-                        )
+                # Add the new Wire to the line's list of wires
+                #
+                api_line.wires.append(api_wire)
 
-                        # Ampacity
-                        api_wire.ampacity = conductor_mapping[api_wire.nameclass][
-                            "ContinuousCurrentRating"
-                        ]
+                ############################################################
+                # END OF WIRES SECTION
+                ############################################################
 
-                        # Emergency ampacity
-                        api_wire.emergency_ampacity = conductor_mapping[
-                            api_wire.nameclass
-                        ]["InterruptCurrentRating"]
+            ## Calculating the impedance matrix of this line
+            #
+            # NOTE: If all information about the Wires, characteristics, and spacings are given,
+            # using geometries is prefered. This information will be stored in DiTTo and when
+            # writing out to another format, geometries will be used instead of linecodes if possible.
+            # We still compute the impedance matrix in case this possibility does not exist in the output format
 
-                        # Resistance
-                        if api_line.length is not None:
-                            api_wire.resistance = (
-                                (
-                                    conductor_mapping[api_wire.nameclass][
-                                        "CableResistance"
-                                    ]
-                                    * api_line.length
-                                )
-                                * 1.0
-                                / 1609.34
-                            )
+            # Use the Phase Conductor charateristics to build the matrix
+            #
+            Count = None
+            impedance_matrix = None
 
-                    if api_wire.Y == 0:
-                        api_wire.Y += 0.01
+            if ConductorName is not None:
+                for k, cond_obj in enumerate(ConductorName):
+                    if PhaseConductorID[i] == cond_obj:
+                        Count = k
+                        break
 
-                    api_line.wires.append(api_wire)
+            # Get sequence impedances
+            #
+            if Count is not None:
+                r1 = PosSequenceResistance_PerLUL[Count]
+                x1 = PosSequenceReactance_PerLUL[Count]
+                r0 = ZeroSequenceResistance_PerLUL[Count]
+                x0 = ZeroSequenceReactance_PerLUL[Count]
 
-                ## Calculating the impedance matrix of this line
+                # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
+                #         __________________________
+                #        | Z0+2*Z+  Z0-Z+   Z0-Z+   |
+                # Z= 1/3 | Z0-Z+    Z0+2*Z+ Z0-Z+   |
+                #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
+                #         --------------------------
 
-                PhaseConductorIDthisline = PhaseConductorID[i]
-
-                tt = 0
-                Count = 0
-                impedance_matrix = None
-
-                if ConductorName is not None:
-                    for obj in ConductorName:
-                        Flag = PhaseConductorIDthisline == ConductorName[tt]
-                        if Flag == True:
-                            Count = tt
-                        tt = tt + 1
-
-                    r1 = PosSequenceResistance_PerLUL[Count]
-                    x1 = PosSequenceReactance_PerLUL[Count]
-                    r0 = ZeroSequenceResistance_PerLUL[Count]
-                    x0 = ZeroSequenceReactance_PerLUL[Count]
-
-                    # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
-                    #         __________________________
-                    #        | Z0+2*Z+  Z0-Z+   Z0-Z+   |
-                    # Z= 1/3 | Z0-Z+    Z0+2*Z+ Z0-Z+   |
-                    #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
-                    #         --------------------------
-
-                    # TODO: Check that the following is correct...
-                    # If LengthUnits is set to English2 or not defined , then assume miles
-                    if LengthUnits == "English2" or LengthUnits is None:
-                        coeff = 0.000621371
-                    # Else, if LengthUnits is set to English1, assume kft
-                    elif LengthUnits == "English1":
-                        coeff = 3.28084 * 10 ** -3
-                    # Else, if LengthUnits is set to Metric, assume km
-                    elif LengthUnits == "Metric":
-                        coeff = 10 ** -3
-                    else:
-                        raise ValueError(
-                            "LengthUnits <{}> is not valid.".format(LengthUnits)
-                        )
-
-                    coeff *= 1.0 / 3.0
-
-                    if NPhase == 2:
-                        impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
-                    if NPhase == 3:
-
-                        b1 = float(r0) - float(r1)
-                        b2 = float(x0) - float(x1)
-
-                        if b1 < 0:
-                            b1 = -b1
-                        if b1 == 0:
-                            b1 = float(r1)
-                        if b2 < 0:
-                            b2 = -b2
-                        if b2 == 0:
-                            b2 = float(x1)
-
-                        b = coeff * complex(b1, b2)
-
-                        a = coeff * complex(
-                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                        )
-
-                        impedance_matrix = [[a, b], [b, a]]
-
-                    if NPhase == 4:
-                        a = coeff * complex(
-                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                        )
-                        b1 = float(r0) - float(r1)
-                        b2 = float(x0) - float(x1)
-
-                        if b1 < 0:
-                            b1 = -b1
-                        if b1 == 0:
-                            b1 = float(r1)
-                        if b2 < 0:
-                            b2 = -b2
-                        if b2 == 0:
-                            b2 = float(x1)
-
-                        b = coeff * complex(b1, b2)
-
-                        impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-                if impedance_matrix is not None:
-                    api_line.impedance_matrix = impedance_matrix
+                # TODO: Check that the following is correct...
+                # If LengthUnits is set to English2 or not defined , then assume miles
+                if LengthUnits == "English2" or LengthUnits is None:
+                    coeff = 0.000621371
+                # Else, if LengthUnits is set to English1, assume kft
+                elif LengthUnits == "English1":
+                    coeff = 3.28084 * 10 ** -3
+                # Else, if LengthUnits is set to Metric, assume km
+                elif LengthUnits == "Metric":
+                    coeff = 10 ** -3
                 else:
-                    print("No impedance matrix for line {}".format(api_line.name))
+                    raise ValueError(
+                        "LengthUnits <{}> is not valid.".format(LengthUnits)
+                    )
 
-            i = i + 1
+                # Multiply by 1/3
+                coeff *= 1.0 / 3.0
 
-        ######### Converting transformer  into Ditto###############
-        i = 0
-        for obj in TransformerId:
+                # One phase case (One phase + neutral)
+                #
+                if NPhase == 2:
+                    impedance_matrix = [
+                        [coeff * complex(float(r0) + float(r1), float(x0) + float(x1))]
+                    ]
 
+                # Two phase case (Two phases + neutral)
+                #
+                if NPhase == 3:
+
+                    b1 = float(r0) - float(r1)
+                    b2 = float(x0) - float(x1)
+
+                    if b1 < 0:
+                        b1 = -b1
+                    if b1 == 0:
+                        b1 = float(r1)
+                    if b2 < 0:
+                        b2 = -b2
+                    if b2 == 0:
+                        b2 = float(x1)
+
+                    b = coeff * complex(b1, b2)
+
+                    a = coeff * complex(
+                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                    )
+
+                    impedance_matrix = [[a, b], [b, a]]
+
+                # Three phases case (Three phases + neutral)
+                #
+                if NPhase == 4:
+                    a = coeff * complex(
+                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                    )
+                    b1 = float(r0) - float(r1)
+                    b2 = float(x0) - float(x1)
+
+                    if b1 < 0:
+                        b1 = -b1
+                    if b1 == 0:
+                        b1 = float(r1)
+                    if b2 < 0:
+                        b2 = -b2
+                    if b2 == 0:
+                        b2 = float(x1)
+
+                    b = coeff * complex(b1, b2)
+
+                    impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
+
+            if impedance_matrix is not None:
+                api_line.impedance_matrix = impedance_matrix
+            else:
+                print("No impedance matrix for line {}".format(api_line.name))
+
+        ####################################################################################
+        #                                                                                  #
+        #                              TRANSFORMERS                                        #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Transformers...")
+        for i, obj in enumerate(TransformerId):
+
+            # Create a PowerTransformer object
             api_transformer = PowerTransformer(model)
-            api_transformer.name = TransformerId[i].replace(" ", "_").lower()
 
-            try:
-                api_transformer.feeder_name = self.section_feeder_mapping[
-                    TransformerSectionId[i]
-                ]
-            except:
-                cleaned_id = TransformerSectionId[i].replace("Tran", "").strip()
-                try:
+            # Set the name
+            # Names can have spaces. Replace them with "_"
+            #
+            api_transformer.name = obj.replace(" ", "_").lower()
+
+            # Set the feeder_name if it is in the mapping
+            if obj in self.section_feeder_mapping:
+                api_transformer.feeder_name = self.section_feeder_mapping[obj]
+            # If it is not, try to remove the "tran" prefix that might have been added
+            else:
+                cleaned_id = obj.replace("Tran", "").strip()
+                if cleaned_id in self.section_feeder_mapping:
                     api_transformer.feeder_name = self.section_feeder_mapping[
                         cleaned_id
                     ]
-                except:
-                    pass
 
-            TransformerTypethisone = TransformerType[i]
-            TransformerSectionIdthisone = TransformerSectionId[i]
+            # Find out the from and to elements which are available in the sections
+            Count = None
+            for k, section in enumerate(LineID):
+                if TransformerSectionId[i] == section:
+                    Count = k
+                    break
 
-            TransformerTypethisone01 = TransformerTypethisone.encode("ascii")
-            TransformerSectionIdthisone01 = TransformerSectionIdthisone.encode("ascii")
+            # If no section found, print a warning
+            if Count is None:
+                print("WARNING: No section found for section {}".format(obj))
 
-            # Find out the from and to elements
-            tt = 0
-            Count = 0
-            for obj in LineID:
-                Flag = TransformerSectionId[i] == LineID[tt]
-                if Flag == True:
-                    Count = tt
-                tt = tt + 1
+            # Set the To element
+            if Count is not None:
+                api_transformer.to_element = ToNodeId[Count].replace(" ", "_").lower()
 
-            # To element
-            api_transformer.to_element = ToNodeId[Count].replace(" ", "_").lower()
+            # Set the From element
+            if Count is not None:
+                api_transformer.from_element = (
+                    FromNodeId[Count].replace(" ", "_").lower()
+                )
 
-            # From element
-            api_transformer.from_element = FromNodeId[Count].replace(" ", "_").lower()
-
-            tt = 0
-            Count = 0
-
+            # Find the transformer equipment from the Warehouse
+            Count = None
             if TransformerTypesinStock is not None:
+                for k, trans_obj in TransformerTypesinStock:
+                    if TransformerType[i] == trans_obj:
+                        Count = k
+                        break
 
-                for obj in TransformerTypesinStock:
-                    Flag = TransformerType[i] == TransformerTypesinStock[tt]
-                    if Flag == True:
-                        Count = tt
-                    tt = tt + 1
+            # If no equipment found, print a warning
+            if Count is None:
+                print(
+                    "WARNING: No transformer equipment found for section {}".format(obj)
+                )
 
-                # TransformerRatedKvathisone = TransformerRatedKva[Count]
-                # api_transformer.powerrating = TransformerRatedKvathisone * 1000
-                # api_transformer.primaryvoltage = HighSideRatedKv[Count] * 1000
-                # api_transformer.secondaryvoltage = LowSideRatedKv[Count] * 1000
+            if Count is not None:
 
-                # HighSideRatedKvthisone = HighSideRatedKv[Count]
-                # PercentImpedancethisone = PercentImpedance[Count]
-                # PercentResistancethisone = PercentResistance[Count]
+                # Set the PT Ratio
+                api_transformer.pt_ratio = PTRatio[Count]
 
-                ## Calculate the impedance of this transformer
-                # Resistancethisone = (
-                #    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
-                #    * PercentResistancethisone
-                #    / 100
-                # )
-                # Reactancethisone = (
-                #    (HighSideRatedKvthisone ** 2 / TransformerRatedKvathisone * 1000)
-                #    * (PercentImpedancethisone - PercentResistancethisone)
-                #    / 100
-                # )
+                # Set the NoLoadLosses
+                api_transformer.noload_loss = NoLoadLosses[Count]
 
-                # transformerimpedance = complex(Resistancethisone, Reactancethisone)
-                #            api_transformer.impedance=repr(transformerimpedance)[1:-1]
-                # api_transformer.impedance = transformerimpedance
+                # Number of windings
+                # TODO: IS THIS RIGHT???
+                #
+                if IsThreePhaseUnit[Count] == 1 and EnableTertiary[Count] == 1:
+                    n_windings = 3
+                else:
+                    n_windings = 2
 
-                ## Connection type of the transformer
-                # api_transformer.connectiontype = (
-                #    HighVoltageConnectionCode[Count] + LowVoltageConnectionCode[Count]
-                # )
+                # Get the phases
+                phases = self.section_phase_mapping[TransformerSectionId[i]]
 
-            # PT Ratio
-            api_transformer.pt_ratio = PTRatio[Count]
+                ############################################################
+                # BEGINING OF WINDING SECTION
+                ############################################################
+                for winding in range(n_windings):
 
-            # NoLoadLosses
-            api_transformer.noload_loss = NoLoadLosses[Count]
+                    # Create a new Winding object
+                    w = Winding(model)
 
-            # Number of windings
-            # TODO: IS THIS RIGHT???
-            #
-            if IsThreePhaseUnit[Count] == 1 and EnableTertiary[Count] == 1:
-                n_windings = 3
-            else:
-                n_windings = 2
+                    # Primary
+                    if winding == 0:
 
-            phases = self.section_phase_mapping[TransformerSectionId[i]]
+                        # Set the Connection_type of the Winding
+                        if (
+                            HighVoltageConnectionCode_N is not None
+                            and len(HighVoltageConnectionCode_N[i]) > 0
+                        ):
+                            w.connection_type = HighVoltageConnectionCode_N[i]
+                        elif HighVoltageConnectionCode_W is not None:
+                            w.connection_type = HighVoltageConnectionCode_W[Count]
 
-            for winding in range(n_windings):
+                        # Set the Nominal voltage of the Winding
+                        w.nominal_voltage = (
+                            HighSideRatedKv[Count] * 10 ** 3
+                        )  # DiTTo in volts
 
-                # Create a new Windign object
-                w = Winding(model)
+                    # Secondary
+                    elif winding == 1:
 
-                # Primary
-                if winding == 0:
+                        # Set the Connection_type of the Winding
+                        if (
+                            LowVoltageConnectionCode_N is not None
+                            and len(LowVoltageConnectionCode_N[i]) > 0
+                        ):
+                            w.connection_type = LowVoltageConnectionCode_N[i]
+                        elif LowVoltageConnectionCode_W is not None:
+                            w.connection_type = LowVoltageConnectionCode_W[Count]
 
-                    # Connection_type
-                    if (
-                        HighVoltageConnectionCode_N is not None
-                        and len(HighVoltageConnectionCode_N[i]) > 0
-                    ):
-                        w.connection_type = HighVoltageConnectionCode_N[i]
-                    elif HighVoltageConnectionCode_W is not None:
-                        w.connection_type = HighVoltageConnectionCode_W[Count]
+                        # Set the Nominal voltage of the Winding
+                        w.nominal_voltage = (
+                            LowSideRatedKv[Count] * 10 ** 3
+                        )  # DiTTo in volts
 
-                    # Nominal voltage
-                    w.nominal_voltage = (
-                        HighSideRatedKv[Count] * 10 ** 3
-                    )  # DiTTo in volts
+                    # Tertiary
+                    elif winding == 2:
 
-                # Secondary
-                elif winding == 1:
+                        # Set the Connection_type of the Winding
+                        if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
+                            w.connection_type = TertConnectCode[i]
+                        elif TertiaryConnectionCode is not None:
+                            w.connection_type = TertiaryConnectionCode[Count]
 
-                    # Connection_type
-                    if (
-                        LowVoltageConnectionCode_N is not None
-                        and len(LowVoltageConnectionCode_N[i]) > 0
-                    ):
-                        w.connection_type = LowVoltageConnectionCode_N[i]
-                    elif LowVoltageConnectionCode_W is not None:
-                        w.connection_type = LowVoltageConnectionCode_W[Count]
+                        # Set the Nominal voltage of the Winding
+                        w.nominal_voltage = (
+                            TertiaryRatedKv[Count] * 10 ** 3
+                        )  # DiTTo in volts
 
-                    # Nominal voltage
-                    w.nominal_voltage = (
-                        LowSideRatedKv[Count] * 10 ** 3
-                    )  # DiTTo in volts
+                    # Set the rated power
+                    if winding == 0 or winding == 1:
+                        w.rated_power = (
+                            TransformerRatedKva[Count]
+                            / float(n_windings)
+                            * 10
+                            ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
+                        )  # DiTTo in Vars
+                    elif winding == 2:
+                        w.rated_power = (
+                            TertiaryKva * 10 ** 3
+                        )  # TODO: Check that this is correct...
 
-                # Tertiary
-                elif winding == 2:
-
-                    # Connection_type
-                    if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
-                        w.connection_type = TertConnectCode[i]
-                    elif TertiaryConnectionCode is not None:
-                        w.connection_type = TertiaryConnectionCode[Count]
-
-                    # Nominal voltage
-                    w.nominal_voltage = (
-                        TertiaryRatedKv[Count] * 10 ** 3
-                    )  # DiTTo in volts
-
-                # rated power
-                if winding == 0 or winding == 1:
-                    w.rated_power = (
-                        TransformerRatedKva[Count] / float(n_windings) * 10 ** 3
+                    # Set the emergency power
+                    w.emergency_power = (
+                        EmergencyKvaRating[Count]
+                        / float(n_windings)
+                        * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                     )  # DiTTo in Vars
-                elif winding == 2:
-                    w.rated_power = (
-                        TertiaryKva * 10 ** 3
-                    )  # TODO: Check that this is correct...
 
-                # emergency power
-                w.emergency_power = (
-                    EmergencyKvaRating[Count] / float(n_windings) * 10 ** 3
-                )  # DiTTo in Vars
+                    # Create the PhaseWindings
+                    for phase in phases:
+                        if phase != "N":
+                            pw = PhaseWinding(model)
+                            pw.phase = phase
+                            w.phase_windings.append(pw)
 
-                # Create the PhaseWindings
-                for phase in phases:
-                    if phase != "N":
-                        pw = PhaseWinding(model)
-                        pw.phase = phase
-                        w.phase_windings.append(pw)
+                    # Append the Winding to the Transformer
+                    api_transformer.windings.append(w)
 
-                # Append the Winding to the Transformer
-                api_transformer.windings.append(w)
+        ####################################################################################
+        #                                                                                  #
+        #                                  LOADS                                           #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Loads...")
+        for i, obj in enumerate(LoadName):
 
-            i += 1
-
-        ######### Convert load into Ditto ##############
-        N = len(LoadName)
-        i = 0
-        for obj in LoadName:
+            # Create a Load DiTTo object
             api_load = Load(model)
-            api_load.name = "Load_" + LoadName[i].replace(" ", "_").lower()
 
-            try:
-                api_load.feeder_name = self.section_feeder_mapping[LoadName[i]]
-            except:
-                pass
+            # Set the name
+            api_load.name = "Load_" + obj.replace(" ", "_").lower()
 
-            tt = 0
-            Count = 0
-            for obj in LineID:
-                Flag = LoadName[i] == LineID[tt]
-                if Flag == True:
-                    Count = tt
-                tt = tt + 1
+            # Set the feeder_name if in the mapping
+            if obj in self.section_feeder_mapping:
+                api_load.feeder_name = self.section_feeder_mapping[obj]
 
-            api_load.connecting_element = ToNodeId[Count].lower()
+            # Fin the section for this load
+            Count = None
+            for k, section in enumerate(LineID):
+                if obj == section:
+                    Count = k
+                    break
 
-            ## Load at each phase
-            PLoad = map(lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]])
-            QLoad = map(
-                lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
-            )
+            # If no section found, print a warning
+            if Count is None:
+                print("WARNING: No section found for Load {}".format(obj))
 
-            for P, Q, phase in zip(PLoad, QLoad, ["A", "B", "C"]):
-                if P != 0 or Q != 0:
-                    phase_load = PhaseLoad(model)
-                    phase_load.phase = phase
-                    phase_load.p = P
-                    phase_load.q = Q
-                    api_load.phase_loads.append(phase_load)
+            if Count is not None:
 
-            i += 1
+                # Set the connecting element
+                api_load.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
 
-        ####### Convert the capacitor data into Ditto ##########
+                # Set P and Q
+                # Create a list for P and Q for each phase and convert to Watts and vars
+                #
+                PLoad = map(
+                    lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
+                )
 
-        i = 0
-        for obj in CapacitorName:
+                QLoad = map(
+                    lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
+                )
+
+                # Set the Phase Loads
+                for P, Q, phase in zip(PLoad, QLoad, ["A", "B", "C"]):
+
+                    # Only create a PhaseLoad is P OR Q is not zero
+                    if P != 0 or Q != 0:
+
+                        # Create the PhaseLoad DiTTo object
+                        phase_load = PhaseLoad(model)
+
+                        # Set the Phase
+                        phase_load.phase = phase
+
+                        # Set P
+                        phase_load.p = P
+
+                        # Set Q
+                        phase_load.q = Q
+
+                        # Add the PhaseLoad to the list
+                        api_load.phase_loads.append(phase_load)
+
+        ####################################################################################
+        #                                                                                  #
+        #                              CAPACITORS                                          #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Capacitors...")
+        for i, obj in enumerate(CapacitorName):
+
+            # Create a Capacitor DiTTo object
             api_cap = Capacitor(model)
-            api_cap.name = CapacitorName[i].replace(" ", "_").lower()
 
-            try:
-                api_cap.feeder_name = self.section_feeder_mapping[CapacitorSectionId[i]]
-            except:
-                pass
+            # Set the name
+            api_cap.name = obj.replace(" ", "_").lower()
 
-            control_mode_mapping = {
-                "VOLTS": "voltage"
-            }  # TODO: Complete the mapping with other control modes
+            # Set the feeder_name if in the mapping
+            if obj in self.section_feeder_mapping:
+                api_cap.feeder_name = self.section_feeder_mapping[obj]
 
+            # Maps control modes from Synergi format to DiTTo format
+            # TODO: Complete the mapping with other control modes
+            #
+            control_mode_mapping = {"VOLTS": "voltage"}
+
+            # Set the nominal voltage
+            # Convert from KV to Volts since DiTTo is in volts
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
+
+            # Set the connection of the capacitor
             api_cap.connection_type = CapacitorConnectionType[i]
+
+            # Set the Delay of the capacitor
             api_cap.delay = CapacitorTimeDelaySec[i]
+
+            # Set the control mode of the capacitor
             if CapacitorPrimaryControlMode[i] in control_mode_mapping:
                 api_cap.mode = control_mode_mapping[CapacitorPrimaryControlMode[i]]
+            # Default sets to voltage
             else:
-                api_cap.mode = "voltage"  # Default sets to voltage
+                api_cap.mode = "voltage"
+
+            # Set the Low Value
             api_cap.low = CapacitorModule1CapSwitchCloseValue[i]
+
+            # Set the High Value
             api_cap.high = CapacitorModule1CapSwitchTripValue[i]
+
+            # Set the PT ratio of the capacitor
             api_cap.pt_ratio = CapacitorPTRatio[i]
+
+            # Set the CT ratio of the capacitor
             api_cap.ct_ratio = CapacitorCTRating[i]
 
-            # Measuring element
+            # Set the Measuring element
             api_cap.measuring_element = "Line." + CapacitorSectionID[i].lower()
 
-            # PT phase
+            # Set the PT phase
             api_cap.pt_phase = MeteringPhase[i]
 
-            ## Find out the connecting bus
-            tt = 0
-            Count = 0
-            for obj in LineID:
-                Flag = CapacitorSectionId[i] == LineID[tt]
-                if Flag == True:
-                    Count = tt
-                tt = tt + 1
+            ## Find the connecting bus of the capacitor through the section
+            Count = None
+            for k, section in enumerate(LineID):
+                if CapacitorSectionId[i] == section:
+                    Count = k
+                    break
 
-            api_cap.connecting_element = ToNodeId[Count].lower()
+            # If no section found, print a warning
+            if Count is None:
+                print("WARNING: No section found for capacitor {}".format(obj))
 
+            if Count is not None:
+                # Set the connecting_element
+                api_cap.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
+
+            # Get the KVAR for each phase
+            #
             QCap = [
                 float(CapacitorFixedKvarPhase1[i]),
                 float(CapacitorFixedKvarPhase2[i]),
                 float(CapacitorFixedKvarPhase3[i]),
             ]
 
-            t = 0
-            Caps = []
+            # Get the phases of this capacitor
             if len(CapacitorConnectedPhases[i]) > 0:
                 PhasesthisCap = CapacitorConnectedPhases[i]
             else:
                 PhasesthisCap = ["A", "B", "C"]
-            for obj in PhasesthisCap:
+
+            for t, phase in enumerate(PhasesthisCap):
+
+                # Create a PhaseCapacitor DiTTo object
                 phase_caps = PhaseCapacitor(model)
-                phase_caps.phase = PhasesthisCap[t]
+
+                # Set the phase
+                phase_caps.phase = phase
+
+                # Set the Var
                 phase_caps.var = QCap[t] * 1000
-                Caps.append(phase_caps)
-                t = t + 1
-            api_cap.phase_capacitors = Caps
 
-            i = i + 1
+                api_cap.phase_capacitors.append(phase_caps)
 
-        ########## Convert regulator into Ditto #########
-        i = 0
-        for obj in RegulatorId:
+        ####################################################################################
+        #                                                                                  #
+        #                              REGULATORS                                          #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Regulators...")
+        for i, obj in enumerate(RegulatorId):
+
+            # Create a Regulator DiTTo object
             api_regulator = Regulator(model)
-            api_regulator.name = RegulatorId[i].replace(" ", "_").lower()
 
-            try:
-                api_regulator.feeder_name = self.section_feeder_mapping[RegulatorId[i]]
-            except:
+            # Set the name
+            api_regulator.name = obj.replace(" ", "_").lower()
+
+            # Set the feeder_name if in mapping
+            if obj in self.section_feeder_mapping:
+                api_regulator.feeder_name = self.section_feeder_mapping[obj]
+            # Otherwise, try to clean the name by removing "Reg" prefix
+            else:
                 cleaned_id = RegulatorId[i].replace("Reg", "").strip()
-                try:
+                if cleaned_id in self.section_feeder_mapping:
                     api_regulator.feeder_name = self.section_feeder_mapping[cleaned_id]
-                except:
-                    pass
 
+            # Set the Delay of the regulator
             api_regulator.delay = RegulatorTimeDelay[i]
+
+            # Set the Highstep of the regulator
             api_regulator.highstep = int(RegulatorTapLimiterHighSetting[i])
+
+            # Set the LowStep of the regulator
             api_regulator.lowstep = -int(RegulatorTapLimiterLowSetting[i])
 
-            ## Regulator phases
-            # RegulagorPhases_this = list(RegulagorPhases[i])
-            # RegulagorPhases_this01 = [s.encode('ascii') for s in RegulagorPhases_this]
-            # RegulagorPhases_this02 = filter(str.strip, RegulagorPhases_this01)
-            # api_regulator.phases=''.join(RegulagorPhases_this02)
-            # api_regulator.pt_phase=RegulagorPhases[i]
+            # Get the phases
+            regulator_phases = list(RegulagorPhases[i])
 
-            if RegulagorPhases[i] == "A":
-                api_regulator.bandwidth = RegulatrorForwardBWDialPhase1[i]
-                api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase1[i]
+            # Set the Bandwidth
+            # NOTE: DiTTo does not support different values on different phase
+            #
+            # Remove 0 values
+            bandwidths = [
+                b
+                for b in [
+                    RegulatrorForwardBWDialPhase1[i],
+                    RegulatrorForwardBWDialPhase2[i],
+                    RegulatrorForwardBWDialPhase3[i],
+                ]
+                if b != 0
+            ]
+            if len(bandwidths) != 0:
+                # If all values are equal, then use one of them
+                if len(np.unique(bandwidths)) == 1:
+                    api_regulator.bandwidth = bandwidths[0]
+                # Otherwise, use the smallest one and print a warning...
+                else:
+                    bandwidth_min = min(bandwidths)
+                    print(
+                        "WARNING: DiTTo does not support different bandwidth values on different phase. Got {ba} for A, {bb} for B, and {bc} for C. Using {x}...".format(
+                            ba=RegulatrorForwardBWDialPhase1[i],
+                            bb=RegulatrorForwardBWDialPhase2[i],
+                            bc=RegulatrorForwardBWDialPhase3[i],
+                            x=bandwidth_min,
+                        )
+                    )
+                    api_regulator.bandwidth = bandwidth_min
 
-            if RegulagorPhases[i] == "B":
-                api_regulator.bandwidth = RegulatrorForwardBWDialPhase2[i]
-                api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase2[i]
+            # Set the bandcenter in the same way as bandwidths
+            #
+            # Remove 0 values
+            bandcenters = [
+                b
+                for b in [
+                    RegulatrorForwardVoltageSettingPhase1[i],
+                    RegulatrorForwardVoltageSettingPhase2[i],
+                    RegulatrorForwardVoltageSettingPhase3[i],
+                ]
+                if b != 0
+            ]
+            if len(bandcenters) != 0:
+                # If all values are equal, then use one of them
+                if len(np.unique(bandcenters)) == 1:
+                    api_regulator.bandcenter = bandcenters[0]
+                # Otherwise, use the smallest one and print a warning...
+                else:
+                    bandcenter_min = min(bandcenters)
+                    print(
+                        "WARNING: DiTTo does not support different bandcenter values on different phase. Got {ba} for A, {bb} for B, and {bc} for C. Using {x}...".format(
+                            ba=RegulatrorForwardVoltageSettingPhase1[i],
+                            bb=RegulatrorForwardVoltageSettingPhase2[i],
+                            bc=RegulatrorForwardVoltageSettingPhase3[i],
+                            x=bandcenter_min,
+                        )
+                    )
+                    api_regulator.bandcenter = bandcenter_min
 
-            if RegulagorPhases[i] == "C":
-                api_regulator.bandwidth = RegulatrorForwardBWDialPhase3[i]
-                api_regulator.bandcenter = RegulatrorForwardVoltageSettingPhase3[i]
-
-            RegulatorTypethisone = RegulatorTypes[i]
-
-            ## Find out pt ratio and ct rating
+            # Find the Regulator equipment in the Warehouse
             Count = None
-            if RegulatrorNames is not None:
-                for idx, obj in enumerate(RegulatrorNames):
-                    if RegulatorTypethisone == obj:
+            if RegulatorNames is not None:
+                for idx, obj in enumerate(RegulatorNames):
+                    if RegulatorTypes[i] == obj:
                         Count = idx
 
+            # If none found, print a warning
+            if Count is None:
+                print("WARNING: No Regulator found for section {}".format(obj))
+
             if Count is not None:
+
+                # Set the PT ratio of the Regulator
                 api_regulator.pt_ratio = RegulatorPTRatio[Count]
+
+                # Set the CT ratio of the Regulator
                 api_regulator.ct_ratio = RegulatorCTRating[Count]
 
+            # Create the Windings
+            #
             n_windings = 2
             for winding in range(n_windings):
+
+                # Create a Winding DiTTo object
                 w = Winding(model)
+
                 if Count is not None:
-                    # Connection type
+                    # Set the Connection of this Winding
                     w.connection_type = RegulatorConnectionCode[Count]
 
-                    # Nominal voltage
+                    # Set the Nominal voltage
                     w.nominal_voltage = RegulatorRatedVoltage[Count]
 
-                    # Rated Power
+                    # Set the Rated Power
                     w.rated_power = (
-                        RegulatorRatedKva[Count] / float(n_windings) * 10 ** 3
+                        RegulatorRatedKva[Count]
+                        / float(n_windings)
+                        * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                     )
 
-                for phase in RegulagorPhases[i]:
+                # Create the PhaseWindings
+                #
+                for phase in regulator_phases:
+
                     if phase != "N":
+
+                        # Create a PhaseWinding DiTTo object
                         pw = PhaseWinding(model)
+
+                        # Set the phase
                         pw.phase = phase
 
                         # Add PhaseWinding to the winding
@@ -1243,185 +1365,113 @@ class Reader(AbstractReader):
                 # Add winding to the regulator
                 api_regulator.windings.append(w)
 
-            ## Find out the from and to elements
+            ## Set the from and to elements through the sections
             Count = None
-            for idx, obj in enumerate(LineID):
+            for idx, section in enumerate(LineID):
                 if RegulatrorSectionId[i] == obj:
                     Count = idx
 
+            # If no section found, print a warning
+            if Count is None:
+                print("WARNING: No section found for regulator {}".format(obj))
+
             if Count is not None:
-                if RegulatorNearFromNode[i] == 0:
-                    RegualatorFromNodeID = ToNodeId[Count].lower() + "_1"
-                    RegualatorToNodeID = ToNodeId[Count].lower()
-                    DummyNodeID = ToNodeId[Count].lower() + "_1"
 
-                if RegulatorNearFromNode[i] == 1:
-                    RegualatorFromNodeID = FromNodeId[Count].lower()
-                    RegualatorToNodeID = FromNodeId[Count].lower() + "_1"
-                    DummyNodeID = FromNodeId[Count].lower() + "_1"
+                # Set the from element
+                api_regulator.from_element = FromNodeId[Count].lower().replace(" ", "_")
 
-                api_regulator.from_element = RegualatorFromNodeID
-                api_regulator.to_element = RegualatorToNodeID
+                # Set the to element
+                api_regulator.to_element = ToNodeId[Count].lower().replace(" ", "_")
 
-                ## Create the dummy node connecting the regulators
-                api_node = Node(model)
-                api_node.name = DummyNodeID.lower()
-                for p in SectionPhases01[Count]:
-                    api_node.phases.append(p)
+        ####################################################################################
+        #                                                                                  #
+        #                              PV SYSTEMS                                          #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing PV systems...")
+        for i, obj in enumerate(PVUniqueDeviceId):
 
-                ## Create a line to put regulator in lines
-                api_line = Line(model)
-                api_line.name = LineID[Count].lower()
-                api_line.length = LineLength[Count] * 0.3048
-                api_line.from_element = FromNodeId[Count].lower()
-                api_line.to_element = ToNodeId[Count].lower()
+            if PVGenType[i] == "PhotoVoltaic":
 
-                ### Line Phases##################
-                SectionPhases_thisline = SectionPhases01[Count]
-                NPhase = len(SectionPhases_thisline)
-
-                ## The wires belong to this line
-                t = 0
-                wires = []
-                for obj in SectionPhases_thisline:
-                    api_wire = Wire(model)
-                    api_wire.phase = SectionPhases_thisline[t]
-                    wires.append(api_wire)
-                    t = t + 1
-
-                ## Calculating the impedance matrix of this line
-
-                PhaseConductorIDthisline = PhaseConductorID[Count]
-
-                tt = 0
-                Count_Conductor = 0
-                impedance_matrix = None
-
-                if ConductorName is not None:
-                    for obj in ConductorName:
-                        Flag = PhaseConductorIDthisline == ConductorName[tt]
-                        if Flag == True:
-                            Count_Conductor = tt
-                        tt = tt + 1
-
-                    r1 = PosSequenceResistance_PerLUL[Count_Conductor]
-                    x1 = PosSequenceReactance_PerLUL[Count_Conductor]
-                    r0 = ZeroSequenceResistance_PerLUL[Count_Conductor]
-                    x0 = ZeroSequenceReactance_PerLUL[Count_Conductor]
-
-                    coeff = 10 ** -3
-                    if NPhase == 2:
-                        impedance_matrix = [[coeff * complex(float(r0), float(x0))]]
-                    if NPhase == 3:
-                        a = coeff * complex(
-                            2 * float(r1) + float(r0), 2 * float(x1) + float(x0)
-                        )
-
-                        b1 = float(r0) - float(r1)
-                        b2 = float(x0) - float(x1)
-
-                        if b1 < 0:
-                            b1 = -b1
-                        if b1 == 0:
-                            b1 = float(r1)
-                        if b2 < 0:
-                            b2 = -b2
-                        if b2 == 0:
-                            b2 = float(x1)
-
-                        b = coeff * complex(b1, b2)
-                        impedance_matrix = [[a, b], [b, a]]
-
-                    if NPhase == 4:
-                        a = coeff * complex(
-                            2 * float(r1) + float(r0), 2 * float(x1) + float(x0)
-                        )
-
-                        b1 = float(r0) - float(r1)
-                        b2 = float(x0) - float(x1)
-
-                        if b1 < 0:
-                            b1 = -b1
-                        if b1 == 0:
-                            b1 = float(r1)
-                        if b2 < 0:
-                            b2 = -b2
-                        if b2 == 0:
-                            b2 = float(x1)
-
-                        b = coeff * complex(b1, b2)
-
-                        impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-
-                api_line.wires = wires
-                if impedance_matrix is not None:
-                    api_line.impedance_matrix = impedance_matrix
-                else:
-                    print("No impedance matrix for line {}".format(api_line.name))
-            i = i + 1
-
-        ##### Convert PV to Ditto###################################
-
-        i = 0
-        for obj in PVUniqueDeviceId:
-            Flag = PVGenType[i] == "PhotoVoltaic"
-            if Flag == True:
+                # Create a PowerSource object
                 api_PV = PowerSource(model)
-                api_PV.name = PVUniqueDeviceId[i].replace(" ", "_").lower()
 
-                try:
-                    api_PV.feeder_name = self.section_feeder_mapping[
-                        PVUniqueDeviceId[i]
-                    ]
-                except:
-                    pass
+                # Set the name
+                api_PV.name = obj.replace(" ", "_").lower()
 
+                # Set feeder name if in mapping
+                if obj in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[obj]
+
+                # Set the phases and compute rated power
+                rated_power_pv = 0
                 if PVGenPhase1Kw[i] != 0:
-                    api_PV.phases = ["A"]
-                    api_PV.rated_power = PVGenPhase1Kw[i]
-                if PVGenPhase1Kw[i] != 0:
-                    api_PV.phases = ["B"]
-                    api_PV.rated_power = PVGenPhase2Kw[i]
-                if PVGenPhase1Kw[i] != 0:
-                    api_PV.phases = ["C"]
-                    api_PV.rated_power = PVGenPhase3Kw[i]
-            ## Find out the from and to elements
-            tt = 0
-            Count = 0
-            for obj in LineID:
-                Flag = PVSectionId[i] == LineID[tt]
-                if Flag == True:
-                    Count = tt
-                tt = tt + 1
-            api_PV.connecting_element = ToNodeId[Count]
+                    api_PV.phases.append("A")
+                    rated_power_pv += PVGenPhase1Kw[i]
+                if PVGenPhase2Kw[i] != 0:
+                    api_PV.phases.append("B")
+                    rated_power_pv += PVGenPhase2Kw[i]
+                if PVGenPhase3Kw[i] != 0:
+                    api_PV.phases.append("C")
+                    rated_power_pv += PVGenPhase3Kw[i]
+
+                # Set the rated power
+                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+
+                ## Set the from and to elements through the sections
+                Count = None
+                for k, section in enumerate(LineID):
+                    if obj == section:
+                        Count = k
+                        break
+
+                # If no section found, print a warning
+                if Count is None:
+                    print("WARNING: No section found for PV {}".format(obj))
+                else:
+                    # Set the connecting element
+                    api_PV.connecting_element = ToNodeId[Count].replace(" ", "_")
 
         for idx, obj in enumerate(GeneratorSectionID):
             Count = None
-            for k, obj in enumerate(GeneratorName):
-                if GeneratorType[i] == obj:
+            for k, gen in enumerate(GeneratorName):
+                if GeneratorType[i] == gen:
                     Count = k
+
             if Count is not None and GeneratorTypeDev[Count] == "PV":
+
+                # Create a PowerSource DiTTo object
                 api_PV = PowerSource(model)
 
-                # PV name
-                api_PV.name = GeneratorSectionID[i].lower()
+                # Set the PV name
+                api_PV.name = GeneratorSectionID[i].lower().replace(" ", "_")
 
-                # Rated Power
+                # Set the Rated Power
                 api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
 
-                # Connecting element
-                Count = None
-                for k, obj in enumerate(LineID):
-                    if GeneratorSectionID[i] == obj:
-                        Count = k
-                api_PV.connecting_element = ToNodeId[Count].lower()
+                # Set the Connecting element
+                Count2 = None
+                for k2, section in enumerate(LineID):
+                    if GeneratorSectionID[i] == section:
+                        Count2 = k
 
-                # Nominal voltage
+                if Count2 is None:
+                    print("WARNING: No section found for PV {}".format(obj))
+
+                if Count2 is not None:
+
+                    # Set the connecting element
+                    api_PV.connecting_element = (
+                        ToNodeId[Count2].lower().replace(" ", "_")
+                    )
+
+                # Set the Nominal voltage
                 api_PV.nominal_voltage = GeneratorVoltageSetting[i] * 10 ** 3
 
-                # Phases
+                # Set the Phases
                 for phase in GeneratorConnectedPhases[i].strip():
                     api_PV.phases.append(phase)
 
-                # Power Factor
+                # Set the Power Factor
                 api_PV.power_factor = GeneratorPF[i]
