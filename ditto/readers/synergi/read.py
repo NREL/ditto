@@ -29,6 +29,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.position import Position
 from ditto.models.base import Unicode
 
@@ -1394,8 +1395,8 @@ class Reader(AbstractReader):
 
             if PVGenType[i] == "PhotoVoltaic":
 
-                # Create a PowerSource object
-                api_PV = PowerSource(model)
+                # Create a Photovoltaic object
+                api_PV = Photovoltaic(model)
 
                 # Set the name
                 api_PV.name = obj.replace(" ", "_").lower()
@@ -1441,8 +1442,8 @@ class Reader(AbstractReader):
 
             if Count is not None and GeneratorTypeDev[Count] == "PV":
 
-                # Create a PowerSource DiTTo object
-                api_PV = PowerSource(model)
+                # Create a Photovoltaic DiTTo object
+                api_PV = Photovoltaic(model)
 
                 # Set the PV name
                 api_PV.name = GeneratorSectionID[i].lower().replace(" ", "_")
