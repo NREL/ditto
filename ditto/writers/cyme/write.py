@@ -88,13 +88,13 @@ class Writer(AbstractWriter):
         +---------------------+-------------+----------------+------------+
         | Transformer Setting | Transformer |       CYME     |  DiTTo     |
         +---------------------+-------------+----------------+-----+------+
-        |                     |             |                | 1st | 2nd  |
+        |     Y is Yg here    |             |                | 1st | 2nd  |
         +=====================+=============+================+=====+======+
-        |      3 or '3'       |  0 or '0'   |      'Y_Y'     | 'Y' | 'Y'  |
+        |      0 or '0'       |  0 or '0'   |      'Y_Y'     | 'Y' | 'Y'  |
         +---------------------+-------------+----------------+-----+------+
-        |      7 or '7'       |  1 or '1'   |      'D_Y'     | 'D' | 'Y'  |
+        |      1 or '1'       |  1 or '1'   |      'D_Y'     | 'D' | 'Y'  |
         +---------------------+-------------+----------------+-----+------+
-        |      8 or '8'       |  2 or '2'   |      'Y_D'     | 'Y' | 'D'  |
+        |      6 or '6'       |  2 or '2'   |      'Y_D'     | 'Y' | 'D'  |
         +---------------------+-------------+----------------+-----+------+
         |      2 or '2'       |  4 or '4'   |      'D_D'     | 'D' | 'D'  |
         +---------------------+-------------+----------------+-----+------+
@@ -104,9 +104,9 @@ class Writer(AbstractWriter):
         +---------------------+-------------+----------------+-----+------+
         """
         transformer_setting_map = {
-            "Y_Y": "3",
-            "D_Y": "7",
-            "Y_D": "8",
+            "Y_Y": "0",
+            "D_Y": "1",
+            "Y_D": "6",
             "D_D": "2",
             "Yg_Zg": "11",
             "D_Zg": "12",
@@ -1810,6 +1810,10 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )
+                                            if transformer_object.is_center_tap == 1:
+                                                KVLLprim = round(
+                                                    KVLLprim / (3 ** 0.5), 2
+                                                )  # produces output in L-N format if center-tap rather than L-L
                                             VoltageUnit = (
                                                 1
                                             )  # Voltage declared in KV, not in KVLL
@@ -2463,6 +2467,10 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )
+                                            if transformer_object.is_center_tap == 1:
+                                                KVLLprim = round(
+                                                    KVLLprim / (3 ** 0.5), 2
+                                                )  # produces output in L-N format if center-tap rather than L-L
                                             voltageUnit = (
                                                 1
                                             )  # Voltage declared in KV, not in KVLL
@@ -2506,6 +2514,10 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )  # *math.sqrt(3)
+                                            if transformer_object.is_center_tap == 1:
+                                                KVLLprim = round(
+                                                    KVLLprim / (3 ** 0.5), 2
+                                                )  # produces output in L-N format if center-tap rather than L-L
                                             voltageUnit = 0
                                         if w == 1:
                                             KVLLsec = (
