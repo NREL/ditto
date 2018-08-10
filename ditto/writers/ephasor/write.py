@@ -19,6 +19,7 @@ from ditto.models.wire import Wire
 from ditto.models.capacitor import Capacitor
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.winding import Winding
 
 from ditto.writers.abstract_writer import AbstractWriter
@@ -1212,6 +1213,7 @@ class Writer(AbstractWriter):
         ]
         self._regulators = [i for i in self.m.models if isinstance(i, Regulator)]
         self._powersources = [i for i in self.m.models if isinstance(i, PowerSource)]
+        self._photovoltaics = [i for i in self.m.models if isinstance(i, Photovoltaic)]
 
         df7 = self.source()
         df1 = self.line()

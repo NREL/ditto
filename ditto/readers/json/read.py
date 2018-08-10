@@ -11,6 +11,7 @@ import numpy
 from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.node import Node
 from ditto.models.line import Line
 from ditto.models.winding import Winding
@@ -97,6 +98,7 @@ class Reader(AbstractReader):
 
         ditto_klasses = [
             "PowerSource",
+            "Photovoltaic",
             "Node",
             "Line",
             "Winding",
