@@ -14,7 +14,6 @@ logging.getLogger(__name__)
 
 
 class Network:
-
     def __init__(self):
         self.graph = None
         self.digraph = None  # Doesn't contain attributes, just topology
@@ -357,7 +356,7 @@ class Network:
         """Find all edges that have both edges in the set of provided nodes"""
         internal_edges = set()
         all_edges = set()
-        names = nx.get_edge_attributes(self.graph, "name")
+        names = nx.get_edge_attributes(self.graph, "equipment_name")
         for node in nodeset:
             linked_edges = self.graph.edges([node])
             for edge in linked_edges:

@@ -1215,12 +1215,12 @@ class NetworkAnalyzer(object):
                                 total_load_kva += math.sqrt(pl.p ** 2 + pl.q ** 2)
                 # ...compute the transformer KVA
                 if hasattr(obj, "windings") and obj.windings is not None:
-                    transformer_kva = sum(
+                    transformer_kva = max(
                         [
                             wdg.rated_power
                             for wdg in obj.windings
                             if wdg.rated_power is not None
-                        ]
+                        ]  # The kva values should be the same on all windings but we take the max
                     )
                     self.results[feeder_name]["transformer_kva_distribution"].append(
                         transformer_kva
@@ -1262,7 +1262,9 @@ class NetworkAnalyzer(object):
                         ):
                             self.results[feeder_name][
                                 "sum_distribution_transformer_mva"
-                            ] += (obj.windings[0].rated_power * 10 ** -6)  # DiTTo in va
+                            ] += (
+                                obj.windings[0].rated_power * 10 ** -6
+                            )  # DiTTo in va
 
                     if (
                         hasattr(obj.windings[0], "phase_windings")

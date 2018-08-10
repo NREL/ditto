@@ -2301,6 +2301,11 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         switch_data["nameclass"] = new_line["nameclass"]
 
+                    try:
+                        new_line["nominal_voltage"] = float(switch_data["kvll"]) * 1000
+                    except:
+                        pass
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2376,6 +2381,13 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         sectionalizer_data["nameclass"] = new_line["nameclass"]
 
+                    try:
+                        new_line["nominal_voltage"] = (
+                            float(sectionalizer_data["kvll"]) * 1000
+                        )
+                    except:
+                        pass
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2450,6 +2462,11 @@ class Reader(AbstractReader):
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         fuse_data["nameclass"] = new_line["nameclass"]
+
+                    try:
+                        new_line["nominal_voltage"] = float(fuse_data["kvll"]) * 1000
+                    except:
+                        pass
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -2527,6 +2544,13 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         recloser_data["nameclass"] = new_line["nameclass"]
 
+                    try:
+                        new_line["nominal_voltage"] = (
+                            float(recloser_data["kvll"]) * 1000
+                        )
+                    except:
+                        pass
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2601,6 +2625,11 @@ class Reader(AbstractReader):
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         breaker_data["nameclass"] = new_line["nameclass"]
+
+                    try:
+                        new_line["nominal_voltage"] = float(breaker_data["kvll"]) * 1000
+                    except:
+                        pass
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -2682,6 +2711,13 @@ class Reader(AbstractReader):
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         network_protector_data["nameclass"] = new_line["nameclass"]
+
+                    try:
+                        new_line["nominal_voltage"] = (
+                            float(network_protector_data["kvll"]) * 1000
+                        )
+                    except:
+                        pass
 
                     # Create the wires
                     for p in phases + ["N"]:

@@ -222,4 +222,4 @@ class Converter(object):
             self.json_writer = self.json_writer_class(output_path=self.json_path)
             self.json_writer.write(self.m)
 
-        self.writer.write(self.m, verbose=self.verbose)
+        self.writer.write(self.m)

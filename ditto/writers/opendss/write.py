@@ -25,6 +25,7 @@ from ditto.models.winding import Winding
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 
 from ditto.writers.abstract_writer import AbstractWriter
 
@@ -79,6 +80,7 @@ class Writer(AbstractWriter):
 
     author: Nicolas Gensollen. October 2017.
     """
+
     register_names = ["dss", "opendss", "OpenDSS", "DSS"]
 
     def __init__(self, **kwargs):
@@ -1038,106 +1040,116 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
         substation_text_map = {}
         for i in model.models:
-            if isinstance(i, PowerSource):
+            if isinstance(i, Photovoltaic):
                 # If is_sourcebus is set to 1, then the object represents a source and not a PV system
-                if hasattr(i, "is_sourcebus") and i.is_sourcebus == 0:
+                if (
+                    self.separate_feeders
+                    and hasattr(i, "feeder_name")
+                    and i.feeder_name is not None
+                ):
+                    feeder_name = i.feeder_name
+                else:
+                    feeder_name = "DEFAULT"
+                if (
+                    self.separate_substations
+                    and hasattr(i, "substation_name")
+                    and i.substation_name is not None
+                ):
+                    substation_name = i.substation_name
+                else:
+                    substation_name = "DEFAULT"
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ""
+                if substation_name + "_" + feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+
+                # Name
+                if hasattr(i, "name") and i.name is not None:
+                    txt += "New Generator.{name}".format(name=i.name)
+
+                # Phases
+                if hasattr(i, "phases") and i.phases is not None:
+                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
+
+                # connecting element
+                if (
+                    hasattr(i, "connecting_element")
+                    and i.connecting_element is not None
+                ):
+                    txt += " bus1={connecting_elt}".format(
+                        connecting_elt=i.connecting_element
+                    )
+
+                # nominal voltage
+                if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                    txt += " kV={kV}".format(
+                        kV=i.nominal_voltage * 10 ** -3
+                    )  # DiTTo in volts
+                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                else:
+                    parent = model[i.connecting_element]
                     if (
-                        self.separate_feeders
-                        and hasattr(i, "feeder_name")
-                        and i.feeder_name is not None
+                        hasattr(parent, "nominal_voltage")
+                        and parent.nominal_voltage is not None
                     ):
-                        feeder_name = i.feeder_name
+                        txt += " kV={kV}".format(
+                            kV=parent.nominal_voltage * 10 ** -3
+                        )  # DiTTo in volts
+                        self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
+
+                if hasattr(i, "rated_power") and i.rated_power is not None:
+                    txt += " kW={kW}".format(
+                        kW=i.rated_power * 10 ** -3
+                    )  # DiTTo in vars
+
+                # connection type
+                if hasattr(i, "connection_type") and i.connection_type is not None:
+                    mapps = {"D": "delta", "Y": "wye"}
+                    if i.connection_type in mapps:
+                        txt += " conn={conn}".format(conn=mapps[i.connection_type])
                     else:
-                        feeder_name = "DEFAULT"
-                    if (
-                        self.separate_substations
-                        and hasattr(i, "substation_name")
-                        and i.substation_name is not None
-                    ):
-                        substation_name = i.substation_name
-                    else:
-                        substation_name = "DEFAULT"
-
-                    if not substation_name in substation_text_map:
-                        substation_text_map[substation_name] = set([feeder_name])
-                    else:
-                        substation_text_map[substation_name].add(feeder_name)
-                    txt = ""
-                    if substation_name + "_" + feeder_name in feeder_text_map:
-                        txt = feeder_text_map[substation_name + "_" + feeder_name]
-
-                    # Name
-                    if hasattr(i, "name") and i.name is not None:
-                        txt += "New PVSystem.{name}".format(name=i.name)
-
-                    # Phases
-                    if hasattr(i, "phases") and i.phases is not None:
-                        txt += " phases={n_phases}".format(n_phases=len(i.phases))
-
-                    # connecting element
-                    if (
-                        hasattr(i, "connecting_element")
-                        and i.connecting_element is not None
-                    ):
-                        txt += " bus1={connecting_elt}".format(
-                            connecting_elt=i.connecting_element
+                        raise NotImplementedError(
+                            "Connection {conn} for PV systems is currently not supported.".format(
+                                conn=i.connection_type
+                            )
                         )
 
-                    # nominal voltage
-                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                        txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10 ** -3
-                        )  # DiTTo in volts
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                # cutout_percent
+                if hasattr(i, "cutout_percent") and i.cutout_percent is not None:
+                    txt += " %Cutout={cutout}".format(cutout=i.cutout_percent)
 
-                    # rated power
-                    if hasattr(i, "rated_power") and i.rated_power is not None:
-                        txt += " kVA={kVA}".format(
-                            kVA=i.rated_power * 10 ** -3
-                        )  # DiTTo in vars
+                # cutin_percent
+                if hasattr(i, "cutin_percent") and i.cutin_percent is not None:
+                    txt += " %Cutin={cutin}".format(cutin=i.cutin_percent)
 
-                    # connection type
-                    if hasattr(i, "connection_type") and i.connection_type is not None:
-                        mapps = {"D": "delta", "Y": "wye"}
-                        if i.connection_type in mapps:
-                            txt += " conn={conn}".format(conn=mapps[i.connection_type])
-                        else:
-                            raise NotImplementedError(
-                                "Connection {conn} for PV systems is currently not supported.".format(
-                                    conn=i.connection_type
-                                )
-                            )
+                # resistance
+                if hasattr(i, "resistance") and i.resistance is not None:
+                    txt += " %R={resistance}".format(resistance=i.resistance)
 
-                    # cutout_percent
-                    if hasattr(i, "cutout_percent") and i.cutout_percent is not None:
-                        txt += " %Cutout={cutout}".format(cutout=i.cutout_percent)
+                # reactance
+                if hasattr(i, "reactance") and i.reactance is not None:
+                    txt += " %X={reactance}".format(reactance=i.reactance)
 
-                    # cutin_percent
-                    if hasattr(i, "cutin_percent") and i.cutin_percent is not None:
-                        txt += " %Cutin={cutin}".format(cutin=i.cutin_percent)
+                # v_max_pu
+                if hasattr(i, "v_max_pu") and i.v_max_pu is not None:
+                    txt += " Vmaxpu={v_max_pu}".format(v_max_pu=i.v_max_pu)
 
-                    # resistance
-                    if hasattr(i, "resistance") and i.resistance is not None:
-                        txt += " %R={resistance}".format(resistance=i.resistance)
+                # v_min_pu
+                if hasattr(i, "v_min_pu") and i.v_min_pu is not None:
+                    txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
 
-                    # reactance
-                    if hasattr(i, "reactance") and i.reactance is not None:
-                        txt += " %X={reactance}".format(reactance=i.reactance)
+                # power_factor
+                if hasattr(i, "power_factor") and i.power_factor is not None:
+                    txt += " Model=1 pf={power_factor}".format(
+                        power_factor=i.power_factor
+                    )
 
-                    # v_max_pu
-                    if hasattr(i, "v_max_pu") and i.v_max_pu is not None:
-                        txt += " Vmaxpu={v_max_pu}".format(v_max_pu=i.v_max_pu)
-
-                    # v_min_pu
-                    if hasattr(i, "v_min_pu") and i.v_min_pu is not None:
-                        txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
-
-                    # power_factor
-                    if hasattr(i, "power_factor") and i.power_factor is not None:
-                        txt += " pf={power_factor}".format(power_factor=i.power_factor)
-
-                    txt += "\n"
-                    feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += "\n"
+                feeder_text_map[substation_name + "_" + feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
@@ -2193,7 +2205,9 @@ class Writer(AbstractWriter):
                 # Length
                 if hasattr(i, "length") and i.length is not None:
                     txt += " Length={length}".format(
-                        length=self.convert_from_meters(np.real(i.length), u"km")
+                        length=max(
+                            0.001, self.convert_from_meters(np.real(i.length), u"km")
+                        )
                     )
 
                 # nominal_voltage (Not mapped)
@@ -2252,6 +2266,20 @@ class Writer(AbstractWriter):
                     fuse_line = "New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y".format(
                         name=i.name
                     )
+                    if hasattr(i, "wires") and i.wires is not None:
+                        currt_rating = -1
+                        all_current_ratings = [
+                            w.interrupting_rating
+                            for w in i.wires
+                            if w.interrupting_rating is not None
+                        ]
+                        if len(all_current_ratings) > 0:
+                            current_rating = max(all_current_ratings)
+                        if current_rating > 0:
+                            fuse_line += " ratedcurrent={curr}".format(
+                                curr=current_rating
+                            )
+
                 else:
                     fuse_line = ""
 
@@ -2628,6 +2656,7 @@ class Writer(AbstractWriter):
             (hasattr(line, "is_switch") and line.is_switch)
             or (hasattr(line, "is_breaker") and line.is_breaker)
             or (hasattr(line, "is_fuse") and line.is_fuse)
+            or (hasattr(line, "is_recloser") and line.is_recloser)
             and "nphases" in result
         ):
             X = [
