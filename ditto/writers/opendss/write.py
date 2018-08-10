@@ -79,6 +79,7 @@ class Writer(AbstractWriter):
 
     author: Nicolas Gensollen. October 2017.
     """
+
     register_names = ["dss", "opendss", "OpenDSS", "DSS"]
 
     def __init__(self, **kwargs):
@@ -2193,7 +2194,9 @@ class Writer(AbstractWriter):
                 # Length
                 if hasattr(i, "length") and i.length is not None:
                     txt += " Length={length}".format(
-                        length=self.convert_from_meters(np.real(i.length), u"km")
+                        length=max(
+                            0.001, self.convert_from_meters(np.real(i.length), u"km")
+                        )
                     )
 
                 # nominal_voltage (Not mapped)
@@ -2252,6 +2255,20 @@ class Writer(AbstractWriter):
                     fuse_line = "New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y".format(
                         name=i.name
                     )
+                    if hasattr(i, "wires") and i.wires is not None:
+                        currt_rating = -1
+                        all_current_ratings = [
+                            w.interrupting_rating
+                            for w in i.wires
+                            if w.interrupting_rating is not None
+                        ]
+                        if len(all_current_ratings) > 0:
+                            current_rating = max(all_current_ratings)
+                        if current_rating > 0:
+                            fuse_line += " ratedcurrent={curr}".format(
+                                curr=current_rating
+                            )
+
                 else:
                     fuse_line = ""
 
@@ -2628,6 +2645,7 @@ class Writer(AbstractWriter):
             (hasattr(line, "is_switch") and line.is_switch)
             or (hasattr(line, "is_breaker") and line.is_breaker)
             or (hasattr(line, "is_fuse") and line.is_fuse)
+            or (hasattr(line, "is_recloser") and line.is_recloser)
             and "nphases" in result
         ):
             X = [
