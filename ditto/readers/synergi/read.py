@@ -262,6 +262,14 @@ class Reader(AbstractReader):
             "DevSwitches", "EmergencyCurrentRating"
         )
 
+        ## Fuses #########
+        fuse_sectionID = self.get_data("InstFuses", "SectionId")
+        fuse_deviceID = self.get_data("InstFuses", "UniqueDeviceId")
+        fuse_rating = self.get_data("InstFuses", "AmpRating")
+        fuse_blow_rating = self.get_data("InstFuses", "CutoffAmps")
+        fuse_connected_phases = self.get_data("InstFuses", "ConnectedPhases")
+        fuse_is_open = self.get_data("InstFuses", "FuseIsOpen")
+
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
         Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
@@ -567,6 +575,23 @@ class Reader(AbstractReader):
                     switch_emerg_rating = None
                     switch_open = None
 
+            # Fuse
+            if fuse_sectionID is not None and obj in fuse_sectionID.values:
+                idd = np.argwhere(fuse_sectionID.values == obj).flatten()
+
+                # Set the is_fuse flag to True
+                api_line.is_fuse = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd) == 1:
+                    this_fuse_rating = fuse_rating[idd[0]]
+                    this_fuse_blow_rating = fuse_blow_rating[idd[0]]
+                    this_fuse_is_open = fuse_is_open[idd[0]]
+                else:
+                    this_fuse_rating = None
+                    this_fuse_blow_rating = None
+                    this_fuse_is_open = None
+
             ### Line Phases##################
             #
             # Phases are given as a string "A B C N"
@@ -620,6 +645,21 @@ class Reader(AbstractReader):
 
                     # Set the is_open flag
                     api_wire.is_open = int(switch_open)
+
+                # Is_fuse
+                if api_line.is_fuse == 1:
+
+                    # Set the flag to True if the line has been identified as a Fuse
+                    api_wire.is_fuse = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = this_fuse_rating
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = this_fuse_blow_rating
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(this_fuse_is_open)
 
                 # The Neutral will be handled seperately
                 if phase != "N":
