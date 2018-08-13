@@ -249,6 +249,19 @@ class Reader(AbstractReader):
             "InstReclosers", "InterruptRatingAmps"
         )
 
+        ## Switches ########
+        switch_sectionID = self.get_data("InstSwitches", "SectionId")
+        switch_deviceID = self.get_data("InstSwitches", "UniqueDeviceId")
+        SwitchType = self.get_data("InstSwitches", "SwitchType")
+        SwitchIsOpen = self.get_data("InstSwitches", "SwitchIsOpen")
+        SwitchName = self.get_data("DevSwitches", "SwitchName")
+        ContinuousCurrentRating_switch = self.get_data(
+            "DevSwitches", "ContinuousCurrentRating"
+        )
+        EmergencyCurrentRating_switch = self.get_data(
+            "DevSwitches", "EmergencyCurrentRating"
+        )
+
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
         Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
@@ -525,9 +538,6 @@ class Reader(AbstractReader):
             api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
 
             # Recloser
-            import pdb
-
-            pdb.set_trace()
             if recloser_sectionID is not None and obj in recloser_sectionID.values:
                 idd = np.argwhere(recloser_sectionID.values == obj).flatten()
 
@@ -539,6 +549,23 @@ class Reader(AbstractReader):
                     interrupting_rating = recloser_interrupting_rating[idd[0]]
                 else:
                     interrupting_rating = None
+
+            # Switch
+            if switch_sectionID is not None and obj in switch_sectionID.values:
+                idd = np.argwhere(switch_sectionID.values == obj).flatten()
+
+                # Set the is_switch flag to True
+                api_line.is_switch = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd) == 1:
+                    switch_amp_rating = ContinuousCurrentRating_switch[idd[0]]
+                    switch_emerg_rating = EmergencyCurrentRating_switch[idd[0]]
+                    switch_open = SwitchIsOpen[idd[0]]
+                else:
+                    switch_amp_rating = None
+                    switch_emerg_rating = None
+                    switch_open = None
 
             ### Line Phases##################
             #
@@ -578,6 +605,21 @@ class Reader(AbstractReader):
                     api_wire.interrupting_rating = (
                         interrupting_rating
                     )  # Value should already be in amps
+
+                # Is_switch
+                if api_line.is_switch == 1:
+
+                    # Set the flag to True if the line has been identified as a Switch
+                    api_wire.is_switch = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = switch_amp_rating
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = switch_emerg_rating
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(switch_open)
 
                 # The Neutral will be handled seperately
                 if phase != "N":
@@ -774,15 +816,19 @@ class Reader(AbstractReader):
 
                     # Set the Ampacity of the conductor
                     #
-                    api_wire.ampacity = conductor_mapping[conductor_name_raw][
-                        "ContinuousCurrentRating"
-                    ]
+                    # If ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.ampacity is None:
+                        api_wire.ampacity = conductor_mapping[conductor_name_raw][
+                            "ContinuousCurrentRating"
+                        ]
 
                     # Set the Emergency ampacity of the conductor
                     #
-                    api_wire.emergency_ampacity = conductor_mapping[conductor_name_raw][
-                        "InterruptCurrentRating"
-                    ]
+                    # If emergency ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.emergency_ampacity is None:
+                        api_wire.emergency_ampacity = conductor_mapping[
+                            conductor_name_raw
+                        ]["InterruptCurrentRating"]
 
                     # Set the resistance of the conductor
                     # TODO: Change this once resistance is the per unit length resistance
