@@ -241,6 +241,14 @@ class Reader(AbstractReader):
         for idx, section in enumerate(LineID):
             self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
 
+        ## Reclosers #######
+        recloser_sectionID = self.get_data("InstReclosers", "SectionId")
+        recloser_deviceID = self.get_data("InstReclosers", "UniqueDeviceId")
+        recloser_rating = self.get_data("InstReclosers", "AmpRating")
+        recloser_interrupting_rating = self.get_data(
+            "InstReclosers", "InterruptRatingAmps"
+        )
+
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
         Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
@@ -516,6 +524,22 @@ class Reader(AbstractReader):
             #
             api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
 
+            # Recloser
+            import pdb
+
+            pdb.set_trace()
+            if recloser_sectionID is not None and obj in recloser_sectionID.values:
+                idd = np.argwhere(recloser_sectionID.values == obj).flatten()
+
+                # Set the is_recloser flag to True
+                api_line.is_recloser = 1
+
+                # Get the interrupting rating (to be used in the wires)
+                if len(idd) == 1:
+                    interrupting_rating = recloser_interrupting_rating[idd[0]]
+                else:
+                    interrupting_rating = None
+
             ### Line Phases##################
             #
             # Phases are given as a string "A B C N"
@@ -543,6 +567,17 @@ class Reader(AbstractReader):
 
                 # Set the phase
                 api_wire.phase = phase
+
+                # Is_recloser
+                if api_line.is_recloser == 1:
+
+                    # Set the flag to True if the line has been identified as a Recloser
+                    api_wire.is_recloser = 1
+
+                    # Set the interrupting rating
+                    api_wire.interrupting_rating = (
+                        interrupting_rating
+                    )  # Value should already be in amps
 
                 # The Neutral will be handled seperately
                 if phase != "N":
