@@ -226,6 +226,9 @@ class Reader(AbstractReader):
         IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
         IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
         AmpRating = self.get_data("InstSection", "AmpRating")
+        AveHeightAboveGround_MUL = self.get_data(
+            "InstSection", "AveHeightAboveGround_MUL"
+        )
 
         # Create mapping between section IDs and Feeder Ids
         self.section_feeder_mapping = create_mapping(
@@ -562,9 +565,10 @@ class Reader(AbstractReader):
                         )  # DiTTo is in meters
 
                         # Set Y
+                        # Add the reference height
                         api_wire.Y = (
-                            config["Position1_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
+                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"]
+                        ) * coeff  # DiTTo is in meters
 
                     # Set the position of the second wire
                     if (
@@ -579,9 +583,10 @@ class Reader(AbstractReader):
                         )  # DiTTo is in meters
 
                         # Set Y
+                        # Add the reference height
                         api_wire.Y = (
-                            config["Position2_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
+                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"]
+                        ) * coeff  # DiTTo is in meters
 
                     # Set the position of the third wire
                     if (
@@ -596,9 +601,10 @@ class Reader(AbstractReader):
                         )  # DiTTo is in meters
 
                         # Set Y
+                        # Add the reference height
                         api_wire.Y = (
-                            config["Position3_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
+                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"]
+                        ) * coeff  # DiTTo is in meters
 
                     # Set the characteristics of the first wire. Use PhaseConductorID
                     #
@@ -700,15 +706,10 @@ class Reader(AbstractReader):
                         )  # DiTTo is in meters
 
                         # Set Y
+                        # Add the reference height
                         api_wire.Y = (
-                            config["Neutral_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
-
-                # Looks like zero-height wires are possible in Synergi but not
-                # in some other formats like OpenDSS
-                #
-                if api_wire.Y == 0:
-                    api_wire.Y += 0.01
+                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
+                        ) * coeff  # DiTTo is in meters
 
                 # Set the characteristics of the wire:
                 # - GMR
