@@ -93,6 +93,12 @@ class Wire(DiTToHasTraits):
         default_value=0,
     )
 
+    # Modification: Nicolas (August 2018)
+    is_sectionalizer = Int(
+        help="""This flag indicates whether or not this wire is also a sectionalizer.""",
+        default_value=None,
+    )
+
     def build(self, model):
         self._model = model
         pass
