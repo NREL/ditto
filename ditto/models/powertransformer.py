@@ -11,9 +11,13 @@ class PowerTransformer(DiTToHasTraits):
 
     name = Unicode(help="""Name of the transformer object""", default_value="")
 
-    # Modification: Nicolas (August 2017)
-    # Moved the rated_power from the transformer down to the windings
-    # rated_power = Float(help='''The rated power of the entire transformer''', default_value=None)
+    rated_power = Float(
+        help="""The rated power of the entire transformer""", default_value=None
+    )
+
+    emergency_power = Float(
+        help="""The emergency power of the entire transformer""", default_value=None
+    )
 
     install_type = Unicode(
         help="""The mounting type of the transformer: one of {POLETOP, PADMOUNT, VAULT}""",
