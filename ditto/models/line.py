@@ -127,7 +127,7 @@ class Line(DiTToHasTraits):
     # Modification: Nicolas (June 2018)
     is_network_protector = Int(
         help="""This flag indicates whether or not the line is also a network protector.""",
-        default_value=0,
+        default_value=None,
     )
 
     def build(

@@ -90,7 +90,13 @@ class Wire(DiTToHasTraits):
     # Modification: Nicolas (June 2018)
     is_network_protector = Int(
         help="""This flag indicates whether or not this wire is also a network protector.""",
-        default_value=0,
+        default_value=None,
+    )
+
+    # Modification: Nicolas (August 2018)
+    is_sectionalizer = Int(
+        help="""This flag indicates whether or not this wire is also a sectionalizer.""",
+        default_value=None,
     )
 
     def build(self, model):
