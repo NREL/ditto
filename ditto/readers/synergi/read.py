@@ -136,6 +136,20 @@ class Reader(AbstractReader):
         ## Feeder ID ##########
         ## This is used to separate different feeders ##
         FeederId = self.get_data("InstFeeders", "FeederId")
+        NominalKvll_src = self.get_data("InstFeeders", "NominalKvll")
+        ConnectionType_src = self.get_data("InstFeeders", "ConnectionType")
+        BusVoltageLevel = self.get_data("InstFeeders", "BusVoltageLevel")
+        PosSequenceResistance_src = self.get_data(
+            "InstFeeders", "PosSequenceResistance"
+        )
+        PosSequenceReactance_src = self.get_data("InstFeeders", "PosSequenceReactance")
+        ZeroSequenceResistance_src = self.get_data(
+            "InstFeeders", "ZeroSequenceResistance"
+        )
+        ZeroSequenceReactance_src = self.get_data(
+            "InstFeeders", "ZeroSequenceReactance"
+        )
+        ByPhVoltDegPh1 = self.get_data("InstFeeders", "ByPhVoltDegPh1")
 
         ## Node ###########
         NodeID = self.get_data("Node", "NodeId")
@@ -476,6 +490,58 @@ class Reader(AbstractReader):
         ####################################################################################
 
         print("--> Converting to DiTTo objects...")
+
+        ####################################################################################
+        #                                                                                  #
+        #                                   SOURCES                                        #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Sources...")
+        for i, obj in enumerate(FeederId):
+
+            # Create a DiTTo PowerSource object
+            api_source = PowerSource(model)
+
+            # Set the name
+            api_source.name = obj.lower().replace(" ", "_") + "_src"
+
+            # Set the nominal voltage
+            # TODO: Not sure what to use here...
+            # Could be :
+            # api_source.nominal_voltage = NominalKvll_src[i] * 10**3 #DiTTo in volts
+            # or:
+            api_source.nominal_voltage = BusVoltageLevel[
+                i
+            ]  # This value should already be in volts
+
+            # Set the phases
+            # TODO: Change this. I couln't find where this is defined
+            api_source.phases.append("A")
+            api_source.phases.append("B")
+            api_source.phases.append("C")
+
+            # Set the sourcebus flag to True
+            api_source.is_sourcebus = 1
+
+            # Set the connection type
+            api_source.connection_type = ConnectionType_src[i]
+
+            # Set the angle of the first phase
+            api_source.phase_angle = ByPhVoltDegPh1[i]
+
+            # Set the positive sequence impedance of the source
+            api_source.positive_sequence_impedance = complex(
+                PosSequenceResistance_src[i], PosSequenceReactance_src[i]
+            )
+
+            # Set the zero sequence impedance of the source
+            api_source.zero_sequence_impedance = complex(
+                ZeroSequenceResistance_src[i], ZeroSequenceReactance_src[i]
+            )
+
+            # Set the connecting element of the source
+            api_source.connecting_element = obj.lower().replace(" ", "_")
 
         ####################################################################################
         #                                                                                  #
