@@ -255,6 +255,62 @@ class Reader(AbstractReader):
         for idx, section in enumerate(LineID):
             self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
 
+        ## Reclosers #######
+        recloser_sectionID = self.get_data("InstReclosers", "SectionId")
+        recloser_deviceID = self.get_data("InstReclosers", "UniqueDeviceId")
+        recloser_rating = self.get_data("InstReclosers", "AmpRating")
+        RecloserIsOpen = self.get_data("InstReclosers", "RecloserIsOpen")
+        recloser_interrupting_rating = self.get_data(
+            "InstReclosers", "InterruptRatingAmps"
+        )
+
+        ## Switches ########
+        switch_sectionID = self.get_data("InstSwitches", "SectionId")
+        switch_deviceID = self.get_data("InstSwitches", "UniqueDeviceId")
+        SwitchType = self.get_data("InstSwitches", "SwitchType")
+        SwitchIsOpen = self.get_data("InstSwitches", "SwitchIsOpen")
+        SwitchName = self.get_data("DevSwitches", "SwitchName")
+        ContinuousCurrentRating_switch = self.get_data(
+            "DevSwitches", "ContinuousCurrentRating"
+        )
+        EmergencyCurrentRating_switch = self.get_data(
+            "DevSwitches", "EmergencyCurrentRating"
+        )
+
+        ## Fuses #########
+        fuse_sectionID = self.get_data("InstFuses", "SectionId")
+        fuse_deviceID = self.get_data("InstFuses", "UniqueDeviceId")
+        fuse_rating = self.get_data("InstFuses", "AmpRating")
+        fuse_blow_rating = self.get_data("InstFuses", "CutoffAmps")
+        fuse_connected_phases = self.get_data("InstFuses", "ConnectedPhases")
+        fuse_is_open = self.get_data("InstFuses", "FuseIsOpen")
+
+        ## Protective devices ############
+        protective_device_sectionID = self.get_data(
+            "InstProtectiveDevices", "SectionId"
+        )
+        protective_device_deviceID = self.get_data(
+            "InstProtectiveDevices", "UniqueDeviceId"
+        )
+        protective_device_connected_phases = self.get_data(
+            "InstProtectiveDevices", "ConnectedPhases"
+        )
+        ProtectiveDeviceTypeName = self.get_data(
+            "DevProtectiveDevices", "ProtectiveDeviceTypeName"
+        )
+        ProtectiveDeviceType = self.get_data(
+            "DevProtectiveDevices", "ProtectiveDeviceType"
+        )
+        protective_device_ContinuousCurrentRating = self.get_data(
+            "DevProtectiveDevices", "ContinuousCurrentRating"
+        )
+        protective_device_EmergencyCurrentRating = self.get_data(
+            "DevProtectiveDevices", "EmergencyCurrentRating"
+        )
+        protective_device_InterruptCurrentRating = self.get_data(
+            "DevProtectiveDevices", "InterruptCurrentRating"
+        )
+
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
         Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
@@ -582,6 +638,92 @@ class Reader(AbstractReader):
             #
             api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
 
+            # Switching devices and network protection devices
+            # Set ratings to Nones
+            #
+            eqt_rating = None
+            eqt_interrupting_rating = None
+            eqt_open = None
+
+            # Recloser
+            if recloser_sectionID is not None and obj in recloser_sectionID.values:
+                idd = np.argwhere(recloser_sectionID.values == obj).flatten()
+
+                # Set the is_recloser flag to True
+                api_line.is_recloser = 1
+
+                # Get the interrupting rating (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_interrupting_rating = recloser_interrupting_rating[idd[0]]
+                    eqt_rating = recloser_rating[idd[0]]
+                    eqt_open = RecloserIsOpen[idd[0]]
+
+            # Switch
+            if switch_sectionID is not None and obj in switch_sectionID.values:
+                idd = np.argwhere(switch_sectionID.values == obj).flatten()
+
+                # Set the is_switch flag to True
+                api_line.is_switch = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_rating = ContinuousCurrentRating_switch[idd[0]]
+                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd[0]]
+                    eqt_open = SwitchIsOpen[idd[0]]
+
+            # Fuse
+            if fuse_sectionID is not None and obj in fuse_sectionID.values:
+                idd = np.argwhere(fuse_sectionID.values == obj).flatten()
+
+                # Set the is_fuse flag to True
+                api_line.is_fuse = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_rating = fuse_rating[idd[0]]
+                    eqt_interrupting_rating = fuse_blow_rating[idd[0]]
+                    eqt_open = fuse_is_open[idd[0]]
+
+            # Protection Devices
+            if (
+                protective_device_sectionID is not None
+                and obj in protective_device_sectionID.values
+            ):
+                idd = np.argwhere(protective_device_sectionID.values == obj).flatten()
+
+                # Get the type of protector
+                if len(idd) == 1:
+
+                    if (
+                        protective_device_deviceID[idd[0]]
+                        in ProtectiveDeviceTypeName.values
+                    ):
+                        eqt_id = np.argwhere(
+                            ProtectiveDeviceTypeName.values
+                            == protective_device_deviceID[idd[0]]
+                        ).flatten()
+
+                        if len(eqt_id) == 1:
+
+                            # Get the type
+                            protect_type = ProtectiveDeviceType[eqt_id].lower()
+
+                            # Try to map this type to one supported by DiTTo
+                            if "fuse" in protect_type:
+                                api_line.is_fuse = 1
+                            elif "sectionalizer" in protect_type:
+                                api_line.is_sectionalizer = 1
+                            elif "breaker" in protect_type:
+                                api_line.is_breaker = 1
+                            elif "recloser" in protect_type:
+                                api_line.is_recloser = 1
+                            # If nothing more specific was found, map to a network protector
+                            else:
+                                api_line.is_network_protector = 1
+
+                            eqt_rating = ContinuousCurrentRating[eqt_id]
+                            eqt_interrupting_rating = InterruptCurrentRating[eqt_id]
+
             ### Line Phases##################
             #
             # Phases are given as a string "A B C N"
@@ -609,6 +751,104 @@ class Reader(AbstractReader):
 
                 # Set the phase
                 api_wire.phase = phase
+
+                # Is_recloser
+                if api_line.is_recloser == 1:
+
+                    # Set the flag to True if the line has been identified as a Recloser
+                    api_wire.is_recloser = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the interrupting rating
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    api_wire.interrupting_rating = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_switch
+                if api_line.is_switch == 1:
+
+                    # Set the flag to True if the line has been identified as a Switch
+                    api_wire.is_switch = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_fuse
+                if api_line.is_fuse == 1:
+
+                    # Set the flag to True if the line has been identified as a Fuse
+                    api_wire.is_fuse = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the interrupting_rating
+                    api_wire.interrupting_rating = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_sectionalizer
+                if api_line.is_sectionalizer == 1:
+
+                    # Set the flag to True if the line has been identified as a sectionalizer
+                    api_wire.is_sectionalizer = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                # Is_network_protector
+                if api_line.is_network_protector == 1:
+
+                    # Set the flag to True if the line has been identified as a network protector
+                    api_wire.is_network_protector = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
 
                 # The Neutral will be handled seperately
                 if phase != "N":
@@ -805,15 +1045,19 @@ class Reader(AbstractReader):
 
                     # Set the Ampacity of the conductor
                     #
-                    api_wire.ampacity = conductor_mapping[conductor_name_raw][
-                        "ContinuousCurrentRating"
-                    ]
+                    # If ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.ampacity is None:
+                        api_wire.ampacity = conductor_mapping[conductor_name_raw][
+                            "ContinuousCurrentRating"
+                        ]
 
                     # Set the Emergency ampacity of the conductor
                     #
-                    api_wire.emergency_ampacity = conductor_mapping[conductor_name_raw][
-                        "InterruptCurrentRating"
-                    ]
+                    # If emergency ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.emergency_ampacity is None:
+                        api_wire.emergency_ampacity = conductor_mapping[
+                            conductor_name_raw
+                        ]["InterruptCurrentRating"]
 
                     # Set the resistance of the conductor
                     # TODO: Change this once resistance is the per unit length resistance
