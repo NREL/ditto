@@ -745,6 +745,12 @@ class Reader(AbstractReader):
                                 pass
 
                             try:
+                                power_rating = float(config["power_rating"]) * 1000
+                                api_transformer.rated_power = power_rating
+                            except AttributeError:
+                                pass
+
+                            try:
                                 high_voltage = config["primary_voltage"]
                                 winding1.nominal_voltage = float(high_voltage)
                             except AttributeError:
@@ -832,47 +838,40 @@ class Reader(AbstractReader):
                                 for x in reactances:
                                     api_transformer.reactances.append(x)
 
-                            try:
-                                power_rating = float(config["power_rating"]) * 1000
-                                winding1.rated_power = power_rating
-                                if num_windings == 3:
-                                    winding2.rated_power = power_rating / 2.0
-                                    winding3.rated_power = power_rating / 2.0
-                                else:
-                                    winding2.rated_power = power_rating
-                            except AttributeError:
-                                pass
-                            try:
-                                power_rating = float(config["powerA_rating"]) * 1000
-                                winding1.rated_power = power_rating
-                                if num_windings == 3:
-                                    winding2.rated_power = power_rating / 2.0
-                                    winding3.rated_power = power_rating / 2.0
-                                else:
-                                    winding2.rated_power = power_rating
-                            except AttributeError:
-                                pass
+                            # IS THIS RIGHT?
+                            # IT LOOKS LIKE THE RATED_POWER WOULD BE OVERWRITTEN
+                            #
+                            # try:
+                            #     power_rating = float(config["powerA_rating"]) * 1000
+                            #     winding1.rated_power = power_rating
+                            #     if num_windings == 3:
+                            #         winding2.rated_power = power_rating / 2.0
+                            #         winding3.rated_power = power_rating / 2.0
+                            #     else:
+                            #         winding2.rated_power = power_rating
+                            # except AttributeError:
+                            #     pass
 
-                            try:
-                                power_rating = float(config["powerB_rating"]) * 1000
-                                winding1.rated_power = power_rating
-                                if num_windings == 3:
-                                    winding2.rated_power = power_rating / 2.0
-                                    winding3.rated_power = power_rating / 2.0
-                                else:
-                                    winding2.rated_power = power_rating
-                            except AttributeError:
-                                pass
-                            try:
-                                power_rating = float(config["powerC_rating"]) * 1000
-                                winding1.rated_power = power_rating
-                                if num_windings == 3:
-                                    winding2.rated_power = power_rating / 2.0
-                                    winding3.rated_power = power_rating / 2.0
-                                else:
-                                    winding2.rated_power = power_rating
-                            except AttributeError:
-                                pass
+                            # try:
+                            #     power_rating = float(config["powerB_rating"]) * 1000
+                            #     winding1.rated_power = power_rating
+                            #     if num_windings == 3:
+                            #         winding2.rated_power = power_rating / 2.0
+                            #         winding3.rated_power = power_rating / 2.0
+                            #     else:
+                            #         winding2.rated_power = power_rating
+                            # except AttributeError:
+                            #     pass
+                            # try:
+                            #     power_rating = float(config["powerC_rating"]) * 1000
+                            #     winding1.rated_power = power_rating
+                            #     if num_windings == 3:
+                            #         winding2.rated_power = power_rating / 2.0
+                            #         winding3.rated_power = power_rating / 2.0
+                            #     else:
+                            #         winding2.rated_power = power_rating
+                            # except AttributeError:
+                            #     pass
 
                 except AttributeError:
                     pass

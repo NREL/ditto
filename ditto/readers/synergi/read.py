@@ -1257,6 +1257,16 @@ class Reader(AbstractReader):
                 # Set the NoLoadLosses
                 api_transformer.noload_loss = NoLoadLosses[Count]
 
+                # Set the rated power
+                api_transformer.rated_power = (
+                    TransformerRatedKva[Count] * 10 ** 3
+                )  # DiTTo in var
+
+                # Set the emergency power
+                api_transformer.emergency_power = (
+                    EmergencyKvaRating[Count] * 10 ** 3
+                )  # DiTTo in var
+
                 # Number of windings
                 # TODO: IS THIS RIGHT???
                 #
@@ -1323,26 +1333,6 @@ class Reader(AbstractReader):
                         w.nominal_voltage = (
                             TertiaryRatedKv[Count] * 10 ** 3
                         )  # DiTTo in volts
-
-                    # Set the rated power
-                    if winding == 0 or winding == 1:
-                        w.rated_power = (
-                            TransformerRatedKva[Count]
-                            / float(n_windings)
-                            * 10
-                            ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
-                        )  # DiTTo in Vars
-                    elif winding == 2:
-                        w.rated_power = (
-                            TertiaryKva * 10 ** 3
-                        )  # TODO: Check that this is correct...
-
-                    # Set the emergency power
-                    w.emergency_power = (
-                        EmergencyKvaRating[Count]
-                        / float(n_windings)
-                        * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
-                    )  # DiTTo in Vars
 
                     # Create the PhaseWindings
                     for phase in phases:
@@ -1555,6 +1545,11 @@ class Reader(AbstractReader):
             # Set the LowStep of the regulator
             api_regulator.lowstep = -int(RegulatorTapLimiterLowSetting[i])
 
+            # Set the rated power of the regulator
+            api_regulator.rated_power = (
+                float(RegulatorRatedKva[Count]) * 10 ** 3
+            )  # DiTTo in var
+
             # Get the phases
             regulator_phases = list(RegulagorPhases[i])
 
@@ -1650,13 +1645,6 @@ class Reader(AbstractReader):
 
                     # Set the Nominal voltage
                     w.nominal_voltage = RegulatorRatedVoltage[Count]
-
-                    # Set the Rated Power
-                    w.rated_power = (
-                        RegulatorRatedKva[Count]
-                        / float(n_windings)
-                        * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
-                    )
 
                 # Create the PhaseWindings
                 #

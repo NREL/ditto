@@ -57,9 +57,9 @@ class Reader(AbstractReader):
                              },
               'windings':{'klass':'list',
                           'value':[{'klass':'Winding',
-                                    'rated_power':{'klass':'float',
-                                                   'value':'1000'
-                                                   }
+                                    'nominal_voltage':{'klass':'float',
+                                                       'value':'12470'
+                                                      }
                                     'phase_windings':{'klass':'list',
                                                       'value':[{'klass':'PhaseWinding',
                                                                 'phase':{'klass':'Unicode',
@@ -161,7 +161,7 @@ class Reader(AbstractReader):
                         list_first_level = []
 
                         # Loop over the element in the list
-                        # Ex: element will be a dict {'klass':Winding, 'rated_power':{'klass':'float','value':10},...}
+                        # Ex: element will be a dict {'klass':Winding, 'nominal_voltage':{'klass':'float','value':10},...}
                         for element in property_value["value"]:
 
                             # Get the type of each element
@@ -180,7 +180,7 @@ class Reader(AbstractReader):
                                 )
 
                                 # Loop over the winding properties
-                                # Ex: rated_power...
+                                # Ex: nominal_voltage...
                                 for element_property, element_value in element.items():
 
                                     if element_property != "klass":
