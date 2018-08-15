@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
+
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -1000,7 +1001,7 @@ class Reader(AbstractReader):
 
             # Try to get the geometry code if it exists
             try:
-                line_geometry_code = data["geometry"]
+                line_geometry_code = data["geometry"].lower()
             except:
                 line_geometry_code = None
                 pass
@@ -1013,7 +1014,9 @@ class Reader(AbstractReader):
             if line_geometry_code is not None:
                 try:
                     line_geometries = dss.utils.class_to_dataframe("linegeometry")
-                    this_line_geometry = line_geometries[line_geometry_code]
+                    this_line_geometry = line_geometries[
+                        "linegeometry.{}".format(line_geometry_code)
+                    ]
                 except:
                     self.logger.warning(
                         "Could not get the geometry {line_geom} data of line {line_name}".format(
@@ -1095,7 +1098,9 @@ class Reader(AbstractReader):
 
                     # nameclass
                     try:
-                        wires[p].nameclass = this_line_geometry["wire"]
+                        wires[p].nameclass = this_line_geometry["wires"][0].split(" ")[
+                            p
+                        ]
                     except:
                         pass
 
@@ -1124,7 +1129,7 @@ class Reader(AbstractReader):
                     if line_geometry_unit is not None:
                         try:
                             wires[p].X = self.convert_to_meters(
-                                this_line_geometry["X"], line_geometry_unit
+                                float(this_line_geometry["x"]), line_geometry_unit
                             )
                         except:
                             pass
@@ -1134,14 +1139,14 @@ class Reader(AbstractReader):
                     if line_geometry_unit is not None:
                         try:
                             wires[p].Y = self.convert_to_meters(
-                                this_line_geometry["H"], line_geometry_unit
+                                float(this_line_geometry["h"]), line_geometry_unit
                             )
                         except:
                             pass
 
                     # Check if we have wireData that we can use
                     try:
-                        this_line_wireData_code = this_line_geometry["wire"]
+                        this_line_wireData_code = this_line_geometry["wire"].lower()
                     except:
                         this_line_wireData_code = None
 
@@ -1153,7 +1158,9 @@ class Reader(AbstractReader):
                     if this_line_wireData_code is not None:
                         try:
                             all_wire_data = dss.utils.class_to_dataframe("wiredata")
-                            this_line_wireData = all_wire_data[this_line_wireData_code]
+                            this_line_wireData = all_wire_data[
+                                "wiredata.{}".format(this_line_wireData_code)
+                            ]
                         except:
                             self.logger.warning(
                                 "Could not get the wireData {wiredata} of lineGeometry {line_geom}".format(
@@ -1170,7 +1177,7 @@ class Reader(AbstractReader):
 
                         # Get the unit for the radius distance
                         try:
-                            wire_radius_unit = this_line_wireData["Radunits"]
+                            wire_radius_unit = this_line_wireData["radunits"]
                         # If not present, assume the same unit as the lineGeometry
                         except:
                             self.logger(
@@ -1195,7 +1202,7 @@ class Reader(AbstractReader):
                         if wire_radius_unit is not None:
                             try:
                                 wires[p].diameter = self.convert_to_meters(
-                                    this_line_wireData["Diam"], wire_radius_unit
+                                    float(this_line_wireData["diam"]), wire_radius_unit
                                 )
                             except:
                                 pass
@@ -1227,22 +1234,22 @@ class Reader(AbstractReader):
                         if wire_gmr_unit is not None:
                             try:
                                 wires[p].gmr = self.convert_to_meters(
-                                    this_line_wireData["GMRac"], wire_gmr_unit
+                                    float(this_line_wireData["GMRac"]), wire_gmr_unit
                                 )
                             except:
                                 pass
 
                         # ampacity
                         try:
-                            wires[p].ampacity = this_line_wireData["Normamps"]
+                            wires[p].ampacity = float(this_line_wireData["normamps"])
                         except:
                             pass
 
                         # ampacity emergency
                         try:
-                            wires[p].ampacity_emergency = this_line_wireData[
-                                "Emergamps"
-                            ]
+                            wires[p].ampacity_emergency = float(
+                                this_line_wireData["emergamps"]
+                            )
                         except:
                             pass
 
@@ -1255,7 +1262,7 @@ class Reader(AbstractReader):
                         if length is not None:
                             # Try to get the per unit resistance
                             try:
-                                Rac = this_line_wireData["Rac"]
+                                Rac = float(this_line_wireData["Rac"])
                             except:
                                 Rac = None
                                 pass
