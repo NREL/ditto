@@ -507,13 +507,12 @@ class Reader(AbstractReader):
             api_source.name = obj.lower().replace(" ", "_") + "_src"
 
             # Set the nominal voltage
-            # TODO: Not sure what to use here...
-            # Could be :
-            # api_source.nominal_voltage = NominalKvll_src[i] * 10**3 #DiTTo in volts
-            # or:
-            api_source.nominal_voltage = BusVoltageLevel[
-                i
-            ]  # This value should already be in volts
+            api_source.nominal_voltage = NominalKvll_src[i] * 10 ** 3  # DiTTo in volts
+
+            # Set the per unit
+            api_source.per_unit = (
+                BusVoltageLevel[i] / 120.0
+            )  # This value should already be in volts
 
             # Set the phases
             # TODO: Change this. I couln't find where this is defined

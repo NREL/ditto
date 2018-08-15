@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
+
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -359,6 +360,12 @@ class Reader(AbstractReader):
                 api_power_source.nominal_voltage = (
                     float(source_data["basekv"]) * 10 ** 3
                 )  # DiTTo in volts
+            except:
+                pass
+
+            # Set the per unit value of the source
+            try:
+                api_power_source.per_unit = float(source_data["pu"])
             except:
                 pass
 
