@@ -1029,9 +1029,18 @@ class Reader(AbstractReader):
                 this_line_geometry = None
 
             # wires
+            # Try to get the number of conductors from the geometry if we have one:
+            if this_line_geometry is not None and "nconds" in this_line_geometry:
+                number_of_conductors = int(this_line_geometry["nconds"])
+            # Otherwise, use the number of phases
+            else:
+                number_of_conductors = N_phases
+
+            # Initialize empty list to store the wires
             wires = []
-            # As many wires as phases plus neutral
-            for p in range(N_phases + 1):
+
+            # Loop over the wires and create the Wire DiTTo objects one by one.
+            for p in range(number_of_conductors):
 
                 wires.append(Wire(model))
 
@@ -1105,10 +1114,13 @@ class Reader(AbstractReader):
                         pass
 
                     # Get the unit for the distances
-                    try:
+                    # NOTE: It is possible to specify different units for the different wires
+                    # Get the units from the list.
+                    if isinstance(this_line_geometry["units"], list):
+                        line_geometry_unit = this_line_geometry["units"][p]
+                    elif isinstance(this_line_geometry["units"], str):
                         line_geometry_unit = this_line_geometry["units"]
-                    # If not present, assume the same unit as the line
-                    except:
+                    else:
                         self.logger(
                             "Could not find the lineGeometry distance unit for line {name}.".format(
                                 name=name
@@ -1122,33 +1134,78 @@ class Reader(AbstractReader):
                         # If we do not have units for the line either, then w'd rather set everything to None...
                         else:
                             line_geometry_unit = None
-                        pass
 
                     # X
                     # If we have a valid distance unit
                     if line_geometry_unit is not None:
-                        try:
-                            wires[p].X = self.convert_to_meters(
-                                float(this_line_geometry["x"]), line_geometry_unit
-                            )
-                        except:
-                            pass
+                        if "x" in this_line_geometry:
+                            if isinstance(this_line_geometry["x"], list):
+                                try:
+                                    geom_x = float(this_line_geometry["x"][p])
+                                except:
+                                    geom_x = None
+                                    pass
+                            elif isinstance(this_line_geometry["x"], (str, int, float)):
+                                geom_x = float(this_line_geometry["x"])
+                            else:
+                                geom_x = None
+
+                            try:
+                                wires[p].X = self.convert_to_meters(
+                                    geom_x, line_geometry_unit
+                                )
+                            except:
+                                pass
 
                     # Y
                     # If we have a valid distance unit
                     if line_geometry_unit is not None:
-                        try:
-                            wires[p].Y = self.convert_to_meters(
-                                float(this_line_geometry["h"]), line_geometry_unit
-                            )
-                        except:
-                            pass
+                        if "h" in this_line_geometry:
+                            if isinstance(this_line_geometry["h"], list):
+                                try:
+                                    geom_y = float(this_line_geometry["h"][p])
+                                except:
+                                    geom_y = None
+                                    pass
+                            elif isinstance(this_line_geometry["h"], (str, int, float)):
+                                geom_y = float(this_line_geometry["h"])
+                            else:
+                                geom_y = None
+                            try:
+                                wires[p].Y = self.convert_to_meters(
+                                    geom_y, line_geometry_unit
+                                )
+                            except:
+                                pass
 
                     # Check if we have wireData that we can use
-                    try:
-                        this_line_wireData_code = this_line_geometry["wire"].lower()
-                    except:
-                        this_line_wireData_code = None
+                    if "wires" in this_line_geometry:
+                        if isinstance(this_line_geometry["wires"], list):
+                            if (
+                                len(this_line_geometry["wires"]) == 1
+                                and " " in this_line_geometry["wires"][0]
+                            ):
+                                this_line_wireData_code = (
+                                    this_line_geometry["wires"][0].split(" ")[p].lower()
+                                )
+                            else:
+                                try:
+                                    this_line_wireData_code = this_line_geometry[
+                                        "wires"
+                                    ][p].lower()
+                                except:
+                                    this_line_wireData_code = None
+                                    pass
+                        elif isinstance(this_line_geometry["wires"], str):
+                            this_line_wireData_code = this_line_geometry["wires"]
+                        else:
+                            this_line_wireData_code = None
+                        if (
+                            this_line_wireData_code is None
+                            and "wire" in this_line_geometry
+                            and isinstance(this_line_geometry["wire"], str)
+                        ):
+                            this_line_wireData_code = this_line_geometry["wire"]
 
                     # If empty, convert it to None
                     if this_line_wireData_code == "":
@@ -1259,7 +1316,7 @@ class Reader(AbstractReader):
                         # We have to make sure that the line length is in the same unit
                         #
                         # First, check if we have a valid line length, otherwise there is no point...
-                        if length is not None:
+                        if api_line.length is not None:
                             # Try to get the per unit resistance
                             try:
                                 Rac = float(this_line_wireData["Rac"])
@@ -1291,15 +1348,13 @@ class Reader(AbstractReader):
                                     pass
                                 # If we have a valid unit for the resistance
                                 if Runits is not None:
-                                    try:
-                                        # Convert the length of the line to the right unit
-                                        # (99.9999% of the time they should match, but just for safety...)
-                                        new_length = self.unit_conversion(
-                                            length, unit, Runits
+
+                                    wires[p].resistance = (
+                                        self.convert_to_meters(
+                                            Rac, Runits, inverse=True
                                         )
-                                        wires[p].resistance = Rac * new_length
-                                    except:
-                                        pass
+                                        * api_line.length
+                                    )
 
                     if wires[p].ampacity is None and "normamps" in data:
                         try:
@@ -1315,7 +1370,6 @@ class Reader(AbstractReader):
 
                     # is_switch
                     wires[p].is_switch = api_line.is_switch
-
             api_line.wires = wires
             self._lines.append(api_line)
 
