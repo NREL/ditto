@@ -182,60 +182,69 @@ class Reader(AbstractReader):
         self.header_mapping = {  # NODES
             "node": "[NODE]",
             # LINES
-            "overhead_unbalanced_line_settings": "[OVERHEADLINEUNBALANCED SETTING]",
-            "overhead_line_settings": "[OVERHEADLINE SETTING]",
-            "overhead_byphase_settings": "[OVERHEAD BYPHASE SETTING]",
-            "underground_line_settings": "[UNDERGROUNDLINE SETTING]",
-            "switch": "[SWITCH]",
-            "switch_settings": "[SWITCH SETTING]",
-            "sectionalizer": "[SECTIONALIZER]",
-            "sectionalizer_settings": "[SECTIONALIZER SETTING]",
-            "fuse": "[FUSE]",
-            "fuse_settings": "[FUSE SETTING]",
-            "recloser": "[RECLOSER]",
-            "recloser_settings": "[RECLOSER SETTING]",
-            "breaker": "[BREAKER]",
-            "breaker_settings": "[BREAKER SETTING]",
-            "section": "[SECTION]",
-            "line": "[LINE]",
-            "unbalanced_line": "[LINE UNBALANCED]",
-            "spacing_table": "[SPACING TABLE FOR LINE]",
-            "conductor": "[CONDUCTOR]",
-            "cable": "[CABLE]",
-            "concentric_neutral_cable": "[CABLE CONCENTRIC NEUTRAL]",
-            "network_protector": "[NETWORKPROTECTOR]",
-            "network_protector_settings": "[NETWORKPROTECTOR SETTING]",
+            "overhead_unbalanced_line_settings": ["[OVERHEADLINEUNBALANCED SETTING]"],
+            "overhead_line_settings": ["[OVERHEADLINE SETTING]"],
+            "overhead_byphase_settings": ["[OVERHEAD BYPHASE SETTING]"],
+            "underground_line_settings": ["[UNDERGROUNDLINE SETTING]"],
+            "switch": ["[SWITCH]"],
+            "switch_settings": ["[SWITCH SETTING]"],
+            "sectionalizer": ["[SECTIONALIZER]"],
+            "sectionalizer_settings": ["[SECTIONALIZER SETTING]"],
+            "fuse": ["[FUSE]"],
+            "fuse_settings": ["[FUSE SETTING]"],
+            "recloser": ["[RECLOSER]"],
+            "recloser_settings": ["[RECLOSER SETTING]"],
+            "breaker": ["[BREAKER]"],
+            "breaker_settings": ["[BREAKER SETTING]"],
+            "section": ["[SECTION]"],
+            "line": ["[LINE]"],
+            "unbalanced_line": ["[LINE UNBALANCED]"],
+            "spacing_table": ["[SPACING TABLE FOR LINE]"],
+            "conductor": ["[CONDUCTOR]"],
+            "cable": ["[CABLE]"],
+            "concentric_neutral_cable": [
+                "[CABLE CONCENTRIC NEUTRAL]",
+                "[CONCENTRIC NEUTRAL CABLE]",
+            ],
+            "network_protector": ["[NETWORKPROTECTOR]"],
+            "network_protector_settings": ["[NETWORKPROTECTOR SETTING]"],
             # CAPACITORS
-            "serie_capacitor_settings": "[SERIE CAPACITOR SETTING]",
-            "shunt_capacitor_settings": "[SHUNT CAPACITOR SETTING]",
-            "serie_capacitor": "[SERIE CAPACITOR]",
-            "shunt_capacitor": "[SHUNT CAPACITOR]",
+            "serie_capacitor_settings": ["[SERIE CAPACITOR SETTING]"],
+            "shunt_capacitor_settings": ["[SHUNT CAPACITOR SETTING]"],
+            "serie_capacitor": ["[SERIE CAPACITOR]"],
+            "shunt_capacitor": ["[SHUNT CAPACITOR]"],
             # TRANSFORMERS
-            "auto_transformer_settings": "[AUTO TRANSFORMER SETTING]",
-            "grounding_transformer_settings": "[GROUNDINGTRANSFORMER SETTINGS]",
-            "three_winding_auto_transformer_settings": "[THREE WINDING AUTO TRANSFORMER SETTING]",
-            "three_winding_transformer_settings": "[THREE WINDING TRANSFORMER SETTING]",
-            "transformer_settings": "[TRANSFORMER SETTING]",
-            "phase_shifter_transformer_settings": "[PHASE SHIFTER TRANSFORMER SETTING]",
-            "auto_transformer": "[AUTO TRANSFORMER]",
-            "grounding_transformer": "[GROUNDING TRANSFORMER]",
-            "three_winding_auto_transformer": "[THREE WINDING AUTO TRANSFORMER]",
-            "three_winding_transformer": "[THREE WINDING TRANSFORMER]",
-            "transformer": "[TRANSFORMER]",
-            "phase_shifter_transformer": "[PHASE SHIFTER TRANSFORMER]",
+            "auto_transformer_settings": ["[AUTO TRANSFORMER SETTING]"],
+            "grounding_transformer_settings": ["[GROUNDINGTRANSFORMER SETTINGS]"],
+            "three_winding_auto_transformer_settings": [
+                "[THREE WINDING AUTO TRANSFORMER SETTING]"
+            ],
+            "three_winding_transformer_settings": [
+                "[THREE WINDING TRANSFORMER SETTING]"
+            ],
+            "transformer_settings": ["[TRANSFORMER SETTING]"],
+            "phase_shifter_transformer_settings": [
+                "[PHASE SHIFTER TRANSFORMER SETTING]"
+            ],
+            "auto_transformer": ["[AUTO TRANSFORMER]"],
+            "grounding_transformer": ["[GROUNDING TRANSFORMER]"],
+            "three_winding_auto_transformer": ["[THREE WINDING AUTO TRANSFORMER]"],
+            "three_winding_transformer": ["[THREE WINDING TRANSFORMER]"],
+            "transformer": ["[TRANSFORMER]"],
+            "phase_shifter_transformer": ["[PHASE SHIFTER TRANSFORMER]"],
             # REGULATORS
-            "regulator_settings": "[REGULATOR SETTING]",
-            "regulator": "[REGULATOR]",
+            "regulator_settings": ["[REGULATOR SETTING]"],
+            "regulator": ["[REGULATOR]"],
             # LOADS
-            "customer_loads": "[CUSTOMER LOADS]",
-            "customer_class": "[CUSTOMER CLASS]",
-            "loads": "[LOADS]",
-            "source": "[SOURCE]",
-            "headnodes": "[HEADNODES]",
-            "source_equivalent": "[SOURCE EQUIVALENT]",
+            "customer_loads": ["[CUSTOMER LOADS]"],
+            "customer_class": ["[CUSTOMER CLASS]"],
+            "loads": ["[LOADS]"],
+            "source": ["[SOURCE]"],
+            "headnodes": ["[HEADNODES]"],
+            "source_equivalent": ["[SOURCE EQUIVALENT]"],
             # SUBSTATIONS
-            "substation": "[SUBSTATION]",
-            "subnetwork_connections": "[SUBNETWORK CONNECTIONS]",
+            "substation": ["[SUBSTATION]"],
+            "subnetwork_connections": ["[SUBNETWORK CONNECTIONS]"],
         }
 
     def update_header_mapping(self, update):
@@ -259,14 +268,14 @@ class Reader(AbstractReader):
             )
 
         # Instanciate new header mapping
-        new_mapping = {}
+        new_mapping = {k: [] for k in self.header_mapping.keys()}
 
         # Loop over the default header mapping and update as requested
         for key, value in self.header_mapping.items():
-            if key in update and value != update[key]:
-                new_mapping[key] = update[key]
+            if key in update and update[key] not in value:
+                new_mapping[key].append(update[key])
             else:
-                new_mapping[key] = value
+                new_mapping[key].append(value)
 
         # Basic safety check
         if len(new_mapping) != len(self.header_mapping):
@@ -699,7 +708,7 @@ class Reader(AbstractReader):
                 )
             )
 
-        return self.header_mapping[obj] in line
+        return np.any([x in line for x in self.header_mapping[obj]])
 
     def parser_helper(self, line, obj_list, attribute_list, mapping, *args):
         """
