@@ -418,7 +418,7 @@ class Reader(AbstractReader):
                 tr.normhkva = sum([float(winding_data['Single Phase Base kVA- Zps'].iloc[0]),
                                    float(winding_data['Single Phase Base kVA- Zpt'].iloc[0]),
                                    float(winding_data['Single Phase Base kVA- Zst'].iloc[0])])
-                tr.noload_loss = float(winding_data['Percent Impedance- Zps'].iloc[0])  * 100
+                tr.noload_loss = float(winding_data['No-Load Loss- Zps'].iloc[0])  / float(winding_data['Single Phase Base kVA- Zps'].iloc[0])
                 tr.install_type = 'PADMOUNT' if bool(winding_data['Is Pad Mounted Transformer'].iloc[0]) else 'POLEMOUNT'
                 tr.reactances.append(float(x_percent))
                 tr.phase_shift = 0
