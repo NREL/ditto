@@ -404,8 +404,8 @@ class Reader(AbstractReader):
 
                 X_R_ratio = float(winding_data['X/R Ratio- Phase A'].iloc[0])
                 Zpercentage = float(winding_data['Percent Impedance- Zps'].iloc[0])
-                x_percent = np.sqrt(Zpercentage ** 2 / (X_R_ratio ** 2 + 1))
-                r_percent = np.sqrt(Zpercentage ** 2 - x_percent ** 2)
+                r_percent = np.sqrt(Zpercentage ** 2 / (X_R_ratio ** 2 + 1))
+                x_percent = np.sqrt(Zpercentage ** 2 - r_percent ** 2)
 
                 tr = PowerTransformer(model)
                 tr.name = node2.replace('node_','tr_')
@@ -432,7 +432,7 @@ class Reader(AbstractReader):
                 for i in range(nwdgs):
 
                     wdg = Winding(model)
-                    wdg.resistance = r_percent / nPhases
+                    wdg.resistance = r_percent / nwdgs
                     kV = float(self.nxGraph[node1][node2]['kv'][i]) * 1000
                     wdg.nominal_voltage = kV if nPhases == 1 else 1.732 * kV
                     wdg.connection_type = self.nxGraph[node1][node2]['conn'][i]
