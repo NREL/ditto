@@ -591,7 +591,7 @@ class NetworkAnalyzer(object):
         sub_MVA = None
         for su in self.__substations:
             if _src in su.name.replace(".", ""):
-                sub_MVA = min([z.rated_power for z in su.windings]) * 10 ** -6
+                sub_MVA = su.rated_power * 10 ** -6  # DiTTo in var
 
         # Create the results dictionary.
         # Note: All metrics relying on networkX calls are computed here.
@@ -1214,17 +1214,14 @@ class NetworkAnalyzer(object):
                             ):
                                 total_load_kva += math.sqrt(pl.p ** 2 + pl.q ** 2)
                 # ...compute the transformer KVA
-                if hasattr(obj, "windings") and obj.windings is not None:
-                    transformer_kva = max(
-                        [
-                            wdg.rated_power
-                            for wdg in obj.windings
-                            if wdg.rated_power is not None
-                        ]  # The kva values should be the same on all windings but we take the max
-                    )
+                if obj.rated_power is not None:
+                    transformer_kva = obj.rated_power
                     self.results[feeder_name]["transformer_kva_distribution"].append(
                         transformer_kva
                     )
+                else:
+                    transformer_kva = 0
+
                 # ...and, compare the two values
                 if total_load_kva > transformer_kva:
                     self.results[feeder_name]["num_overloaded_transformers"] += 1
@@ -1256,15 +1253,9 @@ class NetworkAnalyzer(object):
 
                     # If we use the transformers to compute the kva distribution
                     if self.compute_kva_density_with_transformers:
-                        if (
-                            hasattr(obj.windings[0], "rated_power")
-                            and obj.windings[0].rated_power is not None
-                        ):
-                            self.results[feeder_name][
-                                "sum_distribution_transformer_mva"
-                            ] += (
-                                obj.windings[0].rated_power * 10 ** -6
-                            )  # DiTTo in va
+                        self.results[feeder_name][
+                            "sum_distribution_transformer_mva"
+                        ] += (obj.rated_power * 10 ** -6)  # DiTTo in var
 
                     if (
                         hasattr(obj.windings[0], "phase_windings")

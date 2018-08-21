@@ -591,9 +591,9 @@ class Writer(AbstractWriter):
                     self._transformer_dict[i.from_element]["kv1"] += i.windings[
                         0
                     ].nominal_voltage
-                    self._transformer_dict[i.from_element]["kva"] += i.windings[
-                        0
-                    ].rated_power
+                    self._transformer_dict[i.from_element][
+                        "kva"
+                    ] += i.rated_power  # Units??
                     self._transformer_dict[i.from_element]["Tap " + pp] = (
                         i.windings[0].phase_windings[0].tap_position,
                     )
@@ -608,7 +608,7 @@ class Writer(AbstractWriter):
                         "i": index,
                         "kv1": i.windings[0].nominal_voltage,
                         "Tap " + pp: i.windings[0].phase_windings[0].tap_position,
-                        "kva": i.windings[0].rated_power,
+                        "kva": i.rated_power,  # Units??
                     }
             else:
                 for key, value in obj_dict.items():
@@ -671,7 +671,7 @@ class Writer(AbstractWriter):
                         else:
                             obj_dict["W" + str(winding_num + 1) + "S_base (kVA)"][
                                 index
-                            ] = (winding.rated_power / 1000)
+                            ] = (i.rated_power / 1000)
                             obj_dict["W" + str(winding_num + 1) + "V (kV)"][index] = (
                                 winding.nominal_voltage / 1000
                             )

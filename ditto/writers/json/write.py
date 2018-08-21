@@ -47,9 +47,9 @@ class Writer(AbstractWriter):
                              },
               'windings':{'klass':'list',
                           'value':[{'klass':'Winding',
-                                    'rated_power':{'klass':'float',
-                                                   'value':'1000'
-                                                   }
+                                    'nominal_voltage':{'klass':'float',
+                                                       'value':'12470'
+                                                      }
                                     'phase_windings':{'klass':'list',
                                                       'value':[{'klass':'PhaseWinding',
                                                                 'phase':{'klass':'Unicode',

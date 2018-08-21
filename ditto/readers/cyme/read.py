@@ -4383,21 +4383,24 @@ class Reader(AbstractReader):
                         pass
 
                     # Set the rated power
-                    try:
-                        if w == 0:
-                            api_winding.rated_power = (
-                                float(settings["primaryratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        if w == 1:
-                            api_winding.rated_power = (
-                                float(settings["secondaryratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        if w == 2:
-                            api_winding.rated_power = (
-                                float(settings["tertiaryratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                    except:
-                        pass
+                    total_kva = 0
+                    if (
+                        "primaryratedcapacity" in settings
+                        and settings["primaryratedcapacity"] is not None
+                    ):
+                        total_kva += float(settings["primaryratedcapacity"])
+                    if (
+                        "secondaryratedcapacity" in settings
+                        and settings["secondaryratedcapacity"] is not None
+                    ):
+                        total_kva += float(settings["secondaryratedcapacity"])
+                    if (
+                        "tertiaryratedcapacity" in settings
+                        and settings["tertiaryratedcapacity"] is not None
+                    ):
+                        total_kva += float(settings["tertiaryratedcapacity"])
+                    total_kva *= 10 ** 3  # DiTTo in var
+                    api_transformer.rated_power = total_kva
 
                     # Create the phase windings
                     for p in phases:
@@ -4522,6 +4525,11 @@ class Reader(AbstractReader):
                 except:
                     pass
 
+                # Set the rated power
+                api_transformer.rated_power = (
+                    float(transformer_data["kva"]) * 10 ** 3
+                )  # DiTTo in var
+
                 # Here we know that we have two windings...
                 for w in range(2):
 
@@ -4530,19 +4538,6 @@ class Reader(AbstractReader):
                         api_winding = Winding(model)
                     except:
                         raise ValueError("Unable to instanciate Winding DiTTo object.")
-
-                    # Set the rated power
-                    try:
-                        if w == 0:
-                            api_winding.rated_power = (
-                                float(transformer_data["kva"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        if w == 1:
-                            api_winding.rated_power = (
-                                float(transformer_data["kva"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                    except:
-                        pass
 
                     # Set the nominal voltage
                     try:
@@ -4604,6 +4599,11 @@ class Reader(AbstractReader):
                 else:
                     transformer_data = {}
 
+                # Set the rated power
+                api_transformer.rated_power = (
+                    float(transformer_data["ratedcapacity"]) * 10 ** 3
+                )  # DiTTo in var
+
                 # Here we know that we have two windings...
                 for w in range(2):
 
@@ -4612,19 +4612,6 @@ class Reader(AbstractReader):
                         api_winding = Winding(model)
                     except:
                         raise ValueError("Unable to instanciate Winding DiTTo object.")
-
-                    # Set the rated power
-                    try:
-                        if w == 0:
-                            api_winding.rated_power = (
-                                float(transformer_data["ratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        if w == 1:
-                            api_winding.rated_power = (
-                                float(transformer_data["ratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                    except:
-                        pass
 
                     # Set the nominal voltage
                     try:
@@ -4936,6 +4923,11 @@ class Reader(AbstractReader):
                 except:
                     pass
 
+                # Set the rated power of the regulator
+                api_regulator.rated_power = (
+                    float(regulator_data["kva"]) * 10 ** 3
+                )  # DiTTo in var
+
                 for w in range(2):
 
                     # Instanciate a Winding DiTTo object
@@ -4943,14 +4935,6 @@ class Reader(AbstractReader):
                         api_winding = Winding(model)
                     except:
                         raise ValueError("Unable to instanciate Winding DiTTo object.")
-
-                    # Set the rated power
-                    try:
-                        api_winding.rated_power = (
-                            float(regulator_data["kva"]) * 10 ** 3
-                        )  # DiTTo in volt ampere
-                    except:
-                        pass
 
                     # Set the connection type
                     try:

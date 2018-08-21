@@ -36,13 +36,5 @@ class Winding(DiTToHasTraits):
         default_value=None,
     )
 
-    # Added by Nicolas (August 2017)
-    # Better results are obtained if the rated power is specified at the windings rather
-    # than for the whole transformer
-    rated_power = Float(help="""The rated power of the winding""", default_value=None)
-    emergency_power = Float(
-        help="""The emergency power of the winding""", default_value=None
-    )
-
     def build(self, model):
         self._model = model

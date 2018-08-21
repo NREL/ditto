@@ -10,6 +10,11 @@ from .winding import Winding
 class Regulator(DiTToHasTraits):
 
     name = Unicode(help="""Name of the regulator object""", default_value="")
+    rated_power = Float(help="""The rated power of the regulator""", default_value=None)
+
+    emergency_power = Float(
+        help="""The emergency power of the regulator""", default_value=None
+    )
     delay = Float(
         help="""The delay for first tap change operation""", default_value=None
     )

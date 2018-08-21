@@ -481,13 +481,14 @@ class Writer(AbstractWriter):
                     buses = None
 
                 # Rated power
-                # if hasattr(i, 'rated_power') and i.rated_power is not None:
-                #    fp.write(' kva='+str(i.rated_power*10**-3)) #OpenDSS in kWatts
+                if hasattr(i, "rated_power") and i.rated_power is not None:
+                    txt += " kva={}".format(i.rated_power * 10 ** -3)  # DiTTo in var
 
                 # Emergency power
-                # Emergency_power removed from powerTransformers and added to windings by Tarek
-                # if hasattr(i, 'emergency_power') and i.emergency_power is not None:
-                #    fp.write(' EmergHKVA='+str(i.emergency_power*10**-3)) #OpenDSS in kWatts
+                if hasattr(i, "emergency_power") and i.emergency_power is not None:
+                    txt += " EmergHKVA={}".format(
+                        i.emergency_power * 10 ** -3
+                    )  # DiTTo in var
 
                 # Loadloss
                 if hasattr(i, "loadloss") and i.loadloss is not None:
@@ -584,25 +585,6 @@ class Writer(AbstractWriter):
                                     kv=winding.nominal_voltage * 10 ** -3
                                 )  # OpenDSS in kvolts
                                 self._baseKV_.add(winding.nominal_voltage * 10 ** -3)
-
-                            # rated power
-                            if (
-                                hasattr(winding, "rated_power")
-                                and winding.rated_power is not None
-                            ):
-                                txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10 ** -3
-                                )
-
-                            # emergency_power
-                            # Was added to windings by Tarek
-                            if (
-                                hasattr(winding, "emergency_power")
-                                and winding.emergency_power is not None
-                            ):
-                                txt += " EmergHKVA={}".format(
-                                    winding.emergency_power * 10 ** -3
-                                )  # OpenDSS in kWatts
 
                             # resistance
                             if (
@@ -743,25 +725,6 @@ class Writer(AbstractWriter):
                                     kv=winding.nominal_voltage * 10 ** -3
                                 )  # OpenDSS in kvolts
                                 self._baseKV_.add(winding.nominal_voltage * 10 ** -3)
-
-                            # rated power
-                            if (
-                                hasattr(winding, "rated_power")
-                                and winding.rated_power is not None
-                            ):
-                                txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10 ** -3
-                                )
-
-                            # emergency_power
-                            # Was added to windings by Tarek
-                            if (
-                                hasattr(winding, "emergency_power")
-                                and winding.emergency_power is not None
-                            ):
-                                txt += " EmergHKVA={}".format(
-                                    winding.emergency_power * 10 ** -3
-                                )  # OpenDSS in kWatts
 
                             # Tap position
                             if (
@@ -1682,6 +1645,21 @@ class Writer(AbstractWriter):
                             conns += ")"
                             transfo_creation_string += conns
 
+                        # kva
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            transfo_creation_string += " kva={}".format(
+                                i.rated_power * 10 ** -3
+                            )
+
+                        # emergency power
+                        if (
+                            hasattr(i, "emergency_power")
+                            and i.emergency_power is not None
+                        ):
+                            transfo_creation_string += " EmerghKVA={}".format(
+                                i.emergency_power * 10 ** -3
+                            )
+
                         # kvs
                         if hasattr(i, "windings") and i.windings is not None:
                             kvs = " kvs=("
@@ -1692,31 +1670,6 @@ class Writer(AbstractWriter):
                             kvs = kvs[:-2]
                             kvs += ")"
                             transfo_creation_string += kvs
-
-                        # kvas
-                        if hasattr(i, "windings") and i.windings is not None:
-                            kvas = " kvas=("
-                            for w, winding in enumerate(i.windings):
-                                if (
-                                    hasattr(i.windings[w], "rated_power")
-                                    and i.windings[w].rated_power is not None
-                                ):
-                                    kvas += (
-                                        str(i.windings[w].rated_power * 10 ** -3) + ", "
-                                    )
-                            kvas = kvas[:-2]
-                            kvas += ")"
-                            transfo_creation_string += kvas
-
-                        # emergency_power
-                        if hasattr(i, "windings") and i.windings is not None:
-                            if (
-                                hasattr(i.windings[0], "emergency_power")
-                                and i.windings[0].emergency_power is not None
-                            ):
-                                transfo_creation_string += " EmerghKVA={}".format(
-                                    i.windings[0].emergency_power
-                                )
 
                         # reactances:
                         if hasattr(i, "reactances") and i.reactances is not None:

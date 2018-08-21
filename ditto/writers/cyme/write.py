@@ -1755,13 +1755,13 @@ class Writer(AbstractWriter):
                                     RH = (
                                         winding1.resistance
                                         * 10 ** -2
-                                        * winding1.rated_power
+                                        * i.rated_power
                                         * 10 ** -3
                                     )
                                     RL = (
                                         winding2.resistance
                                         * 10 ** -2
-                                        * winding2.rated_power
+                                        * i.rated_power
                                         * 10 ** -3
                                     )
                                 except:
@@ -1790,19 +1790,16 @@ class Writer(AbstractWriter):
                             #
                             # Expressed in percentage of the KVA base
                             try:
-                                Z1 = _ZHL_ * 100.0 / (winding1.rated_power * 10 ** -3)
+                                Z1 = _ZHL_ * 100.0 / (i.rated_power * 10 ** -3)
                             except:
                                 Z1 = 0
                                 pass
                             Z0 = Z1
 
                             # Total kva
-                            KVA = 0
+                            KVA = i.rated_power * 10 ** -3  # DiTTo in var
+
                             for w, winding in enumerate(windings_local):
-                                try:
-                                    KVA += winding.rated_power * 10 ** -3
-                                except:
-                                    pass
 
                                 if hasattr(winding, "nominal_voltage"):
                                     try:
@@ -1944,17 +1941,14 @@ class Writer(AbstractWriter):
                     else:
                         new_regulator_string += ","
 
-                    _KVA = 0
+                    _KVA = i.rated_power * 10 ** -3  # DiTTo in var
+
                     _KVLN = 0
                     _Rset = {"A": 0, "B": 0, "C": 0}
                     _Xset = {"A": 0, "B": 0, "C": 0}
                     if len(windings_local) >= 2:
-                        for winding in windings_local:
-                            try:
-                                _KVA += winding.rated_power * 10 ** -3
-                            except:
-                                pass
-                        _KVLN = winding.nominal_voltage * 10 ** -3
+
+                        _KVLN = windings_local[0].nominal_voltage * 10 ** -3
 
                         if (
                             hasattr(winding1, "phase_windings")
@@ -2343,8 +2337,7 @@ class Writer(AbstractWriter):
                                             for w in transformer_object.windings
                                         ]
                                         KVA_BASE = (
-                                            transformer_object.windings[0].rated_power
-                                            * 10 ** -3
+                                            transformer_object.rated_power * 10 ** -3
                                         )
                                         XR, Z1 = self.get_center_tap_impedances(
                                             R0, R1, R2, XHL, XHT, XLT, KVA_BASE
@@ -2364,7 +2357,7 @@ class Writer(AbstractWriter):
                                         XHL = (
                                             XHL_perct
                                             * 10 ** -2
-                                            * transformer_object.windings[0].rated_power
+                                            * transformer_object.rated_power
                                             * 10 ** -3
                                         )
                                     except:
@@ -2388,13 +2381,13 @@ class Writer(AbstractWriter):
                                         RH = (
                                             transformer_object.windings[0].resistance
                                             * 10 ** -2
-                                            * transformer_object.windings[0].rated_power
+                                            * transformer_object.rated_power
                                             * 10 ** -3
                                         )
                                         RL = (
                                             transformer_object.windings[1].resistance
                                             * 10 ** -2
-                                            * transformer_object.windings[1].rated_power
+                                            * transformer_object.rated_power
                                             * 10 ** -3
                                         )
                                     except:
@@ -2426,10 +2419,7 @@ class Writer(AbstractWriter):
                                     Z1 = (
                                         _ZHL_
                                         * 100.0
-                                        / (
-                                            transformer_object.windings[0].rated_power
-                                            * 10 ** -3
-                                        )
+                                        / (transformer_object.rated_power * 10 ** -3)
                                     )
                                 except:
                                     Z1 = 0
@@ -2438,10 +2428,7 @@ class Writer(AbstractWriter):
 
                             # Total kva
                             try:
-                                KVA = (
-                                    transformer_object.windings[0].rated_power
-                                    * 10 ** -3
-                                )
+                                KVA = transformer_object.rated_power * 10 ** -3
                             except:
                                 KVA = "DEFAULT"
                                 pass
@@ -2636,9 +2623,19 @@ class Writer(AbstractWriter):
                                     new_transformer_line += ",,"
                                     pass
 
-                            _primary_rated_capacity = None
-                            _secondary_rated_capacity = None
-                            _tertiary_rated_capacity = None
+                            # NOTE: This is probably the only case where moving back the kva to the transformer
+                            # might result in information losses. Assuming kva is evenly distributed here...
+                            #
+                            _primary_rated_capacity = str(
+                                1.0 / 3.0 * transformer_object.rated_power * 10 ** -3
+                            )
+                            _secondary_rated_capacity = str(
+                                1.0 / 3.0 * transformer_object.rated_power * 10 ** -3
+                            )
+                            _tertiary_rated_capacity = str(
+                                1.0 / 3.0 * transformer_object.rated_power * 10 ** -3
+                            )
+
                             _primary_voltage = None
                             _secondary_voltage = None
                             _tertiary_voltage = None
@@ -2648,22 +2645,6 @@ class Writer(AbstractWriter):
                             R = {}
                             XHL_perct, XLT_perct, XHT_perct = None, None, None
                             for w, winding in enumerate(transformer_object.windings):
-                                if (
-                                    hasattr(winding, "rated_power")
-                                    and winding.rated_power is not None
-                                ):
-                                    if w == 0:
-                                        _primary_rated_capacity = str(
-                                            winding.rated_power * 10 ** -3
-                                        )
-                                    if w == 1:
-                                        _secondary_rated_capacity = str(
-                                            winding.rated_power * 10 ** -3
-                                        )
-                                    if w == 2:
-                                        _tertiary_rated_capacity = str(
-                                            winding.rated_power * 10 ** -3
-                                        )
 
                                 if (
                                     hasattr(winding, "connection_type")
@@ -2710,7 +2691,7 @@ class Writer(AbstractWriter):
                                     try:
                                         R[w] = (
                                             winding.resistance
-                                            * winding.rated_power
+                                            * transformer_object.rated_power
                                             * 10 ** -3
                                         )
                                     except:
@@ -2731,7 +2712,7 @@ class Writer(AbstractWriter):
                                     XHL = (
                                         XHL_perct
                                         * 10 ** -2
-                                        * transformer_object.windings[0].rated_power
+                                        * transformer_object.rated_power
                                         * 10 ** -3
                                     )
                                 except:
@@ -2742,7 +2723,7 @@ class Writer(AbstractWriter):
                                     XLT = (
                                         XLT_perct
                                         * 10 ** -2
-                                        * transformer_object.windings[0].rated_power
+                                        * transformer_object.rated_power
                                         * 10 ** -3
                                     )
                                 except:
@@ -2753,7 +2734,7 @@ class Writer(AbstractWriter):
                                     XHT = (
                                         XHT_perct
                                         * 10 ** -2
-                                        * transformer_object.windings[0].rated_power
+                                        * transformer_object.rated_power
                                         * 10 ** -3
                                     )
                                 except:
@@ -2782,30 +2763,21 @@ class Writer(AbstractWriter):
                                 _PrimaryToSecondaryZ1 = (
                                     math.sqrt(ZHL.real ** 2 + ZHL.imag ** 2)
                                     * 100.0
-                                    / (
-                                        transformer_object.windings[0].rated_power
-                                        * 10 ** -3
-                                    )
+                                    / (transformer_object.rated_power * 10 ** -3)
                                 )
                                 _PrimaryToSecondaryZ0 = _PrimaryToSecondaryZ1
 
                                 _PrimaryToTertiaryZ1 = (
                                     math.sqrt(ZHT.real ** 2 + ZHT.imag ** 2)
                                     * 100.0
-                                    / (
-                                        transformer_object.windings[0].rated_power
-                                        * 10 ** -3
-                                    )
+                                    / (transformer_object.rated_power * 10 ** -3)
                                 )
                                 _PrimaryToTertiaryZ0 = _PrimaryToTertiaryZ1
 
                                 _SecondaryToTertiaryZ1 = (
                                     math.sqrt(ZLT.real ** 2 + ZLT.imag ** 2)
                                     * 100.0
-                                    / (
-                                        transformer_object.windings[0].rated_power
-                                        * 10 ** -3
-                                    )
+                                    / (transformer_object.rated_power * 10 ** -3)
                                 )
                                 _SecondaryToTertiaryZ0 = _SecondaryToTertiaryZ1
 

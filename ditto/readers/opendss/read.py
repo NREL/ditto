@@ -1448,6 +1448,14 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            # rated power
+            api_transformer.rated_power = float(data["kVA"]) * 10 ** 3  # DiTTo in var
+
+            # emergency power
+            api_transformer.emergency_power = (
+                float(data["emerghkVA"]) * 10 ** 3
+            )  # DiTTo in var
+
             # from_element and to_element
             try:
                 bus_data = data["buses"]
@@ -1551,26 +1559,6 @@ class Reader(AbstractReader):
                     elif data["conns"][w].lower() == "delta":
                         windings[w].connection_type = "D"
                 except:
-                    pass
-
-                # rated power
-                # rated_power removed from powerTransformer and added to Winding by Nicolas
-                try:
-                    windings[w].rated_power = (
-                        float(data["kVAs"][w]) * 10 ** 3
-                    )  # DiTTo in volt ampere
-                except:
-                    windings[w].rated_power = None
-                    pass
-
-                # emergency_power
-                # emergency_power removed from powerTransformer and added to Winding by Tarek
-                try:
-                    windings[w].emergency_power = (
-                        float(data["emerghkVA"]) * 10 ** 3
-                    )  # DiTTo in volt ampere
-                except:
-                    windings[w].emergency_power = None
                     pass
 
                 # nominal_voltage
@@ -1691,6 +1679,18 @@ class Reader(AbstractReader):
                 # Total number of windings
                 N_windings = int(trans["windings"])
 
+                # rated power
+                if "kVA" in trans:
+                    api_regulator.rated_power = (
+                        float(trans["kVA"]) * 10 ** 3
+                    )  # DiTTo in var
+
+                # emergency power
+                if "emerghkVA" in trans:
+                    api_regulator.emergency_power = (
+                        float(trans["emerghkVA"]) * 10 ** 3
+                    )  # DiTTo in var
+
                 # Initialize the list of Windings
                 api_regulator.windings = [Winding(model) for _ in range(N_windings)]
 
@@ -1721,28 +1721,6 @@ class Reader(AbstractReader):
                             api_regulator.windings[w].resistance = float(
                                 trans["%Rs"][w]
                             )
-                        except:
-                            pass
-
-                # rated_power
-                for w in range(N_windings):
-                    if "kVAs" in trans:
-                        try:
-                            api_regulator.windings[w].rated_power = (
-                                float(trans["kVAs"][w]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        except:
-                            pass
-
-                # emergency_power
-                for w in range(N_windings):
-                    if "emerghkVA" in trans:
-                        try:
-                            api_regulator.windings[w].emergency_power = (
-                                float(trans["emerghkVA"][w])
-                                * 10 ** 3
-                                / float(N_windings)
-                            )  # DiTTo in volt ampere
                         except:
                             pass
 

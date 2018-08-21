@@ -393,6 +393,8 @@ class Writer(AbstractWriter):
                     dic["install_type"] = i.install_type
                 if hasattr(i, "noload_loss") and i.noload_loss is not None:
                     dic["no_load_loss"] = i.noload_loss
+                if hasattr(i, "rated_power") and i.rated_power is not None:
+                    dic["power_rating"] = i.rated_power * 10 ** -3  # DiTTo in var
 
                 n_windings = 0
                 if (
@@ -456,12 +458,6 @@ class Writer(AbstractWriter):
                             dic["primary_voltage"] = winding2.nominal_voltage
                         else:
                             dic["secondary_voltage"] = winding2.nominal_voltage
-
-                    if (
-                        hasattr(winding1, "rated_power")
-                        and winding1.rated_power is not None
-                    ):
-                        dic["power_rating"] = winding1.rated_power / 1000.0
 
                     n_windings = len(i.windings)
                 else:
