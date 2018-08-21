@@ -23,6 +23,10 @@ class PowerSource(DiTToHasTraits):
         help="""This parameter defines the base voltage at the power source.""",
         default_value=None,
     )
+    per_unit = Float(
+        help="""This parameter defines the per unit voltage at the source.""",
+        default_value=1.0,
+    )
     phases = List(
         Instance(Unicode),
         help="""This parameter is a list of all the phases at the power source.""",

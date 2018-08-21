@@ -363,6 +363,12 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            # Set the per unit value of the source
+            try:
+                api_power_source.per_unit = float(source_data["pu"])
+            except:
+                pass
+
             # Set the source_bus flag to True
             try:
                 api_power_source.is_sourcebus = (
