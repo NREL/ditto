@@ -112,6 +112,17 @@ class Photovoltaic(DiTToHasTraits):
         help="""A list of all the timeseries elements used to represent the Solar Irradiance""",
         default_value=None,
     )
+    # Modification: Tarek (August 2018)
+    # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
+    # I think we need both since a substation might have multiple feeders attached to it.
+    # These attributes are filled once the DiTTo model has been created using the Network module
+    substation_name = Unicode(
+        help="""The name of the substation to which the object is connected.""",
+        default=None,
+    )
+    feeder_name = Unicode(
+        help="""The name of the feeder the object is on.""", default=None
+    )
 
     def build(self, model):
         self._model = model
