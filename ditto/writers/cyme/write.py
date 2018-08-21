@@ -21,6 +21,7 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.network.network import Network
@@ -256,6 +257,11 @@ class Writer(AbstractWriter):
         two_windings_transformer_string_list = []
         three_windings_transformer_string_list = []
         regulator_string_list = []
+        converter_string_list = []
+        converter_control_string_list = []
+        pv_settings_string_list = []
+        long_term_dynamics_string_list = []
+        dg_generation_string_list = []
 
         # The linecodes dictionary is used to group lines which have the same properties
         # (impedance matrix, ampacity...)
@@ -1321,6 +1327,223 @@ class Writer(AbstractWriter):
                                 matching_list[line_type].append(new_line_string)
                             except:
                                 pass
+
+                # If we get a Photovoltaic object
+
+                if isinstance(i, Photovoltaic):
+                    new_converter_string = ""
+                    new_converter_control_setting_string = ""
+                    new_pv_setting_string = ""
+                    new_long_term_dynamics = ""
+                    new_dg_generation_string = ""
+                    if (
+                        hasattr(i, "name")
+                        and i.name is not None
+                        and hasattr(i, "connecting_element")
+                        and i.connecting_element is not None
+                        and (
+                            i.connecting_element in model.model_names
+                            or "load_" + i.connecting_element in model.model_names
+                        )
+                    ):
+                        new_section_ID = "{f}_{t}".format(
+                            f=i.connecting_element, t=i.name
+                        )
+                        new_section = "{f}_{t},{f},{t},".format(
+                            f=i.connecting_element, t=i.name
+                        )
+
+                        new_node_string = "{n}".format(n=i.name)
+                        if hasattr(i, "positions") and i.positions is not None:
+                            try:
+                                new_node_string += "," + str(i.positions[0].long)
+                            except:
+                                new_node_string += ",0"
+                                pass
+
+                            try:
+                                new_node_string += "," + str(i.positions[0].lat)
+                            except:
+                                new_node_string += ",0"
+                                pass
+                        else:
+                            new_node_string += ",0,0"
+                        self.node_string_list.append(new_node_string)
+
+                        phases = ""
+                        for phase in i.phases:
+                            if phase.default_value in ["A", "B", "C"]:
+                                new_section += phase.default_value
+                                phases += phase.default_value
+                        self.section_line_list.append(new_section)
+                        if hasattr(i, "feeder_name") and i.feeder_name is not None:
+                            if i.feeder_name in self.section_line_feeder_mapping:
+                                self.section_line_feeder_mapping[i.feeder_name].append(
+                                    new_section
+                                )
+                            else:
+                                self.section_line_feeder_mapping[i.feeder_name] = [
+                                    new_section
+                                ]
+
+                        if hasattr(i, "feeder_name") and i.feeder_name is not None:
+                            if i.feeder_name in self.section_feeder_mapping:
+                                self.section_feeder_mapping[i.feeder_name].append(
+                                    new_section_ID
+                                )
+                            else:
+                                self.section_feeder_mapping[i.feeder_name] = [
+                                    new_section_ID
+                                ]
+                            if (
+                                hasattr(i, "substation_name")
+                                and i.substation_name is not None
+                            ):
+                                self.section_headnode_mapping[
+                                    i.feeder_name
+                                ] = i.substation_name
+                        new_converter_string += (
+                            new_section_ID + ",45,"
+                        )  # 45 is the CYME code for PV devices
+                        new_converter_control_setting_string += (
+                            new_section_ID + ",45,0,0,"
+                        )  # The controlindex and timetrigger indices are both zero
+                        new_pv_setting_string += (
+                            new_section_ID + ",M," + new_section_ID + ",DEFAULT,"
+                        )  # Use the default CYME PV configuration for the moment.
+                        new_dg_generation_string += new_section_ID + "45,DEFAULT,"
+                        # DGGENERATIONMODEL is not included as this just sets the LoadModelName which is DEFAULT
+
+                        if hasattr(i, "temperature") and i.temperature is not None:
+                            new_pv_setting_string += str(i.temperature)
+
+                        new_pv_setting_string += "," + phases
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_converter_string += str(i.rated_power / 1000.0) + ","
+                            new_converter_string += str(i.rated_power / 1000.0) + ","
+                        else:
+                            new_converter_string += ",,"
+                        if hasattr(i, "active_rating") and i.active_rating is not None:
+                            new_dg_generation_string += str(i.active_rating / 1000.0)
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        new_dg_generation_string += ","
+                        if (
+                            hasattr(i, "reactive_rating")
+                            and i.reactive_rating is not None
+                        ):
+                            new_converter_string += str(i.reactive_rating / 1000.0)
+                        new_converter_string += ","
+                        if (
+                            hasattr(i, "min_powerfactor")
+                            and i.min_powerfactor is not None
+                        ):
+                            new_converter_string += str(i.powerfactor)
+                            new_dg_generation_string += str(i.powerfactor)
+                        new_dg_generation_string += ","
+                        new_converter_string += ","
+                        if hasattr(i, "fall_limit") and i.fall_limit is not None:
+                            new_converter_string += str(i.fall_limit)
+                        new_converter_string += ","
+                        if hasattr(i, "rise_limit") and i.rise_limit is not None:
+                            new_converter_string += str(i.rise_limit)
+                        new_converter_string += ","
+                        if (hasattr(i, "fall_limit") and i.fall_limit is not None) or (
+                            hasattr(i, "rise_limit") and i.rise_limit is not None
+                        ):
+                            new_converter_string += "0"  # Using units of % per minute
+
+                        if hasattr(i, "control_type") and i.control_type is not None:
+                            if i.control_type.lower() == "voltvar_vars_over_watts":
+                                new_converter_control_setting_string += "1"
+                            if i.control_type.lower() == "voltvar_watts_over_vars":
+                                new_converter_control_setting_string += "0"
+                            if i.control_type.lower() == "voltvar_fixed_vars":
+                                new_converter_control_setting_string += "2"
+                            if i.control_type.lower() == "voltvar_novars":
+                                new_converter_control_setting_string += "3"
+                            if i.control_type.lower() == "voltwatt":
+                                new_converter_control_setting_string += "5"
+                            if i.control_type.lower() == "watt_powerfactor":
+                                new_converter_control_setting_string += "6"
+                            if i.control_type.lower() == "powerfactor":
+                                new_converter_control_setting_string += "10"
+
+                            new_converter_control_setting_string += ","
+                            if (
+                                i.control_type.lower() == "voltvar_fixed_vars"
+                                and i.var_injection is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    str(i.var_injection) + ",2,"
+                                )  # 2 is the code for the pecentage reactive power available
+                            else:
+                                new_converter_control_setting_string += ",,"
+                            if (
+                                i.control_type.lower() == "voltvar_watts_over_vars"
+                                or i.control_type.lower() == "voltvar_vars_over_watts"
+                            ) and i.voltvar_curve is not None:
+                                new_converter_control_setting_string += (
+                                    i.voltvar_curve + ",,"
+                                )
+                            elif (
+                                i.control_type.lower() == "voltwatt"
+                                and i.voltwatt_curve is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    i.voltwatt_curve + ",0,"
+                                )  # 0 is the code for using the active power rating
+                            elif (
+                                i.control_type.lower() == "watt_powerfactor"
+                                and i.watt_powerfactor_curve is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    i.watt_powerfactor_curve + ",0,"
+                                )  # 0 is the code for using the active power rating
+                            else:
+                                new_converter_control_setting_string += ",,"
+
+                            if (
+                                i.control_type.lower() == "powerfactor"
+                                and i.powerfactor is not None
+                            ):
+                                new_converter_control_setting_string += str(
+                                    i.powerfactor
+                                )
+                        else:
+                            new_converter_control_setting_string += (
+                                "10,,,,,100"
+                            )  # Use Powerfactor as default
+
+                        if hasattr(i, "timeseries") and i.timeseries is not None:
+                            new_long_term_dynamics += (
+                                new_section_ID + ",45,3,4"
+                            )  # 45 is for PV, 3 is for insolation curve and 4 is for insolation
+                            # TODO: connect the timeseries data correctly here.
+
+                    else:
+                        if hasattr(i, "name"):
+                            logger.warning(
+                                "PV "
+                                + i.name
+                                + " was not connected and has not been written to CYME"
+                            )
+                        else:
+                            logger.warning("PV element is unnamed")
+
+                    if new_converter_string != "":
+                        converter_string_list.append(new_converter_string)
+                    if new_converter_control_setting_string != "":
+                        converter_control_string_list.append(
+                            new_converter_control_setting_string
+                        )
+                    if new_pv_setting_string != "":
+                        pv_settings_string_list.append(new_pv_setting_string)
+                    if new_long_term_dynamics != "":
+                        long_term_dynamics_string_list.append(new_long_term_dynamics)
+                    if new_dg_generation_string != "":
+                        dg_generation_string_list.append(new_dg_generation_string)
 
                 # If we get a Capacitor object
                 #
@@ -3343,6 +3566,51 @@ class Writer(AbstractWriter):
                 )
                 for regulator_string in regulator_string_list_merged:
                     f.write(regulator_string + "\n")
+
+            if len(converter_string_list) > 0:
+                f.write("\n[CONVERTER]\n")
+                f.write(
+                    "FORMAT_CONVERTER=DeviceNumber,DeviceType,ConverterRating,ActivePowerRating,ReactivePowerRating,MinimumPowerFactor,PowerFallLimit,PowerRiseLimit,RiseFallUnit\n"
+                )
+                for i in converter_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(converter_control_string_list) > 0:
+                f.write("\n[CONVERTER CONTROL SETTING]\n")
+                f.write(
+                    "FORMAT_CONVERTERCONTROLSETTING=DeviceNumber,DeviceType,ControlIndex,TimeTriggerIndex,ControlType,FixedVarInjection,InjectionReference,ConverterControlID,PowerReference,PowerFactor\n"
+                )
+                for i in converter_control_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(pv_settings_string_list) > 0:
+                f.write("\n[PHOTOVOLTAIC SETTINGS]\n")
+                f.write(
+                    "FORMAT_PHOTOVOLTAICSETTING=SectionID,Location,DeviceNumber,EquipmentID,AmbientTemperature,Phase\n"
+                )
+                for i in pv_settings_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(long_term_dynamics_string_list) > 0:
+                f.write("\n[LONG TERM DYNAMICS CURVE EXT]\n")
+                f.write(
+                    "FORMAT_LONGTERMDYNAMICSCURVEEXT=DeviceNumber,DeviceType,AdjustmentSettings,PowerCurveModel\n"
+                )
+                for i in long_term_dynamics_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(dg_generation_string_list) > 0:
+                f.write("\n[DGGENERATIONMODEL]\n")
+                f.write(
+                    "FORMAT_DGGENERATIONMODEL=DeviceNumber,DeviceType,LoadModelName,ActiveGeneration,PowerFactor\n"
+                )
+                for i in dg_generation_string_list:
+                    f.write(i)
+                    f.write("\n")
 
     def write_equipment_file(self, model, **kwargs):
         """Write the equipment file."""
