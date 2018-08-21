@@ -209,9 +209,9 @@ class Reader(AbstractReader):
             "network_protector": ["[NETWORKPROTECTOR]"],
             "network_protector_settings": ["[NETWORKPROTECTOR SETTING]"],
             # CAPACITORS
-            "serie_capacitor_settings": ["[SERIE CAPACITOR SETTING]"],
+            "serie_capacitor_settings": ["[SERIES CAPACITOR SETTING]"],
             "shunt_capacitor_settings": ["[SHUNT CAPACITOR SETTING]"],
-            "serie_capacitor": ["[SERIE CAPACITOR]"],
+            "serie_capacitor": ["[SERIES CAPACITOR]"],
             "shunt_capacitor": ["[SHUNT CAPACITOR]"],
             # TRANSFORMERS
             "auto_transformer_settings": ["[AUTO TRANSFORMER SETTING]"],
