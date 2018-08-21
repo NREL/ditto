@@ -1546,35 +1546,8 @@ class Writer(AbstractWriter):
                     from_element = None
                     to_element = None
                     windings_local = []
-                    if (
-                        hasattr(i, "connected_transformer")
-                        and hasattr(model[i.connected_transformer], "windings")
-                        and len(model[i.connected_transformer].windings) >= 2
-                        and hasattr(
-                            model[i.connected_transformer].windings[0],
-                            "nominal_voltage",
-                        )
-                        and hasattr(
-                            model[i.connected_transformer].windings[1],
-                            "nominal_voltage",
-                        )
-                        and model[i.connected_transformer].windings[0].nominal_voltage
-                        is not None
-                        and model[i.connected_transformer].windings[1].nominal_voltage
-                        is not None
-                    ):
-
-                        winding1 = model[i.connected_transformer].windings[0]
-                        winding2 = model[i.connected_transformer].windings[1]
-                        if (
-                            hasattr(model[i.connected_transformer], "from_element")
-                            and model[i.connected_transformer].from_element is not None
-                            and hasattr(model[i.connected_transformer], "to_element")
-                            and model[i.connected_transformer].to_element is not None
-                        ):
-                            from_element = model[i.connected_transformer].from_element
-                            to_element = model[i.connected_transformer].to_element
-                    elif hasattr(i, "windings") and i.windings is not None:
+                    # import pdb;pdb.set_trace()
+                    if hasattr(i, "windings") and i.windings is not None:
                         if (
                             len(i.windings) >= 2
                             and hasattr(i.windings[0], "nominal_voltage")
@@ -1588,7 +1561,7 @@ class Writer(AbstractWriter):
                                 hasattr(i, "from_element")
                                 and i.from_element is not None
                                 and hasattr(i, "to_element")
-                                and i.to_element is not none
+                                and i.to_element is not None
                             ):
                                 from_element = i.from_element
                                 to_element = i.to_element
@@ -1834,7 +1807,7 @@ class Writer(AbstractWriter):
                                 else:
                                     NoLoadLosses = ""
 
-                            new_transformer_object_line += "{type},{kva},{voltageunit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift}".format(
+                            new_transformer_object_line += "{type},{kva},{voltageunit},{kvllprim},{kvllsec},{Z1},{Z0},{XR},{XR0},{Conn},{WindingType},{noloadloss},{phaseshift},{isltc}".format(
                                 type=TYPE,
                                 kva=KVA,
                                 voltageunit=VoltageUnit,
@@ -1848,6 +1821,7 @@ class Writer(AbstractWriter):
                                 WindingType=1,
                                 noloadloss=NoLoadLosses,
                                 phaseshift=phase_shift,
+                                isltc=0,
                             )
 
                             found = False
@@ -1933,7 +1907,7 @@ class Writer(AbstractWriter):
                             new_regulator_string += ",,"
                             pass
                     else:
-                        new_regulator_string += ","
+                        new_regulator_string += ",,"
 
                     if hasattr(i, "pt_phase") and i.pt_phase is not None:
                         try:
@@ -2011,8 +1985,9 @@ class Writer(AbstractWriter):
                             elif str(i.pt_phase) == "C":
                                 new_regulator_string += ",0,0," + str(i.bandcenter)
                         except:
-                            new_regulator_string += ","
-                            pass
+                            new_regulator_string += ",,,"
+                    else:
+                        new_regulator_string += ",,,"
 
                     new_regulator_object_line = "{kva},{band},{ct},{pt},{Type},{KVLN},{MaxBuck},{MaxBoost},{Taps},{Reversible}".format(
                         kva=_KVA,
@@ -3210,8 +3185,8 @@ class Writer(AbstractWriter):
                                 NetID=f_name.split("ation_")[1],
                                 X=X,
                                 Y=Y,
-                                Height=125.00,
-                                Length=125.00,
+                                Height=75.00,
+                                Length=75.00,
                             )
                         )
 
@@ -3878,7 +3853,6 @@ class Writer(AbstractWriter):
 
                     if new_customer_load_string != "":
                         customer_load_string_list.append(new_customer_load_string)
-
                     if new_load_string != "":
                         load_string_list.append(new_load_string)
 
