@@ -127,14 +127,15 @@ def test_underground_line_parser():
     #
     ulp.set_property("GMR", [0.0171 * ureg.feet] * 3 + [0.00208 * ureg.feet] * 3)
     assert np.all(
-        map(lambda x: x.magnitude, ulp.GMR) == np.array([0.0171] * 3 + [0.00208] * 3)
+        np.array([x.magnitude for x in ulp.GMR])
+        == np.array([0.0171] * 3 + [0.00208] * 3)
     )
 
     # phase Diameter = 0.567 inches
     # neutral diameter = 0.0641 inches
     ulp.set_property("diameters", [0.567 * ureg.inch] * 3 + [0.0641 * ureg.inch] * 3)
     assert np.all(
-        map(lambda x: x.magnitude, ulp.diameters)
+        np.array([x.magnitude for x in ulp.diameters])
         == np.array([0.567] * 3 + [0.0641] * 3)
     )
 
@@ -146,7 +147,7 @@ def test_underground_line_parser():
         + [14.8722 * ureg.parse_expression("ohm/mi")] * 3,
     )
     assert np.all(
-        map(lambda x: x.magnitude, ulp.resistance)
+        np.array([x.magnitude for x in ulp.resistance])
         == np.array([0.41] * 3 + [14.8722] * 3)
     )
 
