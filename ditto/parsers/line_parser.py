@@ -56,6 +56,24 @@ class LineParser(Parser):
             (None, None) for _ in range(self.n_cond)
         ]  # Initialized as empty
 
+        # Mutual phase impedance matrix z_ij
+        self.z_ij = np.empty((self.n_phase, self.n_phase), dtype=np.complex)
+
+        # Mutual phase neutral impedance matrix z_in
+        self.z_in = np.empty(
+            (self.n_phase, self.n_cond - self.n_phase), dtype=np.complex
+        )
+
+        # Mutual neutral phase impedance matrix z_nj
+        self.z_nj = np.empty(
+            (self.n_cond - self.n_phase, self.n_phase), dtype=np.complex
+        )
+
+        # Self neutral impedance matrix z_nn
+        self.z_nn = np.empty(
+            (self.n_cond - self.n_phase, self.n_cond - self.n_phase), dtype=np.complex
+        )
+
         # Impedance matrix of the line
         self.impedance_matrix = np.empty(
             (self.n_cond, self.n_cond)
@@ -107,3 +125,30 @@ class LineParser(Parser):
         ) * ureg.parse_expression("ohm/mi")
 
         return z_ii.to(ureg.parse_expression(unit))
+
+    def compute_impedance_matrix(self, unit, use_n_cond=False):
+        """
+        Compute the impedance matrix.
+        Has to be implemented in the subclasses.
+        """
+        # If use_n_cond is set to True, we use the number of conductors instead
+        # of the number of phases when computing z_ij.
+        # This little trick enables to compute the primitive sequence impedance
+        # of overhead lines in a single call to this function.
+        if use_n_cond:
+            N = self.n_cond
+            self.z_ij = np.empty((self.n_cond, self.n_cond), dtype=np.complex)
+        else:
+            N = self.n_phase
+
+        # Mutual phase impedance matrix z_ij
+        for i in range(N):
+            for j in range(N):
+                if i == j:
+                    self.z_ij[i][j] = self.self_impedance(
+                        self.resistance[i], self.GMR[i], unit
+                    ).magnitude
+                else:
+                    self.z_ij[i][j] = self.mutual_impedance(
+                        self.distance(self.positions[i], self.positions[j], "ft"), unit
+                    ).magnitude

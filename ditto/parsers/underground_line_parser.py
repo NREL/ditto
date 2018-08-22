@@ -43,24 +43,6 @@ class UndergroundLineParser(LineParser):
         # The equivalent resistance of the concentric neutral
         self.equivalent_resistance = [None for _ in range(self.n_phase)]
 
-        # Mutual phase impedance matrix z_ij
-        self.z_ij = np.empty((self.n_phase, self.n_phase), dtype=np.complex)
-
-        # Mutual phase neutral impedance matrix z_in
-        self.z_in = np.empty(
-            (self.n_phase, self.n_cond - self.n_phase), dtype=np.complex
-        )
-
-        # Mutual neutral phase impedance matrix z_nj
-        self.z_nj = np.empty(
-            (self.n_cond - self.n_phase, self.n_phase), dtype=np.complex
-        )
-
-        # Self neutral impedance matrix z_nn
-        self.z_nn = np.empty(
-            (self.n_cond - self.n_phase, self.n_cond - self.n_phase), dtype=np.complex
-        )
-
     def compute_impedance_matrix(self, unit):
         """
         Compute the impedance matrix.
@@ -92,16 +74,8 @@ class UndergroundLineParser(LineParser):
             )  # In Ohms per mile
 
         # Mutual phase impedance matrix z_ij
-        for i in range(self.n_phase):
-            for j in range(self.n_phase):
-                if i == j:
-                    self.z_ij[i][j] = self.self_impedance(
-                        self.resistance[i], self.GMR[i], unit
-                    ).magnitude
-                else:
-                    self.z_ij[i][j] = self.mutual_impedance(
-                        self.distance(self.positions[i], self.positions[j], "ft"), unit
-                    ).magnitude
+        # Call super
+        LineParser.compute_impedance_matrix(self, unit)
 
         # Mutual phase neutral impedance matrix z_in
         for i in range(self.n_phase):
