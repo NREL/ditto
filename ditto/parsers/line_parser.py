@@ -42,6 +42,18 @@ class LineParser(Parser):
         # Initialize the line parameters to None.
         # Use the set functions to provide these parameters
         #
+        # Length of the line
+        self.length = None
+
+        # Nominal voltage
+        self.nominal_voltage = None
+
+        # Ampacity of the conductors.
+        self.ampacity = [None for _ in range(self.n_cond)]
+
+        # Emergency ampacity of the conductors
+        self.emergency_ampacity = [None for _ in range(self.n_cond)]
+
         # Resistance of the conductors.
         self.resistance = [None for _ in range(self.n_cond)]  # Initialized as empty
 

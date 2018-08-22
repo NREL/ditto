@@ -52,6 +52,34 @@ def test_line_parser():
     assert lp.n_cond == 4
     assert lp.inference
 
+    # Provide the length of the line
+    # For example 2.5 miles
+    lp.set_property("length", 2.5 * ureg.mile)
+    assert lp.length == 2.5 * ureg.miles
+    assert lp.length.to(ureg.km).magnitude == 4.023359999999999
+
+    # Provide the nominal voltage
+    # For example 12.47kv
+    lp.set_property("nominal_voltage", 12.47 * ureg.parse_expression("kV"))
+    assert lp.nominal_voltage.magnitude == 12.47
+    assert lp.nominal_voltage.to(ureg.volt).magnitude == 12470.0
+
+    # Provide the ampacity of the conductors
+    # For example 600 Amps for the phase conductors
+    # And 400 Amps for the neutral conductor
+    lp.set_property("ampacity", [600.0 * ureg.amp] * 3 + [400.0 * ureg.amp])
+    for i in range(3):
+        assert lp.ampacity[i] == 600.0 * ureg.amp
+    assert lp.ampacity[3] == 400.0 * ureg.amp
+
+    # Provide the emergency ampacity of the conductors
+    # For example 1200 Amps for the phase conductors
+    # And 800 Amps for the neutral conductor
+    lp.set_property("emergency_ampacity", [1200.0 * ureg.amp] * 3 + [800.0 * ureg.amp])
+    for i in range(3):
+        assert lp.emergency_ampacity[i] == 1200.0 * ureg.amp
+    assert lp.emergency_ampacity[3] == 800.0 * ureg.amp
+
     # Provide GMR values (one per conductor)
     gmr_phase = 0.0171 * ureg.feet
     gmr_neutral = 0.00208 * ureg.feet

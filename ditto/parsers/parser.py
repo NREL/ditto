@@ -35,7 +35,9 @@ class Parser:
                     name=self.name, att=property_name
                 )
             )
-        if type(getattr(self, property_name)) != type(property_value):
+        if getattr(self, property_name) is not None and type(
+            getattr(self, property_name)
+        ) != type(property_value):
             raise ValueError(
                 "Property {p} of {name} should be a {t1}. A {t2} was received.".format(
                     p=property_name,
