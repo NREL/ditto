@@ -1439,8 +1439,8 @@ class Writer(AbstractWriter):
                             hasattr(i, "min_powerfactor")
                             and i.min_powerfactor is not None
                         ):
-                            new_converter_string += str(i.powerfactor)
-                            new_dg_generation_string += str(i.powerfactor)
+                            new_converter_string += str(i.powerfactor * 100)
+                            new_dg_generation_string += str(i.powerfactor * 100)
                         new_dg_generation_string += ","
                         new_converter_string += ","
                         if hasattr(i, "fall_limit") and i.fall_limit is not None:

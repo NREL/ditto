@@ -1101,10 +1101,10 @@ class Writer(AbstractWriter):
                         )  # DiTTo in volts
                         self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
 
-                if hasattr(i, "rated_power") and i.rated_power is not None:
+                if hasattr(i, "active_rating") and i.active_rating is not None:
                     txt += " kW={kW}".format(
-                        kW=i.rated_power * 10 ** -3
-                    )  # DiTTo in vars
+                        kW=i.active_rating * 10 ** -3
+                    )  # DiTTo in watts
 
                 # connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:

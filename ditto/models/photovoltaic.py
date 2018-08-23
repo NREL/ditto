@@ -84,7 +84,7 @@ class Photovoltaic(DiTToHasTraits):
 
     power_factor = Float(
         help="""The powerfactor used when using powerfactor control setting""",
-        default_value=100,
+        default_value=1,
     )
     voltvar_curve = Unicode(
         help="""The voltvar curve being used. Use CYME's default volt-var curve""",
