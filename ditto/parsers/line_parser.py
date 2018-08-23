@@ -61,6 +61,9 @@ class LineParser(Parser):
         # Diameters of the conductors
         self.diameters = [None for _ in range(self.n_cond)]  # Initialized as empty
 
+        # Outside diameters
+        self.outside_diameters = [None for _ in range(self.n_cond)]
+
         # Positions of the conductors
         self.positions = [
             (None, None) for _ in range(self.n_cond)

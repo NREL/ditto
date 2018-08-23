@@ -112,17 +112,20 @@ def test_underground_line_parser():
     """
     from ditto.parsers.underground_line_parser import UndergroundLineParser
 
-    ulp = UndergroundLineParser("test_udg_line_parser", 3, 13)
+    ulp = UndergroundLineParser("test_udg_line_parser", 3)
     assert ulp.name == "test_udg_line_parser"
     assert ulp.n_phase == 3
     assert ulp.n_cond == 6  # Set to twice the number of phases by the constructor
-    assert ulp.n_strand == 13.0
 
     # Test impedance matrix computation
     # Based on the example from Kersting's book, page 99
     # 3 concentric neutral cables of 1.29 inches with 13 neutral strands
     # lying 6 inches from each other
     #
+    # Set the number of neutral strands
+    ulp.set_property("n_strand", 13)
+    assert ulp.n_strand == 13.0
+
     # Set the outside diameters for the cables.
     # Here, they are all the same. All cables have a diameter of 1.29 inches
     ulp.set_property("outside_diameters", [1.29 * ureg.inch] * 3)

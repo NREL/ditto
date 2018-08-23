@@ -14,21 +14,22 @@ class UndergroundLineParser(LineParser):
     author: Nicolas Gensollen.
     """
 
-    def __init__(self, name, n_phase, n_strand):
+    def __init__(self, name, n_phase):
         """
         UndergroundLineParser class constructor.
         **Inputs:**
             - name: Name of the underground line.
             - n_phase: Number of phases for this line.
-            - n_strand: Number of concentric neutral strands.
         """
         n_cond = 2 * n_phase  # This is for LineParser compatibility
         LineParser.__init__(self, name, n_phase, n_cond)
-        self.n_strand = float(n_strand)
 
         # Parameters are instanciated as Nones.
         # Use set methods to provide these
         #
+        # Number of concentric neutral strands.
+        self.n_strand = None
+
         # Outside diameters of the cables
         self.outside_diameters = [None for _ in range(self.n_phase)]
 
