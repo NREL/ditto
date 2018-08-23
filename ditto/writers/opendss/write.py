@@ -2838,7 +2838,9 @@ class Writer(AbstractWriter):
                         and obj.connecting_element is not None
                     ):
                         fp.write(
-                            "bus1={name} pu=1.0".format(name=obj.connecting_element)
+                            "bus1={name} pu={pu}".format(
+                                name=obj.connecting_element, pu=obj.per_unit
+                            )
                         )
                     else:
                         logger.warning(
@@ -2846,7 +2848,11 @@ class Writer(AbstractWriter):
                                 cleaned_name
                             )
                         )
-                        fp.write("bus1={name} pu=1.0".format(name=cleaned_name))
+                        fp.write(
+                            "bus1={name} pu={pu}".format(
+                                name=cleaned_name, pu=obj.per_unit
+                            )
+                        )
 
                     if (
                         hasattr(obj, "nominal_voltage")
