@@ -25,6 +25,7 @@ from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.photovoltaic import Photovoltaic
 
 from ditto.models.base import Unicode
 
@@ -133,6 +134,18 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |                     'loads'               |                     '[LOADS]'              |
     +-------------------------------------------+--------------------------------------------+
+    |                              DISTRIBUTED GENERATION PARSER                             |
+    +-------------------------------------------+--------------------------------------------+
+    |                   'converter'             |                  '[CONVERTER]'             |
+    +-------------------------------------------+--------------------------------------------+
+    |        'converter_control_settings'       |           '[CONVERTER CONTROL SETTING]'    |
+    +-------------------------------------------+--------------------------------------------+
+    |           'photovoltaic_settings' '       |              [PHOTOVOLTAIC SETTINGS]'      |
+    +-------------------------------------------+--------------------------------------------+
+    |        'long_term_dynamics_curve_ext'     |          '[LONG TERM DYNAMICS CURVE EXT]'  |
+    +-------------------------------------------+--------------------------------------------+
+    |               'dggenerationmodel'         |                '[DGGENERATIONMODEL]'       |
+    +-------------------------------------------+--------------------------------------------+
     """
 
     register_names = ["cyme", "Cyme", "CYME"]
@@ -233,6 +246,17 @@ class Reader(AbstractReader):
             "source": "[SOURCE]",
             "headnodes": "[HEADNODES]",
             "source_equivalent": "[SOURCE EQUIVALENT]",
+            # DISTRIBUTED GENERATION
+            #            "converter": ["[CONVERTER]"],
+            #            "converter_control_settings": ["[CONVERTER CONTROL SETTING]"],
+            #            "photovoltaic_settings": ["[PHOTOVOLTAIC SETTINGS]", "[ELECTRONIC CONVERTER GENERATOR SETTING]"],
+            #            "long_term_dynamics_curve_ext": ["[LONG TERM DYNAMICS CURVE EXT]"],
+            #            "dggenerationmodel": ["[DGGENERATIONMODEL]"],
+            "converter": "[CONVERTER]",
+            "converter_control_settings": "[CONVERTER CONTROL SETTING]",
+            "photovoltaic_settings": "[ELECTRONIC CONVERTER GENERATOR SETTING]",
+            "long_term_dynamics_curve_ext": "[LONG TERM DYNAMICS CURVE EXT]",
+            "dggenerationmodel": "[DGGENERATIONMODEL]",
             # SUBSTATIONS
             "substation": "[SUBSTATION]",
             "subnetwork_connections": "[SUBNETWORK CONNECTIONS]",
@@ -819,6 +843,7 @@ class Reader(AbstractReader):
         else:
             logger.info("Parsing the Headnodes...")
             self.parse_head_nodes(model)
+        model.set_names()
 
     def parse_header(self):
         """
@@ -5304,3 +5329,307 @@ class Reader(AbstractReader):
                     self._loads[sectionID] = api_load
 
         return 1
+
+    def parse_dg(self, model):
+        """ Parse the Distributed Generation from CYME to DiTTo. May be respresented as ECGs or PVs.
+            This reads the objets [CONVERTER], [CONVERTER CONTROL SETTING], [LONG TERM DYNAMICS CURVE EXT] [DGGENERATIONMODEL] and in the case when PV is included [PHOTOVOLTAIC SETTINGS]"""
+        self._dgs = []
+        self.converter = {}
+        self.converter_settings = {}
+        self.long_term_dynamics = {}
+        self.photovoltaic_settings = {}
+        self.dg_generation = {}
+
+        mapp_converter = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "converterrating": 2,
+            "activepowerrating": 3,
+            "reactivepowerrating": 4,
+            "minimumpowerfactor": 5,
+            "powerfalllimit": 23,
+            "powerriselimit": 24,
+            "risefallunit": 25,
+        }
+
+        mapp_converter_settings = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "controlindex": 2,
+            "timetriggerindex": 3,
+            "controltype": 4,
+            "fixedvarinjection": 5,
+            "injectionreference": 6,
+            "convertercontrolid": 7,
+            "powerreference": 8,
+            "powerfactor": 9,
+        }
+
+        mapp_photovoltaic_settings = {
+            "sectionid": 0,
+            "location": 1,
+            "devicenumber": 2,
+            "equipmentid": 6,
+            "ambienttemparature": 11,
+        }
+
+        mapp_long_term_dynamics = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "adjustmentsettings": 2,
+            "powercurvemodel": 3,
+        }
+
+        mapp_dg_generation_model = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "loadmodelname": 2,
+            "activegeneration": 3,
+            "powerfactor": 4,
+        }
+
+        #####################################################
+        #                                                   #
+        #                   NETWORK FILE                    #
+        #                                                   #
+        #####################################################
+        #
+        # Open the network file
+        self.get_file_content("network")
+
+        # Loop over the network file
+        for line in self.content:
+
+            #########################################
+            #                                       #
+            #              CONVERTER                #
+            #                                       #
+            #########################################
+
+            self.converter.update(
+                self.parser_helper(
+                    line,
+                    ["converter"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "converterrating",
+                        "activepowerrating",
+                        "reactivepowerrating",
+                        "minimumpowerfactor",
+                        "powerfalllimit",
+                        "powerriselimit",
+                        "risefallunit",
+                    ],
+                    mapp_converter,
+                    {"type": "converter"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #    CONVERTER CONTROL SETTINGS         #
+            #                                       #
+            #########################################
+
+            self.converter_settings.update(
+                self.parser_helper(
+                    line,
+                    ["converter_control_settings"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "controltype",
+                        "fixedvarinjection",
+                        "injectionreference",
+                        "convertercontrolid",
+                        "powerreference",
+                        "powerfactor",
+                    ],
+                    mapp_converter_settings,
+                    {"type": "converter_settings"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #      PHOTOVOLTAIC SETTINGS            #
+            #                                       #
+            #########################################
+
+            self.photovoltaic_settings.update(
+                self.parser_helper(
+                    line,
+                    ["photovoltaic_settings"],
+                    ["sectionid", "devicenumber", "ambienttemparature"],
+                    mapp_photovoltaic_settings,
+                    {"type": "photovoltaic_settings"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #    LONG TERM DYNAMICS CURVE EXT       #
+            #                                       #
+            #########################################
+
+            self.long_term_dynamics.update(
+                self.parser_helper(
+                    line,
+                    ["long_term_dynamics_curve_ext"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "adjustmentsettings",
+                        "powercurvemodel",
+                    ],
+                    mapp_long_term_dynamics,
+                    {"type": "long_term_dynamics"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #         DGGENERATIONMODEL             #
+            #                                       #
+            #########################################
+
+            self.dg_generation.update(
+                self.parser_helper(
+                    line,
+                    ["dggenerationmodel"],
+                    ["devicenumber", "devicetype", "activegeneration", "powerfactor"],
+                    mapp_dg_generation_model,
+                    {"type": "dg_generation_model"},
+                )
+            )
+        api_photovoltaics = {}
+        for sectionID, settings in self.photovoltaic_settings.items():
+            try:
+                api_photovoltaic = Photovoltaic(model)
+            except:
+                raise ValueError(
+                    "Unable to instanciate photovoltaic {id}".format(id=sectionID)
+                )
+            try:
+                api_photovoltaic.name = "PV_" + settings["devicenumber"].lower()
+                api_photovoltaic.feeder_name = self.section_feeder_mapping[
+                    sectionID.lower()
+                ]
+                api_photovoltaics[settings["devicenumber"].lower()] = api_photovoltaic
+            except:
+                raise ValueError(
+                    "Unable to set photovoltaic name for {id}".format(id=sectionID)
+                )
+
+            try:
+                api_photovoltaic.temperature = float(
+                    settings["ambienttemperature"]
+                )  # Not included in ECG SETTINGS
+            except:
+                pass
+
+            try:
+                api_photovoltaic.connecting_element = self.section_phase_mapping[
+                    sectionID.lower()
+                ]["fromnodeid"]
+            except:
+                pass
+
+        for deviceID, settings in self.dg_generation.items():
+            deviceID = deviceID.strip(
+                "*"
+            ).lower()  # TODO: Deal with multiple configurations for the same location
+            api_photovoltaic = api_photovoltaics[deviceID]
+            try:
+                api_photovoltaic.active_rating = (
+                    float(settings["activegeneration"]) * 1000
+                )
+            except:
+                pass
+            try:
+                api_photovoltaic.power_factor = float(settings["powerfactor"]) / 100.0
+            except:
+                pass
+
+        for deviceID, settings in self.converter.items():
+
+            deviceID = deviceID.strip(
+                "*"
+            ).lower()  # TODO: Deal with multiple configurations for the same location
+            api_photovoltaic = api_photovoltaics[deviceID]
+            try:
+                api_photovoltaic.rated_power = (
+                    float(settings["activepowerrating"]) * 1000
+                )
+            except:
+                pass
+            try:
+                api_photovoltaic.reactive_rating = (
+                    float(settings["reactivepowerrating"]) * 1000
+                )
+            except:
+                pass
+            try:
+                api_photovoltaic.min_powerfactor = (
+                    float(settings["minimumpowerfactor"]) / 100.0
+                )
+            except:
+                pass
+            try:
+                api_photovoltaic.fall_limit = float(settings["powerfalllimit"])
+            except:
+                pass
+            try:
+                api_photovoltaic.rise_limit = float(settings["powerriselimit"])
+            except:
+                pass
+            # TODO: check the units being used
+
+        for deviceID, settings in self.converter_settings.items():
+            deviceID = deviceID.strip(
+                "*"
+            ).lower()  # TODO: Deal with multiple configurations for the same location
+            api_photovoltaic = api_photovoltaics[deviceID]
+            try:
+                control_type = str(settings["controltype"])
+                if control_type == "1":
+                    api_photovoltaic.control_type = "voltvar_vars_over_watts"
+                if control_type == "0":
+                    api_photovoltaic.control_type = "voltvar_watts_over_vars"
+                if control_type == "2":
+                    api_photovoltaic.control_type = "voltvar_fixedvars"
+                if control_type == "3":
+                    api_photovoltaic.control_type = "voltvar_novars"
+                if control_type == "5":
+                    api_photovoltaic.control_type = "voltwatt"
+                if control_type == "6":
+                    api_photovoltaic.control_type = "watt_powerfactor"
+                if control_type == "10":
+                    api_photovoltaic.control_type = "powerfactor"
+            except:
+                pass
+
+            try:
+                api_photovoltaic.var_injection = float(settings["fixedvarinjection"])
+            except:
+                pass
+            try:
+                curve = float(settings["convertercontrolid"])
+                if (
+                    api_photovoltaic.control_type == "voltvar_watts_over_vars"
+                    or api_photovoltaic.control_type == "voltvar_vars_over_watts"
+                ):
+                    api_photovoltaic.voltvar_curve = curve
+                if api_photovoltaic.control_type == "voltwatt":
+                    api_photovoltaic.voltwatt_curve = curve
+                if api_photovoltaic.control_type == "watt_powerfactor":
+                    api_photovoltaic.watt_powerfactor_curve = curve
+            except:
+                pass
+
+            try:
+                pf = float(settings["powerfactor"]) / 100.0
+                api_photovoltaic.power_factor = pf
+            except:
+                pass
