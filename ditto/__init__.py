@@ -6,3 +6,7 @@ __email__ = "tarek.elgindy@nrel.gov"
 __version__ = "0.1.0"
 
 from .store import Store
+
+from pint import UnitRegistry
+
+ureg = UnitRegistry()

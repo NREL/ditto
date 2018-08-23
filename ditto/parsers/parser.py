@@ -1,8 +1,6 @@
 # coding: utf8
 
-from pint import UnitRegistry
-
-ureg = UnitRegistry()
+from .. import ureg
 
 
 class Parser:

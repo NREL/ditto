@@ -6,15 +6,13 @@ test_parsers
 Tests for parsers.
 """
 import os
-from pint import UnitRegistry
+from ditto import ureg
 import numpy as np
 from numpy.testing import (
     assert_allclose,
     assert_almost_equal,
     assert_array_almost_equal,
 )
-
-ureg = UnitRegistry()
 
 
 def test_parser():

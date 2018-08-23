@@ -3,9 +3,7 @@
 from .parser import Parser
 import numpy as np
 import math
-from pint import UnitRegistry
-
-ureg = UnitRegistry()
+from .. import ureg
 
 
 class LineParser(Parser):
