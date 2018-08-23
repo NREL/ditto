@@ -13,6 +13,8 @@ import logging
 import time
 import operator
 
+from ... import ureg
+
 # Ditto imports #
 
 from ditto.readers.abstract_reader import AbstractReader
@@ -32,6 +34,9 @@ from ditto.models.power_source import PowerSource
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.position import Position
 from ditto.models.base import Unicode
+
+from ditto.parsers.overhead_line_parser import OverheadLineParser
+from ditto.parsers.underground_line_parser import UndergroundLineParser
 
 logger = logging.getLogger(__name__)
 
@@ -336,8 +341,9 @@ class Reader(AbstractReader):
             }
 
         ## Wires ###########
-        CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
-        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableGMR_MUL = self.get_data("DevConductors", "CableGMR_MUL")
+        CableDiamOutside_SUL = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        Diameter_SUL = self.get_data("DevConductors", "Diameter_SUL")
         CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
         ConductorName = self.get_data("DevConductors", "ConductorName")
         PosSequenceResistance_PerLUL = self.get_data(
@@ -358,12 +364,16 @@ class Reader(AbstractReader):
         InterruptCurrentRating = self.get_data(
             "DevConductors", "InterruptCurrentRating"
         )
+        CableConNeutStrandCount = self.get_data(
+            "DevConductors", "CableConNeutStrandCount"
+        )
 
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
-                "CableGMR": CableGMR[idx],
-                "CableDiamOutside": CableDiamOutside[idx],
+                "CableGMR_MUL": CableGMR_MUL[idx],
+                "CableDiamOutside_SUL": CableDiamOutside_SUL[idx],
+                "Diameter_SUL": Diameter_SUL[idx],
                 "CableResistance": CableResistance[idx],
                 "PosSequenceResistance_PerLUL": PosSequenceResistance_PerLUL[idx],
                 "PosSequenceReactance_PerLUL": PosSequenceReactance_PerLUL[idx],
@@ -371,6 +381,7 @@ class Reader(AbstractReader):
                 "ZeroSequenceReactance_PerLUL": ZeroSequenceReactance_PerLUL[idx],
                 "ContinuousCurrentRating": ContinuousCurrentRating[idx],
                 "InterruptCurrentRating": InterruptCurrentRating[idx],
+                "CableConNeutStrandCount": CableConNeutStrandCount[idx],
             }
 
         ## Loads #############
@@ -607,6 +618,32 @@ class Reader(AbstractReader):
             #
             api_line.name = obj.lower().replace(" ", "_")
 
+            ### Line Phases##################
+            #
+            # Phases are given as a string "A B C N"
+            # Convert this string to a list of characters
+            #
+            SectionPhases_thisline1 = list(SectionPhases[i])
+
+            # Remove the spaces from the list
+            SectionPhases_thisline = [s for s in SectionPhases_thisline1 if s != " "]
+
+            # Get the number of phases as the length of this list
+            # Warning: Neutral will be included in this number
+            #
+            n_cond = len(SectionPhases_thisline)
+
+            if "N" in SectionPhases_thisline:
+                n_phase = n_cond - 1
+
+            # Determine whether this line is overhead or underground
+            if AveHeightAboveGround_MUL[i] >= 0:
+                api_line.line_type = "overhead"
+                lp = OverheadLineParser(api_line.name, n_phase, n_cond)
+            else:
+                api_line.line_type = "underground"
+                lp = UndergroundLineParser(api_line.name, n_phase)
+
             # Set the feeder_name if it exists in the mapping
             if obj in self.section_feeder_mapping:
                 api_line.feeder_name = self.section_feeder_mapping[obj]
@@ -623,9 +660,29 @@ class Reader(AbstractReader):
                     config = {}
 
             # Assumes MUL is medium unit length and this is feets
-            # Converts to meters then
+            lp.set_property("length", LineLength[i] * ureg.feet)
+
+            # Provide the length in meters to DiTTo
             #
-            api_line.length = LineLength[i] * 0.3048
+            api_line.length = lp.length.to(ureg.meter).magnitude
+
+            # Set the positions of the conductors in the Parser
+            # Phase conductors
+            for n in range(n_phase):
+                lp.positions[n] = (
+                    config["Position{}_X_MUL".format(n + 1)] * ureg.feet,
+                    (
+                        config["Position{}_Y_MUL".format(n + 1)]
+                        + AveHeightAboveGround_MUL[i]
+                    )
+                    * ureg.feet,
+                )
+            # Neutral conductor
+            for n in range(n_phase, n_cond):
+                lp.positions[n] = (
+                    config["Neutral_X_MUL"] * ureg.feet,
+                    (config["Neutral_Y_MUL"] + AveHeightAboveGround_MUL[i]) * ureg.feet,
+                )
 
             # From element
             # Replace spaces with "_"
@@ -722,21 +779,6 @@ class Reader(AbstractReader):
 
                             eqt_rating = ContinuousCurrentRating[eqt_id]
                             eqt_interrupting_rating = InterruptCurrentRating[eqt_id]
-
-            ### Line Phases##################
-            #
-            # Phases are given as a string "A B C N"
-            # Convert this string to a list of characters
-            #
-            SectionPhases_thisline1 = list(SectionPhases[i])
-
-            # Remove the spaces from the list
-            SectionPhases_thisline = [s for s in SectionPhases_thisline1 if s != " "]
-
-            # Get the number of phases as the length of this list
-            # Warning: Neutral will be included in this number
-            #
-            NPhase = len(SectionPhases_thisline)
 
             ############################################################
             # BEGINING OF WIRES SECTION
@@ -1019,27 +1061,43 @@ class Reader(AbstractReader):
                 # Set the characteristics of the wire:
                 # - GMR
                 # - Diameter
+                # - Outside diameter
                 # - Ampacity
                 # - Emergency Ampacity
                 # - Resistance
+                # - Number of concentric neutral strands
                 #
                 if (
                     conductor_name_raw is not None
                     and conductor_name_raw in conductor_mapping
                 ):
+                    # Set the number of concentric neutral strands
+                    lp.n_strand = float(
+                        conductor_mapping[conductor_name_raw]["CableConNeutStrandCount"]
+                    )
+
                     # Set the GMR of the conductor
                     # DiTTo is in meters and GMR is assumed to be given in feets
                     #
-                    api_wire.gmr = (
-                        conductor_mapping[conductor_name_raw]["CableGMR"] * 0.3048
+                    lp.GMR[idx] = (
+                        conductor_mapping[conductor_name_raw]["CableGMR_MUL"]
+                        * ureg.feet
                     )
+                    api_wire.gmr = lp.GMR[idx].to(ureg.meter).magnitude
 
                     # Set the Diameter of the conductor
                     # Diameter is assumed to be given in inches and is converted to meters here
                     #
-                    api_wire.diameter = (
-                        conductor_mapping[conductor_name_raw]["CableDiamOutside"]
-                        * 0.0254
+                    lp.diameters[idx] = (
+                        conductor_mapping[conductor_name_raw]["Diameter_SUL"]
+                        * ureg.inch
+                    )
+                    api_wire.diameter = lp.diameters[idx].to(ureg.meter).magnitude
+
+                    # Grab the outside diameter of the cable
+                    lp.outside_diameters[idx] = (
+                        conductor_mapping[conductor_name_raw]["CableDiamOutside_SUL"]
+                        * ureg.inch
                     )
 
                     # Set the Ampacity of the conductor
@@ -1061,12 +1119,15 @@ class Reader(AbstractReader):
                     # Set the resistance of the conductor
                     # TODO: Change this once resistance is the per unit length resistance
                     #
+                    lp.resistance[idx] = conductor_mapping[conductor_name_raw][
+                        "CableResistance"
+                    ] * ureg.parse_expression("ohm/mi")
                     if api_line.length is not None:
                         api_wire.resistance = (
-                            conductor_mapping[conductor_name_raw]["CableResistance"]
-                            * api_line.length
-                            * 1.0
-                            / 1609.34
+                            lp.length.to(ureg.meter).magnitude
+                            * lp.resistance[idx]
+                            .to(ureg.parse_expression("ohm/m"))
+                            .magnitude
                         )
 
                 # Add the new Wire to the line's list of wires
@@ -1084,107 +1145,9 @@ class Reader(AbstractReader):
             # writing out to another format, geometries will be used instead of linecodes if possible.
             # We still compute the impedance matrix in case this possibility does not exist in the output format
 
-            # Use the Phase Conductor charateristics to build the matrix
-            #
-            Count = None
-            impedance_matrix = None
+            lp.compute_impedance_matrix("ohm/m")
 
-            if ConductorName is not None:
-                for k, cond_obj in enumerate(ConductorName):
-                    if PhaseConductorID[i] == cond_obj:
-                        Count = k
-                        break
-
-            # Get sequence impedances
-            #
-            if Count is not None:
-                r1 = PosSequenceResistance_PerLUL[Count]
-                x1 = PosSequenceReactance_PerLUL[Count]
-                r0 = ZeroSequenceResistance_PerLUL[Count]
-                x0 = ZeroSequenceReactance_PerLUL[Count]
-
-                # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
-                #         __________________________
-                #        | Z0+2*Z+  Z0-Z+   Z0-Z+   |
-                # Z= 1/3 | Z0-Z+    Z0+2*Z+ Z0-Z+   |
-                #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
-                #         --------------------------
-
-                # TODO: Check that the following is correct...
-                # If LengthUnits is set to English2 or not defined , then assume miles
-                if LengthUnits == "English2" or LengthUnits is None:
-                    coeff = 0.000621371
-                # Else, if LengthUnits is set to English1, assume kft
-                elif LengthUnits == "English1":
-                    coeff = 3.28084 * 10 ** -3
-                # Else, if LengthUnits is set to Metric, assume km
-                elif LengthUnits == "Metric":
-                    coeff = 10 ** -3
-                else:
-                    raise ValueError(
-                        "LengthUnits <{}> is not valid.".format(LengthUnits)
-                    )
-
-                # Multiply by 1/3
-                coeff *= 1.0 / 3.0
-
-                # One phase case (One phase + neutral)
-                #
-                if NPhase == 2:
-                    impedance_matrix = [
-                        [coeff * complex(float(r0) + float(r1), float(x0) + float(x1))]
-                    ]
-
-                # Two phase case (Two phases + neutral)
-                #
-                if NPhase == 3:
-
-                    b1 = float(r0) - float(r1)
-                    b2 = float(x0) - float(x1)
-
-                    if b1 < 0:
-                        b1 = -b1
-                    if b1 == 0:
-                        b1 = float(r1)
-                    if b2 < 0:
-                        b2 = -b2
-                    if b2 == 0:
-                        b2 = float(x1)
-
-                    b = coeff * complex(b1, b2)
-
-                    a = coeff * complex(
-                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                    )
-
-                    impedance_matrix = [[a, b], [b, a]]
-
-                # Three phases case (Three phases + neutral)
-                #
-                if NPhase == 4:
-                    a = coeff * complex(
-                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                    )
-                    b1 = float(r0) - float(r1)
-                    b2 = float(x0) - float(x1)
-
-                    if b1 < 0:
-                        b1 = -b1
-                    if b1 == 0:
-                        b1 = float(r1)
-                    if b2 < 0:
-                        b2 = -b2
-                    if b2 == 0:
-                        b2 = float(x1)
-
-                    b = coeff * complex(b1, b2)
-
-                    impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
-
-            if impedance_matrix is not None:
-                api_line.impedance_matrix = impedance_matrix
-            else:
-                print("No impedance matrix for line {}".format(api_line.name))
+            api_line.impedance_matrix = lp.impedance_matrix
 
         ####################################################################################
         #                                                                                  #
