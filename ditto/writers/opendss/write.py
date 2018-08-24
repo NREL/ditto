@@ -91,6 +91,7 @@ class Writer(AbstractWriter):
         self.all_wires = {}
         self.all_geometries = {}
         self.compensator = {}
+        self.all_cables = {}
 
         self.files_to_redirect = []
 
@@ -114,6 +115,7 @@ class Writer(AbstractWriter):
             "storage": "Storage.dss",
             "PVSystems": "PVSystems.dss",
             "master": "Master.dss",
+            "CNDATA": "CNData.dss",
         }
 
         # Call super
@@ -2348,38 +2350,76 @@ class Writer(AbstractWriter):
         for i in list_of_lines:
             # If we get a line object
             if isinstance(i, Line):
-                # Loop over the wires of this line
-                for wire in i.wires:
-                    # Parse the wire to get a dictionary with all the available attributes
-                    parsed_wire = self.parse_wire(wire)
-                    if len(parsed_wire) > 0:
-                        # If we have a nameclass, then use it to ID the wire
-                        if wire.nameclass is not None:
-                            # If the nameclass is not in self.all_wires, then just add it
-                            if wire.nameclass not in self.all_wires:
-                                self.all_wires[wire.nameclass] = parsed_wire
-                            # Otherwise, there is nothing to do unless the dictionary we previously has is not
-                            # exactly the one we currently have
+                # If the line is overhead, then export to WireData
+                # If line_type wasn't defined, try to export as for overhead...
+                if i.line_type != "underground":
+                    # Loop over the wires of this line
+                    for wire in i.wires:
+                        # Parse the wire to get a dictionary with all the available attributes
+                        parsed_wire = self.parse_wire(wire)
+                        if len(parsed_wire) > 0:
+                            # If we have a nameclass, then use it to ID the wire
+                            if wire.nameclass is not None:
+                                # If the nameclass is not in self.all_wires, then just add it
+                                if wire.nameclass not in self.all_wires:
+                                    self.all_wires[wire.nameclass] = parsed_wire
+                                # Otherwise, there is nothing to do unless the dictionary we previously has is not
+                                # exactly the one we currently have
+                                else:
+                                    if self.all_wires[wire.nameclass] != parsed_wire:
+                                        self.all_wires[
+                                            wire.nameclass + "_" + str(cnt)
+                                        ] = parsed_wire
+                                        wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                        cnt += 1
+                            # If we don't have a nameclass, we use fake names "wire_1", "wire_2"...
                             else:
-                                if self.all_wires[wire.nameclass] != parsed_wire:
+                                wire_found = False
+                                for k, v in self.all_wires.items():
+                                    if parsed_wire == v:
+                                        wire_found = True
+                                        wire.nameclass = k
+                                if not wire_found:
                                     self.all_wires[
-                                        wire.nameclass + "_" + str(cnt)
+                                        "Wire_{n}".format(n=cnt)
                                     ] = parsed_wire
-                                    wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                    wire.nameclass = "Wire_{n}".format(n=cnt)
                                     cnt += 1
-                        # If we don't have a nameclass, we use fake names "wire_1", "wire_2"...
-                        else:
-                            wire_found = False
-                            for k, v in self.all_wires.items():
-                                if parsed_wire == v:
-                                    wire_found = True
-                                    wire.nameclass = k
-                            if not wire_found:
-                                self.all_wires["Wire_{n}".format(n=cnt)] = parsed_wire
-                                wire.nameclass = "Wire_{n}".format(n=cnt)
-                                cnt += 1
+                else:
+                    # Loop over the wires of this line
+                    for wire in i.wires:
+                        # Parse the wire to get a dictionary with all the available attributes
+                        parsed_cable = self.parse_cable(wire)
+                        if len(parsed_cable) > 0:
+                            # If we have a nameclass, then use it to ID the wire
+                            if wire.nameclass is not None:
+                                # If the nameclass is not in self.all_wires, then just add it
+                                if wire.nameclass not in self.all_cables:
+                                    self.all_cables[wire.nameclass] = parsed_cable
+                                # Otherwise, there is nothing to do unless the dictionary we previously has is not
+                                # exactly the one we currently have
+                                else:
+                                    if self.all_cables[wire.nameclass] != parsed_wire:
+                                        self.all_cables[
+                                            wire.nameclass + "_" + str(cnt)
+                                        ] = parsed_cable
+                                        wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                        cnt += 1
+                            # If we don't have a nameclass, we use fake names "cncable_1", "cncable_2"...
+                            else:
+                                cable_found = False
+                                for k, v in self.all_cables.items():
+                                    if parsed_cable == v:
+                                        cable_found = True
+                                        wire.nameclass = k
+                                if not cable_found:
+                                    self.all_cables[
+                                        "CNCable_{n}".format(n=cnt)
+                                    ] = parsed_cable
+                                    wire.nameclass = "CNCable_{n}".format(n=cnt)
+                                    cnt += 1
 
-        if len(self.all_wires) > 0:
+        if len(self.all_wires) > 0 or len(self.all_cables) > 0:
             output_folder = None
             output_redirect = None
             if self.separate_substations and substation_name is not None:
@@ -2399,6 +2439,7 @@ class Writer(AbstractWriter):
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
+        if len(self.all_wires) > 0:
             fp = open(
                 os.path.join(output_folder, self.output_filenames["wiredata"]), "w"
             )
@@ -2408,6 +2449,17 @@ class Writer(AbstractWriter):
             for wire_name, wire_data in self.all_wires.items():
                 fp.write("New WireData.{name}".format(name=wire_name))
                 for key, value in wire_data.items():
+                    fp.write(" {k}={v}".format(k=key, v=value))
+                fp.write("\n\n")
+
+        if len(self.all_cables) > 0:
+            fp = open(os.path.join(output_folder, self.output_filenames["CNDATA"]), "w")
+            self.files_to_redirect.append(
+                os.path.join(output_redirect, self.output_filenames["CNDATA"])
+            )
+            for cable_name, cable_data in self.all_cables.items():
+                fp.write("New CNDATA.{name}".format(name=cable_name))
+                for key, value in cable_data.items():
                     fp.write(" {k}={v}".format(k=key, v=value))
                 fp.write("\n\n")
 
@@ -2735,6 +2787,80 @@ class Writer(AbstractWriter):
 
         return result
 
+    def parse_cable(self, wire):
+        """
+        Takes a wire DiTTo object as input and outputs a dictionary with the attribute of
+        the concentric neutral cable it represents.
+
+        :param wire: Wire diTTo object
+        :type wire: Wire diTTo object
+        :returns: result
+        :rtype: dict
+        """
+        result = {}
+
+        # Number of concentric neutral strands
+        if (
+            hasattr(wire, "concentric_neutral_nstrand")
+            and wire.concentric_neutral_nstrand is not None
+        ):
+            result["k"] = wire.concentric_neutral_nstrand
+
+        # Diameter of the neutral strands
+        if (
+            hasattr(wire, "concentric_neutral_diameter")
+            and wire.concentric_neutral_diameter is not None
+        ):
+            result["DiaStrand"] = wire.concentric_neutral_diameter
+
+        # Resistance of the neutral strand
+        if (
+            hasattr(wire, "concentric_neutral_resistance")
+            and wire.concentric_neutral_resistance is not None
+        ):
+            result["Rstrand"] = wire.concentric_neutral_resistance
+
+        # Diameter of the phase conductor
+        # Here wire.diameter is used
+        #
+        if hasattr(wire, "diameter") and wire.diameter is not None:
+            result["Diam"] = wire.diameter
+
+        # Outside diameter of the cable
+        if (
+            hasattr(wire, "concentric_neutral_outside_diameter")
+            and wire.concentric_neutral_outside_diameter is not None
+        ):
+            result["DiaCable"] = wire.concentric_neutral_outside_diameter
+
+        # Resistance of the phase conductor
+        # Here wire.resistance is used
+        # since the neutral resistance has its own attribute, there is no confict
+        #
+        if hasattr(wire, "resistance") and wire.resistance is not None:
+            result["Rac"] = wire.resistance
+
+        # GMR of the neutral strand
+        if (
+            hasattr(wire, "concentric_neutral_gmr")
+            and wire.concentric_neutral_gmr is not None
+        ):
+            result["GmrStrand"] = wire.concentric_neutral_gmr
+
+        # GMR of the phase conductor
+        # Here wire.gmr is used
+        #
+        if hasattr(wire, "gmr") and wire.gmr is not None:
+            result["GMRac"] = wire.gmr
+
+        # While the units are being integrated into DiTTo, we assume that
+        # everything is in meters here, even if it doesn't make much sense for cable properties...
+        result["Runits"] = "m"
+        result["Radunits"] = "m"
+        result["GMRunits"] = "m"
+
+        return result
+
     def parse_wire(self, wire):
         """
         Takes a wire diTTo object as input and outputs a dictionary with the attributes of the wire.
@@ -2887,6 +3013,13 @@ class Writer(AbstractWriter):
                     "Redirect {f}\n".format(f=self.output_filenames["wiredata"])
                 )  # Currently wire data is in the base folder
                 self.files_to_redirect.remove(self.output_filenames["wiredata"])
+
+            # Write CNDATA.dss first if it exists
+            if self.output_filenames["CNDATA"] in self.files_to_redirect:
+                fp.write(
+                    "Redirect {f}\n".format(f=self.output_filenames["CNDATA"])
+                )  # Currently wire data is in the base folder
+                self.files_to_redirect.remove(self.output_filenames["CNDATA"])
 
             # Write LineGeometry.dss then if it exists
             if self.output_filenames["linegeometry"] in self.files_to_redirect:
