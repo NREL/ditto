@@ -342,7 +342,9 @@ class Writer(AbstractWriter):
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
 
                     txt += "{name} {X} {Y}\n".format(
-                        name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long
+                        name=i.name.lower(),
+                        X=i.positions[0].latitude,
+                        Y=i.positions[0].longitude,
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 

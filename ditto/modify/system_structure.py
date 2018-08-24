@@ -114,8 +114,8 @@ class system_structure_modifier(Modifier):
                 and (
                     i.positions is None
                     or len(i.positions) == 0
-                    or i.positions[0].lat == 0
-                    or i.positions[0].long == 0
+                    or i.positions[0].latitude == 0
+                    or i.positions[0].longitude == 0
                 )
                 and (hasattr(i, "name") and i.name is not None)
             ):
@@ -136,10 +136,12 @@ class system_structure_modifier(Modifier):
                         hasattr(j, "positions")
                         and j.positions is not None
                         and len(j.positions) != 0
-                        and j.positions[0].lat != 0
-                        and j.positions[0].long != 0
+                        and j.positions[0].latitude != 0
+                        and j.positions[0].longitude != 0
                     ):
-                        adj_lats_longs.append((j.positions[0].lat, j.positions[0].long))
+                        adj_lats_longs.append(
+                            (j.positions[0].latitude, j.positions[0].longitude)
+                        )
 
                 if len(adj_lats_longs) == 0:
                     next_recur.append(i)
@@ -154,8 +156,8 @@ class system_structure_modifier(Modifier):
                     av_lat = av_lat / float(num)
                     av_long = av_long / float(num)
                     computed_pos = Position(self.model)
-                    computed_pos.lat = av_lat
-                    computed_pos.long = av_long
+                    computed_pos.latitude = av_lat
+                    computed_pos.longitude = av_long
                     self.model[i].positions = [computed_pos]
             if len(next_recur) == len(recur_nodes):
                 for i in recur_nodes:
@@ -327,13 +329,13 @@ class system_structure_modifier(Modifier):
                             position_obj = self.model[obj.connecting_element].positions
                             obj.positions = []
                             for po in position_obj:
-                                _long = po.long
-                                _lat = po.lat
+                                _long = po.longitude
+                                _lat = po.latitude
                                 _elev = po.elevation
 
                                 load_position = Position()
-                                load_position.long = _long + delta_longitude
-                                load_position.lat = _lat + delta_latitude
+                                load_position.longitude = _long + delta_longitude
+                                load_position.latitude = _lat + delta_latitude
                                 load_position.elevation = _elev + delta_elevation
 
                                 obj.positions.append(load_position)

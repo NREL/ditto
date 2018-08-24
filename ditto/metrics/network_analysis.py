@@ -771,8 +771,8 @@ class NetworkAnalyzer(object):
         # then we add the points to the list of points for the feeder
         if hasattr(obj, "positions") and obj.positions is not None:
             for position in obj.positions:
-                X = position.long
-                Y = position.lat
+                X = position.longitude
+                Y = position.latitude
                 if X is not None and Y is not None:
                     if feeder_name in self.points:
                         self.points[feeder_name].append([X, Y])
@@ -1330,9 +1330,7 @@ class NetworkAnalyzer(object):
                         ):
                             self.results[feeder_name][
                                 "sum_distribution_transformer_mva"
-                            ] += (
-                                obj.windings[0].rated_power * 10 ** -6
-                            )  # DiTTo in va
+                            ] += (obj.windings[0].rated_power * 10 ** -6)  # DiTTo in va
 
                     if (
                         hasattr(obj.windings[0], "phase_windings")

@@ -590,8 +590,8 @@ class Reader(AbstractReader):
             pos = Position(model)
 
             # Set the coordinates
-            pos.long = NodeY[i]
-            pos.lat = NodeX[i]
+            pos.longitude = NodeY[i]
+            pos.latitude = NodeX[i]
 
             # Add the Position to the node's positions
             api_node.positions.append(pos)
