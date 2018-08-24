@@ -5,6 +5,8 @@ from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Insta
 
 from .position import Position
 
+from ..constant import V
+
 
 class Node(DiTToHasTraits):
     """Inheritance:
@@ -14,19 +16,22 @@ class Node(DiTToHasTraits):
     ConnectivityNode (self._cn)
     """
 
-    name = Unicode(help="""Name of the node object""")
+    name = Unicode(help="""Name of the node object""", unit=None)
     nominal_voltage = Float(
         help="""This parameter defines the base voltage at the node.""",
         default_value=None,
+        unit=V,
     )
     phases = List(
         Instance(Unicode),
         help="""This parameter is a list of all the phases at the node.""",
+        unit=None,
     )
     positions = List(
         Instance(Position),
         help="""This parameter is a list of positional points describing the node - it should only contain one.
         The positions are objects containing elements of long, lat and elevation.""",
+        unit=None,
     )
 
     # Modification: Nicolas (December 2017)
@@ -36,9 +41,10 @@ class Node(DiTToHasTraits):
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
         default=None,
+        unit=None,
     )
     feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
+        help="""The name of the feeder the object is on.""", default=None, unit=None
     )
 
     # Modification: Tarek (April 2018)
@@ -46,12 +52,14 @@ class Node(DiTToHasTraits):
     is_substation_connection = Int(
         help="""1 if the node connects from inside a substation to outside, 0 otherwise.""",
         default=None,
+        unit=None,
     )
 
     # Modification: Nicolas (May 2018)
     is_substation = Int(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
         default_value=0,
+        unit=None,
     )
 
     def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
