@@ -2143,19 +2143,56 @@ class Writer(AbstractWriter):
         for i in model.models:
             if isinstance(i, Line):
                 use_linecodes = False
-                for wire in i.wires:
-                    # If we are missing the position of at least one wire, default to linecodes
-                    if wire.X is None or wire.Y is None:
-                        use_linecodes = True
-                    # If we are missing the GMR of at least one wire, default to linecodes
-                    if wire.gmr is None:
-                        use_linecodes = True
-                    # If we are missing the diameter of at least one wire, default to linecodes
-                    if wire.diameter is None:
-                        use_linecodes = True
-                    # If we are missing the ampacity of at least one wire, default to linecodes
-                    if wire.ampacity is None:
-                        use_linecodes = True
+
+                # Find out if we have all the information we need to export
+                # the line using geometries. If we miss something, use LineCodes.
+                #
+                # For overhead (and undefined lines...)
+                if i.line_type != "underground":
+                    for wire in i.wires:
+                        # If we are missing the position of at least one wire, default to linecodes
+                        if wire.X is None or wire.Y is None:
+                            use_linecodes = True
+                        # If we are missing the GMR of at least one wire, default to linecodes
+                        if wire.gmr is None:
+                            use_linecodes = True
+                        # If we are missing the diameter of at least one wire, default to linecodes
+                        if wire.diameter is None:
+                            use_linecodes = True
+                        # If we are missing the ampacity of at least one wire, default to linecodes
+                        if wire.ampacity is None:
+                            use_linecodes = True
+                # For underground lines, we need a lot of data...
+                else:
+                    for wire in i.wires:
+                        # If we are missing the position of at least one wire, default to linecodes
+                        if wire.X is None or wire.Y is None:
+                            use_linecodes = True
+                        # If we are missing the GMR of at least one phase conductor, default to linecodes
+                        if wire.gmr is None:
+                            use_linecodes = True
+                        # If we are missing the diameter of at least one phase conductor, default to linecodes
+                        if wire.diameter is None:
+                            use_linecodes = True
+                        # If we are missing the ampacity of at least one wire, default to linecodes
+                        if wire.ampacity is None:
+                            use_linecodes = True
+                        # If we are missing the neutral strand GMR for at least one cable, default to linecodes
+                        if wire.concentric_neutral_gmr is None:
+                            use_linecodes = True
+                        # If we are missing the neutral strand resistance for at least one cable, default to linecodes
+                        if wire.concentric_neutral_resistance is None:
+                            use_linecodes = True
+                        # If we are missing the neutral strand diameter for at least one cable, default to linecodes
+                        if wire.concentric_neutral_diameter is None:
+                            use_linecodes = True
+                        # If we are missing the outside diameter for at least one cable, default to linecodes
+                        if wire.concentric_neutral_outside_diameter is None:
+                            use_linecodes = True
+                        # If we are missing the number of neutral strands for at least one cable, default to linecodes
+                        if wire.concentric_neutral_nstrand is None:
+                            use_linecodes = True
+
                 if use_linecodes:
                     lines_to_linecodify.append(i)
                 else:
