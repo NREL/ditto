@@ -3335,7 +3335,7 @@ class Writer(AbstractWriter):
                             if (
                                 isinstance(obj, Node)
                                 and obj.substation_name == f_name.split("ation_")[1]
-                                and obj.is_substation == 1
+                                and obj.is_substation_connection == 1
                             ):
                                 if obj.nominal_voltage is not None:
                                     if (
@@ -3388,8 +3388,8 @@ class Writer(AbstractWriter):
                             Ys = defaultY
                         # If we were able to sample some coordinates, take the average
                         if len(Xs) > 0 and len(Ys) > 0:
-                            X = np.mean(Xs)
-                            Y = np.mean(Ys)
+                            X = np.mean(Xs) - 75 / 2.0
+                            Y = np.mean(Ys) + 75 / 2.0
                         # (CASE 3)
                         elif len(all_coordsX) > 0 and len(all_coordsY) > 0:
                             X = np.mean(all_coordsX)
