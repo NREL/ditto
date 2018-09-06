@@ -532,6 +532,15 @@ class Writer(AbstractWriter):
                             new_sectionID = "{f}_{t}".format(
                                 f=i.from_element, t=i.to_element
                             )
+                            if hasattr(i, "feeder_name") and i.feeder_name is not None:
+                                if i.feeder_name in self.section_feeder_mapping:
+                                    while (
+                                        new_sectionID
+                                        in self.section_feeder_mapping[i.feeder_name]
+                                    ):
+                                        new_sectionID = (
+                                            new_sectionID + "*"
+                                        )  # This is used to deal with duplicate lines from same from and to nodes
                             new_line_string += new_sectionID
                             new_section_line = "{id},{f},{t}".format(
                                 id=new_sectionID, f=i.from_element, t=i.to_element
@@ -1993,12 +2002,12 @@ class Writer(AbstractWriter):
                             Z0 = Z1
 
                             # Total kva
-                            KVA = 0
+                            try:
+                                KVA = windings_local[0].rated_power
+                            except:
+                                pass
+
                             for w, winding in enumerate(windings_local):
-                                try:
-                                    KVA += winding.rated_power * 10 ** -3
-                                except:
-                                    pass
 
                                 if hasattr(winding, "nominal_voltage"):
                                     try:
@@ -2146,12 +2155,11 @@ class Writer(AbstractWriter):
                     _Rset = {"A": 0, "B": 0, "C": 0}
                     _Xset = {"A": 0, "B": 0, "C": 0}
                     if len(windings_local) >= 2:
-                        for winding in windings_local:
-                            try:
-                                _KVA += winding.rated_power * 10 ** -3
-                            except:
-                                pass
-                        _KVLN = winding.nominal_voltage * 10 ** -3
+                        try:
+                            _KVA = windings_local[0].rated_power * 10 ** -3
+                        except:
+                            pass
+                        _KVLN = windings_local[-1].nominal_voltage * 10 ** -3
 
                         if (
                             hasattr(winding1, "phase_windings")
@@ -2180,10 +2188,10 @@ class Writer(AbstractWriter):
                         new_regulator_string += ","
 
                     _CT = None
-                    if hasattr(i, "ct_prim") and i.ct_prim is not None:
+                    if hasattr(i, "ct_ratio") and i.ct_ratio is not None:
                         try:
-                            new_regulator_string += "," + str(i.ct_prim)
-                            _CT = str(i.ct_prim)
+                            new_regulator_string += "," + str(i.ct_ratio)
+                            _CT = str(i.ct_ratio)
                         except:
                             new_regulator_string += ","
                     else:
@@ -2221,7 +2229,7 @@ class Writer(AbstractWriter):
                         KVLN=_KVLN,
                         MaxBuck=10,
                         MaxBoost=10,
-                        Taps=0,
+                        Taps=32,
                         Reversible=0,
                     )
 
@@ -3388,8 +3396,8 @@ class Writer(AbstractWriter):
                             Ys = defaultY
                         # If we were able to sample some coordinates, take the average
                         if len(Xs) > 0 and len(Ys) > 0:
-                            X = np.mean(Xs) - 75 / 2.0
-                            Y = np.mean(Ys) + 75 / 2.0
+                            X = np.mean(Xs)
+                            Y = np.mean(Ys) + 50 / 2.0
                         # (CASE 3)
                         elif len(all_coordsX) > 0 and len(all_coordsY) > 0:
                             X = np.mean(all_coordsX)
@@ -3408,8 +3416,8 @@ class Writer(AbstractWriter):
                                 NetID=f_name.split("ation_")[1],
                                 X=X,
                                 Y=Y,
-                                Height=75.00,
-                                Length=75.00,
+                                Height=50.00,
+                                Length=50.00,
                             )
                         )
 
@@ -3514,7 +3522,7 @@ class Writer(AbstractWriter):
 
             # Breakers
             #
-            if len(recloser_string_list) > 0:
+            if len(breaker_string_list) > 0:
                 f.write("\n[BREAKER SETTING]\n")
                 f.write(
                     "FORMAT_BREAKERSETTING=SectionID,EqID,Location,ClosedPhase,Locked,ConnectionStatus,DeviceNumber\n"
@@ -3836,6 +3844,8 @@ class Writer(AbstractWriter):
             f.write("DEFAULT,1.000001,1.000001,2000.000000,2000.000000\n")
             if len(self.conductors) > 0:
                 for ID, data in self.conductors.items():
+                    if ID == "DEFAULT":
+                        continue
                     f.write(ID + ",")
                     f.write(data)
                     f.write("\n")
