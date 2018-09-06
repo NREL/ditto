@@ -193,7 +193,7 @@ class Reader(AbstractReader):
         # Modification done by the 'update_header_mapping' method
         #
         self.header_mapping = {  # NODES
-            "node": "[NODE]",
+            "node": ["[NODE]"],
             # LINES
             "overhead_unbalanced_line_settings": ["[OVERHEADLINEUNBALANCED SETTING]"],
             "overhead_line_settings": ["[OVERHEADLINE SETTING]"],
@@ -786,8 +786,7 @@ class Reader(AbstractReader):
             # At this point, we should have the mapping for the parameters of interest
             # while next_line[0] not in ['[','',' ','\n','\r\n']:
             while len(next_line) > 2:
-
-                if "=" not in next_line.lower() or "node" in obj_list:
+                if "=" not in next_line.lower():
 
                     data = next_line.split(",")
 
