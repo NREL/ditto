@@ -44,6 +44,50 @@ def test_parse_wire():
     assert parsed_wire["Rac"] == 5
 
 
+def test_parse_concentric_neutral_cable():
+    """
+    Tests the parsing of concentric neutral cables.
+
+    The example used is:
+
+    New CNDATA.250_1/3 k=13 DiaStrand=0.064 Rstrand=2.816666667 epsR=2.3
+    ~ InsLayer=0.220 DiaIns=1.06 DiaCable=1.16 Rac=0.076705 GMRac=0.20568 diam=0.573
+    ~ Runits=kft Radunits=in GMRunits=in
+    """
+    from ditto.store import Store
+    from ditto.models.wire import Wire
+    from ditto.writers.opendss.write import Writer
+
+    m = Store()
+    wire = Wire(
+        m,
+        phase="A",
+        nameclass="250_1/3",
+        diameter=0.0145542,  # 0.573 inches in meters
+        gmr=0.005224272,  # 0.20568 inches in meters
+        ampacity=500,
+        emergency_ampacity=1000,
+        resistance=0.000251656824147,  # 0.076705 ohm/kft in ohm/meter
+        concentric_neutral_resistance=0.00924103237205,  # 2.816666667 ohm/kft in ohm/meter
+        concentric_neutral_diameter=0.0016256,  # 0.064 inches in meters
+        concentric_neutral_outside_diameter=0.029464,  # 1.16 inches in meters
+        concentric_neutral_nstrand=13,
+    )
+    output_path = tempfile.gettempdir()
+    w = Writer(output_path=output_path)
+    parsed_cable = w.parse_cable(wire)
+    assert parsed_cable["k"] == 13
+    assert parsed_cable["DiaStrand"] == 0.0016256
+    assert parsed_cable["Rstrand"] == 0.00924103237205
+    assert parsed_cable["Diam"] == 0.0145542
+    assert parsed_cable["DiaCable"] == 0.029464
+    assert parsed_cable["Rac"] == 0.000251656824147
+    assert parsed_cable["GMRac"] == 0.005224272
+    assert parsed_cable["Runits"] == "m"
+    assert parsed_cable["Radunits"] == "m"
+    assert parsed_cable["GMRunits"] == "m"
+
+
 def setup_line_test():
     """Setup a line with 4 wires."""
     from ditto.store import Store

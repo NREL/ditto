@@ -21,8 +21,16 @@ class Wire(DiTToHasTraits):
         help="""The vertical placement above (or below) ground of the wire on a cross section of the line w.r.t. some point of reference (typically one wire on the configuration)""",
         default_value=None,
     )
-    diameter = Float(help="""The diameter of the conductor""", default_value=None)
-    gmr = Float(help="""The geometric mean radius of the wire""", default_value=None)
+    diameter = Float(
+        help="""The diameter of the conductor.
+        If the wire is a concentric neutral cable, this is the diameter of the phase conductor.""",
+        default_value=None,
+    )
+    gmr = Float(
+        help="""The geometric mean radius of the wire.
+        If the wire is a concentric neutral cable, this is the GMR of the phase conductor.""",
+        default_value=None,
+    )
     ampacity = Float(
         help="""The ampacity rating for the wire under nomal conditions""",
         default_value=None,
@@ -31,7 +39,11 @@ class Wire(DiTToHasTraits):
         help="""The ampacity rating for the wire under emergency conditions""",
         default_value=None,
     )
-    resistance = Float(help="""The total resistance of the wire""", default_value=None)
+    resistance = Float(
+        help="""The total resistance of the wire.
+        If the wire is a concentric neutral cable, this is the per-unit resistance of the phase conductor""",
+        default_value=None,
+    )
     insulation_thickness = Float(
         help="""Thickness of the insulation around the secondary live conductors""",
         default=None,
@@ -54,17 +66,32 @@ class Wire(DiTToHasTraits):
         help="""The maximum current that can pass through the wire before the equipment disconnects.""",
         default_value=None,
     )
+
+    # Concentric Neutral Specific
+    # This section should be used to model the Wire object as a concentric neutral cable
+    # If the wire is a basic bare conductor, leave undefined.
+    #
     concentric_neutral_gmr = Float(
-        help="""The geometric mean radius of the neutral for a concentric wire""",
+        help="""The geometric mean radius of the neutral strand for a concentric neutral cable.""",
         default_value=None,
     )
     concentric_neutral_resistance = Float(
-        help="""The total resistance of the neutral for a concentric wire""",
+        help="""The per-unit length resistance of the neutral strand for a concentric neutral cable.""",
         default_value=None,
     )
     concentric_neutral_diameter = Float(
-        help="""The diameter of the neutral for a concentric wire""", default_value=None
+        help="""The diameter of the neutral strand of the concentric neutral cable.""",
+        default_value=None,
     )
+    concentric_neutral_outside_diameter = Float(
+        help="""The outside diameter of the concentric neutral cable.""",
+        default_value=None,
+    )
+    concentric_neutral_nstrand = Int(
+        help="""The number of strands for the concentric neutral cable.""",
+        default_value=None,
+    )
+    ###############################################################
 
     # Modification: Nicolas Gensollen (December 2017)
     # Drop flag is used if we created objects in the reader that we do not want to output.
