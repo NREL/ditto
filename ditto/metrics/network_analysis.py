@@ -412,10 +412,34 @@ class NetworkAnalyzer(object):
                 if isinstance(obj, Node):
                     if obj.name in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.name]
-                        obj.substation_name = self.substations[obj.feeder_name]
+                        if obj.feeder_name in self.substations:
+                            obj.substation_name = self.substations[obj.feeder_name]
                     else:
-                        obj.feeder_name = "subtransmission"
-                        obj.substation_name = ""
+                        curr_name = obj.name
+                        done_looping = False
+
+                        while not done_looping:
+                            try:
+                                predecessor = next(
+                                    self.G.digraph.predecessors(curr_name)
+                                )
+                            except StopIteration:
+                                done_looping = True
+                                break
+                            prev_obj = self.model[predecessor]
+                            curr_name = (
+                                predecessor
+                            )  # Only decent along the branch of the last predecessor for simplicity
+                            if (
+                                hasattr(prev_obj, "feeder_name")
+                                and prev_obj.feeder_name is not None
+                                and prev_obj.feeder_name is not ""
+                            ):
+                                obj.feeder_name = prev_obj.feeder_name
+                                obj.substation_name = prev_obj.substation_name
+                                done_looping = True
+                                break
+
                         logger.debug(
                             "Node {name} was not found in feeder mapping".format(
                                 name=obj.name
@@ -427,10 +451,32 @@ class NetworkAnalyzer(object):
                         obj.feeder_name = self.node_feeder_mapping[
                             obj.connecting_element
                         ]
-                        obj.substation_name = self.substations[obj.feeder_name]
+                        if obj.feeder_name in self.substations:
+                            obj.substation_name = self.substations[obj.feeder_name]
                     else:
-                        obj.feeder_name = "subtransmission"
-                        obj.substation_name = ""
+                        curr_name = obj.connecting_element
+                        done_looping = False
+                        while not done_looping:
+                            try:
+                                predecessor = next(
+                                    self.G.digraph.predecessors(curr_name)
+                                )
+                            except StopIteration:
+                                done_looping = True
+                                break
+                            prev_obj = self.model[predecessor]
+                            curr_name = (
+                                predecessor
+                            )  # Only decent along the branch of the last predecessor for simplicity
+                            if (
+                                hasattr(prev_obj, "feeder_name")
+                                and prev_obj.feeder_name is not None
+                                and prev_obj.feeder_name is not ""
+                            ):
+                                obj.feeder_name = prev_obj.feeder_name
+                                obj.substation_name = prev_obj.substation_name
+                                done_looping = True
+                                break
 
                         logger.debug(
                             "Object {name} connecting element {namec} was not found in feeder mapping".format(
@@ -440,10 +486,32 @@ class NetworkAnalyzer(object):
                 elif hasattr(obj, "from_element"):
                     if obj.from_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.from_element]
-                        obj.substation_name = self.substations[obj.feeder_name]
+                        if obj.feeder_name in self.substations:
+                            obj.substation_name = self.substations[obj.feeder_name]
                     else:
-                        obj.feeder_name = "subtransmission"
-                        obj.substation_name = ""
+                        curr_name = obj.from_element
+                        done_looping = False
+                        while not done_looping:
+                            try:
+                                predecessor = next(
+                                    self.G.digraph.predecessors(curr_name)
+                                )
+                            except StopIteration:
+                                done_looping = True
+                                break
+                            prev_obj = self.model[predecessor]
+                            curr_name = (
+                                predecessor
+                            )  # Only decent along the branch of the last predecessor for simplicity
+                            if (
+                                hasattr(prev_obj, "feeder_name")
+                                and prev_obj.feeder_name is not None
+                                and prev_obj.feeder_name is not ""
+                            ):
+                                obj.feeder_name = prev_obj.feeder_name
+                                obj.substation_name = prev_obj.substation_name
+                                done_looping = True
+                                break
 
                         logger.debug(
                             "Object {name} from element {namec} was not found in feeder mapping".format(
