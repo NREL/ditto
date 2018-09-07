@@ -408,7 +408,7 @@ class NetworkAnalyzer(object):
         Loop over the objects and fill the feeder_name and substaation_name attributes.
         """
         for obj in self.model.models:
-            if hasattr(obj, "feeder_name"):
+            if hasattr(obj, "feeder_name") and hasattr(obj, "name"):
                 if isinstance(obj, Node):
                     if obj.name in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.name]
@@ -478,6 +478,10 @@ class NetworkAnalyzer(object):
                                 done_looping = True
                                 break
 
+                    if hasattr(obj,"timeseries") and obj.timeseries is not None and len(obj.timeseries) >0:
+                        for t in obj.timeseries:
+                            t.feeder_name = obj.feeder_name
+                            t.substation_name = obj.substation_name
                         logger.debug(
                             "Object {name} connecting element {namec} was not found in feeder mapping".format(
                                 name=obj.name, namec=obj.connecting_element
@@ -1633,7 +1637,10 @@ class NetworkAnalyzer(object):
             except KeyError:
                 _points = []
             # Having more than 2 points to compute the convex hull surface is a good thing...
-            if len(_points) > 2:
+            unique_points = set()
+            for arr in _points:
+                unique_points.add(tuple(list(arr)))
+            if len(_points) > 2 and len(unique_points)>2:
                 hull = ConvexHull(_points)  # Compute the Convex Hull using Scipy
                 hull_surf_sqmile = (
                     hull.area * 3.86102 * 10 ** -7
