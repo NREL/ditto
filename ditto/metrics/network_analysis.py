@@ -1419,9 +1419,11 @@ class NetworkAnalyzer(object):
             "sum_load_phc_kw",
         ]
 
+        mv_feeder_names = [k for k in self.feeder_names if self.substations[k] is not None and len(self.substations[k]) > 0]
+
         # Setup the data structures for all feeders
         self.results = {
-            k: self.setup_results_data_structure(k) for k in self.feeder_names
+            k: self.setup_results_data_structure(k) for k in mv_feeder_names
         }
 
         # Loop over the objects in the model and analyze them
@@ -1430,13 +1432,13 @@ class NetworkAnalyzer(object):
             if hasattr(obj, "name"):
                 _feeder_ref = self.get_feeder(obj)
                 # If we have a valid name, analyze the object
-                if _feeder_ref is not None:
+                if _feeder_ref is not None and _feeder_ref in mv_feeder_names:
                     self.analyze_object(obj, _feeder_ref)
 
         # Do some post-processing of the results before returning them
         #
         # Compute the percentages of low voltage load kW for each phase
-        for _feeder_ref in self.feeder_names:
+        for _feeder_ref in mv_feeder_names:
             total_demand_LV = (
                 self.results[_feeder_ref]["sum_lv_pha_load_kw"]
                 + self.results[_feeder_ref]["sum_lv_phb_load_kw"]
