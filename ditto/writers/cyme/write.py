@@ -4097,9 +4097,17 @@ class Writer(AbstractWriter):
 
                     # Location
                     new_load_string += ",0"
+                    new_customer_load_string += ",0,"
 
                     # CustomerNumber, CustomerType
-                    new_customer_load_string += ",0,PQ"
+                    found_timeseries = False
+                    if hasattr(i, "timeseries") and i.timeseries is not None and len(i.timeseries)>0:
+                        ts = i.timeseries[0]
+                        if hasattr(ts,"data_label") and ts.data_label is not None and len(ts.data_label)>0:
+                            new_customer_load_string+=ts.data_label
+                            found_timeseries = True
+                    if not found_timeseries:
+                        new_customer_load_string+="PQ"
 
                     # CenterTapPercent and values
                     # Only fill these fields if the load is a center tap load and
