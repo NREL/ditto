@@ -16,6 +16,12 @@ class Storage(DiTToHasTraits):
     rated_power = Float(
         help="""Rated power of the device. In watts.""", default_value=None
     )
+    reactive_rating = Float(
+        help="""Rated reactive power of the device. In watts.""", default_value=None
+    )
+    min_powerfactor = Float(
+        help="""Minimum power factor of the device""", default_value=None
+    )
     rated_kWh = Float(
         help="""Rated storage capacity. In kilo-watt-hours.""", default_value=None
     )
@@ -32,57 +38,57 @@ class Storage(DiTToHasTraits):
         default_value=None,
     )
     discharge_rate = Float(
-        help="""Discharge rate in percent of rated power.""", default=0
+        help="""Discharge rate in percent of rated power.""", default_value=None
     )
-    charge_rate = Float(help="""Charging rate in percent of rated power.""", default=0)
+    charge_rate = Float(help="""Charging rate in percent of rated power.""", default_value=None)
     charging_efficiency = Float(
-        help="""Percent efficiency for charging the storage element.""", default=None
+        help="""Percent efficiency for charging the storage element.""", default_value=None
     )
     discharging_efficiency = Float(
-        help="""Percent efficiency for discharging the storage element.""", default=None
+        help="""Percent efficiency for discharging the storage element.""", default_value=None
     )
     resistance = Float(
-        help="""Equivalent percent internal resistance. In ohms.""", default=None
+        help="""Equivalent percent internal resistance. In ohms.""", default_value=None
     )
     reactance = Float(
-        help="""Equivalent percent internal reactance. In ohms.""", default=None
+        help="""Equivalent percent internal reactance. In ohms.""", default_value=None
     )
     model_ = Int(
         help="""Model to use for power output with voltage. 1=constant P at specified pf. 2=constant admittance. 3=User-written model.""",
-        default=None,
+        default_value=None,
     )
     yearly = Unicode(
-        help="""Dispatch shape to use for yearly simulations.""", default=None
+        help="""Dispatch shape to use for yearly simulations.""", default_value=None
     )
     daily = Unicode(
-        help="""Dispatch shape to use for daily simulations.""", default=None
+        help="""Dispatch shape to use for daily simulations.""", default_value=None
     )
     duty = Unicode(
-        help="""Load shape to use for duty cycle dispatch simulations.""", default=None
+        help="""Load shape to use for duty cycle dispatch simulations.""", default_value=None
     )
     discharge_trigger = Float(
-        help="""Dispatch trigger value for discharging the storage.""", default=None
+        help="""Dispatch trigger value for discharging the storage.""", default_value=None
     )
     charge_trigger = Float(
-        help="""Dispatch trigger value for charging the storage.""", default=None
+        help="""Dispatch trigger value for charging the storage.""", default_value=None
     )
     phase_storages = List(
         Instance(PhaseStorage),
         help="""A list of the phase storage that the storage contains.""",
-        default=None,
+        default_value=None,
     )
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
-        default=None,
+        default_value=None,
     )
     feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
+        help="""The name of the feeder the object is on.""", default_value=None
     )
 
     # Modification: Nicolas (May 2018)
     is_substation = Int(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
+        default_value=None,
     )
 
     def build(self, model):
