@@ -1688,7 +1688,7 @@ class Writer(AbstractWriter):
                         if hasattr(i, "windings") and i.windings is not None:
                             kvs = " kvs=("
                             for w, winding in enumerate(i.windings):
-                                if hasattr(i.windings[w], "nominal_voltage"):
+                                if hasattr(i.windings[w], "nominal_voltage") and i.windings[w].nominal_voltage is not None:
                                     kvs += str(i.windings[w].nominal_voltage) + ", "
                                     self._baseKV_.add(i.windings[w].nominal_voltage)
                             kvs = kvs[:-2]
@@ -2314,10 +2314,10 @@ class Writer(AbstractWriter):
                         ]
                         if len(all_current_ratings) > 0:
                             current_rating = max(all_current_ratings)
-                        if current_rating > 0:
-                            fuse_line += " ratedcurrent={curr}".format(
-                                curr=current_rating
-                            )
+                            if current_rating > 0:
+                                fuse_line += " ratedcurrent={curr}".format(
+                                    curr=current_rating
+                                )
 
                 else:
                     fuse_line = ""
