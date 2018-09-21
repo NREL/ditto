@@ -75,6 +75,14 @@ $ ls | grep .txt
 
 More documentation can be found on [here](https://nrel.github.io/ditto).
 
+## Contributing
+DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bufgix, or a new parser you want to integrate, feel free to contribute.
+
+To contribute to Ditto in 3 steps:
+- Fork the repository (button in the upper right corner of the DiTTo GitHub page).
+- Create a feature branch on your local fork and implement your modifications there.
+- Once your work is ready to be shared, submit a Pull Request on the DiTTo GitHub page. See the official GitHub documentation on how to do that [here](https://help.github.com/articles/creating-a-pull-request-from-a-fork/)
+
 ## Getting Help
 
 If you are having issues using DiTTo, feel free to open an Issue on GitHub [here](https://github.com/NREL/ditto/issues/new)
