@@ -74,10 +74,11 @@ $ ls | grep .txt
 ### Going further
 
 More documentation can be found [here](https://nrel.github.io/ditto).
+
 Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples.html). 
 
 ## Contributing
-DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bufgix, or a new parser you want to integrate, feel free to contribute.
+DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bugfix, or a new parser you want to integrate, feel free to contribute.
 
 To contribute to Ditto in 3 steps:
 - Fork the repository (button in the upper right corner of the DiTTo GitHub page).
