@@ -73,7 +73,8 @@ $ ls | grep .txt
 
 ### Going further
 
-More documentation can be found on [here](https://nrel.github.io/ditto).
+More documentation can be found [here](https://nrel.github.io/ditto).
+Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples.html). 
 
 ## Contributing
 DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bufgix, or a new parser you want to integrate, feel free to contribute.
