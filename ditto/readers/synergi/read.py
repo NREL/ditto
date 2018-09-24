@@ -233,6 +233,7 @@ class Reader(AbstractReader):
         LineID = self.get_data("InstSection", "SectionId")
         # FeederId = self.get_data("InstSection", "FeederId")
         LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
         PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
         PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
         PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
@@ -275,6 +276,10 @@ class Reader(AbstractReader):
         SwitchType = self.get_data("InstSwitches", "SwitchType")
         SwitchIsOpen = self.get_data("InstSwitches", "SwitchIsOpen")
         SwitchName = self.get_data("DevSwitches", "SwitchName")
+        Switch_index_map = {}
+        for i in range(len(SwitchName)):
+            Switch_index_map[SwitchName[i]] = i
+
         ContinuousCurrentRating_switch = self.get_data(
             "DevSwitches", "ContinuousCurrentRating"
         )
@@ -342,7 +347,7 @@ class Reader(AbstractReader):
 
         ## Wires ###########
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
-        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableDiamConductor = self.get_data("DevConductors", "CableDiamConductor_SUL")
         CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
         ConductorName = self.get_data("DevConductors", "ConductorName")
         PosSequenceResistance_PerLUL = self.get_data(
@@ -356,7 +361,7 @@ class Reader(AbstractReader):
         )
         ZeroSequenceReactance_PerLUL = self.get_data(
             "DevConductors", "ZeroSequenceReactance_PerLUL"
-        )
+            )
         ContinuousCurrentRating = self.get_data(
             "DevConductors", "ContinuousCurrentRating"
         )
@@ -364,11 +369,18 @@ class Reader(AbstractReader):
             "DevConductors", "InterruptCurrentRating"
         )
 
+        ### Concentric Neutral Data ###
+        CableConNeutStrandDiameter_SUL = self.get_data("DevConductors", "CableConNeutStrandDiameter_SUL")
+        CableConNeutResistance_PerLUL = self.get_data("DevConductors", "CableConNeutResistance_PerLUL")
+        CableConNeutStrandCount = self.get_data("DevConductors", "CableConNeutStrandCount")
+        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableDiamOverInsul = self.get_data("DevConductors", "CableDiamOverInsul_SUL")
+
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
                 "CableGMR": CableGMR[idx],
-                "CableDiamOutside": CableDiamOutside[idx],
+                "CableDiamConductor": CableDiamConductor[idx],
                 "CableResistance": CableResistance[idx],
                 "PosSequenceResistance_PerLUL": PosSequenceResistance_PerLUL[idx],
                 "PosSequenceReactance_PerLUL": PosSequenceReactance_PerLUL[idx],
@@ -376,6 +388,12 @@ class Reader(AbstractReader):
                 "ZeroSequenceReactance_PerLUL": ZeroSequenceReactance_PerLUL[idx],
                 "ContinuousCurrentRating": ContinuousCurrentRating[idx],
                 "InterruptCurrentRating": InterruptCurrentRating[idx],
+                "CableConNeutStrandDiameter_SUL": CableConNeutStrandDiameter_SUL[idx],
+                "CableConNeutResistance_PerLUL": CableConNeutResistance_PerLUL[idx],
+                "CableConNeutStrandCount": CableConNeutStrandCount[idx],
+                "CableDiamOutside": CableDiamOutside[idx],
+                "CableDiamOverInsul": CableDiamOverInsul[idx],
+
             }
 
         ## Loads #############
@@ -635,6 +653,10 @@ class Reader(AbstractReader):
                 SynergiValueType.MUL,
                 LengthUnits
             )
+            if LineHeight[i] <0:
+                api_line.line_type = "underground"
+            else:
+                api_line.line_type = "overhead"
 
             # From element
             # Replace spaces with "_"
@@ -668,16 +690,17 @@ class Reader(AbstractReader):
 
             # Switch
             if switch_sectionID is not None and obj in switch_sectionID.values:
-                idd = np.argwhere(switch_sectionID.values == obj).flatten()
+                idd_db= np.argwhere(switch_sectionID.values == obj).flatten()
 
                 # Set the is_switch flag to True
                 api_line.is_switch = 1
 
                 # Get the current ratings (to be used in the wires)
-                if len(idd) == 1:
-                    eqt_rating = ContinuousCurrentRating_switch[idd[0]]
-                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd[0]]
-                    eqt_open = SwitchIsOpen[idd[0]]
+                if len(idd_db) == 1:
+                    idd_warehouse = Switch_index_map[SwitchType[idd_db[0]]]
+                    eqt_rating = ContinuousCurrentRating_switch[idd_warehouse]
+                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd_warehouse]
+                    eqt_open = SwitchIsOpen[idd_db[0]]
 
             # Fuse
             if fuse_sectionID is not None and obj in fuse_sectionID.values:
@@ -1053,7 +1076,7 @@ class Reader(AbstractReader):
                     # Diameter is assumed to be given in inches and is converted to meters here
                     #
                     api_wire.diameter = convert_length_unit(
-                        conductor_mapping[conductor_name_raw]["CableDiamOutside"],
+                        conductor_mapping[conductor_name_raw]["CableDiamConductor"],
                         SynergiValueType.SUL,
                         LengthUnits
                     )
@@ -1075,15 +1098,26 @@ class Reader(AbstractReader):
                         ]["InterruptCurrentRating"]
 
                     # Set the resistance of the conductor
-                    # TODO: Change this once resistance is the per unit length resistance
+                    # Represented in Ohms per meter
                     #
                     if api_line.length is not None:
                         api_wire.resistance = convert_length_unit(
                             conductor_mapping[conductor_name_raw]["CableResistance"]
-                            * api_line.length,
                             SynergiValueType.Per_LUL,
                             LengthUnits
                         )
+
+                    # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
+                    if conductor_mapping[conductor_name_raw]["CableDiamOutside"] > conductor_mapping[conductor_name_raw]["CableDiamConductor"]:
+                        api_wire.concentric_neutral_resistance = conductor_mapping[conductor_name_raw]["CableConNeutResistance_PerLUL"] /160934
+                        api_wire.concentric_neutral_diameter = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]*0.0254 # multiplied by short unit length scale
+                        api_wire.concentric_neutral_gmr = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]/2.0*0.7788*0.0254 # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
+                        api_wire.concentric_neutral_outside_diameter = conductor_mapping[conductor_name_raw]["CableDiamOutside"]* 0.0254 # multiplied by short unit length scale
+                        api_wire.concentric_neutral_nstrand = int(conductor_mapping[conductor_name_raw]["CableConNeutStrandCount"])
+                        api_wire.insulation_thickness = (conductor_mapping[conductor_name_raw]["CableDiamOverInsul"]- conductor_mapping[conductor_name_raw]["CableDiamConductor"])/2.0*0.0254
+
+
+                        
 
                 # Add the new Wire to the line's list of wires
                 #

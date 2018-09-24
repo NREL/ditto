@@ -1480,6 +1480,7 @@ class Reader(AbstractReader):
                     elif (
                         "format_feeder" in line.lower()
                         or "format_substation" in line.lower()
+                        or "format_generalnetwork" in line.lower()
                     ):
                         format_feeder = list(
                             map(
@@ -1492,8 +1493,10 @@ class Reader(AbstractReader):
                     elif len(line) >= 7 and (
                         line[:7].lower() == "feeder="
                         or line[:11].lower() == "substation="
+                        or line[:11].lower() == "substation="
+                        or line[:15].lower() == "generalnetwork="
                     ):
-                        if line[:7].lower() == "feeder=":
+                        if line[:7].lower() == "feeder=" or line[:15].lower() == "generalnetwork=":
                             self.network_type = "feeder"
                         if line[:11].lower() == "substation=":
                             self.network_type = "substation"
