@@ -305,7 +305,7 @@ class NetworkAnalyzer(object):
         if args:
             export_path = args[0]
         else:
-            export_path = "./output.xlsx"
+            export_path = "./output.csv"
 
         # TODO: More maintainable way for this...
         cols = [
@@ -396,12 +396,8 @@ class NetworkAnalyzer(object):
             card.loc[n_row] = [key] + [data[x] if x in data else None for x in cols[1:]]
             n_row += 1
 
-        # Instanciate the writer
-        xlsx_writer = pd.ExcelWriter(export_path)
-        # Write to excel
-        card.to_excel(xlsx_writer)
-        # Save
-        xlsx_writer.save()
+        # Write to csv
+        card.to_csv(export_path, header=True, index=False)
 
     def tag_objects(self):
         """
@@ -478,7 +474,11 @@ class NetworkAnalyzer(object):
                                 done_looping = True
                                 break
 
-                    if hasattr(obj,"timeseries") and obj.timeseries is not None and len(obj.timeseries) >0:
+                    if (
+                        hasattr(obj, "timeseries")
+                        and obj.timeseries is not None
+                        and len(obj.timeseries) > 0
+                    ):
                         for t in obj.timeseries:
                             t.feeder_name = obj.feeder_name
                             t.substation_name = obj.substation_name
@@ -1419,7 +1419,11 @@ class NetworkAnalyzer(object):
             "sum_load_phc_kw",
         ]
 
-        mv_feeder_names = [k for k in self.feeder_names if self.substations[k] is not None and len(self.substations[k]) > 0]
+        mv_feeder_names = [
+            k
+            for k in self.feeder_names
+            if self.substations[k] is not None and len(self.substations[k]) > 0
+        ]
 
         # Setup the data structures for all feeders
         self.results = {
@@ -1642,7 +1646,7 @@ class NetworkAnalyzer(object):
             unique_points = set()
             for arr in _points:
                 unique_points.add(tuple(list(arr)))
-            if len(_points) > 2 and len(unique_points)>2:
+            if len(_points) > 2 and len(unique_points) > 4:  # Ignore tiny feeders
                 hull = ConvexHull(_points)  # Compute the Convex Hull using Scipy
                 hull_surf_sqmile = (
                     hull.area * 3.86102 * 10 ** -7
