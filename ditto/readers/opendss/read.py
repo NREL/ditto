@@ -46,7 +46,6 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
-
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -709,15 +708,15 @@ class Reader(AbstractReader):
         # Even if a fuse is disabled we identify it as a fuse.
         # If the line is disabled we ignore it unless it's a switch
         fuses = dss.utils.class_to_dataframe("Fuse")
-        #import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         fuses_names = [
-            d["MonitoredObj"].lower().split(".")[1] for name, d in fuses.items()
+            d["MonitoredObj"][0].lower().split(".")[1] for name, d in fuses.items()
         ]
 
         # In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe("recloser")
         reclosers_names = [
-            d["MonitoredObj"].lower().split(".")[1] for name, d in reclosers.items()
+            d["MonitoredObj"][0].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
         start = time.time()
