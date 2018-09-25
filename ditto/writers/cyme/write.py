@@ -203,6 +203,9 @@ class Writer(AbstractWriter):
         """
         self.section_line_list = []
         self.node_string_list = []
+        self.node_connector_string_list = []
+        self.node_connector_string_mapping = {}  # A mapping of the node and index to the section
+        self.bus_string_list = []  # Only used for nodes - not nodes derived from PV, Loads or Capacitors
         self.nodeID_list = []
         self.sectionID_list = []
         self.section_feeder_mapping = {}
@@ -301,6 +304,28 @@ class Writer(AbstractWriter):
                 for i in model.models
                 if isinstance(i, Regulator)
             ]
+
+            # Build connector_string_mapping
+            # TODO integrate into rest of model so we don't have to loop twice over ditto elements
+            for i in model.models:
+                if (
+                    hasattr(i, "from_element")
+                    and i.from_element is not None
+                    and hasattr(i, "from_element_connection_index")
+                    and i.from_element_connection_index is not None
+                ):
+                    self.node_connector_string_mapping[
+                        (i.from_element, i.from_element_connection_index)
+                    ] = "{f}_{t}".format(f=i.from_element, t=i.to_element)
+                if (
+                    hasattr(i, "to_element")
+                    and i.to_element is not None
+                    and hasattr(i, "to_element_connection_index")
+                    and i.to_element_connection_index is not None
+                ):
+                    self.node_connector_string_mapping[
+                        (i.to_element, i.to_element_connection_index)
+                    ] = "{f}_{t}".format(f=i.from_element, t=i.to_element)
 
             # Loop over the DiTTo objects
             for i in model.models:
@@ -434,15 +459,22 @@ class Writer(AbstractWriter):
                     # Empty new node string
                     new_node_string = ""
 
+                    # Empty new bus string (for bus representations of nodes with two coords)
+                    new_bus_string = ""
+
                     # Name
                     if hasattr(i, "name") and i.name is not None:
-                        new_node_string += i.name
                         self.nodeID_list.append(i.name)
                     else:
                         continue
 
                     # CoordX and CoordY
-                    if hasattr(i, "positions") and i.positions is not None:
+                    if (
+                        hasattr(i, "positions")
+                        and i.positions is not None
+                        and len(i.positions) == 1
+                    ):
+                        new_node_string += i.name
                         try:
                             new_node_string += "," + str(i.positions[0].long)
                         except:
@@ -454,12 +486,62 @@ class Writer(AbstractWriter):
                         except:
                             new_node_string += ",0"
                             pass
+                    elif (
+                        hasattr(i, "positions")
+                        and i.positions is not None
+                        and len(i.positions) >= 2
+                    ):
+                        new_bus_string += i.name
+                        try:
+                            new_bus_string += "," + str(i.positions[0].long)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+
+                        try:
+                            new_bus_string += "," + str(i.positions[0].lat)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+
+                        try:
+                            new_bus_string += "," + str(i.positions[-1].long)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+
+                        try:
+                            new_bus_string += "," + str(i.positions[-1].lat)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+                        new_bus_string += ",2"  # Set width of 2
+                        for j in range(1, len(i.positions) - 1):
+                            sectionid = ""
+                            if (i.name, j - 1) in self.node_connector_string_mapping:
+                                sectionid = self.node_connector_string_mapping[
+                                    (i.name, j - 1)
+                                ]
+                            new_node_connector_string = "{n},{x},{y},{s}".format(
+                                n=i.name,
+                                x=i.positions[j].long,
+                                y=i.positions[j].lat,
+                                s=sectionid,
+                            )
+                            self.node_connector_string_list.append(
+                                new_node_connector_string
+                            )
+
                     else:
+                        new_node_string += i.name
                         new_node_string += ",0,0"
 
                     # Add the node string to the list
                     if new_node_string != "":
                         self.node_string_list.append(new_node_string)
+
+                    if new_bus_string != "":
+                        self.bus_string_list.append(new_bus_string)
 
                 # If we get a Line object
                 #
@@ -542,8 +624,24 @@ class Writer(AbstractWriter):
                                             new_sectionID + "*"
                                         )  # This is used to deal with duplicate lines from same from and to nodes
                             new_line_string += new_sectionID
-                            new_section_line = "{id},{f},{t}".format(
-                                id=new_sectionID, f=i.from_element, t=i.to_element
+                            from_index = 0
+                            to_index = 0
+                            if (
+                                hasattr(i, "from_element_connection_index")
+                                and i.from_element_connection_index is not None
+                            ):
+                                from_index = i.from_element_connection_index
+                            if (
+                                hasattr(i, "to_element_connection_index")
+                                and i.to_element_connection_index is not None
+                            ):
+                                to_index = i.to_element_connection_index
+                            new_section_line = "{id},{f},{fi},{t},{ti}".format(
+                                id=new_sectionID,
+                                f=i.from_element,
+                                fi=from_index,
+                                t=i.to_element,
+                                ti=to_index,
                             )
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
@@ -1358,7 +1456,7 @@ class Writer(AbstractWriter):
                         new_section_ID = "{f}_{t}".format(
                             f=i.connecting_element, t=i.name
                         )
-                        new_section = "{f}_{t},{f},{t},".format(
+                        new_section = "{f}_{t},{f},0,{t},0,".format(  # Assume only one index for the load connection point
                             f=i.connecting_element, t=i.name
                         )
 
@@ -1576,7 +1674,7 @@ class Writer(AbstractWriter):
                             new_section_ID = "{f}_{t}".format(
                                 f=i.connecting_element, t=i.name
                             )
-                            new_section = "{f}_{t},{f},{t},".format(
+                            new_section = "{f}_{t},{f},0,{t},0,".format(  # assume only one connection point for capacitors
                                 f=i.connecting_element, t=i.name
                             )
                             new_capacitor_line += new_section_ID
@@ -1745,8 +1843,20 @@ class Writer(AbstractWriter):
                         and i.to_element is not None
                     ):
                         # try:
-                        new_section = "{f}_{t},{f},{t},".format(
-                            f=i.from_element, t=i.to_element
+                        from_index = 0
+                        to_index = 0
+                        if (
+                            hasattr(i, "from_element_connection_index")
+                            and i.from_element_connection_index is not None
+                        ):
+                            from_index = i.from_element_connection_index
+                        if (
+                            hasattr(i, "to_element_connection_index")
+                            and i.to_element_connection_index is not None
+                        ):
+                            to_index = i.to_element_connection_index
+                        new_section = "{f}_{t},{f},{fi},{t},{ti},".format(
+                            f=i.from_element, fi=from_index, t=i.to_element, ti=to_index
                         )
                         new_section_ID = "{f}_{t}".format(
                             f=i.from_element, t=i.to_element
@@ -1777,6 +1887,8 @@ class Writer(AbstractWriter):
                     winding2 = None
                     from_element = None
                     to_element = None
+                    from_index = 0
+                    to_index = 0
                     windings_local = []
                     # import pdb;pdb.set_trace()
                     if hasattr(i, "windings") and i.windings is not None:
@@ -1797,17 +1909,34 @@ class Writer(AbstractWriter):
                             ):
                                 from_element = i.from_element
                                 to_element = i.to_element
+
+                                if (
+                                    hasattr(i, "from_element_connection_index")
+                                    and i.from_element_connection_index is not None
+                                ):
+                                    from_index = i.from_element_connection_index
+                                if (
+                                    hasattr(i, "to_element_connection_index")
+                                    and i.to_element_connection_index is not None
+                                ):
+                                    to_index = i.to_element_connection_index
                     if winding1 is not None and winding2 is not None:
                         windings_local = [winding1, winding2]
                         if winding1.nominal_voltage != winding2.nominal_voltage:
                             new_trans_sectionID = "{f}_{t}".format(
                                 f=from_element, t=to_element + "_reg"
                             )
-                            new_trans_section = "{f}_{t},{f},{t},".format(
-                                f=from_element, t=to_element + "_reg"
+                            new_trans_section = "{f}_{t},{f},{fi},{t},{ti},".format(
+                                f=from_element,
+                                fi=from_index,
+                                t=to_element + "_reg",
+                                ti=to_index,
                             )
-                            new_section = "{f}_{t},{f},{t},".format(
-                                f=to_element + "_reg", t=to_element
+                            new_section = "{f}_{t},{f},{fi},{t},{ti},".format(
+                                f=to_element + "_reg",
+                                fi=from_index,
+                                t=to_element,
+                                ti=to_index,
                             )
                             new_section_ID = "{f}_{t}".format(
                                 f=to_element + "_reg", t=to_element
@@ -2207,14 +2336,17 @@ class Writer(AbstractWriter):
                     else:
                         new_regulator_string += ","
 
-                    if hasattr(i, "bandcenter") and i.bandcenter is not None:
+                    if hasattr(i, "setpoint") and i.setpoint is not None:
+                        scaled_setpoint = i.setpoint * 120 / 100.0
                         try:
-                            if str(i.pt_phase) == "A":
-                                new_regulator_string += "," + str(i.bandcenter) + ",0,0"
-                            elif str(i.pt_phase) == "B":
-                                new_regulator_string += ",0," + str(i.bandcenter) + ",0"
-                            elif str(i.pt_phase) == "C":
-                                new_regulator_string += ",0,0," + str(i.bandcenter)
+                            new_regulator_string += (
+                                ","
+                                + str(scaled_setpoint)
+                                + ","
+                                + str(scaled_setpoint)
+                                + ","
+                                + str(scaled_setpoint)
+                            )  # Assume same setpoint on all phases
                         except:
                             new_regulator_string += ",,,"
                     else:
@@ -2301,9 +2433,27 @@ class Writer(AbstractWriter):
                         and hasattr(transformer_object, "to_element")
                         and transformer_object.to_element is not None
                     ):
-                        new_section = "{f}_{t},{f},{t},".format(
+                        from_index = 0
+                        to_index = 0
+                        if (
+                            hasattr(transformer_object, "from_element_connection_index")
+                            and transformer_object.from_element_connection_index
+                            is not None
+                        ):
+                            from_index = (
+                                transformer_object.from_element_connection_index
+                            )
+                        if (
+                            hasattr(transformer_object, "to_element_connection_index")
+                            and transformer_object.to_element_connection_index
+                            is not None
+                        ):
+                            to_index = transformer_object.to_element_connection_index
+                        new_section = "{f}_{t},{f},{fi},{t},{ti},".format(
                             f=transformer_object.from_element,
+                            fi=from_index,
                             t=transformer_object.to_element,
+                            ti=to_index,
                         )
                         new_section_ID = "{f}_{t}".format(
                             f=transformer_object.from_element,
@@ -3134,6 +3284,11 @@ class Writer(AbstractWriter):
             for node_string in self.node_string_list:
                 f.write(node_string + "\n")
 
+            if len(self.bus_string_list) > 0:
+                f.write("FORMAT_NODE=NodeID,CoordX1,CoordY1,CoordX2,CoordY2,Width\n")
+                for bus_string in self.bus_string_list:
+                    f.write(bus_string + "\n")
+
             # Intermediate nodes
             #
             f.write("\n[INTERMEDIATE NODES]\n")
@@ -3237,7 +3392,9 @@ class Writer(AbstractWriter):
             f.write("\n[SECTION]\n")
 
             # Always write the SECTION format
-            f.write("FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase,SubNetworkId\n")
+            f.write(
+                "FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,SubNetworkId\n"
+            )
 
             # Always write the FEEDER format
             f.write("FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet\n")
@@ -3412,7 +3569,7 @@ class Writer(AbstractWriter):
                             X = 0
                             Y = 0
                         f.write(
-                            "{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,0.755872,0.251957,1\n".format(
+                            "{NetID},0,{X},{Y},{Height},{Length},-1,Geographically Referenced,-1,5,0.251957,1\n".format(
                                 NetID=f_name.split("ation_")[1],
                                 X=X,
                                 Y=Y,
@@ -3617,6 +3774,13 @@ class Writer(AbstractWriter):
                     "FORMAT_DGGENERATIONMODEL=DeviceNumber,DeviceType,LoadModelName,ActiveGeneration,PowerFactor\n"
                 )
                 for i in dg_generation_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(self.node_connector_string_list) > 0:
+                f.write("\n[NODE CONNECTOR]\n")
+                f.write("FORMAT_NODECONNECTOR=NodeID,CoordX,CoordY,SectionID\n")
+                for i in self.node_connector_string_list:
                     f.write(i)
                     f.write("\n")
 
@@ -3953,7 +4117,7 @@ class Writer(AbstractWriter):
                         new_section_ID = "{f}_{t}".format(
                             f=i.connecting_element, t=i.name
                         )
-                        new_section = "{f}_{t},{f},{t},".format(
+                        new_section = "{f}_{t},{f},0,{t},0,".format(  # Assume loads only have one connection point
                             f=i.connecting_element, t=i.name
                         )
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
@@ -4101,13 +4265,21 @@ class Writer(AbstractWriter):
 
                     # CustomerNumber, CustomerType
                     found_timeseries = False
-                    if hasattr(i, "timeseries") and i.timeseries is not None and len(i.timeseries)>0:
+                    if (
+                        hasattr(i, "timeseries")
+                        and i.timeseries is not None
+                        and len(i.timeseries) > 0
+                    ):
                         ts = i.timeseries[0]
-                        if hasattr(ts,"data_label") and ts.data_label is not None and len(ts.data_label)>0:
-                            new_customer_load_string+=ts.data_label
+                        if (
+                            hasattr(ts, "data_label")
+                            and ts.data_label is not None
+                            and len(ts.data_label) > 0
+                        ):
+                            new_customer_load_string += ts.data_label
                             found_timeseries = True
                     if not found_timeseries:
-                        new_customer_load_string+="PQ"
+                        new_customer_load_string += "PQ"
 
                     # CenterTapPercent and values
                     # Only fill these fields if the load is a center tap load and
