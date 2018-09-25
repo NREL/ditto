@@ -1229,26 +1229,28 @@ class Writer(AbstractWriter):
                 if (
                     hasattr(i, "data_location")
                     and i.data_location is not None
-                    and os.path.isfile(os.path.join('..','..',i.data_location))
+                    and os.path.isfile(i.data_location)
                     and (i.scale_factor is None or i.scale_factor == 1)
                 ):
-                    filename = i.data_location[
+                    filename = i.data_location.split("/")[-1][
                         :-4
                     ]  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
-                    location = os.path.join('..','..',filename) #Assume the load is in a feeder and the data is two folders up. TODO Fix this correctly
+                    location = os.path.join(
+                        "..", "..", filename
+                    )  # Assume the load is in a feeder and the data is two folders up. TODO Fix this correctly
                     if i.data_location in self.timeseries_datasets:
                         continue
-                    npoints = len(pd.read_csv(location))
+                    npoints = len(pd.read_csv(i.data_location))
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
                     ):  # The cases of hourly, minute or second resolution data for exactly one day TODO: make this more precise
                         self.timeseries_format[filename] = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
-                    txt += "New loadshape .{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
+                    txt += "New loadshape {filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
                         filename=filename,
                         npoints=npoints,
-                        data_location=location,
+                        data_location=i.data_location.split("/")[-1],
                     )
                     self.timeseries_datasets[i.data_location] = filename
 
@@ -1279,7 +1281,7 @@ class Writer(AbstractWriter):
                         self.timeseries_format[filename] = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
-                    txt += "New loadshape .{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
+                    txt += "New loadshape {filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
                         filename=filename,
                         npoints=npoints,
                         data_location=scaled_data_location,
@@ -1287,12 +1289,15 @@ class Writer(AbstractWriter):
                 # elif: In memory
                 #     pass
                 else:
+                    import pdb
+
+                    pdb.set_trace()
                     pass  # problem
 
                 self.timeseries_datasets[i.data_location] = filename
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
 
-                    # pass #TODO: write the timeseries data if it's in memory
+                # pass #TODO: write the timeseries data if it's in memory
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
