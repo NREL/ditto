@@ -1238,7 +1238,10 @@ class Writer(AbstractWriter):
                     location = os.path.join(
                         "..", "..", filename
                     )  # Assume the load is in a feeder and the data is two folders up. TODO Fix this correctly
-                    if i.data_location in self.timeseries_datasets:
+                    if (
+                        i.data_location in self.timeseries_datasets
+                        and substation_name + "_" + feeder_name in feeder_text_map
+                    ):  # Need to make sure the loadshape exits in each subfolder
                         continue
                     npoints = len(pd.read_csv(i.data_location))
                     if (
@@ -1269,7 +1272,10 @@ class Writer(AbstractWriter):
                         + "__scaled%s" % (str(int((i.scale_factor) * 100)).zfill(3))
                         + i.data_location[-4:]
                     )
-                    if i.data_location in self.timeseries_datasets:
+                    if (
+                        i.data_location in self.timeseries_datasets
+                        and substation_name + "_" + feeder_name in feeder_text_map
+                    ):  # Need to make sure the loadshape exits in each subfolder
                         continue
                     timeseries = pd.read_csv(i.data_location)
                     npoints = len(timeseries)

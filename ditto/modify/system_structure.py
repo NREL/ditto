@@ -569,6 +569,7 @@ class system_structure_modifier(Modifier):
 
         # Instanciate the list of nominal voltages (one value for each group)
         nominal_voltage_group = [None for _ in node_mapping]
+        upstream_transformer_name_group = [None for _ in node_mapping]
 
         # For every group...
         for idx, group in enumerate(node_mapping):
@@ -588,6 +589,7 @@ class system_structure_modifier(Modifier):
 
                 # ...get the transformer object
                 upstream_transformer_object = self.model[upstream_transformer_name]
+                upstream_transformer_name_group[idx] = upstream_transformer_name
 
                 # Get the nominal voltage of the secondary
                 if (
@@ -615,6 +617,10 @@ class system_structure_modifier(Modifier):
 
                 # And set the nominal voltage as the group value
                 self.model[n].nominal_voltage = nominal_voltage_group[idx]
+                if isinstance(self.model[n], Load):
+                    self.model[
+                        n
+                    ].upstream_transformer_name = upstream_transformer_name_group[idx]
 
         # Now we take care of the Lines.
         # Since we should have the nominal voltage for every node (in a perfect world),
