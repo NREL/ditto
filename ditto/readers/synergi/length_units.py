@@ -1,11 +1,11 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class SynergiValueType(Enum):
-    SUL = auto()
-    MUL = auto()
-    LUL = auto()
-    Per_LUL = auto()
+    SUL = 'SUL'
+    MUL = 'MUL'
+    LUL = 'LUL'
+    Per_LUL = 'Per_LUL'
 
 
 def convert_length_unit(value, value_type, length_units):
