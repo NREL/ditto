@@ -54,7 +54,7 @@ def test_single_phase_capacitor_writing():
 def test_three_phase_capacitor_writing():
     m = Store()
 
-    # Create a one phase, 100kVar capacitor on phase A
+    # Create a three phase, 900kVar capacitor
     cap1 = Capacitor(m)
     cap1.connecting_element = "bus66"
     cap1.nominal_voltage = 4.16 * 10 ** 3
