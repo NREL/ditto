@@ -27,40 +27,44 @@ def test_linegeometries():
     assert len(m["line1"].wires) == 4  # Line1 should have 4 wires
 
     # Phases of the different wires
-    assert [w.phase for w in m["line1"].wires] == ["A", "B", "C", "N"]
+    assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C", "N"])
+
+    phased_wires = {}
+    for wire in m["line1"].wires:
+        phased_wires[wire.phase] = wire
 
     # Nameclass
-    assert [w.nameclass for w in m["line1"].wires] == ["ACSR336"] * 3 + ["ACSR1/0"]
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].nameclass == "ACSR336"
+    assert phased_wires["N"].nameclass == "ACSR1/0"
 
     # Positions of the wires
-    assert [w.X for w in m["line1"].wires] == [
-        -1.2909,
+    assert (phased_wires["A"].X, phased_wires["A"].Y) == (-1.2909, 13.716)
+    assert (phased_wires["B"].X, phased_wires["B"].Y) == (
         -0.1530096 * 0.3048,
-        0.5737,
-        0.0,
-    ]
-    assert [w.Y for w in m["line1"].wires] == [
-        13.716,
         4.1806368 * 0.3048,
-        13.716,
-        14.648,
-    ]
+    )
+    assert (phased_wires["C"].X, phased_wires["C"].Y) == (0.5737, 13.716)
+    assert (phased_wires["N"].X, phased_wires["N"].Y) == (0.0, 14.648)
 
     # GMR
-    assert [w.gmr for w in m["line1"].wires] == [0.0255 * 0.3048] * 3 + [
-        0.00446 * 0.3048
-    ]
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].gmr == 0.0255 * 0.3048
+    assert phased_wires["N"].gmr == 0.00446 * 0.3048
 
     # Diameter
-    assert [w.diameter for w in m["line1"].wires] == [0.741 * 0.0254] * 3 + [
-        0.398 * 0.0254
-    ]
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].diameter == 0.741 * 0.0254
+    assert phased_wires["N"].diameter == 0.398 * 0.0254
 
     # Resistance
     # TODO: Change this once the resistance of a Wire object will no longer be the total
     # resistance, but the per meter resistance...
     #
-    assert np.allclose(
-        [w.resistance for w in m["line1"].wires],
-        [0.306 * 0.000621371 * 300 * 0.3048] * 3 + [1.12 * 0.000621371 * 300 * 0.3048],
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].resistance == pytest.approx(
+            0.306 * 0.000621371 * 300 * 0.3048, 0.00001
+        )
+    assert phased_wires["N"].resistance == pytest.approx(
+        1.12 * 0.000621371 * 300 * 0.3048, 0.00001
     )
