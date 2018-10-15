@@ -579,7 +579,7 @@ class Reader(AbstractReader):
                 or value == "3"
                 or value.lower() == "open delta"
                 or value == "4"
-                or value == "closed delta"
+                or value.lower() == "closed delta"
             ):
                 return "D"
             if value == "5" or value.lower() == "zg":
