@@ -22,9 +22,9 @@ def convert_length_unit(value, value_type, length_units):
     +----------+----------------+------------+
     |   SUL    |     Metric     |     mm     |
     +----------+----------------+------------+
-    |   MUL    |    English2    |    inch    |
+    |   MUL    |    English2    |    foot    |
     +----------+----------------+------------+
-    |   MUL    |    English1    |    inch    |
+    |   MUL    |    English1    |    foot    |
     +----------+----------------+------------+
     |   MUL    |     Metric     |     m      |
     +----------+----------------+------------+
