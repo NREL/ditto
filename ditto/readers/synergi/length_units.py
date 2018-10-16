@@ -73,7 +73,7 @@ def convert_length_unit(value, value_type, length_units):
             SynergiValueType.SUL: 0.0254,
             SynergiValueType.MUL: 0.3048,
             SynergiValueType.LUL: 1609.34,
-            SynergiValueType.Per_LUL: 0.000621371,
+            SynergiValueType.Per_LUL: 1/1609.34,
         },
         'English1': {
             SynergiValueType.SUL: 0.0254,
