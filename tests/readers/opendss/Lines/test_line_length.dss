@@ -1,0 +1,33 @@
+Clear
+
+New circuit.test_line_length basekv=4.16 pu=1.01 phases=3 bus1=sourcebus
+
+! Line 1 is a 100 meters 3 phase line
+New Line.line1 Bus1=sourcebus Bus2=bus1 phases=3 Length=100 units=m
+
+! Line 2 is a 83.47 kilo-feet 3 phase line
+New Line.line2 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3 phases=3 Length=83.47 units=kft
+
+! Line 3 is a 200 feet 2 phases line
+New Line.line3 Bus1=bus2.1.3 Bus2=bus3.1.3 phases=2 Length=200 units=ft
+
+! Line 4 is a 1.01 miles 1 phase line
+New Line.line4 Bus1=bus2.2 Bus2=bus4.2 phases=1 Length=1.01 units=mi
+
+! Line 5 is a 2040.12 centimeters 3 phase line
+New Line.line5 Bus1=bus2 Bus2=bus5 phases=3 Length=2040.12 units=cm
+
+! Line 6 is a 1666.87 inches 1 phase line
+New Line.line6 Bus1=bus2.1 Bus2=bus6.1 phases=1 Length=1666.87 units=in
+
+! Line 7 uses like to have the same characteristics as line 1
+! NOTE: DOES NOT WORK IN OPENDSSDIRECT. UNDER INVESTIGATION...
+! IGNORE Line7 and Line8 for now...
+! New Line.line7 Bus1=bus2 Bus2=Bus7 like=line1
+
+! Line 8 uses like to have the same characteristics as line 1
+! New Line.line8 Bus1=bus7 Bus2=Bus8 like=line1 Length=300
+
+Set Voltagebases=[4.16]
+Calcvoltagebases
+Solve
