@@ -51,7 +51,7 @@ class Writer(AbstractWriter):
         with open(os.path.join(self.output_path, "Model.txt"), "w") as fp:
 
             # Write lines
-            self.logger.info("Writing the Lines...")
+            logger.info("Writing the Lines...")
             if self.verbose:
                 logger.debug("Writing the Lines...")
             s = self.write_lines(model, fp)

@@ -362,7 +362,7 @@ class Writer(AbstractWriter):
                     R = np.real(Z)  # Resistance matrix
                     X = np.imag(Z)  # Reactance  matrix
                 except:
-                    self.logger.error(
+                    logger.error(
                         "Problem with impedance matrix in line {name}".format(
                             name=line.name
                         )
@@ -692,7 +692,7 @@ class Writer(AbstractWriter):
                                     index
                                 ] = "delta"
                             else:
-                                self.logger.error(
+                                logger.error(
                                     "Unsupported type of connection {conn} for transformer {name}".format(
                                         conn=winding.connection_type, name=i.name
                                     )
@@ -731,7 +731,7 @@ class Writer(AbstractWriter):
                                     #     obj_dict[tap_name][index] = pw.tap_position
 
                     if len(np.unique(N_phases)) != 1:
-                        self.logger.error(
+                        logger.error(
                             "Did not find the same number of phases accross windings of transformer {name}".format(
                                 name=i.name
                             )
@@ -741,7 +741,7 @@ class Writer(AbstractWriter):
                         logger.debug(" phases={Np}".format(Np=N_phases[0]))
                         logger.debug(" windings={N}".format(N=len(i.windings)))
                     except:
-                        self.logger.error(
+                        logger.error(
                             "Could not write the number of phases for transformer {name}".format(
                                 name=i.name
                             )

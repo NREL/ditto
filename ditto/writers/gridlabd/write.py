@@ -18,7 +18,7 @@ from ditto.models.winding import Winding
 
 from ..abstract_writer import AbstractWriter
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Writer(AbstractWriter):
@@ -64,7 +64,7 @@ class Writer(AbstractWriter):
         with open(os.path.join(self.output_path, "Model.glm"), "w") as fp:
 
             # Write the modules
-            self.logger.info("Writing the Module...")
+            logger.info("Writing the Module...")
             if self.verbose:
                 logger.debug("Writing the Module...")
             fp.write(
@@ -74,7 +74,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write the nodes
-            self.logger.info("Writing the Nodes...")
+            logger.info("Writing the Nodes...")
             if self.verbose:
                 logger.debug("Writing the Nodes...")
             s = self.write_nodes(model, fp)
@@ -82,7 +82,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write the capacitors
-            self.logger.info("Writing the Capacitors...")
+            logger.info("Writing the Capacitors...")
             if self.verbose:
                 logger.debug("Writing the Capacitors...")
             s = self.write_capacitors(model, fp)
@@ -90,7 +90,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write the loads
-            self.logger.info("Writing the Loads...")
+            logger.info("Writing the Loads...")
             if self.verbose:
                 logger.debug("Writing the Loads...")
             s = self.write_loads(model, fp)
@@ -98,7 +98,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write transformer configurations
-            self.logger.info("Writing the Transformer Configurations...")
+            logger.info("Writing the Transformer Configurations...")
             if self.verbose:
                 logger.debug("Writing the Transformer Configurations...")
             s = self.write_transformer_configurations(model, fp)
@@ -106,7 +106,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write transformers
-            self.logger.info("Writing the Transformers...")
+            logger.info("Writing the Transformers...")
             if self.verbose:
                 logger.debug("Writing the Transformers...")
             s = self.write_transformers(model, fp)
@@ -114,7 +114,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write regulator configurations
-            self.logger.info("Writing the Regulator Configurations...")
+            logger.info("Writing the Regulator Configurations...")
             if self.verbose:
                 logger.debug("Writing the Regulator Configurations...")
             s = self.write_regulator_configurations(model, fp)
@@ -122,7 +122,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write regulators
-            self.logger.info("Writing the Regulators...")
+            logger.info("Writing the Regulators...")
             if self.verbose:
                 logger.debug("Writing the Regulators...")
             s = self.write_regulators(model, fp)
@@ -130,7 +130,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write line configurations
-            self.logger.info("Writing the Line Configurations...")
+            logger.info("Writing the Line Configurations...")
             if self.verbose:
                 logger.debug("Writing the Line Configurations...")
             s = self.write_line_configurations(model, fp)
@@ -138,7 +138,7 @@ class Writer(AbstractWriter):
                 logger.debug("Succesful!")
 
             # Write lines
-            self.logger.info("Writing the Lines...")
+            logger.info("Writing the Lines...")
             if self.verbose:
                 logger.debug("Writing the Lines...")
             s = self.write_lines(model, fp)
