@@ -123,7 +123,7 @@ class Writer(AbstractWriter):
 
         self._baseKV_ = set()
 
-        self.logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
+        logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
 
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
@@ -159,7 +159,7 @@ class Writer(AbstractWriter):
             self.separate_substations = False
 
         # Write the bus coordinates
-        self.logger.info("Writing the bus coordinates...")
+        logger.info("Writing the bus coordinates...")
         if self.verbose:
             logger.debug("Writing the bus coordinates...")
         s = self.write_bus_coordinates(model)
@@ -167,7 +167,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the transformers
-        self.logger.info("Writing the transformers...")
+        logger.info("Writing the transformers...")
         if self.verbose:
             logger.debug("Writing the transformers...")
         s = self.write_transformers(model)
@@ -175,7 +175,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the regulators
-        self.logger.info("Writing the regulators...")
+        logger.info("Writing the regulators...")
         if self.verbose:
             logger.debug("Writing the regulators...")
         s = self.write_regulators(model)
@@ -183,7 +183,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the capacitors
-        self.logger.info("Writing the capacitors...")
+        logger.info("Writing the capacitors...")
         if self.verbose:
             logger.debug("Writing the capacitors...")
         s = self.write_capacitors(model)
@@ -191,7 +191,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # write the timeseries
-        self.logger.info("Writing the timeseries...")
+        logger.info("Writing the timeseries...")
         if self.verbose:
             logger.debug("Writing the timeseries...")
         s = self.write_timeseries(model)
@@ -199,7 +199,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # write the loads
-        self.logger.info("Writing the loads...")
+        logger.info("Writing the loads...")
         if self.verbose:
             logger.debug("Writing the loads...")
         s = self.write_loads(model)
@@ -207,7 +207,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the lines
-        self.logger.info("Writting the lines...")
+        logger.info("Writting the lines...")
         if self.verbose:
             logger.debug("Writting the lines...")
         s = self.write_lines(model)
@@ -215,7 +215,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the storage elements
-        self.logger.info("Writting the storage devices...")
+        logger.info("Writting the storage devices...")
         if self.verbose:
             logger.debug("Writting the storage devices...")
         s = self.write_storages(model)
@@ -223,7 +223,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the PV
-        self.logger.info("Writting the PVs...")
+        logger.info("Writting the PVs...")
         if self.verbose:
             logger.debug("Writting the PVs...")
         s = self.write_PVs(model)
@@ -231,14 +231,14 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the Master file
-        self.logger.info("Writting the master file...")
+        logger.info("Writting the master file...")
         if self.verbose:
             logger.debug("Writting the master file...")
         s = self.write_master_file(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
-        self.logger.info("Done.")
+        logger.info("Done.")
         if self.verbose:
             logger.debug("Writting done.")
 
@@ -451,7 +451,7 @@ class Writer(AbstractWriter):
                         ):
                             N_phases.append(len(winding.phase_windings))
                     if len(np.unique(N_phases)) != 1:
-                        self.logger.error(
+                        logger.error(
                             "Did not find the same number of phases accross windings of transformer {name}".format(
                                 name=i.name
                             )
@@ -461,7 +461,7 @@ class Writer(AbstractWriter):
                         txt += " phases={Np}".format(Np=N_phases[0])
                         txt += " windings={N}".format(N=len(i.windings))
                     except:
-                        self.logger.error(
+                        logger.error(
                             "Could not write the number of phases for transformer {name}".format(
                                 name=i.name
                             )
@@ -569,7 +569,7 @@ class Writer(AbstractWriter):
                                 elif winding.connection_type == "D":
                                     txt += " conn=delta"
                                 else:
-                                    self.logger.error(
+                                    logger.error(
                                         "Unsupported type of connection {conn} for transformer {name}".format(
                                             conn=winding.connection_type, name=i.name
                                         )
@@ -672,7 +672,7 @@ class Writer(AbstractWriter):
                             # Since we are in the case of 2 windings, we should only have one reactance
                             if isinstance(i.reactances, list):
                                 if len(i.reactances) != 1:
-                                    self.logger.error(
+                                    logger.error(
                                         "Number of reactances incorrect for transformer {name}. Expected 1, got {N}".format(
                                             name=i.name, N=len(i.reactances)
                                         )
@@ -683,7 +683,7 @@ class Writer(AbstractWriter):
                             elif isinstance(i.reactances, (int, float)):
                                 txt += " XHL={reac}".format(reac=i.reactances)
                             else:
-                                self.logger.error(
+                                logger.error(
                                     "Reactances not understood for transformer {name}.".format(
                                         name=i.name
                                     )
@@ -708,7 +708,7 @@ class Writer(AbstractWriter):
                                 elif winding.connection_type == "D":
                                     txt += " conn=delta"
                                 else:
-                                    self.logger.error(
+                                    logger.error(
                                         "Unsupported type of connection {conn} for transformer {name}".format(
                                             conn=winding.connection_type, name=i.name
                                         )
@@ -805,7 +805,7 @@ class Writer(AbstractWriter):
                                     XHT=i.reactances[2],
                                 )
                             else:
-                                self.logger.error(
+                                logger.error(
                                     "Wrong number of reactances for transformer {name}".format(
                                         name=i.name
                                     )
@@ -1688,7 +1688,10 @@ class Writer(AbstractWriter):
                         if hasattr(i, "windings") and i.windings is not None:
                             kvs = " kvs=("
                             for w, winding in enumerate(i.windings):
-                                if hasattr(i.windings[w], "nominal_voltage") and i.windings[w].nominal_voltage is not None:
+                                if (
+                                    hasattr(i.windings[w], "nominal_voltage")
+                                    and i.windings[w].nominal_voltage is not None
+                                ):
                                     kvs += str(i.windings[w].nominal_voltage) + ", "
                                     self._baseKV_.add(i.windings[w].nominal_voltage)
                             kvs = kvs[:-2]
@@ -1729,7 +1732,7 @@ class Writer(AbstractWriter):
                                         i.reactances[0]
                                     )
                             except:
-                                self.logger.warning(
+                                logger.warning(
                                     "Could not extract XHL from regulator {name}".format(
                                         name=i.name
                                     )
@@ -1742,7 +1745,7 @@ class Writer(AbstractWriter):
                                         i.reactances[1]
                                     )
                             except:
-                                self.logger.warning(
+                                logger.warning(
                                     "Could not extract XLT from regulator {name}".format(
                                         name=i.name
                                     )
@@ -1755,7 +1758,7 @@ class Writer(AbstractWriter):
                                         i.reactances[2]
                                     )
                             except:
-                                self.logger.warning(
+                                logger.warning(
                                     "Could not extract XHT from regulator {name}".format(
                                         name=i.name
                                     )
@@ -1830,7 +1833,7 @@ class Writer(AbstractWriter):
                                 x=list(self.compensator[i.name]["X"])[0]
                             )
                         else:
-                            self.logger.warning(
+                            logger.warning(
                                 """Compensator_x not the same for all windings of transformer {name}.
                                                    Using the first value for regControl {name2}.""".format(
                                     name=i.connected_transformer, name2=i.name
@@ -1848,7 +1851,7 @@ class Writer(AbstractWriter):
                                 r=list(self.compensator[i.name]["R"])[0]
                             )
                         else:
-                            self.logger.warning(
+                            logger.warning(
                                 """Compensator_r not the same for all windings of transformer {name}.
                                                    Using the first value for regControl {name2}.""".format(
                                     name=i.connected_transformer, name2=i.name
@@ -1998,7 +2001,7 @@ class Writer(AbstractWriter):
                     elif i.connection_type == "D":
                         txt += " conn=delta"
                     else:
-                        self.logger.error(
+                        logger.error(
                             "Unknown connection type in capacitor {name}".format(
                                 name=i.name
                             )
@@ -2017,7 +2020,7 @@ class Writer(AbstractWriter):
                             try:
                                 total_var += phase_capacitor.var
                             except:
-                                self.logger.error(
+                                logger.error(
                                     "Cannot compute Var of capacitor {name}".format(
                                         name=name
                                     )
@@ -2735,7 +2738,7 @@ class Writer(AbstractWriter):
                 R = np.real(Z)  # Resistance matrix
                 X = np.imag(Z)  # Reactance  matrix
             except:
-                self.logger.error(
+                logger.error(
                     "Problem with impedance matrix in line {name}".format(
                         name=line.name
                     )

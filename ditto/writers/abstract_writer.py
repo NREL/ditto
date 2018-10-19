@@ -24,6 +24,12 @@ class AbstractWriter(object):
 
         self.output_path = kwargs.get("output_path", "./")
 
+        if "log_file" in kwargs:
+            # log_file = kwargs["log_file"]
+            self.logger.warning(
+                "Log file currently not supported, please contact the developers for information on how to generate log files"
+            )
+
     @classmethod
     def register(cls, registration_dict):
         for name in cls.register_names:

@@ -25,8 +25,8 @@ def start_console_log(
     console_handler.setLevel(log_level)
     logformat = logging.Formatter(log_format)
     console_handler.setFormatter(logformat)
-    logging.getLogger().setLevel(log_level)
-    logging.getLogger().addHandler(console_handler)
+    logging.getLogger("ditto").setLevel(log_level)
+    logging.getLogger("ditto").addHandler(console_handler)
 
 
 def start_file_log(
@@ -34,9 +34,9 @@ def start_file_log(
     log_level=logging.WARN,
     log_format="%(asctime)s|%(levelname)s|%(name)s|\n    %(message)s",
 ):
-    logfile = logging.FileHandler(filename=filename)
-    logfile.setLevel(log_level)
+    file_handler = logging.FileHandler(filename=filename)
+    file_handler.setLevel(log_level)
     logformat = logging.Formatter(log_format)
-    logfile.setFormatter(logformat)
-    logging.getLogger().setLevel(log_level)
-    logging.getLogger().addHandler(logfile)
+    file_handler.setFormatter(logformat)
+    logging.getLogger("ditto").setLevel(log_level)
+    logging.getLogger("ditto").addHandler(file_handler)
