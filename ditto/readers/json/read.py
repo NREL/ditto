@@ -26,6 +26,35 @@ from ditto.models.capacitor import Capacitor
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.base import Unicode
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
+
+class_mapping = {
+    "PowerSource": PowerSource,
+    "Photovoltaic": Photovoltaic,
+    "Node": Node,
+    "Line": Line,
+    "Winding": Winding,
+    "PowerTransformer": PowerTransformer,
+    "Regulator": Regulator,
+    "Position": Position,
+    "Wire": Wire,
+    "PhaseWinding": PhaseWinding,
+    "Load": Load,
+    "PhaseLoad": PhaseLoad,
+    "Capacitor": Capacitor,
+    "PhaseCapacitor": PhaseCapacitor,
+    "Feeder_metadata": Feeder_metadata,
+    "Storage": Storage,
+    "PhaseStorage": PhaseStorage,
+    "Unicode": Unicode,
+    "int": int,
+    "float": float,
+    "str": str,
+    "bool": bool,
+    "unicode": unicode,
+    "numpy.float64": numpy.float64,
+}
 
 
 class Reader(AbstractReader):
@@ -140,8 +169,12 @@ class Reader(AbstractReader):
             # Use the klass to instantiate the proper DiTTo object
             # Ex: PowerTransformer
 
-            # TODO: Why is eval being using here?! Fix ASAP!
-            api_object = eval(_object["klass"])(self.model)
+            if _object["klass"] in class_mapping:
+                api_object = class_mapping[_object["klass"]](self.model)
+            else:
+                raise ValueError(
+                    "Class {cl} is not supported by DiTTo.".format(cl=_object["klass"])
+                )
 
             # Loop over the object properties.
             # Ex: name, postion...
@@ -175,7 +208,7 @@ class Reader(AbstractReader):
 
                                 # Instanciate the proper DiTTo object
                                 # Ex: Winding
-                                api_object_one_level_deep = eval(element_type)(
+                                api_object_one_level_deep = class_mapping[element_type](
                                     self.model
                                 )
 
@@ -207,11 +240,13 @@ class Reader(AbstractReader):
                                                 if element_deep_class in ditto_klasses:
 
                                                     # Create the proper object
-                                                    api_object_two_level_deep = eval(
+                                                    api_object_two_level_deep = class_mapping[
                                                         element_deep_class
-                                                    )(self.model)
+                                                    ](
+                                                        self.model
+                                                    )
 
-                                                    # Amd loop over its attributes
+                                                    # And loop over its attributes
                                                     for (
                                                         nested_object_property,
                                                         nested_object_property_value,
@@ -258,11 +293,11 @@ class Reader(AbstractReader):
                                                                 setattr(
                                                                     api_object_two_level_deep,
                                                                     nested_object_property,
-                                                                    eval(
+                                                                    class_mapping[
                                                                         nested_object_property_value[
                                                                             "klass"
                                                                         ]
-                                                                    )(
+                                                                    ](
                                                                         nested_object_property_value[
                                                                             "value"
                                                                         ]
@@ -288,9 +323,9 @@ class Reader(AbstractReader):
                                                 elif element_deep_class != "NoneType":
 
                                                     list_second_level.append(
-                                                        eval(element_deep_class)(
-                                                            element_deep["value"]
-                                                        )
+                                                        class_mapping[
+                                                            element_deep_class
+                                                        ](element_deep["value"])
                                                     )
 
                                             # Set the object attribute with the list we just built
@@ -318,7 +353,7 @@ class Reader(AbstractReader):
                                             setattr(
                                                 api_object_one_level_deep,
                                                 element_property,
-                                                eval(nested_element_type)(
+                                                class_mapping[nested_element_type](
                                                     element_value["value"]
                                                 ),
                                             )
@@ -349,7 +384,7 @@ class Reader(AbstractReader):
                                     elif element_deep["klass"] != "NoneType":
 
                                         inner_list.append(
-                                            eval(element_deep["klass"])(
+                                            class_mapping[element_deep["klass"]](
                                                 element_deep["value"]
                                             )
                                         )
@@ -368,7 +403,7 @@ class Reader(AbstractReader):
                             elif element_type != "NoneType":
 
                                 list_first_level.append(
-                                    eval(element_type)(element["value"])
+                                    class_mapping[element_type](element["value"])
                                 )
 
                         # Finally, set the attribute
@@ -393,5 +428,5 @@ class Reader(AbstractReader):
                         setattr(
                             api_object,
                             object_property,
-                            eval(property_type)(property_value["value"]),
+                            class_mapping[property_type](property_value["value"]),
                         )
