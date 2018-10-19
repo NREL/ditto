@@ -1688,7 +1688,10 @@ class Writer(AbstractWriter):
                         if hasattr(i, "windings") and i.windings is not None:
                             kvs = " kvs=("
                             for w, winding in enumerate(i.windings):
-                                if hasattr(i.windings[w], "nominal_voltage") and i.windings[w].nominal_voltage is not None:
+                                if (
+                                    hasattr(i.windings[w], "nominal_voltage")
+                                    and i.windings[w].nominal_voltage is not None
+                                ):
                                     kvs += str(i.windings[w].nominal_voltage) + ", "
                                     self._baseKV_.add(i.windings[w].nominal_voltage)
                             kvs = kvs[:-2]

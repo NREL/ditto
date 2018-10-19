@@ -519,9 +519,7 @@ class Reader(AbstractReader):
                     if name not in self.all_object_names:
                         self.all_object_names.append(name)
                     else:
-                        logger.warning(
-                            "Duplicate object Node {name}".format(name=name)
-                        )
+                        logger.warning("Duplicate object Node {name}".format(name=name))
                 else:
                     buses[name]["positions"] = [X, Y]
 
@@ -560,9 +558,7 @@ class Reader(AbstractReader):
                 if b1_name not in self.all_object_names:
                     self.all_object_names.append(b1_name)
                 else:
-                    logger.warning(
-                        "Duplicate object Node {name}".format(name=b1_name)
-                    )
+                    logger.warning("Duplicate object Node {name}".format(name=b1_name))
                 buses[b1_name] = {}
                 buses[b1_name]["positions"] = None
                 buses[b1_name]["phases"] = b1_phases
@@ -577,9 +573,7 @@ class Reader(AbstractReader):
                 if b2_name not in self.all_object_names:
                     self.all_object_names.append(b2_name)
                 else:
-                    logger.warning(
-                        "Duplicate object Node {name}".format(name=b2_name)
-                    )
+                    logger.warning("Duplicate object Node {name}".format(name=b2_name))
                 buses[b2_name] = {}
                 buses[b2_name]["positions"] = None
                 buses[b2_name]["phases"] = b2_phases
@@ -646,9 +640,7 @@ class Reader(AbstractReader):
                 if b1_name not in self.all_object_names:
                     self.all_object_names.append(b1_name)
                 else:
-                    logger.warning(
-                        "Duplicate object Node {name}".format(name=b1_name)
-                    )
+                    logger.warning("Duplicate object Node {name}".format(name=b1_name))
                 buses[b1_name] = {}
                 buses[b1_name]["positions"] = None
                 buses[b1_name]["phases"] = b1_phases
