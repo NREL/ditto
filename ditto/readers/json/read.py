@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-import json
+import json_tricks
 
 # TODO: remove numpy dependency here
 import numpy
@@ -123,7 +123,7 @@ class Reader(AbstractReader):
         """Parse a JSON file to a DiTTo model."""
         # Open the input file and get the data
         with open(self.input_file, "r") as f:
-            input_data = json.load(f)
+            input_data = json_tricks.load(f)
 
         ditto_classes = [
             "PowerSource",

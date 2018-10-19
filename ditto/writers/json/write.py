@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
 import os
-import json
 import json_tricks
 
 from ditto.writers.abstract_writer import AbstractWriter
@@ -229,7 +228,4 @@ class Writer(AbstractWriter):
                 }
 
         with open(os.path.join(self.output_path, self.filename), "w") as f:
-            try:
-                f.write(json.dumps(_model))
-            except:
-                f.write(json_tricks.dumps(_model, allow_nan=True))
+            f.write(json_tricks.dumps(_model, allow_nan=True))
