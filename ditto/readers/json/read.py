@@ -52,7 +52,7 @@ class_mapping = {
     "float": float,
     "str": str,
     "bool": bool,
-    "unicode": unicode,
+    "unicode": Unicode,
     "numpy.float64": numpy.float64,
 }
 
