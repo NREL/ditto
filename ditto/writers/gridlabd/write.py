@@ -18,7 +18,7 @@ from ditto.models.winding import Winding
 
 from ..abstract_writer import AbstractWriter
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class Writer(AbstractWriter):
@@ -35,42 +35,7 @@ class Writer(AbstractWriter):
     regulator_seen = set()
 
     def __init__(self, **kwargs):
-
-        if "log_file" in kwargs:
-            log_file = kwargs["log_file"]
-        else:
-            log_file = "GridLAB-D_writer.log"
-
-        if "output_path" in kwargs:
-            self.output_path = kwargs["output_path"]
-        else:
-            self.output_path = "./"
-
-        print(self.output_path)
-        # create logger
-        self.logger = logging.getLogger("GridLAB-D_writer")
-        self.logger.setLevel(logging.INFO)
-
-        # create file handler which logs everything
-        self.fh = logging.FileHandler(log_file)
-        self.fh.setLevel(logging.INFO)
-
-        # create console handler with WARNING log level
-        self.ch = logging.StreamHandler()
-        self.ch.setLevel(logging.WARNING)
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        self.fh.setFormatter(formatter)
-        self.ch.setFormatter(formatter)
-
-        # add the handlers to the logger
-        self.logger.addHandler(self.fh)
-        self.logger.addHandler(self.ch)
-
-        self.logger.info("DiTTo--->GridLAB-D writer successfuly instanciated.")
+        super().__init__(**kwargs)
 
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
