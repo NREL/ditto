@@ -7,6 +7,7 @@ import json_tricks
 
 # TODO: remove numpy dependency here
 import numpy
+from six import text_type
 
 from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
@@ -52,7 +53,7 @@ class_mapping = {
     "float": float,
     "str": str,
     "bool": bool,
-    "unicode": Unicode,
+    "unicode": text_type,
     "numpy.float64": numpy.float64,
 }
 
