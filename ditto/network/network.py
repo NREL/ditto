@@ -10,7 +10,7 @@ import traceback
 import networkx as nx
 from ditto.models.base import DiTToHasTraits
 
-logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Network:
