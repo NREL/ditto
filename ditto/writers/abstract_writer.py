@@ -26,7 +26,9 @@ class AbstractWriter(object):
 
         if "log_file" in kwargs:
             # log_file = kwargs["log_file"]
-            self.logger.warning("Log file currently not supported, please contact the developers for information on how to generate log files")
+            self.logger.warning(
+                "Log file currently not supported, please contact the developers for information on how to generate log files"
+            )
 
     @classmethod
     def register(cls, registration_dict):
