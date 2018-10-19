@@ -63,35 +63,35 @@ class Reader(AbstractReader):
     The reader expects the following format:
 
         - objects are stored in a list [object_1,object_2,...,object_N]
-        - Each object is a dictionary object_1={'klass':'PowerTransformer',
-                                                'is_substationr':{'klass':'int',
+        - Each object is a dictionary object_1={'class':'PowerTransformer',
+                                                'is_substationr':{'class':'int',
                                                                   'value':'1'
                                                                  },
                                                 (...)
                                                 }
-        - The special key 'klass' indicates the type of the object considered.
-        - klass can be:
+        - The special key 'class' indicates the type of the object considered.
+        - class can be:
                 - a DiTTo object type like 'PowerTransformer' or 'Winding'
                 - a "standard" type like 'int', 'float', or 'str'
                 - a list ('list')
-                - a complex number: 1+2j will be {'klass':'complex', 'value':[1,2]}
+                - a complex number: 1+2j will be {'class':'complex', 'value':[1,2]}
 
     .. note:: For nested objects, this format can become a bit complex. See example below
 
     **Example:**
 
-    object_1={'klass':'PowerTransformer',
-              'is_substation':{'klass':'int',
+    object_1={'class':'PowerTransformer',
+              'is_substation':{'class':'int',
                                'value':'1'
                              },
-              'windings':{'klass':'list',
-                          'value':[{'klass':'Winding',
-                                    'rated_power':{'klass':'float',
+              'windings':{'class':'list',
+                          'value':[{'class':'Winding',
+                                    'rated_power':{'class':'float',
                                                    'value':'1000'
                                                    }
-                                    'phase_windings':{'klass':'list',
-                                                      'value':[{'klass':'PhaseWinding',
-                                                                'phase':{'klass':'Unicode',
+                                    'phase_windings':{'class':'list',
+                                                      'value':[{'class':'PhaseWinding',
+                                                                'phase':{'class':'Unicode',
                                                                          'value':'C'
                                                                          },
                                                                 (...)
@@ -125,7 +125,7 @@ class Reader(AbstractReader):
         with open(self.input_file, "r") as f:
             input_data = json.load(f)
 
-        ditto_klasses = [
+        ditto_classes = [
             "PowerSource",
             "Photovoltaic",
             "Node",
@@ -150,13 +150,13 @@ class Reader(AbstractReader):
         for _object in input_data:
 
             # Get the class of the element
-            _klass = _object["klass"]
+            _class = _object["class"]
 
             # If it is a second level or third level class, ignore the object
             # These objects will be created when handling the first level object
             # Ex: When creating a PowerTransformer, corresponding Windings and
             # PhaseWindings will be created
-            if _klass in [
+            if _class in [
                 "Winding",
                 "PhaseWinding",
                 "Wire",
@@ -166,24 +166,24 @@ class Reader(AbstractReader):
             ]:
                 continue
 
-            # Use the klass to instantiate the proper DiTTo object
+            # Use the class to instantiate the proper DiTTo object
             # Ex: PowerTransformer
 
-            if _object["klass"] in class_mapping:
-                api_object = class_mapping[_object["klass"]](self.model)
+            if _object["class"] in class_mapping:
+                api_object = class_mapping[_object["class"]](self.model)
             else:
                 raise ValueError(
-                    "Class {cl} is not supported by DiTTo.".format(cl=_object["klass"])
+                    "Class {cl} is not supported by DiTTo.".format(cl=_object["class"])
                 )
 
             # Loop over the object properties.
             # Ex: name, postion...
             for object_property, property_value in _object.items():
 
-                if object_property != "klass":
+                if object_property != "class":
 
                     # Get the type of the property
-                    property_type = property_value["klass"]
+                    property_type = property_value["class"]
 
                     # Depending on this type, there are a few different scenarios...
                     # First, if it is a list...
@@ -194,17 +194,17 @@ class Reader(AbstractReader):
                         list_first_level = []
 
                         # Loop over the element in the list
-                        # Ex: element will be a dict {'klass':Winding, 'rated_power':{'klass':'float','value':10},...}
+                        # Ex: element will be a dict {'class':Winding, 'rated_power':{'class':'float','value':10},...}
                         for element in property_value["value"]:
 
                             # Get the type of each element
                             # Ex: Winding
-                            element_type = element["klass"]
+                            element_type = element["class"]
 
                             # Again, there are multiple possibilities
                             # First, it could be a DiTTo object.
                             # Ex: Winding
-                            if element_type in ditto_klasses:
+                            if element_type in ditto_classes:
 
                                 # Instanciate the proper DiTTo object
                                 # Ex: Winding
@@ -216,11 +216,11 @@ class Reader(AbstractReader):
                                 # Ex: rated_power...
                                 for element_property, element_value in element.items():
 
-                                    if element_property != "klass":
+                                    if element_property != "class":
 
                                         # Get the type of the property
                                         # Ex: float
-                                        nested_element_type = element_value["klass"]
+                                        nested_element_type = element_value["class"]
 
                                         # If it is a list...
                                         if nested_element_type == "list":
@@ -233,11 +233,11 @@ class Reader(AbstractReader):
 
                                                 # Get the class
                                                 element_deep_class = element_deep[
-                                                    "klass"
+                                                    "class"
                                                 ]
 
                                                 # If it is a DiTTo object
-                                                if element_deep_class in ditto_klasses:
+                                                if element_deep_class in ditto_classes:
 
                                                     # Create the proper object
                                                     api_object_two_level_deep = class_mapping[
@@ -254,13 +254,13 @@ class Reader(AbstractReader):
 
                                                         if (
                                                             nested_object_property
-                                                            != "klass"
+                                                            != "class"
                                                         ):
 
                                                             # At this point, it should be either a complex...
                                                             if (
                                                                 nested_object_property_value[
-                                                                    "klass"
+                                                                    "class"
                                                                 ]
                                                                 == "complex"
                                                             ):
@@ -285,7 +285,7 @@ class Reader(AbstractReader):
                                                             # ...or a standard type
                                                             elif (
                                                                 nested_object_property_value[
-                                                                    "klass"
+                                                                    "class"
                                                                 ]
                                                                 != "NoneType"
                                                             ):
@@ -295,7 +295,7 @@ class Reader(AbstractReader):
                                                                     nested_object_property,
                                                                     class_mapping[
                                                                         nested_object_property_value[
-                                                                            "klass"
+                                                                            "class"
                                                                         ]
                                                                     ](
                                                                         nested_object_property_value[
@@ -371,7 +371,7 @@ class Reader(AbstractReader):
                                 for element_deep in element["value"]:
 
                                     # They could be complex numbers
-                                    if element_deep["klass"] == "complex":
+                                    if element_deep["class"] == "complex":
 
                                         inner_list.append(
                                             complex(
@@ -381,10 +381,10 @@ class Reader(AbstractReader):
                                         )
 
                                     # Or standard numbers (int or float)
-                                    elif element_deep["klass"] != "NoneType":
+                                    elif element_deep["class"] != "NoneType":
 
                                         inner_list.append(
-                                            class_mapping[element_deep["klass"]](
+                                            class_mapping[element_deep["class"]](
                                                 element_deep["value"]
                                             )
                                         )
