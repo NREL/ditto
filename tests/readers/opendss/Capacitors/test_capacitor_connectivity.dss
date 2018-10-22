@@ -1,0 +1,19 @@
+Clear
+
+New circuit.test_capacitor_connectivity basekv=4.16 pu=1.01 phases=3 bus1=sourcebus
+
+! Capacitor Cap1 should be a three phase capacitor (3 PhaseCapacitor objects) connected to bus1
+New Capacitor.Cap1 Bus1=bus1 phases=3 kVAR=600 kV=4.16
+
+! Capacitor Cap2 should be a one phase capacitor (1 PhaseCapacitor object) connected to bus2 on phase C
+New Capacitor.Cap2 Bus1=bus2.3 phases=1 kVAR=100 kV=2.4
+
+! Capacitor Cap3 should be a one phase capacitor (1 PhaseCapacitor object) connected to bus3 on phase A
+New Capacitor.Cap3 Bus1=bus3.1 phases=1 kVAR=200.37 kV=2.4
+
+! Capacitor Cap4 should be a two phase capacitor (2 PhaseCapacitor objects) connected to bus4 on phase A and C
+New Capacitor.Cap4 Bus1=bus4.1.3 phases=2 kVAR=400 kV=2.4
+
+Set Voltagebases=[4.16, 2.4]
+Calcvoltagebases
+Solve
