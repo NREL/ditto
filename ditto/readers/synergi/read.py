@@ -1102,7 +1102,7 @@ class Reader(AbstractReader):
                     #
                     if api_line.length is not None:
                         api_wire.resistance = convert_length_unit(
-                            conductor_mapping[conductor_name_raw]["CableResistance"]
+                            conductor_mapping[conductor_name_raw]["CableResistance"],
                             SynergiValueType.Per_LUL,
                             LengthUnits
                         )
