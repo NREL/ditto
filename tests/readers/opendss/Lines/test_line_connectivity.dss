@@ -1,0 +1,30 @@
+Clear
+
+New circuit.test_line_connectivity basekv=4.16 pu=1.01 phases=3 bus1=sourcebus
+
+! Line1 connects sourcebus to bus1 and should have 4 wires: A, B, C, and N
+New Line.line1 Bus1=sourcebus Bus2=bus1 phases=3 Length=100 units=m
+
+! Line2 connects bus1 to bus2 and should have 4 wires: A, B, C, and N
+New Line.line2 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3 phases=3 Length=200 units=m
+
+! Line3 connects bus2 to bus3 and should have 3 wires: A, B, and N
+New Line.line3 Bus1=bus2.1.2 Bus2=bus3.1.2 phases=2 Length=50 units=m
+
+! Line4 connects bus3 to bus4 and should have 2 wires: B, and N
+New Line.line4 Bus1=bus3.2 Bus2=bus4.2 phases=1 Length=25 units=m
+
+! Line5 connects bus1 to bus5 and should have 3 wires: A, C, and N
+New Line.line5 Bus1=bus1.1.3 Bus2=bus5.1.3 phases=2 Length=1500 units=ft
+
+! Line6 connects bus4 to bus6 and should have 3 wires: B, C, and N
+! This line is obviously wrong since it is downstream of a one phase
+! line. However, DiTTo cannot know this when reading.
+New Line.line6 Bus1=bus4.2.3 Bus2=bus6.2.3 phases=2 Length=110 units=m
+
+! Line7 should raise some error in DiTTo since it only supports 1, 2, 3, and 0.
+New Line.line7 Bus1=bus1.6.9 Bus2=bus2.6.9 phases=2 Length=100 units=m
+
+Set Voltagebases=[4.16]
+Calcvoltagebases
+Solve
