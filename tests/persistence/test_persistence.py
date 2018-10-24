@@ -21,8 +21,11 @@ for (dirpath, dirname, files) in test_list:
         m = Store()
         if reader_type == 'opendss':
             reader = Reader_opendss(master_file = os.path.join('..',dirpath,'master.dss'), buscoordinates_file = os.path.join('..',dirpath,'buscoord.dss'))
-        if reader_type == 'cyme':
+        elif reader_type == 'cyme':
             reader = Reader_cyme(data_folder_path=os.path.join('..',dirpath))
+        else:
+            #Update with other tests if they get added to the persistence tests
+            continue
         reader.parse(m)
         m.set_names()
         output_path = tempfile.TemporaryDirectory()
