@@ -63,19 +63,26 @@ class Reader(AbstractReader):
 
     The reader expects the following format:
 
-        - objects are stored in a list [object_1,object_2,...,object_N]
-        - Each object is a dictionary object_1={'class':'PowerTransformer',
-                                                'is_substationr':{'class':'int',
-                                                                  'value':'1'
-                                                                 },
-                                                (...)
-                                                }
-        - The special key 'class' indicates the type of the object considered.
-        - class can be:
-                - a DiTTo object type like 'PowerTransformer' or 'Winding'
-                - a "standard" type like 'int', 'float', or 'str'
-                - a list ('list')
-                - a complex number: 1+2j will be {'class':'complex', 'value':[1,2]}
+    {"model": [object_1,object_2,...,object_N],
+     "metadata": {"time": time,
+                  ...
+                  }
+    }
+
+    The actual DiTTo model is stored in "model" as a list of objects.
+    Each object is a dictionary object_1={'class':'PowerTransformer',
+                                          'is_substationr':{'class':'int',
+                                                            'value':'1'
+                                                            },
+                                          (...)
+                                         }
+
+    The special key 'class' indicates the type of the object considered.
+    class can be:
+        - a DiTTo object type like 'PowerTransformer' or 'Winding'
+        - a "standard" type like 'int', 'float', or 'str'
+        - a list ('list')
+        - a complex number: 1+2j will be {'class':'complex', 'value':[1,2]}
 
     .. note:: For nested objects, this format can become a bit complex. See example below
 
@@ -147,8 +154,14 @@ class Reader(AbstractReader):
         # Create a new empty model
         self.model = Store()
 
+        if "model" not in input_data:
+            raise ValueError("No model found in the JSON file provided")
+
+        if not isinstance(input_data["model"], list):
+            raise TypeError("Model in JSON file should be a list of objects.")
+
         # Loop over the objects...
-        for _object in input_data:
+        for _object in input_data["model"]:
 
             # Get the class of the element
             _class = _object["class"]
