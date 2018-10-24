@@ -850,7 +850,7 @@ class Writer(AbstractWriter):
                 )  # TODO should this be rated power?
                 obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
                 for pw in transformer.windings[1].phase_windings:
-                    obj_dict["bus " + pw.phase.upper()][index] = (
+                    obj_dict["bus " + pw.phase.lower()][index] = (
                         transformer.to_element + "_" + pw.phase.lower()
                     )
             else:  # just a powersource object
@@ -858,7 +858,7 @@ class Writer(AbstractWriter):
                 obj_dict["V (kV)"][index] = i.nominal_voltage
                 for ph in i.phases:
                     if str(ph).lower() in set(["a", "b", "c"]):
-                        obj_dict["bus " + str(ph).upper()][index] = (
+                        obj_dict["bus " + str(ph).lower()][index] = (
                             i.name + "_" + str(ph).lower()
                         )
 
@@ -908,7 +908,7 @@ class Writer(AbstractWriter):
             if hasattr(node, "name"):
                 letter_phases = set()
                 for phase_unicode in node.phases:
-                    phase = phase_unicode.default_value
+                    phase = phase_unicode.default_value.lower()
                     if (
                         phase== "A"
                         or phase== "B"
@@ -1054,7 +1054,7 @@ class Writer(AbstractWriter):
                         phases = phases + j.phase
                         if hasattr(i, "connecting_element") and i.connecting_element is not None:
                             obj_dict["Bus " + str(phase_cnt)][index] = (
-                                i.connecting_element + "_" + j.phase
+                                i.connecting_element + "_" + j.phase.lower()
                             )
 
 
