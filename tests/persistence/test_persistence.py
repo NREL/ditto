@@ -34,7 +34,7 @@ for (dirpath, dirname, files) in test_list:
         original = json.load(open(os.path.join(dirpath,files[0]),'r'))
         update = json.load(open(os.path.join(output_path.name,'Model.json'),'r'))
         try:
-            assert update == original
+            assert update["model"] == original["model"]
         except AssertionError as e:
             logger.error("Model differs for usecase {loc}".format(loc = dirpath))
             e.args += ("Model differs for usecase {loc}".format(loc = dirpath),)
