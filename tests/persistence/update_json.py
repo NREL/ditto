@@ -12,14 +12,16 @@ def update_persistence_jsons():
             m = Store()
             if reader_type == 'opendss':
                 reader = Reader_opendss(master_file = os.path.join('..',dirpath,'master.dss'), buscoordinates_file = os.path.join('..',dirpath,'buscoord.dss'))
-            if reader_type == 'cyme':
-                reader = Reader_cyme(data_folder_path=os.path.join('..',dirpath))
+            elif reader_type == 'cyme':
+                reader = Reader_cyme(data_folder_path=os.path.join('..',dirpath),load_filename="load.txt", network_filename="network.txt", equipment_filename="equipment.txt")
             else:
                 #Update with other tests if they get added to the persistence tests
                 continue
             reader.parse(m)
             m.set_names()
-            output_path = os.path.join(dirpath,files[0])
-            w = Writer(output_path=output_path.name, log_path=output_path)
+            print("Writing "+dirpath)
+            w = Writer(output_path=dirpath, log_path=dirpath)
             w.write(m)
 
+if __name__ == '__main__':
+    update_persistence_jsons()
