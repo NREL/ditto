@@ -256,4 +256,4 @@ class Writer(AbstractWriter):
                 }
 
         with open(os.path.join(self.output_path, self.filename), "w") as f:
-            f.write(json_tricks.dumps(json_dump["model"], allow_nan=True, indent=4))
+            f.write(json_tricks.dumps(json_dump, allow_nan=True, indent=4))
