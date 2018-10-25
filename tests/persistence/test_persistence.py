@@ -11,7 +11,7 @@ from ditto.readers.cyme.read import Reader as Reader_cyme
 from ditto.writers.json.write import Writer
 from ditto.store import Store
 import logging
-import json
+import json_tricks
 
 logger = logging.getLogger(__name__)
 test_list = os.walk('data')
@@ -31,8 +31,8 @@ for (dirpath, dirname, files) in test_list:
         output_path = tempfile.TemporaryDirectory()
         w = Writer(output_path=output_path.name, log_path=output_path)
         w.write(m)
-        original = json.load(open(os.path.join(dirpath,files[0]),'r'))
-        update = json.load(open(os.path.join(output_path.name,'Model.json'),'r'))
+        original = json_tricks.load(open(os.path.join(dirpath,files[0]),'r'))
+        update = json_tricks.load(open(os.path.join(output_path.name,'Model.json'),'r'))
         try:
             assert update["model"] == original["model"]
         except AssertionError as e:
