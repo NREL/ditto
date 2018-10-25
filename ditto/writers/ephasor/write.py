@@ -167,7 +167,7 @@ class Writer(AbstractWriter):
                                 obj_dict["Switch Name"].append(
                                     line.name + "_" + wire.phase.lower()
                                 )
-                                if hasattr(line, "is_open") and line.is_open == 1:
+                                if hasattr(wire, "is_open") and wire.is_open == 1:
                                     obj_dict["Normal Status"].append("0")
                                 else:
                                     obj_dict["Normal Status"].append("1")
