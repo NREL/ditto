@@ -167,7 +167,7 @@ class Writer(AbstractWriter):
                                 obj_dict["Switch Name"].append(
                                     line.name + "_" + wire.phase.lower()
                                 )
-                                if hasattr(line, "is_open") and line.is_open == 1:
+                                if hasattr(wire, "is_open") and wire.is_open == 1:
                                     obj_dict["Normal Status"].append("0")
                                 else:
                                     obj_dict["Normal Status"].append("1")
@@ -306,13 +306,11 @@ class Writer(AbstractWriter):
                     np.real(line.length), units
                 )
 
+            tmp_phase=['a','b','c']
             if hasattr(line, "from_element") and line.from_element is not None:
                 logger.debug(" bus1={from_el}".format(from_el=line.from_element))
                 if hasattr(line, "wires") and line.wires is not None:
-                    for temp_phase in ["a", "b", "c"]:
-                        obj_dict["bus0" + temp_phase][index] = (
-                            line.from_element + "_" + temp_phase
-                        )
+                    wire_cnt = 0
                     for wire in line.wires:
                         if (
                             hasattr(wire, "phase")
@@ -320,18 +318,16 @@ class Writer(AbstractWriter):
                             and wire.phase != "N"
                         ):
                             # logger.debug('.{p}'.format(p=self.phase_mapping(wire.phase)))
-                            obj_dict["bus0" + wire.phase.lower()][index] = (
-                                line.from_element + "_" + wire.phase.lower()
-                            )
-                            # obj_dict['bus1' + wire.phase.lower()][index] = line.to_element+ "_" + wire.phase.lower()
+                         #   obj_dict["bus0" + wire.phase.lower()][index] = (
+                         #       line.from_element + "_" + wire.phase.lower()
+                         #   )
+                            obj_dict["bus0"+tmp_phase[wire_cnt]][index] = line.from_element+"_"+wire.phase.lower()
+                            wire_cnt+=1
 
             if hasattr(line, "to_element") and line.to_element is not None:
                 logger.debug(" bus2={to_el}".format(to_el=line.to_element))
                 if hasattr(line, "wires") and line.wires is not None:
-                    for temp_phase in ["a", "b", "c"]:
-                        obj_dict["bus1" + temp_phase][index] = (
-                            line.to_element + "_" + temp_phase
-                        )
+                    wire_cnt = 0
                     for wire in line.wires:
                         if (
                             hasattr(wire, "phase")
@@ -339,11 +335,12 @@ class Writer(AbstractWriter):
                             and wire.phase != "N"
                         ):
                             # logger.debug('.{p}'.format(p=self.phase_mapping(wire.phase)))
-                            obj_dict["bus1" + wire.phase.lower()][index] = (
-                                line.to_element + "_" + wire.phase.lower()
-                            )
+                          #  obj_dict["bus1" + wire.phase.lower()][index] = (
+                          #      line.to_element + "_" + wire.phase.lower()
+                          #  )
+                            obj_dict["bus1"+tmp_phase[wire_cnt]][index] = line.to_element+"_"+wire.phase.lower()
+                            wire_cnt+=1
 
-                            # obj_dict['bus1' + wire.phase.lower()][index] = line.from_element
 
             if (
                 hasattr(line, "faultrate")
@@ -362,7 +359,7 @@ class Writer(AbstractWriter):
                     R = np.real(Z)  # Resistance matrix
                     X = np.imag(Z)  # Reactance  matrix
                 except:
-                    logger.error(
+                    self.logger.error(
                         "Problem with impedance matrix in line {name}".format(
                             name=line.name
                         )
@@ -422,7 +419,7 @@ class Writer(AbstractWriter):
                 C = np.array(line.capacitance_matrix)
                 kf2mil = 0.189394
                 result += "Bmatrix=("
-                for rc, row in enumerate(Z):
+                for rc, row in enumerate(C): #Should only be a real matrix
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
@@ -436,16 +433,19 @@ class Writer(AbstractWriter):
                             # -.602 siemens per mile
                             # convet to micor se
                             B = 0
-                            if np.imag(elt) != 0:
-                                B = 1 / self.convert_from_meters(
-                                    np.imag(elt), units, inverse=True
-                                )
-                                logger.debug("Sub ", B)
-                                B = 1 / (np.imag(elt) * line.length)
+                           # if np.imag(elt) != 0:
+                           #     B = 1 / self.convert_from_meters(
+                           #         np.imag(elt), units, inverse=True
+                           #     )*1e3*2*60*math.pi
+                            if elt !=0:
+                                B = np.real(self.convert_from_meters(
+                                    elt, units, inverse=True
+                                )*1e-3*2*60*math.pi)
 
+                            #import pdb;pdb.set_trace()
                             logger.debug("Siemens line units ", B)
-                            logger.debug(np.imag(B) * 0.000621371)
-                            B = np.imag(B) * 0.000621371 * 1e6
+                           # logger.debug(np.imag(B) * 0.000621371)
+                           # B = np.imag(B) * 0.000621371 * 1e6
                             logger.debug("done", B)
 
                             # B = self.convert_from_meters(np.imag(B), units, inverse=True)
@@ -466,6 +466,7 @@ class Writer(AbstractWriter):
                             # print B
                             # print line.name
                             # exit(0)
+                        obj_dict[name][index] = B
                         result += "{e} ".format(
                             e=self.convert_from_meters(
                                 np.real(elt), units, inverse=True
@@ -497,7 +498,6 @@ class Writer(AbstractWriter):
                                 np.real(B), units, inverse=False
                             )
                             B = B * 1e6
-                            obj_dict[name][index] = B
                             # print "Siemens line units ", B /(2.6526)
                             # obj_dict[name][index] = B /(2.6526)
 
@@ -692,7 +692,7 @@ class Writer(AbstractWriter):
                                     index
                                 ] = "delta"
                             else:
-                                logger.error(
+                                self.logger.error(
                                     "Unsupported type of connection {conn} for transformer {name}".format(
                                         conn=winding.connection_type, name=i.name
                                     )
@@ -731,7 +731,7 @@ class Writer(AbstractWriter):
                                     #     obj_dict[tap_name][index] = pw.tap_position
 
                     if len(np.unique(N_phases)) != 1:
-                        logger.error(
+                        self.logger.error(
                             "Did not find the same number of phases accross windings of transformer {name}".format(
                                 name=i.name
                             )
@@ -741,7 +741,7 @@ class Writer(AbstractWriter):
                         logger.debug(" phases={Np}".format(Np=N_phases[0]))
                         logger.debug(" windings={N}".format(N=len(i.windings)))
                     except:
-                        logger.error(
+                        self.logger.error(
                             "Could not write the number of phases for transformer {name}".format(
                                 name=i.name
                             )
@@ -857,9 +857,9 @@ class Writer(AbstractWriter):
                 obj_dict["ID"][index] = i.name
                 obj_dict["V (kV)"][index] = i.nominal_voltage
                 for ph in i.phases:
-                    if str(ph.default_value).lower() in set(["a", "b", "c"]):
-                        obj_dict["bus " + str(ph.default_value).upper()][index] = (
-                            i.name + "_" + str(ph.default_value).lower()
+                    if str(ph).lower() in set(["a", "b", "c"]):
+                        obj_dict["bus " + str(ph).upper()][index] = (
+                            i.name + "_" + str(ph).lower()
                         )
 
         df7 = pd.DataFrame(obj_dict)
@@ -893,7 +893,7 @@ class Writer(AbstractWriter):
         :rtype: dataframe
 
         """
-        obj_dict = {"Bus": [], "Voltage (V)": [], "Angle (deg)": []}
+        obj_dict = {"Bus": [], "BaseVoltage":[], "Voltage (V)": [], "Angle (deg)": [], "Type":[]}
         nodes = [i for i in self.m.models if isinstance(i, Node)]
         index = 0
         # for c,i in enumerate(nodes):
@@ -907,15 +907,21 @@ class Writer(AbstractWriter):
         for node in self._nodes + self._powersources:
             if hasattr(node, "name"):
                 letter_phases = set()
-                for phase in node.phases:
+                for phase_unicode in node.phases:
+                    phase = phase_unicode.default_value.lower()
                     if (
-                        phase.default_value == "A"
-                        or phase.default_value == "B"
-                        or phase.default_value == "C"
+                        phase== "a"
+                        or phase== "b"
+                        or phase== "c"
                     ):
-                        letter_phases.add(phase.default_value)
-                        obj_dict["Bus"].append(node.name + "_" + phase.default_value)
-                        obj_dict["Voltage (V)"].append(node.nominal_voltage)
+                        letter_phases.add(phase)
+                        obj_dict["Bus"].append(node.name + "_" + phase)
+                        obj_dict["BaseVoltage"].append(node.nominal_voltage)
+                        if isinstance(node.nominal_voltage, float):
+                            obj_dict["Voltage (V)"].append(node.nominal_voltage/math.sqrt(3))
+                        else:
+                            obj_dict["Voltage (V)"].append(node.nominal_voltage)
+                        obj_dict["Type"].append("PV") #No generators so all nodes are PV buses
                 if len(letter_phases) == 1:
                     obj_dict["Angle (deg)"].append(0)
                 if len(letter_phases) == 2:
@@ -955,7 +961,7 @@ class Writer(AbstractWriter):
         # index = pd.Index(['1'], name='ID')
         # df9 = pd.DataFrame(obj_dict, columns=columns)
         df9 = pd.DataFrame(obj_dict)
-        df9 = df9[["Bus", "Voltage (V)", "Angle (deg)"]]
+        df9 = df9[["Bus", "BaseVoltage", "Voltage (V)", "Angle (deg)", "Type"]]
         logger.debug(obj_dict)
         return df9
 
@@ -970,17 +976,17 @@ class Writer(AbstractWriter):
 
         """
         obj_dict = {
-            "Bus A": [],
-            "Bus B": [],
-            "Bus C": [],
+            "Bus 1": [],
+            "Bus 2": [],
+            "Bus 3": [],
             "ID": [],
             "Type": [],
-            "P_a (kW)": [],
-            "Q_a (kVAr)": [],
-            "P_b (kW)": [],
-            "Q_b (kVAr)": [],
-            "P_c (kW)": [],
-            "Q_c (kVAr)": [],
+            "P_1 (kW)": [],
+            "Q_1 (kVAr)": [],
+            "P_2 (kW)": [],
+            "Q_2 (kVAr)": [],
+            "P_3 (kW)": [],
+            "Q_3 (kVAr)": [],
             "V (kV)": [],
             "Bandwidth (pu)": [],
             "Conn. type": [],
@@ -1019,7 +1025,10 @@ class Writer(AbstractWriter):
                             value.append(None)
                         index += 1
                         load_dict[n_name] = index
-                        obj_dict["ID"][index] = n_name
+                        if 'load_' == n_name[0:5]:
+                            obj_dict["ID"][index] = n_name[5:]
+                        else:
+                            obj_dict["ID"][index] = n_name
 
                     else:
                         index = load_dict[n_name]
@@ -1027,25 +1036,27 @@ class Writer(AbstractWriter):
                     for key, value in obj_dict.items():
                         value.append(None)
                     index += 1
-                    obj_dict["ID"][index] = i.name
+                    if 'load_' == i.name[0:5]:
+                        obj_dict["ID"][index] = i.name[5:]
+                    else:
+                        obj_dict["ID"][index] = i.name
 
             if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                 # logger.debug('    nominal_voltage {nv};'.format(nv=i.nominal_voltage))
                 obj_dict["V (kV)"][index] = i.nominal_voltage / 1000.0
 
-            if hasattr(i, "connecting_element") and i.connecting_element is not None:
-                # logger.debug('    parent n{ce};'.format(ce=i.connecting_element))
-                for temp_phase in ["a", "b", "c"]:
-                    obj_dict["Bus " + temp_phase.upper()][index] = (
-                        i.connecting_element + "_" + temp_phase
-                    )
 
+            phase_cnt = 1
             if hasattr(i, "phase_loads") and i.phase_loads is not None:
                 phases = ""
                 for j in i.phase_loads:
                     if hasattr(j, "phase") and j.phase is not None:
                         phases = phases + j.phase
-                        logger.debug("here", i.name, str(j.p), j.phase)
+                        if hasattr(i, "connecting_element") and i.connecting_element is not None:
+                            obj_dict["Bus " + str(phase_cnt)][index] = (
+                                i.connecting_element + "_" + j.phase.lower()
+                            )
+
 
                         if hasattr(j, "use_zip") and j.use_zip is not None:
                             if (
@@ -1105,10 +1116,10 @@ class Writer(AbstractWriter):
                                     )
                                 )
                                 obj_dict["Type"][index] = "ZIP"
-                                obj_dict["P_" + j.phase.lower() + " (kW)"][index] = (
+                                obj_dict["P_" + str(phase_cnt) + " (kW)"][index] = (
                                     j.p / 1000.0
                                 )
-                                obj_dict["Q_" + j.phase.lower() + " (kVAr)"][index] = (
+                                obj_dict["Q_" + str(phase_cnt) + " (kVAr)"][index] = (
                                     j.q / 1000.0
                                 )
                                 obj_dict["K_p"][index] = (
@@ -1140,10 +1151,10 @@ class Writer(AbstractWriter):
                                             cp=str(complex(j.p, j.q)).strip("()"),
                                         )
                                     )
-                                    obj_dict["P_" + j.phase.lower() + " (kW)"][
+                                    obj_dict["P_" + str(phase_cnt) + " (kW)"][
                                         index
                                     ] = (abs(j.p) / 1000.0)
-                                    obj_dict["Q_" + j.phase.lower() + " (kVAr)"][
+                                    obj_dict["Q_" + str(phase_cnt) + " (kVAr)"][
                                         index
                                     ] = (abs(j.q) / 1000.0)
 
@@ -1164,21 +1175,22 @@ class Writer(AbstractWriter):
                                     obj_dict["K_i"][index] = 1
                                     obj_dict["K_z"][index] = 0
                                     obj_dict["Type"][index] = "ZIP"
+                        phase_cnt+=1
 
         df3 = pd.DataFrame(obj_dict)
         df3 = df3[
             [
-                "Bus A",
-                "Bus B",
-                "Bus C",
+                "Bus 1",
+                "Bus 2",
+                "Bus 3",
                 "ID",
                 "Type",
-                "P_a (kW)",
-                "Q_a (kVAr)",
-                "P_b (kW)",
-                "Q_b (kVAr)",
-                "P_c (kW)",
-                "Q_c (kVAr)",
+                "P_1 (kW)",
+                "Q_1 (kVAr)",
+                "P_2 (kW)",
+                "Q_2 (kVAr)",
+                "P_3 (kW)",
+                "Q_3 (kVAr)",
                 "V (kV)",
                 "Bandwidth (pu)",
                 "Conn. type",
@@ -1227,9 +1239,9 @@ class Writer(AbstractWriter):
             engine="xlsxwriter",
         )
 
-        df1.to_excel(writer, "Line 3-phase", index=False)
+        df1.to_excel(writer, "Multiphase Line", index=False)
         # workbook = writer.book
-        worksheet = writer.sheets["Line 3-phase"]
+        worksheet = writer.sheets["Multiphase Line"]
 
         worksheet.set_column(0, 25, 16)
 
@@ -1239,9 +1251,9 @@ class Writer(AbstractWriter):
 
         worksheet.set_column(0, 25, 16)
 
-        df3.to_excel(writer, "Load 3-phase", index=False)
+        df3.to_excel(writer, "Multiphase Load", index=False)
         # workbook = writer.book
-        worksheet = writer.sheets["Load 3-phase"]
+        worksheet = writer.sheets["Multiphase Load"]
 
         worksheet.set_column(0, 19, 16)
 
@@ -1262,6 +1274,7 @@ class Writer(AbstractWriter):
         worksheet = writer.sheets["Bus"]
 
         worksheet.set_column(0, 3, 16)
+        writer.save()
 
 
 if __name__ == "__main__":
