@@ -971,7 +971,7 @@ class reader:
                                         wires[
                                             pw
                                         ].ampacity = None  # switches ampacity update it
-                                        wires[pw].ampacity_emergency = None
+                                        wires[pw].emergency_ampacity = None
                                         wires[
                                             pw
                                         ].resistance = (
@@ -997,7 +997,7 @@ class reader:
                                                 int(row_wr1[6][:-1])
                                             ]
                                         )
-                                        wires[pw].ampacity_emergency = float(
+                                        wires[pw].emergency_ampacity = float(
                                             PTLINECOND_DRATAMBTEMP1A[
                                                 int(row_wr1[6][:-1])
                                             ]
@@ -1022,7 +1022,7 @@ class reader:
                                     wires[pw].ampacity = float(
                                         PTLINECOND_DRATAMBTEMP1A[int(row_wr1[5][:-1])]
                                     )
-                                    wires[pw].ampacity_emergency = float(
+                                    wires[pw].emergency_ampacity = float(
                                         PTLINECOND_DRATAMBTEMP1A[int(row_wr1[5][:-1])]
                                     )
                                     wires[pw].resistance = float(
@@ -1037,7 +1037,7 @@ class reader:
                                         wires[
                                             pw
                                         ].ampacity = None  # switches ampacity update it
-                                        wires[pw].ampacity_emergency = None
+                                        wires[pw].emergency_ampacity = None
                                         wires[pw].resistance = None
                                     else:
                                         wires[pw].nameclass = PTCABCOND_STDESC[
@@ -1064,7 +1064,7 @@ class reader:
                                             wires[pw].ampacity = float(
                                                 PTCABCOND_DRATA0[int(row_wr1[6][:-1])]
                                             )
-                                            wires[pw].ampacity_emergency = float(
+                                            wires[pw].emergency_ampacity = float(
                                                 PTCABCOND_DRATA0[int(row_wr1[5][:-1])]
                                             )  # not provided
                                         if (
@@ -1074,7 +1074,7 @@ class reader:
                                             wires[pw].ampacity = float(
                                                 PTCABCOND_DRATA1[int(row_wr1[6][:-1])]
                                             )
-                                            wires[pw].ampacity_emergency = float(
+                                            wires[pw].emergency_ampacity = float(
                                                 PTCABCOND_DRATA1[int(row_wr1[5][:-1])]
                                             )  # not provided
                                         if (
@@ -1084,7 +1084,7 @@ class reader:
                                             wires[pw].ampacity = float(
                                                 PTCABCOND_DRATA2[int(row_wr1[6][:-1])]
                                             )
-                                            wires[pw].ampacity_emergency = float(
+                                            wires[pw].emergency_ampacity = float(
                                                 PTCABCOND_DRATA2[int(row_wr1[5][:-1])]
                                             )  # not provided
                                 else:
@@ -1107,21 +1107,21 @@ class reader:
                                         wires[pw].ampacity = float(
                                             PTCABCOND_DRATA0[int(row_wr1[5][:-1])]
                                         )
-                                        wires[pw].ampacity_emergency = float(
+                                        wires[pw].emergency_ampacity = float(
                                             PTCABCOND_DRATA0[int(row_wr1[5][:-1])]
                                         )  # not provided
                                     if PTLINESPC_SOVERHEAD[int(row_wr1[4][:-1])] == 1.0:
                                         wires[pw].ampacity = float(
                                             PTCABCOND_DRATA1[int(row_wr1[5][:-1])]
                                         )
-                                        wires[pw].ampacity_emergency = float(
+                                        wires[pw].emergency_ampacity = float(
                                             PTCABCOND_DRATA1[int(row_wr1[5][:-1])]
                                         )  # not provided
                                     if PTLINESPC_SOVERHEAD[int(row_wr1[4][:-1])] == 2.0:
                                         wires[pw].ampacity = float(
                                             PTCABCOND_DRATA2[int(row_wr1[5][:-1])]
                                         )
-                                        wires[pw].ampacity_emergency = float(
+                                        wires[pw].emergency_ampacity = float(
                                             PTCABCOND_DRATA2[int(row_wr1[5][:-1])]
                                         )  # not provided
 
