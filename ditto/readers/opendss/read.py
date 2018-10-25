@@ -1302,7 +1302,7 @@ class Reader(AbstractReader):
 
                         # ampacity emergency
                         try:
-                            wires[p].ampacity_emergency = float(
+                            wires[p].emergency_ampacity = float(
                                 this_line_wireData["emergamps"]
                             )
                         except:
@@ -1360,9 +1360,9 @@ class Reader(AbstractReader):
                         except:
                             pass
 
-                    if wires[p].ampacity_emergency is None and "emergamps" in data:
+                    if wires[p].emergency_ampacity is None and "emergamps" in data:
                         try:
-                            wires[p].ampacity_emergency = float(data["emergamps"])
+                            wires[p].emergency_ampacity = float(data["emergamps"])
                         except:
                             pass
 

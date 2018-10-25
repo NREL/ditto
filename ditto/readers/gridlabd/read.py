@@ -115,8 +115,8 @@ class Reader(AbstractReader):
                 logger.warning("Spacing distance is 0 - using default positions")
                 for w in conductors:
                     w.X = 0
-                    w.Y = default_height+2*cnt
-                    cnt+=1
+                    w.Y = default_height + 2 * cnt
+                    cnt += 1
 
             else:
                 for w in conductors:
@@ -125,7 +125,7 @@ class Reader(AbstractReader):
                         tmp_map[w.phase] = (0, 0)
                     if index == max_to:
                         tmp_map[w.phase] = (0, 0 - max_dist)
-    
+
                 for w in conductors:
                     non_rotated = np.array(tmp_map[w.phase])
                     if has_earth:
@@ -157,7 +157,7 @@ class Reader(AbstractReader):
                         tmp_map[w.phase] = [(0, 0)]
                     elif index == max_to:
                         tmp_map[w.phase] = [(0, 0 - max_dist)]
-    
+
                     else:
                         dist_a = distances[index][max_from]
                         dist_b = distances[index][max_to]
@@ -180,7 +180,7 @@ class Reader(AbstractReader):
                                 "Line Geometry infeasible with distances %f %f %f"
                                 % (dist_a, dist_b, max_dist)
                             )
-    
+
                 for w in conductors:
                     final = []
                     for non_rotated in tmp_map[w.phase]:
@@ -200,7 +200,7 @@ class Reader(AbstractReader):
                             final[1] = final[1] + distances[max_from][-1]
                             if final[1] == distances[index][-1]:
                                 break
-    
+
                         else:
                             rotation = np.array(
                                 [
@@ -217,14 +217,13 @@ class Reader(AbstractReader):
                 cnt = 0
                 logger.warning("Failed to read spacing - using default positions")
                 for w in conductors:
-                    if w.phase.lower() == 'n':
+                    if w.phase.lower() == "n":
                         w.X = 0
-                        w.Y = default_height+2
+                        w.Y = default_height + 2
                     else:
-                        w.X = cnt*2
+                        w.X = cnt * 2
                         w.Y = default_height
-                        cnt+=1
-                
+                        cnt += 1
 
         if (
             n_entries == 4
@@ -241,7 +240,7 @@ class Reader(AbstractReader):
                         tmp_map[w.phase] = [(0, 0)]
                     elif index == max_to:
                         tmp_map[w.phase] = [(0, 0 - max_dist)]
-    
+
                     else:
                         dist_a = distances[index][max_from]
                         dist_b = distances[index][max_to]
@@ -259,9 +258,9 @@ class Reader(AbstractReader):
                         y = -1 * math.sqrt(dist_a ** 2 - x ** 2)
                         if seen_one:
                             # Warning : possible bug in here - needs more testing
-                            if (x - first_x) ** 2 + (y - first_y) ** 2 != distances[index][
-                                first_index
-                            ] ** 2:
+                            if (x - first_x) ** 2 + (y - first_y) ** 2 != distances[
+                                index
+                            ][first_index] ** 2:
                                 x = x * -1
                         else:
                             seen_one = True
@@ -269,7 +268,7 @@ class Reader(AbstractReader):
                             first_y = y
                             first_index = index
                         tmp_map[w.phase] = [(x, y)]
-    
+
                 for w in conductors:
                     final = []
                     for non_rotated in tmp_map[w.phase]:
@@ -281,7 +280,7 @@ class Reader(AbstractReader):
                             theta = math.acos(h / float(max_dist))
                             rotation = np.array(
                                 [
-                                        [math.cos(theta), -1 * math.sin(theta)],
+                                    [math.cos(theta), -1 * math.sin(theta)],
                                     [math.sin(theta), math.cos(theta)],
                                 ]
                             )
@@ -289,7 +288,7 @@ class Reader(AbstractReader):
                             final[1] = final[1] + distances[max_from][-1]
                             if final[1] == distances[index][-1]:
                                 break
-    
+
                         else:
                             rotation = np.array(
                                 [
@@ -306,14 +305,13 @@ class Reader(AbstractReader):
                 cnt = 0
                 logger.warning("Failed to read spacing - using default positions")
                 for w in conductors:
-                    if w.phase.lower() == 'n':
+                    if w.phase.lower() == "n":
                         w.X = 0
-                        w.Y = default_height+2
+                        w.Y = default_height + 2
                     else:
-                        w.X = cnt*2
+                        w.X = cnt * 2
                         w.Y = default_height
-                        cnt+=1
-                
+                        cnt += 1
 
     def compute_secondary_matrix(
         self, wire_list, freq=60, resistivity=100, kron_reduce=True
@@ -1576,7 +1574,7 @@ class Reader(AbstractReader):
                         except AttributeError:
                             pass
                         try:
-                            api_wire.ampacity_emergency = float(
+                            api_wire.emergency_ampacity = float(
                                 conductor["rating.summer.emergency"]
                             )
                         except AttributeError:
@@ -1877,7 +1875,7 @@ class Reader(AbstractReader):
                                     j_index = j
                         n_entries = int(math.sqrt(n_entries))
                         if n_entries == 2:
-                            if distances[i_index][j_index] !=0:
+                            if distances[i_index][j_index] != 0:
                                 is_seen = False
                                 for w in conductors:
                                     if is_seen:
@@ -1888,13 +1886,14 @@ class Reader(AbstractReader):
                                         w.Y = -6
                                         is_seen = True
                             else:
-                                logger.warning("Spacing distance is 0 - using default positions")
+                                logger.warning(
+                                    "Spacing distance is 0 - using default positions"
+                                )
                                 cnt = 0
                                 for w in conductors:
-                                    w.X = 0.5*cnt
+                                    w.X = 0.5 * cnt
                                     w.Y = -6
-                                    cnt+=1
-
+                                    cnt += 1
 
                         if (
                             n_entries == 3
@@ -1946,12 +1945,14 @@ class Reader(AbstractReader):
                                         )
 
                             except:
-                                logger.warning("Failed to read spacing - using default positions")
+                                logger.warning(
+                                    "Failed to read spacing - using default positions"
+                                )
                                 cnt = 0
                                 for w in conductors:
-                                    w.X = 0.5*cnt
-                                    w.Y =-6
-                                    cnt+=1
+                                    w.X = 0.5 * cnt
+                                    w.Y = -6
+                                    cnt += 1
 
                             # TODO: underground lines with 4 conductors ABCN. Use Heron's formula for there too in a similar way (works since we have pairwise distances)
 
@@ -1968,7 +1969,7 @@ class Reader(AbstractReader):
                                             max_dist = distances[i][j]
                                             max_from = i
                                             max_to = j
-    
+
                                 seen_one = False
                                 first_x = -10
                                 first_y = -10
@@ -1992,18 +1993,20 @@ class Reader(AbstractReader):
                                         if not seen_one:
                                             w.Y = -6 + height
                                             w.X = math.sqrt(
-                                                distances[i][max_from] ** 2 - height ** 2
+                                                distances[i][max_from] ** 2
+                                                - height ** 2
                                             )
                                             seen_one = True
                                             first_x = w.X
                                             first_y = w.Y
                                             first_i = i
-    
+
                                         else:
                                             # Warning: possible bug here - needs extra testing.
                                             w.Y = -6 + height
                                             w.X = math.sqrt(
-                                                distances[i][max_from] ** 2 - height ** 2
+                                                distances[i][max_from] ** 2
+                                                - height ** 2
                                             )
                                             if (w.X - first_x) ** 2 + (
                                                 w.Y - first_y
@@ -2017,14 +2020,14 @@ class Reader(AbstractReader):
                                         w.Y = -6
 
                             except:
-                                logger.warning("Failed to read spacing - using default positions")
+                                logger.warning(
+                                    "Failed to read spacing - using default positions"
+                                )
                                 cnt = 0
                                 for w in conductors:
-                                    w.X = 0.5*cnt
-                                    w.Y =-6
-                                    cnt+=1
-
-
+                                    w.X = 0.5 * cnt
+                                    w.Y = -6
+                                    cnt += 1
 
                 except AttributeError:
                     pass

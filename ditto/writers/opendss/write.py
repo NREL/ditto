@@ -2170,7 +2170,7 @@ class Writer(AbstractWriter):
                 # For underground lines, we need a lot of data...
                 else:
                     if len(i.wires) == 0:
-                        use_linecodes = True # For empty lines
+                        use_linecodes = True  # For empty lines
                     for wire in i.wires:
                         # If we are missing the position of at least one wire, default to linecodes
                         if wire.X is None or wire.Y is None:
@@ -2824,7 +2824,7 @@ class Writer(AbstractWriter):
             hasattr(line, "wires")
             and line.wires is not None
             and len(line.wires) > 0
-            and hasattr(line.wires[0], "ampacity_emergency")
+            and hasattr(line.wires[0], "emergency_ampacity")
             and line.wires[0].emergency_ampacity is not None
         ):
             result["emergamps"] = line.wires[0].emergency_ampacity
@@ -2843,10 +2843,13 @@ class Writer(AbstractWriter):
         """
         result = {}
         # Insulator thickness
-        if hasattr(wire,"insulation_thickness") and wire.insulation_thickness is not None:
+        if (
+            hasattr(wire, "insulation_thickness")
+            and wire.insulation_thickness is not None
+        ):
             result["InsLayer"] = wire.insulation_thickness
-            if hasattr(wire,"diameter") and wire.diameter is not None:
-                result["DiaIns"] = wire.diameter+2*wire.insulation_thickness
+            if hasattr(wire, "diameter") and wire.diameter is not None:
+                result["DiaIns"] = wire.diameter + 2 * wire.insulation_thickness
 
         # Number of concentric neutral strands
         if (
