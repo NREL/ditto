@@ -1,11 +1,11 @@
 {
+    "metadata": {
+        "model_size": 33,
+        "time": "2018-10-25 14:49:31.389574"
+    },
     "model": [
         {
             "class": "PowerSource",
-            "name": {
-                "class": "str",
-                "value": "107_src"
-            },
             "connecting_element": {
                 "class": "str",
                 "value": "107"
@@ -29,6 +29,10 @@
             "is_sourcebus": {
                 "class": "int",
                 "value": 1
+            },
+            "name": {
+                "class": "str",
+                "value": "107_src"
             },
             "nominal_voltage": {
                 "class": "float",
@@ -84,10 +88,6 @@
         },
         {
             "class": "Node",
-            "name": {
-                "class": "str",
-                "value": "112"
-            },
             "feeder_name": {
                 "class": "str",
                 "value": ""
@@ -100,17 +100,13 @@
                 "class": "int",
                 "value": 0
             },
+            "name": {
+                "class": "str",
+                "value": "112"
+            },
             "nominal_voltage": {
                 "class": "NoneType",
                 "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            },
-            "substation_name": {
-                "class": "str",
-                "value": ""
             },
             "positions": {
                 "class": "list",
@@ -135,14 +131,18 @@
                         }
                     }
                 ]
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            },
+            "substation_name": {
+                "class": "str",
+                "value": ""
             }
         },
         {
             "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "elevation": {
                 "class": "float",
                 "value": 0.0
@@ -155,6 +155,10 @@
                 "class": "float",
                 "value": 64.955333
             },
+            "name": {
+                "class": "str",
+                "value": null
+            },
             "response": {
                 "class": "NoneType",
                 "value": null
@@ -162,10 +166,6 @@
         },
         {
             "class": "Node",
-            "name": {
-                "class": "str",
-                "value": "107"
-            },
             "feeder_name": {
                 "class": "str",
                 "value": ""
@@ -178,17 +178,13 @@
                 "class": "int",
                 "value": 0
             },
+            "name": {
+                "class": "str",
+                "value": "107"
+            },
             "nominal_voltage": {
                 "class": "NoneType",
                 "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            },
-            "substation_name": {
-                "class": "str",
-                "value": ""
             },
             "positions": {
                 "class": "list",
@@ -213,14 +209,18 @@
                         }
                     }
                 ]
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            },
+            "substation_name": {
+                "class": "str",
+                "value": ""
             }
         },
         {
             "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "elevation": {
                 "class": "float",
                 "value": 0.0
@@ -233,6 +233,10 @@
                 "class": "float",
                 "value": -135.72593
             },
+            "name": {
+                "class": "str",
+                "value": null
+            },
             "response": {
                 "class": "NoneType",
                 "value": null
@@ -240,10 +244,6 @@
         },
         {
             "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "elevation": {
                 "class": "float",
                 "value": 0.0
@@ -256,17 +256,16 @@
                 "class": "float",
                 "value": 0.0
             },
+            "name": {
+                "class": "str",
+                "value": null
+            },
             "response": {
                 "class": "NoneType",
                 "value": null
             }
         },
         {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "X": {
                 "class": "NoneType",
                 "value": null
@@ -279,6 +278,7 @@
                 "class": "float",
                 "value": 247.0
             },
+            "class": "Wire",
             "concentric_neutral_diameter": {
                 "class": "NoneType",
                 "value": null
@@ -308,8 +308,8 @@
                 "value": 0
             },
             "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
+                "class": "float",
+                "value": 0.0
             },
             "gmr": {
                 "class": "float",
@@ -350,6 +350,10 @@
             "is_switch": {
                 "class": "bool",
                 "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "nameclass": {
                 "class": "str",
@@ -369,11 +373,6 @@
             }
         },
         {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "X": {
                 "class": "NoneType",
                 "value": null
@@ -386,6 +385,7 @@
                 "class": "float",
                 "value": 247.0
             },
+            "class": "Wire",
             "concentric_neutral_diameter": {
                 "class": "NoneType",
                 "value": null
@@ -415,8 +415,8 @@
                 "value": 0
             },
             "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
+                "class": "float",
+                "value": 0.0
             },
             "gmr": {
                 "class": "float",
@@ -457,6 +457,10 @@
             "is_switch": {
                 "class": "bool",
                 "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "nameclass": {
                 "class": "str",
@@ -476,11 +480,6 @@
             }
         },
         {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "X": {
                 "class": "NoneType",
                 "value": null
@@ -493,6 +492,7 @@
                 "class": "float",
                 "value": 247.0
             },
+            "class": "Wire",
             "concentric_neutral_diameter": {
                 "class": "NoneType",
                 "value": null
@@ -522,8 +522,8 @@
                 "value": 0
             },
             "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
+                "class": "float",
+                "value": 0.0
             },
             "gmr": {
                 "class": "float",
@@ -564,6 +564,10 @@
             "is_switch": {
                 "class": "bool",
                 "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "nameclass": {
                 "class": "str",
@@ -584,10 +588,6 @@
         },
         {
             "class": "Line",
-            "name": {
-                "class": "str",
-                "value": "111"
-            },
             "faultrate": {
                 "class": "NoneType",
                 "value": null
@@ -599,380 +599,6 @@
             "from_element": {
                 "class": "str",
                 "value": "3"
-            },
-            "is_banked": {
-                "class": "NoneType",
-                "value": null
-            },
-            "is_breaker": {
-                "class": "int",
-                "value": 0
-            },
-            "is_fuse": {
-                "class": "int",
-                "value": 0
-            },
-            "is_network_protector": {
-                "class": "int",
-                "value": 0
-            },
-            "is_recloser": {
-                "class": "int",
-                "value": 0
-            },
-            "is_sectionalizer": {
-                "class": "int",
-                "value": 0
-            },
-            "is_substation": {
-                "class": "int",
-                "value": 0
-            },
-            "is_switch": {
-                "class": "int",
-                "value": 0
-            },
-            "length": {
-                "class": "float",
-                "value": 762.0
-            },
-            "line_type": {
-                "class": "str",
-                "value": "overhead"
-            },
-            "nameclass": {
-                "class": "NoneType",
-                "value": null
-            },
-            "nominal_voltage": {
-                "class": "NoneType",
-                "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            },
-            "substation_name": {
-                "class": "NoneType",
-                "value": null
-            },
-            "to_element": {
-                "class": "str",
-                "value": "4"
-            },
-            "wires": {
-                "class": "list",
-                "value": [
-                    {
-                        "class": "Wire",
-                        "X": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "Y": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "ampacity": {
-                            "class": "float",
-                            "value": 247.0
-                        },
-                        "concentric_neutral_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_gmr": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_nstrand": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_outside_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "diameter": {
-                            "class": "float",
-                            "value": 1.0
-                        },
-                        "drop": {
-                            "class": "int",
-                            "value": 0
-                        },
-                        "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "gmr": {
-                            "class": "float",
-                            "value": 0.743712
-                        },
-                        "insulation_thickness": {
-                            "class": "float",
-                            "value": 0.0
-                        },
-                        "interrupting_rating": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "is_breaker": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_fuse": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_network_protector": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_open": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_recloser": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_sectionalizer": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_switch": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "nameclass": {
-                            "class": "str",
-                            "value": "336_500_26_7_NOB"
-                        },
-                        "phase": {
-                            "class": "str",
-                            "value": "A"
-                        },
-                        "resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "response": {
-                            "class": "NoneType",
-                            "value": null
-                        }
-                    },
-                    {
-                        "class": "Wire",
-                        "X": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "Y": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "ampacity": {
-                            "class": "float",
-                            "value": 247.0
-                        },
-                        "concentric_neutral_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_gmr": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_nstrand": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_outside_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "diameter": {
-                            "class": "float",
-                            "value": 1.0
-                        },
-                        "drop": {
-                            "class": "int",
-                            "value": 0
-                        },
-                        "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "gmr": {
-                            "class": "float",
-                            "value": 0.743712
-                        },
-                        "insulation_thickness": {
-                            "class": "float",
-                            "value": 0.0
-                        },
-                        "interrupting_rating": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "is_breaker": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_fuse": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_network_protector": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_open": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_recloser": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_sectionalizer": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_switch": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "nameclass": {
-                            "class": "str",
-                            "value": "336_500_26_7_NOB"
-                        },
-                        "phase": {
-                            "class": "str",
-                            "value": "B"
-                        },
-                        "resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "response": {
-                            "class": "NoneType",
-                            "value": null
-                        }
-                    },
-                    {
-                        "class": "Wire",
-                        "X": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "Y": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "ampacity": {
-                            "class": "float",
-                            "value": 247.0
-                        },
-                        "concentric_neutral_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_gmr": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_nstrand": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_outside_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "diameter": {
-                            "class": "float",
-                            "value": 1.0
-                        },
-                        "drop": {
-                            "class": "int",
-                            "value": 0
-                        },
-                        "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "gmr": {
-                            "class": "float",
-                            "value": 0.743712
-                        },
-                        "insulation_thickness": {
-                            "class": "float",
-                            "value": 0.0
-                        },
-                        "interrupting_rating": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "is_breaker": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_fuse": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_network_protector": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_open": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_recloser": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_sectionalizer": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_switch": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "nameclass": {
-                            "class": "str",
-                            "value": "336_500_26_7_NOB"
-                        },
-                        "phase": {
-                            "class": "str",
-                            "value": "C"
-                        },
-                        "resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "response": {
-                            "class": "NoneType",
-                            "value": null
-                        }
-                    }
-                ]
             },
             "impedance_matrix": {
                 "class": "list",
@@ -1056,476 +682,6 @@
                         ]
                     }
                 ]
-            }
-        },
-        {
-            "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
-            "elevation": {
-                "class": "float",
-                "value": 0.0
-            },
-            "lat": {
-                "class": "float",
-                "value": 0.0
-            },
-            "long": {
-                "class": "float",
-                "value": 0.0
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            }
-        },
-        {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
-            "X": {
-                "class": "NoneType",
-                "value": null
-            },
-            "Y": {
-                "class": "NoneType",
-                "value": null
-            },
-            "ampacity": {
-                "class": "float",
-                "value": 247.0
-            },
-            "concentric_neutral_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_gmr": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_nstrand": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_outside_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "diameter": {
-                "class": "float",
-                "value": 1.0
-            },
-            "drop": {
-                "class": "int",
-                "value": 0
-            },
-            "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
-            },
-            "gmr": {
-                "class": "float",
-                "value": 0.743712
-            },
-            "insulation_thickness": {
-                "class": "float",
-                "value": 0.0
-            },
-            "interrupting_rating": {
-                "class": "NoneType",
-                "value": null
-            },
-            "is_breaker": {
-                "class": "bool",
-                "value": false
-            },
-            "is_fuse": {
-                "class": "bool",
-                "value": false
-            },
-            "is_network_protector": {
-                "class": "bool",
-                "value": false
-            },
-            "is_open": {
-                "class": "bool",
-                "value": false
-            },
-            "is_recloser": {
-                "class": "bool",
-                "value": false
-            },
-            "is_sectionalizer": {
-                "class": "bool",
-                "value": false
-            },
-            "is_switch": {
-                "class": "bool",
-                "value": false
-            },
-            "nameclass": {
-                "class": "str",
-                "value": "336_500_26_7_NOB"
-            },
-            "phase": {
-                "class": "str",
-                "value": "A"
-            },
-            "resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            }
-        },
-        {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
-            "X": {
-                "class": "NoneType",
-                "value": null
-            },
-            "Y": {
-                "class": "NoneType",
-                "value": null
-            },
-            "ampacity": {
-                "class": "float",
-                "value": 247.0
-            },
-            "concentric_neutral_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_gmr": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_nstrand": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_outside_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "diameter": {
-                "class": "float",
-                "value": 1.0
-            },
-            "drop": {
-                "class": "int",
-                "value": 0
-            },
-            "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
-            },
-            "gmr": {
-                "class": "float",
-                "value": 0.743712
-            },
-            "insulation_thickness": {
-                "class": "float",
-                "value": 0.0
-            },
-            "interrupting_rating": {
-                "class": "NoneType",
-                "value": null
-            },
-            "is_breaker": {
-                "class": "bool",
-                "value": false
-            },
-            "is_fuse": {
-                "class": "bool",
-                "value": false
-            },
-            "is_network_protector": {
-                "class": "bool",
-                "value": false
-            },
-            "is_open": {
-                "class": "bool",
-                "value": false
-            },
-            "is_recloser": {
-                "class": "bool",
-                "value": false
-            },
-            "is_sectionalizer": {
-                "class": "bool",
-                "value": false
-            },
-            "is_switch": {
-                "class": "bool",
-                "value": false
-            },
-            "nameclass": {
-                "class": "str",
-                "value": "336_500_26_7_NOB"
-            },
-            "phase": {
-                "class": "str",
-                "value": "B"
-            },
-            "resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            }
-        },
-        {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
-            "X": {
-                "class": "NoneType",
-                "value": null
-            },
-            "Y": {
-                "class": "NoneType",
-                "value": null
-            },
-            "ampacity": {
-                "class": "float",
-                "value": 247.0
-            },
-            "concentric_neutral_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_gmr": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_nstrand": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_outside_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "diameter": {
-                "class": "float",
-                "value": 1.0
-            },
-            "drop": {
-                "class": "int",
-                "value": 0
-            },
-            "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
-            },
-            "gmr": {
-                "class": "float",
-                "value": 0.743712
-            },
-            "insulation_thickness": {
-                "class": "float",
-                "value": 0.0
-            },
-            "interrupting_rating": {
-                "class": "NoneType",
-                "value": null
-            },
-            "is_breaker": {
-                "class": "bool",
-                "value": false
-            },
-            "is_fuse": {
-                "class": "bool",
-                "value": false
-            },
-            "is_network_protector": {
-                "class": "bool",
-                "value": false
-            },
-            "is_open": {
-                "class": "bool",
-                "value": false
-            },
-            "is_recloser": {
-                "class": "bool",
-                "value": false
-            },
-            "is_sectionalizer": {
-                "class": "bool",
-                "value": false
-            },
-            "is_switch": {
-                "class": "bool",
-                "value": false
-            },
-            "nameclass": {
-                "class": "str",
-                "value": "336_500_26_7_NOB"
-            },
-            "phase": {
-                "class": "str",
-                "value": "C"
-            },
-            "resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            }
-        },
-        {
-            "class": "Wire",
-            "name": {
-                "class": "str",
-                "value": null
-            },
-            "X": {
-                "class": "NoneType",
-                "value": null
-            },
-            "Y": {
-                "class": "NoneType",
-                "value": null
-            },
-            "ampacity": {
-                "class": "float",
-                "value": 247.0
-            },
-            "concentric_neutral_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_gmr": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_nstrand": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_outside_diameter": {
-                "class": "NoneType",
-                "value": null
-            },
-            "concentric_neutral_resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "diameter": {
-                "class": "float",
-                "value": 1.0
-            },
-            "drop": {
-                "class": "int",
-                "value": 0
-            },
-            "emergency_ampacity": {
-                "class": "NoneType",
-                "value": null
-            },
-            "gmr": {
-                "class": "float",
-                "value": 0.248107
-            },
-            "insulation_thickness": {
-                "class": "float",
-                "value": 0.0
-            },
-            "interrupting_rating": {
-                "class": "NoneType",
-                "value": null
-            },
-            "is_breaker": {
-                "class": "bool",
-                "value": false
-            },
-            "is_fuse": {
-                "class": "bool",
-                "value": false
-            },
-            "is_network_protector": {
-                "class": "bool",
-                "value": false
-            },
-            "is_open": {
-                "class": "bool",
-                "value": false
-            },
-            "is_recloser": {
-                "class": "bool",
-                "value": false
-            },
-            "is_sectionalizer": {
-                "class": "bool",
-                "value": false
-            },
-            "is_switch": {
-                "class": "bool",
-                "value": false
-            },
-            "nameclass": {
-                "class": "str",
-                "value": "4_0_6_1_ACSR_NOB"
-            },
-            "phase": {
-                "class": "str",
-                "value": "N"
-            },
-            "resistance": {
-                "class": "NoneType",
-                "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            }
-        },
-        {
-            "class": "Line",
-            "name": {
-                "class": "str",
-                "value": "109"
-            },
-            "faultrate": {
-                "class": "NoneType",
-                "value": null
-            },
-            "feeder_name": {
-                "class": "str",
-                "value": "utility"
-            },
-            "from_element": {
-                "class": "str",
-                "value": "107"
             },
             "is_banked": {
                 "class": "NoneType",
@@ -1561,11 +717,15 @@
             },
             "length": {
                 "class": "float",
-                "value": 609.6
+                "value": 762.0
             },
             "line_type": {
                 "class": "str",
                 "value": "overhead"
+            },
+            "name": {
+                "class": "str",
+                "value": "111"
             },
             "nameclass": {
                 "class": "NoneType",
@@ -1585,13 +745,12 @@
             },
             "to_element": {
                 "class": "str",
-                "value": "2"
+                "value": "4"
             },
             "wires": {
                 "class": "list",
                 "value": [
                     {
-                        "class": "Wire",
                         "X": {
                             "class": "NoneType",
                             "value": null
@@ -1604,6 +763,7 @@
                             "class": "float",
                             "value": 247.0
                         },
+                        "class": "Wire",
                         "concentric_neutral_diameter": {
                             "class": "NoneType",
                             "value": null
@@ -1633,8 +793,8 @@
                             "value": 0
                         },
                         "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
+                            "class": "float",
+                            "value": 0.0
                         },
                         "gmr": {
                             "class": "float",
@@ -1694,7 +854,6 @@
                         }
                     },
                     {
-                        "class": "Wire",
                         "X": {
                             "class": "NoneType",
                             "value": null
@@ -1707,6 +866,7 @@
                             "class": "float",
                             "value": 247.0
                         },
+                        "class": "Wire",
                         "concentric_neutral_diameter": {
                             "class": "NoneType",
                             "value": null
@@ -1736,8 +896,8 @@
                             "value": 0
                         },
                         "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
+                            "class": "float",
+                            "value": 0.0
                         },
                         "gmr": {
                             "class": "float",
@@ -1797,7 +957,6 @@
                         }
                     },
                     {
-                        "class": "Wire",
                         "X": {
                             "class": "NoneType",
                             "value": null
@@ -1810,6 +969,7 @@
                             "class": "float",
                             "value": 247.0
                         },
+                        "class": "Wire",
                         "concentric_neutral_diameter": {
                             "class": "NoneType",
                             "value": null
@@ -1839,8 +999,8 @@
                             "value": 0
                         },
                         "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
+                            "class": "float",
+                            "value": 0.0
                         },
                         "gmr": {
                             "class": "float",
@@ -1898,111 +1058,474 @@
                             "class": "NoneType",
                             "value": null
                         }
-                    },
-                    {
-                        "class": "Wire",
-                        "X": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "Y": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "ampacity": {
-                            "class": "float",
-                            "value": 247.0
-                        },
-                        "concentric_neutral_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_gmr": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_nstrand": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_outside_diameter": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "concentric_neutral_resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "diameter": {
-                            "class": "float",
-                            "value": 1.0
-                        },
-                        "drop": {
-                            "class": "int",
-                            "value": 0
-                        },
-                        "emergency_ampacity": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "gmr": {
-                            "class": "float",
-                            "value": 0.248107
-                        },
-                        "insulation_thickness": {
-                            "class": "float",
-                            "value": 0.0
-                        },
-                        "interrupting_rating": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "is_breaker": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_fuse": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_network_protector": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_open": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_recloser": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_sectionalizer": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "is_switch": {
-                            "class": "bool",
-                            "value": false
-                        },
-                        "nameclass": {
-                            "class": "str",
-                            "value": "4_0_6_1_ACSR_NOB"
-                        },
-                        "phase": {
-                            "class": "str",
-                            "value": "N"
-                        },
-                        "resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "response": {
-                            "class": "NoneType",
-                            "value": null
-                        }
                     }
                 ]
+            }
+        },
+        {
+            "class": "Position",
+            "elevation": {
+                "class": "float",
+                "value": 0.0
+            },
+            "lat": {
+                "class": "float",
+                "value": 0.0
+            },
+            "long": {
+                "class": "float",
+                "value": 0.0
+            },
+            "name": {
+                "class": "str",
+                "value": null
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            }
+        },
+        {
+            "X": {
+                "class": "NoneType",
+                "value": null
+            },
+            "Y": {
+                "class": "NoneType",
+                "value": null
+            },
+            "ampacity": {
+                "class": "float",
+                "value": 247.0
+            },
+            "class": "Wire",
+            "concentric_neutral_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_gmr": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_nstrand": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_outside_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "diameter": {
+                "class": "float",
+                "value": 1.0
+            },
+            "drop": {
+                "class": "int",
+                "value": 0
+            },
+            "emergency_ampacity": {
+                "class": "float",
+                "value": 0.0
+            },
+            "gmr": {
+                "class": "float",
+                "value": 0.743712
+            },
+            "insulation_thickness": {
+                "class": "float",
+                "value": 0.0
+            },
+            "interrupting_rating": {
+                "class": "NoneType",
+                "value": null
+            },
+            "is_breaker": {
+                "class": "bool",
+                "value": false
+            },
+            "is_fuse": {
+                "class": "bool",
+                "value": false
+            },
+            "is_network_protector": {
+                "class": "bool",
+                "value": false
+            },
+            "is_open": {
+                "class": "bool",
+                "value": false
+            },
+            "is_recloser": {
+                "class": "bool",
+                "value": false
+            },
+            "is_sectionalizer": {
+                "class": "bool",
+                "value": false
+            },
+            "is_switch": {
+                "class": "bool",
+                "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
+            },
+            "nameclass": {
+                "class": "str",
+                "value": "336_500_26_7_NOB"
+            },
+            "phase": {
+                "class": "str",
+                "value": "A"
+            },
+            "resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            }
+        },
+        {
+            "X": {
+                "class": "NoneType",
+                "value": null
+            },
+            "Y": {
+                "class": "NoneType",
+                "value": null
+            },
+            "ampacity": {
+                "class": "float",
+                "value": 247.0
+            },
+            "class": "Wire",
+            "concentric_neutral_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_gmr": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_nstrand": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_outside_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "diameter": {
+                "class": "float",
+                "value": 1.0
+            },
+            "drop": {
+                "class": "int",
+                "value": 0
+            },
+            "emergency_ampacity": {
+                "class": "float",
+                "value": 0.0
+            },
+            "gmr": {
+                "class": "float",
+                "value": 0.743712
+            },
+            "insulation_thickness": {
+                "class": "float",
+                "value": 0.0
+            },
+            "interrupting_rating": {
+                "class": "NoneType",
+                "value": null
+            },
+            "is_breaker": {
+                "class": "bool",
+                "value": false
+            },
+            "is_fuse": {
+                "class": "bool",
+                "value": false
+            },
+            "is_network_protector": {
+                "class": "bool",
+                "value": false
+            },
+            "is_open": {
+                "class": "bool",
+                "value": false
+            },
+            "is_recloser": {
+                "class": "bool",
+                "value": false
+            },
+            "is_sectionalizer": {
+                "class": "bool",
+                "value": false
+            },
+            "is_switch": {
+                "class": "bool",
+                "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
+            },
+            "nameclass": {
+                "class": "str",
+                "value": "336_500_26_7_NOB"
+            },
+            "phase": {
+                "class": "str",
+                "value": "B"
+            },
+            "resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            }
+        },
+        {
+            "X": {
+                "class": "NoneType",
+                "value": null
+            },
+            "Y": {
+                "class": "NoneType",
+                "value": null
+            },
+            "ampacity": {
+                "class": "float",
+                "value": 247.0
+            },
+            "class": "Wire",
+            "concentric_neutral_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_gmr": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_nstrand": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_outside_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "diameter": {
+                "class": "float",
+                "value": 1.0
+            },
+            "drop": {
+                "class": "int",
+                "value": 0
+            },
+            "emergency_ampacity": {
+                "class": "float",
+                "value": 0.0
+            },
+            "gmr": {
+                "class": "float",
+                "value": 0.743712
+            },
+            "insulation_thickness": {
+                "class": "float",
+                "value": 0.0
+            },
+            "interrupting_rating": {
+                "class": "NoneType",
+                "value": null
+            },
+            "is_breaker": {
+                "class": "bool",
+                "value": false
+            },
+            "is_fuse": {
+                "class": "bool",
+                "value": false
+            },
+            "is_network_protector": {
+                "class": "bool",
+                "value": false
+            },
+            "is_open": {
+                "class": "bool",
+                "value": false
+            },
+            "is_recloser": {
+                "class": "bool",
+                "value": false
+            },
+            "is_sectionalizer": {
+                "class": "bool",
+                "value": false
+            },
+            "is_switch": {
+                "class": "bool",
+                "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
+            },
+            "nameclass": {
+                "class": "str",
+                "value": "336_500_26_7_NOB"
+            },
+            "phase": {
+                "class": "str",
+                "value": "C"
+            },
+            "resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            }
+        },
+        {
+            "X": {
+                "class": "NoneType",
+                "value": null
+            },
+            "Y": {
+                "class": "NoneType",
+                "value": null
+            },
+            "ampacity": {
+                "class": "float",
+                "value": 247.0
+            },
+            "class": "Wire",
+            "concentric_neutral_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_gmr": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_nstrand": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_outside_diameter": {
+                "class": "NoneType",
+                "value": null
+            },
+            "concentric_neutral_resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "diameter": {
+                "class": "float",
+                "value": 1.0
+            },
+            "drop": {
+                "class": "int",
+                "value": 0
+            },
+            "emergency_ampacity": {
+                "class": "float",
+                "value": 0.0
+            },
+            "gmr": {
+                "class": "float",
+                "value": 0.248107
+            },
+            "insulation_thickness": {
+                "class": "float",
+                "value": 0.0
+            },
+            "interrupting_rating": {
+                "class": "NoneType",
+                "value": null
+            },
+            "is_breaker": {
+                "class": "bool",
+                "value": false
+            },
+            "is_fuse": {
+                "class": "bool",
+                "value": false
+            },
+            "is_network_protector": {
+                "class": "bool",
+                "value": false
+            },
+            "is_open": {
+                "class": "bool",
+                "value": false
+            },
+            "is_recloser": {
+                "class": "bool",
+                "value": false
+            },
+            "is_sectionalizer": {
+                "class": "bool",
+                "value": false
+            },
+            "is_switch": {
+                "class": "bool",
+                "value": false
+            },
+            "name": {
+                "class": "str",
+                "value": null
+            },
+            "nameclass": {
+                "class": "str",
+                "value": "4_0_6_1_ACSR_NOB"
+            },
+            "phase": {
+                "class": "str",
+                "value": "N"
+            },
+            "resistance": {
+                "class": "NoneType",
+                "value": null
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            }
+        },
+        {
+            "class": "Line",
+            "faultrate": {
+                "class": "NoneType",
+                "value": null
+            },
+            "feeder_name": {
+                "class": "str",
+                "value": "utility"
+            },
+            "from_element": {
+                "class": "str",
+                "value": "107"
             },
             "impedance_matrix": {
                 "class": "list",
@@ -2086,14 +1609,491 @@
                         ]
                     }
                 ]
+            },
+            "is_banked": {
+                "class": "NoneType",
+                "value": null
+            },
+            "is_breaker": {
+                "class": "int",
+                "value": 0
+            },
+            "is_fuse": {
+                "class": "int",
+                "value": 0
+            },
+            "is_network_protector": {
+                "class": "int",
+                "value": 0
+            },
+            "is_recloser": {
+                "class": "int",
+                "value": 0
+            },
+            "is_sectionalizer": {
+                "class": "int",
+                "value": 0
+            },
+            "is_substation": {
+                "class": "int",
+                "value": 0
+            },
+            "is_switch": {
+                "class": "int",
+                "value": 0
+            },
+            "length": {
+                "class": "float",
+                "value": 609.6
+            },
+            "line_type": {
+                "class": "str",
+                "value": "overhead"
+            },
+            "name": {
+                "class": "str",
+                "value": "109"
+            },
+            "nameclass": {
+                "class": "NoneType",
+                "value": null
+            },
+            "nominal_voltage": {
+                "class": "NoneType",
+                "value": null
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            },
+            "substation_name": {
+                "class": "NoneType",
+                "value": null
+            },
+            "to_element": {
+                "class": "str",
+                "value": "2"
+            },
+            "wires": {
+                "class": "list",
+                "value": [
+                    {
+                        "X": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "Y": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "ampacity": {
+                            "class": "float",
+                            "value": 247.0
+                        },
+                        "class": "Wire",
+                        "concentric_neutral_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_gmr": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_nstrand": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_outside_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "diameter": {
+                            "class": "float",
+                            "value": 1.0
+                        },
+                        "drop": {
+                            "class": "int",
+                            "value": 0
+                        },
+                        "emergency_ampacity": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "gmr": {
+                            "class": "float",
+                            "value": 0.743712
+                        },
+                        "insulation_thickness": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "interrupting_rating": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "is_breaker": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_fuse": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_network_protector": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_open": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_recloser": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_sectionalizer": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_switch": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "nameclass": {
+                            "class": "str",
+                            "value": "336_500_26_7_NOB"
+                        },
+                        "phase": {
+                            "class": "str",
+                            "value": "A"
+                        },
+                        "resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "response": {
+                            "class": "NoneType",
+                            "value": null
+                        }
+                    },
+                    {
+                        "X": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "Y": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "ampacity": {
+                            "class": "float",
+                            "value": 247.0
+                        },
+                        "class": "Wire",
+                        "concentric_neutral_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_gmr": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_nstrand": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_outside_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "diameter": {
+                            "class": "float",
+                            "value": 1.0
+                        },
+                        "drop": {
+                            "class": "int",
+                            "value": 0
+                        },
+                        "emergency_ampacity": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "gmr": {
+                            "class": "float",
+                            "value": 0.743712
+                        },
+                        "insulation_thickness": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "interrupting_rating": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "is_breaker": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_fuse": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_network_protector": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_open": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_recloser": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_sectionalizer": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_switch": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "nameclass": {
+                            "class": "str",
+                            "value": "336_500_26_7_NOB"
+                        },
+                        "phase": {
+                            "class": "str",
+                            "value": "B"
+                        },
+                        "resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "response": {
+                            "class": "NoneType",
+                            "value": null
+                        }
+                    },
+                    {
+                        "X": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "Y": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "ampacity": {
+                            "class": "float",
+                            "value": 247.0
+                        },
+                        "class": "Wire",
+                        "concentric_neutral_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_gmr": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_nstrand": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_outside_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "diameter": {
+                            "class": "float",
+                            "value": 1.0
+                        },
+                        "drop": {
+                            "class": "int",
+                            "value": 0
+                        },
+                        "emergency_ampacity": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "gmr": {
+                            "class": "float",
+                            "value": 0.743712
+                        },
+                        "insulation_thickness": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "interrupting_rating": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "is_breaker": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_fuse": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_network_protector": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_open": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_recloser": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_sectionalizer": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_switch": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "nameclass": {
+                            "class": "str",
+                            "value": "336_500_26_7_NOB"
+                        },
+                        "phase": {
+                            "class": "str",
+                            "value": "C"
+                        },
+                        "resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "response": {
+                            "class": "NoneType",
+                            "value": null
+                        }
+                    },
+                    {
+                        "X": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "Y": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "ampacity": {
+                            "class": "float",
+                            "value": 247.0
+                        },
+                        "class": "Wire",
+                        "concentric_neutral_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_gmr": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_nstrand": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_outside_diameter": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "concentric_neutral_resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "diameter": {
+                            "class": "float",
+                            "value": 1.0
+                        },
+                        "drop": {
+                            "class": "int",
+                            "value": 0
+                        },
+                        "emergency_ampacity": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "gmr": {
+                            "class": "float",
+                            "value": 0.248107
+                        },
+                        "insulation_thickness": {
+                            "class": "float",
+                            "value": 0.0
+                        },
+                        "interrupting_rating": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "is_breaker": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_fuse": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_network_protector": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_open": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_recloser": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_sectionalizer": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "is_switch": {
+                            "class": "bool",
+                            "value": false
+                        },
+                        "nameclass": {
+                            "class": "str",
+                            "value": "4_0_6_1_ACSR_NOB"
+                        },
+                        "phase": {
+                            "class": "str",
+                            "value": "N"
+                        },
+                        "resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "response": {
+                            "class": "NoneType",
+                            "value": null
+                        }
+                    }
+                ]
             }
         },
         {
             "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "elevation": {
                 "class": "float",
                 "value": 0.0
@@ -2105,6 +2105,10 @@
             "long": {
                 "class": "float",
                 "value": 0.0
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "response": {
                 "class": "NoneType",
@@ -2113,10 +2117,6 @@
         },
         {
             "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "elevation": {
                 "class": "float",
                 "value": 0.0
@@ -2128,6 +2128,10 @@
             "long": {
                 "class": "float",
                 "value": 0.0
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "response": {
                 "class": "NoneType",
@@ -2136,10 +2140,6 @@
         },
         {
             "class": "PowerTransformer",
-            "name": {
-                "class": "str",
-                "value": "Trans_110"
-            },
             "feeder_name": {
                 "class": "str",
                 "value": "utility"
@@ -2164,6 +2164,10 @@
                 "class": "NoneType",
                 "value": null
             },
+            "name": {
+                "class": "str",
+                "value": "Trans_110"
+            },
             "noload_loss": {
                 "class": "NoneType",
                 "value": null
@@ -2176,6 +2180,15 @@
                 "class": "NoneType",
                 "value": null
             },
+            "reactances": {
+                "class": "list",
+                "value": [
+                    {
+                        "class": "float",
+                        "value": 0.9995458428165725
+                    }
+                ]
+            },
             "response": {
                 "class": "NoneType",
                 "value": null
@@ -2187,15 +2200,6 @@
             "to_element": {
                 "class": "str",
                 "value": "3"
-            },
-            "reactances": {
-                "class": "list",
-                "value": [
-                    {
-                        "class": "float",
-                        "value": 0.9995458428165725
-                    }
-                ]
             },
             "windings": {
                 "class": "list",
@@ -2214,30 +2218,6 @@
                             "class": "float",
                             "value": 12470.0
                         },
-                        "rated_power": {
-                            "class": "float",
-                            "value": 6000000.0
-                        },
-                        "resistance": {
-                            "class": "float",
-                            "value": 0.49977292140828616
-                        },
-                        "response": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "reverse_resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "voltage_limit": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "voltage_type": {
-                            "class": "NoneType",
-                            "value": null
-                        },
                         "phase_windings": {
                             "class": "list",
                             "value": [
@@ -2311,6 +2291,30 @@
                                     }
                                 }
                             ]
+                        },
+                        "rated_power": {
+                            "class": "float",
+                            "value": 6000000.0
+                        },
+                        "resistance": {
+                            "class": "float",
+                            "value": 0.49977292140828616
+                        },
+                        "response": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "reverse_resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "voltage_limit": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "voltage_type": {
+                            "class": "NoneType",
+                            "value": null
                         }
                     },
                     {
@@ -2327,30 +2331,6 @@
                             "class": "float",
                             "value": 4160.0
                         },
-                        "rated_power": {
-                            "class": "float",
-                            "value": 6000000.0
-                        },
-                        "resistance": {
-                            "class": "float",
-                            "value": 0.49977292140828616
-                        },
-                        "response": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "reverse_resistance": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "voltage_limit": {
-                            "class": "NoneType",
-                            "value": null
-                        },
-                        "voltage_type": {
-                            "class": "NoneType",
-                            "value": null
-                        },
                         "phase_windings": {
                             "class": "list",
                             "value": [
@@ -2424,6 +2404,30 @@
                                     }
                                 }
                             ]
+                        },
+                        "rated_power": {
+                            "class": "float",
+                            "value": 6000000.0
+                        },
+                        "resistance": {
+                            "class": "float",
+                            "value": 0.49977292140828616
+                        },
+                        "response": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "reverse_resistance": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "voltage_limit": {
+                            "class": "NoneType",
+                            "value": null
+                        },
+                        "voltage_type": {
+                            "class": "NoneType",
+                            "value": null
                         }
                     }
                 ]
@@ -2431,10 +2435,6 @@
         },
         {
             "class": "Position",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "elevation": {
                 "class": "float",
                 "value": 0.0
@@ -2447,6 +2447,10 @@
                 "class": "float",
                 "value": 0.0
             },
+            "name": {
+                "class": "str",
+                "value": null
+            },
             "response": {
                 "class": "NoneType",
                 "value": null
@@ -2454,22 +2458,26 @@
         },
         {
             "class": "Winding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "connection_type": {
                 "class": "str",
                 "value": "Y"
             },
             "emergency_power": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "nominal_voltage": {
                 "class": "float",
                 "value": 12470.0
             },
+            "phase_windings": {
+                "class": "list",
+                "value": []
+            },
             "rated_power": {
                 "class": "float",
                 "value": 6000000.0
@@ -2493,24 +2501,20 @@
             "voltage_type": {
                 "class": "NoneType",
                 "value": null
-            },
-            "phase_windings": {
-                "class": "list",
-                "value": []
             }
         },
         {
             "class": "PhaseWinding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "compensator_r": {
                 "class": "NoneType",
                 "value": null
             },
             "compensator_x": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "phase": {
@@ -2528,16 +2532,16 @@
         },
         {
             "class": "PhaseWinding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "compensator_r": {
                 "class": "NoneType",
                 "value": null
             },
             "compensator_x": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "phase": {
@@ -2555,16 +2559,16 @@
         },
         {
             "class": "PhaseWinding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "compensator_r": {
                 "class": "NoneType",
                 "value": null
             },
             "compensator_x": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "phase": {
@@ -2582,10 +2586,6 @@
         },
         {
             "class": "Winding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "connection_type": {
                 "class": "str",
                 "value": "Y"
@@ -2594,9 +2594,17 @@
                 "class": "NoneType",
                 "value": null
             },
+            "name": {
+                "class": "str",
+                "value": null
+            },
             "nominal_voltage": {
                 "class": "float",
                 "value": 4160.0
+            },
+            "phase_windings": {
+                "class": "list",
+                "value": []
             },
             "rated_power": {
                 "class": "float",
@@ -2621,24 +2629,20 @@
             "voltage_type": {
                 "class": "NoneType",
                 "value": null
-            },
-            "phase_windings": {
-                "class": "list",
-                "value": []
             }
         },
         {
             "class": "PhaseWinding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "compensator_r": {
                 "class": "NoneType",
                 "value": null
             },
             "compensator_x": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "phase": {
@@ -2656,16 +2660,16 @@
         },
         {
             "class": "PhaseWinding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "compensator_r": {
                 "class": "NoneType",
                 "value": null
             },
             "compensator_x": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "phase": {
@@ -2683,16 +2687,16 @@
         },
         {
             "class": "PhaseWinding",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "compensator_r": {
                 "class": "NoneType",
                 "value": null
             },
             "compensator_x": {
                 "class": "NoneType",
+                "value": null
+            },
+            "name": {
+                "class": "str",
                 "value": null
             },
             "phase": {
@@ -2709,11 +2713,6 @@
             }
         },
         {
-            "class": "Load",
-            "name": {
-                "class": "str",
-                "value": "Load_112_C_B_A"
-            },
             "center_tap_perct_1_2": {
                 "class": "NoneType",
                 "value": null
@@ -2726,6 +2725,7 @@
                 "class": "NoneType",
                 "value": null
             },
+            "class": "Load",
             "connecting_element": {
                 "class": "str",
                 "value": "4"
@@ -2745,6 +2745,10 @@
             "is_substation": {
                 "class": "int",
                 "value": 0
+            },
+            "name": {
+                "class": "str",
+                "value": "Load_112_C_B_A"
             },
             "nominal_voltage": {
                 "class": "NoneType",
@@ -2771,38 +2775,6 @@
                 "value": null
             },
             "peak_q": {
-                "class": "NoneType",
-                "value": null
-            },
-            "response": {
-                "class": "NoneType",
-                "value": null
-            },
-            "rooftop_area": {
-                "class": "NoneType",
-                "value": null
-            },
-            "substation_name": {
-                "class": "NoneType",
-                "value": null
-            },
-            "transformer_connected_kva": {
-                "class": "float",
-                "value": 0.0
-            },
-            "upstream_transformer_name": {
-                "class": "NoneType",
-                "value": null
-            },
-            "vmax": {
-                "class": "NoneType",
-                "value": null
-            },
-            "vmin": {
-                "class": "NoneType",
-                "value": null
-            },
-            "yearly_energy": {
                 "class": "NoneType",
                 "value": null
             },
@@ -2975,14 +2947,42 @@
                         }
                     }
                 ]
+            },
+            "response": {
+                "class": "NoneType",
+                "value": null
+            },
+            "rooftop_area": {
+                "class": "NoneType",
+                "value": null
+            },
+            "substation_name": {
+                "class": "NoneType",
+                "value": null
+            },
+            "transformer_connected_kva": {
+                "class": "float",
+                "value": 0.0
+            },
+            "upstream_transformer_name": {
+                "class": "NoneType",
+                "value": null
+            },
+            "vmax": {
+                "class": "NoneType",
+                "value": null
+            },
+            "vmin": {
+                "class": "NoneType",
+                "value": null
+            },
+            "yearly_energy": {
+                "class": "NoneType",
+                "value": null
             }
         },
         {
             "class": "PhaseLoad",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "drop": {
                 "class": "int",
                 "value": 0
@@ -2990,6 +2990,10 @@
             "model": {
                 "class": "int",
                 "value": 1
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "p": {
                 "class": "float",
@@ -3038,10 +3042,6 @@
         },
         {
             "class": "PhaseLoad",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "drop": {
                 "class": "int",
                 "value": 0
@@ -3049,6 +3049,10 @@
             "model": {
                 "class": "int",
                 "value": 1
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "p": {
                 "class": "float",
@@ -3097,10 +3101,6 @@
         },
         {
             "class": "PhaseLoad",
-            "name": {
-                "class": "str",
-                "value": null
-            },
             "drop": {
                 "class": "int",
                 "value": 0
@@ -3108,6 +3108,10 @@
             "model": {
                 "class": "int",
                 "value": 1
+            },
+            "name": {
+                "class": "str",
+                "value": null
             },
             "p": {
                 "class": "float",
@@ -3156,13 +3160,13 @@
         },
         {
             "class": "Feeder_metadata",
-            "name": {
-                "class": "str",
-                "value": "utility"
-            },
             "headnode": {
                 "class": "str",
                 "value": "107"
+            },
+            "name": {
+                "class": "str",
+                "value": "utility"
             },
             "negative_sequence_reactance": {
                 "class": "NoneType",
@@ -3221,9 +3225,5 @@
                 "value": null
             }
         }
-    ],
-    "metadata": {
-        "time": "2018-10-24 15:16:39.499338",
-        "model_size": 33
-    }
+    ]
 }
