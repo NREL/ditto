@@ -1250,10 +1250,11 @@ class Writer(AbstractWriter):
                         self.timeseries_format[filename] = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
-                    txt += "New loadshape {filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
+                    txt += "New Loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
                         filename=filename,
                         npoints=npoints,
-                        data_location=i.data_location.split("/")[-1],
+                        # data_location=i.data_location.split("/")[-1],
+                        data_location=location,
                     )
                     self.timeseries_datasets[i.data_location] = filename
 
@@ -1287,7 +1288,7 @@ class Writer(AbstractWriter):
                         self.timeseries_format[filename] = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
-                    txt += "New loadshape {filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
+                    txt += "New Loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
                         filename=filename,
                         npoints=npoints,
                         data_location=scaled_data_location,
