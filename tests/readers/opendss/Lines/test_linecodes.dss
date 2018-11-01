@@ -67,21 +67,21 @@ New Linecode.c1_only nphases=3 c1=10.4308823411236 units=km
 ! Linecode 14 only has c0 set 
 New Linecode.x0_only nphases=3 c0=4.38501282215346 units=km 
 
-New Line.line1 Bus1=bus1 Bus2=bus2 phases=3 Length=10 linecode=3-1/0C_2/0CN_T units=m
-New Line.line2 Bus1=bus2 Bus2=bus3 phases=1 Length=10 linecode=1P_#8CU_#8 units=m
-New Line.line3 Bus1=bus3 Bus2=bus4 phases=3 Length=10 linecode=3P_3#500_AL_EPR_CD units=m
-New Line.line4 Bus1=bus4 Bus2=bus5 phases=3 Length=10 linecode=3ph_h-397_acsr397_acsr397_acsr2/0_acsr units=m
-New Line.line5 Bus1=bus5 Bus2=bus6 phases=1 Length=10 linecode=1ph-2_acsrxx4_acsr units=m
-New Line.line6 Bus1=bus6 Bus2=bus7 phases=2 Length=10 linecode=2ph_h-2_acsrx2_acsr2_acsr  units=m
-New Line.line7 Bus1=bus7 Bus2=bus8 phases=2 Length=10 linecode=750_Triplex units=m
-New Line.line8 Bus1=bus8 Bus2=bus9 phases=2 Length=10 linecode=4/0Triplex  units=m
-New Line.line9 Bus1=bus9 Bus2=bus10 phases=3 Length=10 linecode=empty units=m
-New Line.line10 Bus1=bus10 Bus2=bus11 phases=3 Length=10 linecode=r1_only units=m
-New Line.line11 Bus1=bus11 Bus2=bus12 phases=3 Length=10 linecode=r0_only units=m
-New Line.line12 Bus1=bus12 Bus2=bus13 phases=3 Length=10 linecode=x1_only units=m
-New Line.line13 Bus1=bus13 Bus2=bus14 phases=3 Length=10 linecode=x0_only units=m
-New Line.line14 Bus1=bus14 Bus2=bus15 phases=3 Length=10 linecode=c1_only units=m
-New Line.line15 Bus1=bus15 Bus2=bus16 phases=3 Length=10 linecode=c0_only units=m
+New Line.line1 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3 phases=3 Length=10 linecode=3-1/0C_2/0CN_T units=m
+New Line.line2 Bus1=bus2.3 Bus2=bus3.3 phases=1 Length=10 linecode=1P_#8CU_#8N units=m
+New Line.line3 Bus1=bus2.1.2.3 Bus2=bus4.1.2.3 phases=3 Length=10 linecode=3P_3#500_AL_EPR_CD units=m
+New Line.line4 Bus1=bus4.1.2.3 Bus2=bus5.1.2.3 phases=3 Length=10 linecode=3ph_h-397_acsr397_acsr397_acsr2/0_acsr units=m
+New Line.line5 Bus1=bus5.2 Bus2=bus6.2 phases=1 Length=10 linecode=1ph-2_acsrxx4_acsr units=m
+New Line.line6 Bus1=bus5.1.3 Bus2=bus7.1.3 phases=2 Length=10 linecode=2ph_h-2_acsrx2_acsr2_acsr  units=m
+New Line.line7 Bus1=bus5.1.2 Bus2=bus8.1.2 phases=2 Length=10 linecode=750_Triplex units=m
+New Line.line8 Bus1=bus5.2.3 Bus2=bus9.2.3 phases=2 Length=10 linecode=4/0Triplex  units=m
+New Line.line9 Bus1=bus4.1.2.3 Bus2=bus10.1.2.3 phases=3 Length=10 linecode=empty units=m
+New Line.line10 Bus1=bus10.1.2.3 Bus2=bus11.1.2.3 phases=3 Length=10 linecode=r1_only units=m
+New Line.line11 Bus1=bus11.1.2.3 Bus2=bus12.1.2.3 phases=3 Length=10 linecode=r0_only units=m
+New Line.line12 Bus1=bus12.1.2.3 Bus2=bus13.1.2.3 phases=3 Length=10 linecode=x1_only units=m
+New Line.line13 Bus1=bus13.1.2.3 Bus2=bus14.1.2.3 phases=3 Length=10 linecode=x0_only units=m
+New Line.line14 Bus1=bus14.1.2.3 Bus2=bus15.1.2.3 phases=3 Length=10 linecode=c1_only units=m
+New Line.line15 Bus1=bus15.1.2.3 Bus2=bus16.1.2.3 phases=3 Length=10 linecode=c0_only units=m
 
 
 Set Voltagebases=[12.47]
