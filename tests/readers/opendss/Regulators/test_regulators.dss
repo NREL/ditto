@@ -1,0 +1,20 @@
+Clear
+
+New circuit.test_regulators basekv=115 pu=1.01 bus1=sourcebus
+
+! Regulator No. 1
+
+New Transformer.VREG2_A phases=1  windings=2  bank=VREG2  buses=(regxfmr_190-8593.1, 190-8593.1)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(10000, 10000)  xhl=0.1 %loadloss=.01 Wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
+New Transformer.VREG2_B phases=1  windings=2  bank=VREG2  buses=(regxfmr_190-8593.2, 190-8593.2)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(10000, 10000)  xhl=0.1 %loadloss=.01 Wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
+New Transformer.VREG2_C phases=1  windings=2  bank=VREG2  buses=(regxfmr_190-8593.3, 190-8593.3)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(10000, 10000)  xhl=0.1 %loadloss=.01 Wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
+
+New RegControl.VREG2_A transformer=VREG2_A  winding=2 vreg=125  ptratio=60 band=2
+New RegControl.VREG2_B transformer=VREG2_B  winding=2 vreg=125  ptratio=60 band=2
+New RegControl.VREG2_C transformer=VREG2_C  winding=2 vreg=125  ptratio=60 band=2
+
+! Regulator No. 2
+
+New Transformer.regxfmr_B18865 phases=1 windings=2 buses=(B18865.3, B18865reg.3) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 enabled=True
+New RegControl.regxfmr_B18865_ctrl transformer=regxfmr_B18865 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=45
+
+
