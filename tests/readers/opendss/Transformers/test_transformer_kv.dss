@@ -65,6 +65,16 @@ New Transformer.B4551-1A phases=1 wdg=1	bus=B4551.1 kv=7.2 kVA=15 wdg=2	bus=X_B4
 ! Three phase Wye-Wye Transformer from Epri J-1 Feeder
 New Transformer.5865228330A-1ABC phases=3 wdg=1	bus=5865228330A.1.2.3 kv=12.47 kVA=2000	wdg=2 bus=X_5865228330A	kv=0.416 kVA=2000 %loadloss=0.7 %noloadloss=0.05 XHL=5	normhkva=2000.01 emerghkva=2800
 
+! Single phase delta-wye transformer. This is a dummy test as we don't expect to see delta configurations on a single phase
+new transformer.t1 phases=1 xhl=6
+~ wdg=1 bus=n2.3 conn=delta kV=12.47 kVA=6000 %r=0.5
+~ wdg=2 bus=n3.1.2 conn=wye kV=4.16  kVA=6000 %r=0.5
+
+! Single phase wye-delta transformer. This is a dummy test as we don't expect to see delta configurations on a single phase
+new transformer.t1 phases=1 xhl=6
+~ wdg=1 bus=n2.3 conn=wye kV=12.47 kVA=6000 %r=0.5
+~ wdg=2 bus=n3.1.2 conn=delta kV=4.16  kVA=6000 %r=0.5
+
 
 Set Voltagebases=[115, 12.7, 7.2, 4.16, 4.0, 0.48, 0.416, 0.12]
 Calcvoltagebases
