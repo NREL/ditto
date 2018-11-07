@@ -17,6 +17,11 @@ New Transformer.xfm1 phases=2 windings=2 XHL=2
 ~ wdg=1 bus=bus2.1.3 conn=Delta kv=4.16 kva=500 %r=.55 XHT=1
 ~ wdg=2 bus=bus3.1.2 conn=Wye kv=0.48 kva=500 %r=.55 XLT=1
 
+! Three phase wye-wye transformer from IEEE 4 node feeder
+new transformer.t1 xhl=6
+~ wdg=1 bus=n2 conn=wye kV=12.47 kVA=6000 %r=0.5
+~ wdg=2 bus=n3 conn=wye kV=4.16  kVA=6000 %r=0.5
+
 
 ! Three phase Delta-Wye substation Transformer from 4kV SMART-DS region P4U
 
