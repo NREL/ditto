@@ -29,19 +29,19 @@ New Transformer.sb5_p4uhs0_4_trans_439 phases=3 windings=2 wdg=1 conn=delta Kv=6
 
 ! Three phase Wye-Wye Transformer from 4kV SMART-DS region P4U
 
-New Transformer.tr(r:p4udt27-p4udt27lv) phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=wye Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=wye Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000 
+New Transformer.tr(r:p4udt27-p4udt27lv) phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=wye Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=wye Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000
 
 ! Three phase Delta-Wye Transformer (modified) from 4kV SMART-DS region P4U
 
-New Transformer.tr(r:p4udt27-p4udt27lv)_1 phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=delta Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=wye Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000 
+New Transformer.tr(r:p4udt27-p4udt27lv)_1 phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=delta Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=wye Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000
 
 ! Three phase Delta-Delta Transformer (modified) from 4kV SMART-DS region P4U
 
-New Transformer.tr(r:p4udt27-p4udt27lv)_2 phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=delta Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=delta Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000 
+New Transformer.tr(r:p4udt27-p4udt27lv)_2 phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=delta Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=delta Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000
 
 ! Three phase Wye-Delta Transformer (modified) from 4kV SMART-DS region P4U
 
-New Transformer.tr(r:p4udt27-p4udt27lv)_3 phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=wye Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=delta Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000 
+New Transformer.tr(r:p4udt27-p4udt27lv)_3 phases=3 windings=2 %loadloss=1.74408 %Noloadloss=0.6 normhkva=82.5 wdg=1 conn=wye Kv=4.0 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27 wdg=2 conn=delta Kv=0.48 kva=75.0 EmergHKVA=112.5 %R=0.87204 bus=p4udt27lv XHL=3.240000000000000
 
 ! Center Tap Transformer from 4kV SMART-DS region P4U
 
@@ -53,7 +53,7 @@ New Transformer.tr(r:p4udt25-p4udt25lv) phases=1 windings=3 %loadloss=0.798816 %
 New Transformer.T21396254A phases=1 windings=3  wdg=1 bus=L2804253.1 kv=7.2 kVA=15   wdg=2 bus=X2804253A.1.0 kv=0.12 kVA=15   wdg=3 bus=X2804253A.0.2 kv=0.12 kVA=15   %imag=0.5 %Rs=[0.6 1.2 1.2] %noloadloss=.2 Xhl=2.04  Xht=2.04  Xlt=1.36
 
 
-! Single phase Wye-Wye Transformer (for regulator) From IEEE 8500 Test case 
+! Single phase Wye-Wye Transformer (for regulator) From IEEE 8500 Test case
 New Transformer.FEEDER_REGA phases=1  windings=2  Bank=FEEDER_REG buses=(regxfmr_HVMV_Sub_LSB.1,  _HVMV_Sub_LSB.1)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(27500, 27500)  xhl=0.1 %loadloss=.001 wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
 
 
@@ -66,12 +66,12 @@ New Transformer.B4551-1A phases=1 wdg=1	bus=B4551.1 kv=7.2 kVA=15 wdg=2	bus=X_B4
 New Transformer.5865228330A-1ABC phases=3 wdg=1	bus=5865228330A.1.2.3 kv=12.47 kVA=2000	wdg=2 bus=X_5865228330A	kv=0.416 kVA=2000 %loadloss=0.7 %noloadloss=0.05 XHL=5	normhkva=2000.01 emerghkva=2800
 
 ! Single phase delta-wye transformer. This is a dummy test as we don't expect to see delta configurations on a single phase
-new transformer.t1 phases=1 xhl=6
+new transformer.t1_1 phases=1 xhl=6
 ~ wdg=1 bus=n2.3 conn=delta kV=12.47 kVA=6000 %r=0.5
 ~ wdg=2 bus=n3.1.2 conn=wye kV=4.16  kVA=6000 %r=0.5
 
 ! Single phase wye-delta transformer. This is a dummy test as we don't expect to see delta configurations on a single phase
-new transformer.t1 phases=1 xhl=6
+new transformer.t1_2 phases=1 xhl=6
 ~ wdg=1 bus=n2.3 conn=wye kV=12.47 kVA=6000 %r=0.5
 ~ wdg=2 bus=n3.1.2 conn=delta kV=4.16  kVA=6000 %r=0.5
 

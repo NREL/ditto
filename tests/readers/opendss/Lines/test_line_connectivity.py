@@ -24,7 +24,7 @@ def test_line_connectivity():
     from ditto.store import Store
     from ditto.readers.opendss.read import Reader
 
-    # test on the test_line_length.dss
+    # test on the test_line_connectivity.dss
     m = Store()
     r = Reader(
         master_file=os.path.join(current_directory, "test_line_connectivity.dss")

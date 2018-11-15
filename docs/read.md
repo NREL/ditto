@@ -5,26 +5,26 @@
 | :------------------:|:-------:|
 | name                | yes     |
 | nominal_voltage     | yes     |
-| line_type           | no      |
+| line_type           | yes     |
 | length              | yes     |
 | from_element        | yes     |
 | to_element          | yes     |
-| is_fuse             | no      |
-| is_switch           | no      |
-| is_banked           | no      |
-| faultrate           | no      |
+| is_fuse             | no      | # Tarek needs to send this
+| is_switch           | no      | # Tarek needs to send this
+| is_banked           | no      | # Not now
+| faultrate           | no      | # Tarek needs to send this
 | wires               | yes     |
-| positions           | no      |
+| positions           | no      | # Not now
 | impedance_matrix    | yes     |
-| capacitance_matrix  | yes     |
-| substation_name     | no      |
-| feeder_name         | yes     |
-| is_recloser         | no      |
-| is_breaker          | no      |
-| is_sectionalizer    | no      |
+| capacitance_matrix  | yes     | # Tarek needs to send this
+| substation_name     | no      | # Not implemented
+| feeder_name         | yes     | # Document it
+| is_recloser         | no      | # Document it  that its in the name
+| is_breaker          | no      |# Document it that its in the name
+| is_sectionalizer    | no      | # Not now
 | nameclass           | yes     |
-| is_substation       | no      |
-| is_network_protector| no      |
+| is_substation       | no      | # Not now
+| is_network_protector| no      | # Not now
 
 
 ## Wire
@@ -40,29 +40,29 @@
 | ampacity            | yes     |
 | emergency_ampacity  | yes     |
 | resistance          | yes     |
-| insulation_thickness| no      |
-| is_fuse             | no      |
-| is_switch           | no      |
+| insulation_thickness| no      |# Needs to be implemented
+| is_fuse             | no      | # needs to be deprecated
+| is_switch           | no      | # needs to be deprecated
 | is_open             | no      |
-| interrupting_rating | no      |
-| concentric_neutral_gmr | no      |
-| concentric_neutral_resistance | no      |
-| concentric_neutral_diameter   | no      |
-| concentric_outside_diameter   | no      |
-| concentric_neutral_nstrand    | no      |
-| drop                | no      |
-| is_recloser         | no      |
-| is_breaker          | no      |
-| is_network_protector| no      |
-| is_sectionalizer    | no      |
+| interrupting_rating | no      | # Not for now
+| concentric_neutral_gmr | no      |  # Needs to be implemented
+| concentric_neutral_resistance | no      |  # Needs to be implemented
+| concentric_neutral_diameter   | no      | # Needs to be implemented
+| concentric_outside_diameter   | no      | # Needs to be implemented
+| concentric_neutral_nstrand    | no      | # Needs to be implemented
+| drop                | no      | # doesn't need testing, possible deprecation
+| is_recloser         | no      |# needs to be deprecated
+| is_breaker          | no      |# needs to be deprecated
+| is_network_protector| no      | # doesn't need testing, needs to be deprecated
+| is_sectionalizer    | no      |# needs to be deprecated
 
 ## Capacitor
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | nominal_voltage     | yes     |
 | connection_type     | yes     |
-| delay               | no      |
-| mode                | no      |
+| delay               | yes     |
+| mode                | yes     |
 | low                 | no      |
 | high                | no      |
 | resistance          | no      |
@@ -73,14 +73,14 @@
 | susceptance0        | no      |
 | conductance         | no      |
 | conductance0        | no      |
-| pt_ratio            | no      |
+| pt_ratio            | yes     |
 | ct_ratio            | no      |
-| pt_phase            | no      |
+| pt_phase            | yes     |
 | connecting_element  | no      |
 | positions           | no      |
-| measuring_element   | no      |
+| measuring_element   | yes     |
 | substation_name     | no      |
-| feeder_name         | no      |
+| feeder_name         | yes     |
 | is_substation       | no      |
 
 ## Phase Capacitor
@@ -96,114 +96,150 @@
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | name                | no      |
-| install_type        | no      |
-| noload_loss         | no      |
-| phase_shift         | no      |
+| install_type        | no      | #not needed
+| noload_loss         | yes     |
+| phase_shift         | no      | # Tarek to check if this exists in opendss and set it
 | from_element        | yes     |
 | to_element          | yes     |
 | reactances          | yes     |
 | windings            | yes     |
-| positions           | no      |
-| loadloss            | no      |
-| normhkva            | no      |
-| is_center_tap       | no      |
-| is_substation       | no      |
-| substation_name     | no      |
-| feeder_name         | yes     |
+| positions           | no      | # Not needed
+| loadloss            | yes     |
+| normhkva            | yes     |
+| is_center_tap       | yes     |
+| is_substation       | no      | # Not needed
+| substation_name     | no      | # Not needed
+| feeder_name         | yes     | # mention that the feeder name is set from the circuit rather than the feeder
 
 ## Winding
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | connection_type     | yes     |
-| voltage_type        | no      |
+| voltage_type        | no      | # Needs to be implemented , raise issue
 | nominal_voltage     | yes     |
-| voltage_limit       | no      |
+| voltage_limit       | no      | # Tarek to create a test case with a voltage regulator included, raise issue
 | resistance          | yes     |
-| reverse_resistance  | no      |
+| reverse_resistance  | no      | # Needs to be implemented , raise issue
 | phase_windings      | yes     |
 | rated_power         | yes     |
-| emergency_power     | no      |
+| emergency_power     | yes     |
 
 
 ## Phase Winding
 | Attribute           | Tested  |
 | :------------------:|:-------:|
-| tap_position        | no      |
+| tap_position        | no      | # Tarek looks into this
 | phase               | yes     |
-| compensator_r       | no      |
-| compensator_x       | no      |
+| compensator_r       | yes     |
+| compensator_x       | yes     |
 
 ## Regulator
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | name                | no      |
 | delay               | yes     |
-| highstep            | no      |
-| lowstep             | no      |
+| highstep            | yes     |
+| lowstep             | no      |  # needs to be implemented ( equal to highstep), raise an issue
 | pt_ratio            | yes     |
-| ct_ratio            | no      |
-| phase_shift         | no      |
-| ltc                 | no      |
+| ct_ratio            | no      | # Tarek to look at this
+| phase_shift         | no      | # Tarek to check if this exists in opendss and set it
+| ltc                 | no      | # not implemented
 | bandwidth           | yes     |
 | bandcenter          | yes     |
-| voltage_limit       | no      |
+| voltage_limit       | no      | # Tarek to create a test case with a voltage regulator included, raise issue
 | from_element        | yes     |
 | to_element          | yes     |
 |connected_transformer| yes     |
-| pt_phase            | no      |
+| pt_phase            | no      | # Bhavya needs to add
 | reactances          | yes     |
-| windings            | no      |
-| positions           | no      |
-| winding             | yes     |
-| ct_prim             | no      |
-| noload_loss         | no      |
-| substation_name     | no      |
+| windings            | no      | # Deprecate but a big api change
+| positions           | no      | # Not now
+| winding             | yes     | # Change name to pt_winding, check all the readers and writers
+| ct_prim             | no      | # Tarek to set for an example
+| noload_loss         | no      |# Deprecate along with windings but a big api change
+| substation_name     | no      |# Not needed
 | feeder_name         | yes     |
-| setpoint            | no      |
-| is_substation       | no      |
+| setpoint            | no      | #Needs to be implemented, Raise an issue, read it from vreg
+| is_substation       | no      |# Not needed
 
 ## Load
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | name                | no      |
-| connection_type     | no      |
+| connection_type     | no      | # Tarek to create an example
 | nominal_voltage     | yes     |
 | vmin                | yes     |
 | vmax                | yes     |
 | phase_loads         | yes     |
-| positions           | no      |
-| timeseries          | no      |
+| positions           | no      | # Not now
+| timeseries          | no      | # Test later
 | connecting_element  | yes     |
-| rooftop_area        | no      |
-| peak_p              | no      |
-| peak_q              | no      |
-| peak_coincident_p  | no      |
-| peak_coincident_q  | no      |
-| yearly_energy       | no      |
-| num_levels          | no      |
-| num_users           | no      |
-| substation_name     | no      |
+| rooftop_area        | no      | # Not implemented
+| peak_p              | no      | # Deprecate
+| peak_q              | no      | # Deprecate
+| peak_coincident_p   | no      | # Might Replace with peak coincident factor
+| peak_coincident_q   | no      | # Might Replace with peak coincident factor
+| yearly_energy       | no      | # Not implemented
+| num_levels          | no      |# Not implemented
+| num_users           | no      |# Not implemented
+| substation_name     | no      |# not needed
 | feeder_name         | yes     |
-| upstream_transformer_name  | no      |
-| transformer_connected_kva  | no      |
-| is_substation       | no      |
-| is_center_tap       | no      |
-| center_tap_perct_1_N| no      |
-| center_tap_perct_N_2| no      |
-| center_tap_perct_1_2| no      |
+| upstream_transformer_name  | no      | # Not implemented
+| transformer_connected_kva  | no      | # Not implemented
+| is_substation       | no      |# Not implemented
+| is_center_tap       | no      |# Not implemented
+| center_tap_perct_N_2| no      |# Not implemented
+| center_tap_perct_1_N| no      |# Not implemented
+| center_tap_perct_1_2| no      |# Not implemented
 
 ## PhaseLoad
 | Attribute           | Tested  |
 | :------------------:|:-------:|
-| phase               | no      |
-| p                   | no      |
-| q                   | no      |
-| model               | no      |
-| use_zip             | no      |
+| phase               | no      | # Bhavya to check this
+| p                   | yes     |
+| q                   | yes     |
+| model               | yes     |
+| use_zip             | yes     |
 | drop                | no      |
-| ppercentcurrent     | no      |
-| qpercentcurrent     | no      |
-| ppercentpower       | no      |
-| qpercentpower       | no      |
-| ppercentimpedance   | no      |
-| qpercentimpedance   | no      |
+| ppercentcurrent     | yes     |
+| qpercentcurrent     | yes     |
+| ppercentpower       | yes     |
+| qpercentpower       | yes     |
+| ppercentimpedance   | yes     |
+| qpercentimpedance   | yes     |
+
+## PowerSource
+| Attribute           | Tested  |
+| :------------------:|:-------:|
+| name                | no      |
+| nominal_voltage     | no      |
+| per_unit            | no      |
+| phases              | no      |
+| positions           | no      |
+| is_sourcebus        | no      |
+| rated_power         | no      |
+| emergency_power     | no      |
+| connection_type     | no      |
+| cutout_percent      | no      |
+| cutin_percent       | no      |
+| resistance          | no      |
+| reactance           | no      |
+| v_max_pu            | no      |
+| v_min_pu            | no      |
+| power_factor        | no      |
+| connecting_element  | no      |
+| phase_angle         | no      |
+| positive_sequence_impedance  | no      |
+| zero_sequence_impedance      | no      |
+
+## Nodes
+| Attribute           | Tested  |
+| :------------------:|:-------:|
+| name                | no      |
+| nominal_voltage     | no      |
+| phases              | no      |
+| positions           | no      |
+| substation_name     | no      |
+| feeder_name         | no      |
+| is_substation       | no      |
+| is_substation_connection  | no      |
