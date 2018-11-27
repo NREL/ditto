@@ -702,13 +702,13 @@ class Reader(AbstractReader):
         # If the line is disabled we ignore it unless it's a switch
         fuses = dss.utils.class_to_dataframe("Fuse")
         fuses_names = [
-            d["MonitoredObj"][0].lower().split(".")[1] for name, d in fuses.items()
+            d["MonitoredObj"].lower().split(".")[1] for name, d in fuses.items()
         ]
 
         # In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe("recloser")
         reclosers_names = [
-            d["MonitoredObj"][0].lower().split(".")[1] for name, d in reclosers.items()
+            d["MonitoredObj"].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
         start = time.time()
@@ -1206,6 +1206,7 @@ class Reader(AbstractReader):
                             this_line_wireData_code = this_line_geometry["wire"]
 
                     # If empty, convert it to None
+                    this_line_wireData = None
                     if this_line_wireData_code == "":
                         this_line_wireData_code = None
 
@@ -1224,8 +1225,6 @@ class Reader(AbstractReader):
                                 )
                             )
                             pass
-                    else:
-                        this_line_wireData = None
 
                     # If we have valid WireData
                     if this_line_wireData is not None:

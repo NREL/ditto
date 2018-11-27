@@ -526,12 +526,12 @@ class Reader(AbstractReader):
                     obj = entries[1].split(":")
                     obj_class = obj[0]
                     if (
-                        obj_class == "house"
-                        or obj_class == "solar"
+                        #obj_class == "house"
+                        obj_class == "solar"
                         or obj_class == "inverter"
                         or obj_class == "waterheater"
                         or obj_class == "climate"
-                        or obj_class == "ZIPload"
+                        #or obj_class == "ZIPload"
                         or obj_class == "tape.recorder"
                         or obj_class == "player"
                         or obj_class == "tape.collector"
@@ -655,7 +655,7 @@ class Reader(AbstractReader):
                 except AttributeError:
                     pass
 
-            if obj_type == "triplex_node" or obj_type == "triplex_meter":
+            if obj_type == "triplex_node" or obj_type == "triplex_meter" or obj_type == "house":
                 api_node = Node(model)
                 try:
                     api_node.name = obj["name"]
@@ -678,6 +678,16 @@ class Reader(AbstractReader):
                         phases.append(Unicode(str(cnt)))
                     api_node.phases = phases
                 except AttributeError:
+                    pass
+                try:
+                    parent = obj["parent"]
+                    # Create a dummy line from house node to the parent
+                    api_line = Line(model)
+                    api_line.name=api_node.name+"_"+parent
+                    api_line.from_element = parent
+                    api_line.to_element = api_node.name
+                    api_line.length = 0.01
+                except:
                     pass
 
             if obj_type == "transformer":
@@ -917,7 +927,7 @@ class Reader(AbstractReader):
                     windings.append(winding3)
                 api_transformer.windings = windings
 
-            if obj_type == "load":
+            if obj_type == "load" or obj_type=="ZIPload":
 
                 api_load = Load(model)
                 api_node = None
@@ -955,7 +965,7 @@ class Reader(AbstractReader):
                     if not has_parent:
                         api_node.phases = list(map(lambda x: Unicode(x), phases))
                 except AttributeError:
-                    pass
+                    phases = ['']
                 num_phases = 0
 
                 # The use_zip parameter is used to determine whether the load is zip or not.
@@ -1348,8 +1358,140 @@ class Reader(AbstractReader):
 
                         phaseloads.append(phaseload)
 
+                    else:
+                        num_phases = num_phases + 1
+                        phaseload = PhaseLoad(model)
+                        phaseload.phase = phase
+                        phaseload.p = 0  # Default value
+                        phaseload.q = 0
+                        try:
+                            complex_power = complex(obj["constant_power"])
+                            p = complex_power.real
+                            q = complex_power.imag
+                            if (
+                                p != 0
+                            ):  # Assume that unless ZIP is specifically specified only one of constant_power, constant_current and constant_impedance is used. A real part of 0 means that I or Z is being used instead.
+                                phaseload.p = p
+                                phaseload.q = q
+                                phaseload.model = (
+                                    1
+                                )  # The opendss model number (specifying constant power)
+                                phaseload.use_zip = 0
+                                phaseloads.append(phaseload)
+                                continue
+                        except AttributeError:
+                            pass
+
+                        try:
+                            # Firstly check if it's using a non-zip model.
+                            complex_impedance = complex(obj["constant_impedance"])
+                            complex_voltage = complex(
+                                obj["voltage"]
+                            )  # Needed to compute the power
+                            if (
+                                complex_impedance.real != 0
+                            ):  # Assume that unless ZIP is specifically specified only one of constant_power, constant_current and constant_impedance is used. A real part of 0 means that I or P is being used instead.
+                                p = (
+                                    (
+                                        (
+                                            complex_voltage.real ** 2
+                                            + complex_voltage.imag ** 2
+                                        )
+                                    )
+                                    / complex_impedance.conjugate()
+                                ).real
+                                q = (
+                                    (
+                                        (
+                                            complex_voltage.real ** 2
+                                            + complex_voltage.imag ** 2
+                                        )
+                                    )
+                                    / complex_impedance.conjugate()
+                                ).imag
+                                phaseload.p = p
+                                phaseload.q = q
+                                phaseload.model = (
+                                    2
+                                )  # The opendss model number (specifying constant impedance)
+                                phaseload.use_zip = 0
+                                phaseloads.append(phaseload)
+                                continue
+                        except AttributeError:
+                            pass
+
+                        try:
+                            # Firstly check if it's using a non-zip model.
+                            complex_current = complex(obj["constant_current"])
+                            complex_voltage = complex(
+                                obj["voltage"]
+                            )  # Needed to compute the power
+                            p = (complex_voltage * complex_current.conjugate()).real
+                            q = (complex_voltage * complex_current.conjugate()).imag
+                            if (
+                                complex_current.real != 0
+                            ):  # Assume that unless ZIP is specifically specified only one of constant_power, constant_current and constant_impedance is used. A real part of 0 means that Z or P is being used instead.
+                                phaseload.p = p
+                                phaseload.q = q
+                                phaseload.use_zip = 0
+                                phaseload.model = (
+                                    5
+                                )  # The opendss model number (specifying constant current)
+                                phaseloads.append(phaseload)
+                                continue
+                        except AttributeError:
+                            pass
+
+                        try:
+                            base_power = float(obj["base_power"])
+                            p = base_power
+                            phaseload.p = p
+                        except AttributeError:
+                            pass
+                        except ValueError:
+                            data = obj["base_power"].split("*")
+                            if data[0] in all_schedules:
+                                phaseload.p = float(all_schedules[data[0]]) * float(
+                                    data[1]
+                                )
+                            if data[1] in all_schedules:
+                                phaseload.p = float(all_schedules[data[1]]) * float(
+                                    data[0]
+                                )
+
+                        try:
+                            # Require all six elements to compute the ZIP load model
+                            current_fraction = float(obj["current_fraction"])
+                            current_pf = float(obj["current_pf"])
+                            power_fraction = float(obj["power_fraction"])
+                            power_pf = float(obj["power_pf"])
+                            impedance_fraction = float(obj["impedance_fraction"])
+                            impedance_pf = float(obj["impedance_pf"])
+
+                            phaseload.ppercentcurrent = current_fraction * current_pf
+                            phaseload.qpercentcurrent = current_fraction * (
+                                1 - current_pf
+                            )
+                            phaseload.ppercentpower = power_fraction * power_pf
+                            phaseload.qpercentpower = power_fraction * (1 - power_pf)
+                            phaseload.ppercentimpedance = (
+                                impedance_fraction * impedance_pf
+                            )
+                            phaseload.qpercentimpedance = impedance_fraction * (
+                                1 - impedance_pf
+                            )
+                            phaseload.use_zip = 1
+                        except AttributeError:
+                            pass
+
+                        phaseloads.append(phaseload)
+
+
                 if num_phases > 0:
                     api_load.phase_loads = phaseloads
+                else:
+                    import pdb;pdb.set_trace()
+
 
             if obj_type == "fuse":
                 api_line = Line(model)
@@ -2182,12 +2324,12 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_regulator.high_from = obj["from"]
+                    api_regulator.from_element = obj["from"]
                 except AttributeError:
                     pass
 
                 try:
-                    api_regulator.low_to = obj["to"]
+                    api_regulator.to_element = obj["to"]
                 except AttributeError:
                     pass
 
