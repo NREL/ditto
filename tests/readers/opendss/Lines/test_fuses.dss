@@ -1,0 +1,21 @@
+Clear
+
+New circuit.test_fuses basekv=12.47 pu=1.01 phases=3 bus1=sourcebus
+
+New Line.origin Units=km Length=0.001 bus1=sourcebus bus2=node1 phases=3
+
+New Line.line1 Units=km Length=0.001 bus1=node1.1.2.3 bus2=node2.1.2.3 switch=n enabled=y phases=3 Normamps=3000 EmergencyAmps=4000
+New Fuse.Fuse_1 monitoredobj=Line.line1 enabled=y
+
+New Line.line2 Units=km Length=0.001 bus1=node1.1 bus2=node3.1 switch=n enabled=y phases=1 Normamps=3000 EmergencyAmps=4000
+New Fuse.Fuse_2 monitoredobj=Line.line2 enabled=y
+
+New Line.line3 Units=km Length=0.001 bus1=node1.3 bus2=node4.3 switch=n enabled=y phases=1 Normamps=3000 EmergencyAmps=4000
+New Fuse.Fuse_3 monitoredobj=Line.line3 enabled=y
+
+New Line.line4 Units=km Length=0.001 bus1=node1.2.3 bus2=node4.2.3 switch=n enabled=y phases=2 Normamps=3000 EmergencyAmps=4000
+New Fuse.Fuse_4 monitoredobj=Line.line4 enabled=y
+
+Set Voltagebases=[12.47]
+Calcvoltagebases
+Solve
