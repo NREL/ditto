@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
 
-def test_line_length():
+def test_nodes():
     from ditto.store import Store
     from ditto.readers.opendss.read import Reader
 

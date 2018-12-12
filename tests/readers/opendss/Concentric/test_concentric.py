@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-test_line_connectivity.py
+test_concentric.py
 ----------------------------------
 
-Tests for checking the line connectivity and all the attributes of line and wire
+Tests for checking the concenctric properties
 """
 import logging
 import os
@@ -19,12 +19,10 @@ logger = logging.getLogger(__name__)
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
 
-def test_line_connectivity():
-    """Tests if line length units are in meters."""
+def test_concentric():
     from ditto.store import Store
     from ditto.readers.opendss.read import Reader
 
-    # test on the test_line_connectivity.dss
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_concentric.dss"))
     r.parse(m)
