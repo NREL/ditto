@@ -4,21 +4,21 @@ New circuit.test_switches basekv=12.47 pu=1.01 phases=3 bus1=sourcebus
 
 New Line.origin Units=km Length=0.001 bus1=sourcebus bus2=node1 phases=3
 
-New Line.switch1 Units=km Length=0.001 bus1=node1 bus2=node2 switch=y enabled=y phases=3 Normamps=3000 EmergencyAmps=4000
+New Line.switch1 Units=km Length=0.001 bus1=node1 bus2=node2 switch=y enabled=y phases=3 Normamps=3000 EmergAmps=4000
 
-New Line.switch2 Unites=km Length=0.001 bus1=node1 bus2=node3 switch=y enabled=n phases=3 Normamps=3000 EmergencyAmps=4000
+New Line.switch2 Units=km Length=0.001 bus1=node1 bus2=node3 switch=y enabled=n phases=3 Normamps=3000 EmergAmps=4000
 
-New Line.switch3 Unites=km Length=0.001 bus1=node1.1.2.3 bus2=node4.1.2.3 switch=y enabled=n phases=3 Normamps=3000 EmergencyAmps=4000
+New Line.switch3 Units=km Length=0.001 bus1=node1.1.2.3 bus2=node4.1.2.3 switch=y enabled=n phases=3 Normamps=3000 EmergAmps=4000
 
-New Line.switch4 Unites=km Length=0.001 bus1=node1.1.2.3 bus2=node5.1.2.3 switch=y enabled=y phases=3 Normamps=3000 EmergencyAmps=4000
+New Line.switch4 Units=km Length=0.001 bus1=node1.1.2.3 bus2=node5.1.2.3 switch=y enabled=y phases=3 Normamps=3000 EmergAmps=4000
 
-New Line.switch5 Unites=km Length=0.001 bus1=node1.1 bus2=node6.1 switch=y enabled=y phases=1 Normamps=3000 EmergencyAmps=4000
+New Line.switch5 Units=km Length=0.001 bus1=node1.1 bus2=node6.1 switch=y enabled=y phases=1 Normamps=3000 EmergAmps=4000
 
-New Line.switch6 Unites=km Length=0.001 bus1=node1.3 bus2=node7.3 switch=y enabled=n phases=1 Normamps=3000 EmergencyAmps=4000
+New Line.switch6 Units=km Length=0.001 bus1=node1.3 bus2=node7.3 switch=y enabled=n phases=1 Normamps=3000 EmergAmps=4000
 
-New Line.switch7 Unites=km Length=0.001 bus1=node1.2.3 bus2=node8.2.3 switch=y enabled=n phases=2 Normamps=3000 EmergencyAmps=4000
+New Line.switch7 Units=km Length=0.001 bus1=node1.2.3 bus2=node8.2.3 switch=y enabled=n phases=2 Normamps=3000 EmergAmps=4000
 
-New Line.switch8 Unites=km Length=0.001 bus1=node1.1.2 bus2=node9.1.2 switch=y enabled=y phases=2 Normamps=3000 EmergencyAmps=4000
+New Line.switch8 Units=km Length=0.001 bus1=node1.1.2 bus2=node9.1.2 switch=y enabled=y phases=2 Normamps=3000 EmergAmps=4000
 
 Set Voltagebases=[12.47]
 Calcvoltagebases

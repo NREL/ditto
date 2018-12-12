@@ -5,27 +5,27 @@ New Circuit.test_circuit
 Redirect test_wiredata.dss
 Redirect test_concentricneutral.dss
 
-New Wiredata.ACSR336 GMR=0.0255000 DIAM=0.7410000 RAC=0.3060000 NormAmps=530.0000 Runits=mi radunits=in gmrunits=ft
-New Wiredata.ACSR1/0 GMR=0.0044600 DIAM=0.3980000 RAC=1.120000 NormAmps=230.0000 Runits=mi radunits=in gmrunits=ft
+New Wiredata.wire1 GMR=0.0255000 DIAM=0.7410000 RAC=0.3060000 NormAmps=530.0000 Runits=mi radunits=in gmrunits=ft
+New Wiredata.wire2 GMR=0.0044600 DIAM=0.3980000 RAC=1.120000 NormAmps=230.0000 Runits=mi radunits=in gmrunits=ft
 
 
-New Linegeometry.HC2_336_1neut_0Mess nconds=4 nphases=3
-~ cond=1 Wire=ACSR336 x=-1.2909 h=13.716 units=m
-~ cond=2 Wire=ACSR336 x=-0.1530096 h=4.1806368 units=ft
-~ cond=3 Wire=ACSR336 x=0.5737 h=13.716 units=m
-~ cond=4 Wire= ACSR1/0 x=0 h=14.648 ! units=m ! neutral
+New Linegeometry.geometry_1 nconds=4 nphases=3
+~ cond=1 Wire=wire1 x=-1.2909 h=13.716 units=m
+~ cond=2 Wire=wire1 x=-0.1530096 h=4.1806368 units=ft
+~ cond=3 Wire=wire1 x=0.5737 h=13.716 units=m
+~ cond=4 Wire=wire2 x=0 h=14.648 ! units=m ! neutral
 
-New LineGeometry.606 nconds=3 nphases=3 units=ft
-~ cond=1 Wire=1/0_ACSR cncable=250_1/3 x=-0.5 h= -4
-~ cond=2 Wire=1/0_ACSR cncable=250_1/3 x=0   h= -4
-~ cond=3 Wire=1/0_ACSR cncable=250_1/3 x=0.5  h= -4
+New LineGeometry.geometry_2 nconds=3 nphases=3 units=ft
+~ cond=1 Wire=wire3 cncable=cndata1 x=-0.5 h= -4
+~ cond=2 Wire=wire3 cncable=cndata1 x=0   h= -4
+~ cond=3 Wire=wire3 cncable=cndata1 x=0.5  h= -4
 
 New Line.Line1 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3
-~ Geometry= HC2_336_1neut_0Mess
+~ Geometry= geometry_1
 ~ Length=300 units=ft
 
 New Line.Line2 Bus1=bus2.1.2.3 Bus3=bus2.1.2.3
-~ Geometry= 606
+~ Geometry= geometry_2
 ~ Length=1 units=mi
 
 

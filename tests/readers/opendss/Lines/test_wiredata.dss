@@ -1,3 +1,3 @@
-New WireData.1/0_ACSR         Rac=0.646847 Runits=km GMRac=0.13589  GMRUnits=cm Radius=0.50546   Radunits=cm Normamps=260  Emergamps=260
-New WireData.1000_CU          Rac=0.042875 Runits=km GMRac=1.121921 GMRUnits=cm Radius=1.46177   Radunits=cm Normamps=1300 Emergamps=1300
+New WireData.wire3         Rac=0.646847 Runits=km GMRac=0.13589  GMRUnits=cm Radius=0.50546   Radunits=cm Normamps=260  Emergamps=260
+New WireData.wire4          Rac=0.042875 Runits=km GMRac=1.121921 GMRUnits=cm Radius=1.46177   Radunits=cm Normamps=1300 Emergamps=1300
 
