@@ -182,14 +182,6 @@ class Writer(AbstractWriter):
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
-        # Write the capacitors
-        self.logger.info("Writing the capacitors...")
-        if self.verbose:
-            logger.debug("Writing the capacitors...")
-        s = self.write_capacitors(model)
-        if self.verbose and s != -1:
-            logger.debug("Succesful!")
-
         # write the timeseries
         self.logger.info("Writing the timeseries...")
         if self.verbose:
@@ -211,6 +203,14 @@ class Writer(AbstractWriter):
         if self.verbose:
             logger.debug("Writting the lines...")
         s = self.write_lines(model)
+        if self.verbose and s != -1:
+            logger.debug("Succesful!")
+
+        # Write the capacitors
+        self.logger.info("Writing the capacitors...")
+        if self.verbose:
+            logger.debug("Writing the capacitors...")
+        s = self.write_capacitors(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
@@ -1588,7 +1588,7 @@ class Writer(AbstractWriter):
         # It might be the case that we have to create new transformers from the regulators.
         # In this case, we build the strings and store them in a list.
         # At the end, we simply loop over the list to write all strings to transformers.dss
-        transfo_creation_string_list = []
+        transfo_creation_string_map = {}
 
         for i in model.models:
             if isinstance(i, Regulator):
@@ -1615,8 +1615,12 @@ class Writer(AbstractWriter):
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ""
+                transfo_creation_string = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    transfo_creation_string = transfo_creation_string_map[
+                        substation_name + "_" + feeder_name
+                    ]
 
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New RegControl.{name}".format(name=i.name)
@@ -1636,7 +1640,7 @@ class Writer(AbstractWriter):
                     else:
 
                         # Initialize the string:
-                        transfo_creation_string = "New Transformer."
+                        transfo_creation_string += "New Transformer."
 
                         # Name:
                         transfo_name = "trans_{}".format(
@@ -1695,6 +1699,8 @@ class Writer(AbstractWriter):
                                     conns += mapp[i.windings[w].connection_type] + ", "
                             conns = conns[:-2]
                             conns += ")"
+                            if conns == " conns=(":
+                                conns = ""
                             transfo_creation_string += conns
 
                         # kvs
@@ -1774,9 +1780,6 @@ class Writer(AbstractWriter):
                                     )
                                 )
                                 pass
-
-                        # Store the string in the list
-                        transfo_creation_string_list.append(transfo_creation_string)
 
                         txt += " transformer={trans}".format(trans=transfo_name)
 
@@ -1872,11 +1875,22 @@ class Writer(AbstractWriter):
                             )
 
                 txt += "\n\n"
+                if len(transfo_creation_string) > 0:
+                    transfo_creation_string += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
+                transfo_creation_string_map[
+                    substation_name + "_" + feeder_name
+                ] = transfo_creation_string
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
+                if substation_name + "_" + feeder_name in transfo_creation_string_map:
+                    transfo_creation_string = transfo_creation_string_map[
+                        substation_name + "_" + feeder_name
+                    ]
+                else:
+                    transfo_creation_string = ""
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
                 if txt != "":
@@ -1905,16 +1919,17 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         fp.write(txt)
-                    if len(transfo_creation_string_list) > 0:
+                    if len(transfo_creation_string) > 0:
+                        import pdb
+
+                        pdb.set_trace()
                         with open(
                             os.path.join(
                                 output_folder, self.output_filenames["transformers"]
                             ),
                             "a",
                         ) as f:
-                            for trans_string in transfo_creation_string_list:
-                                f.write(trans_string)
-                                f.write("\n\n")
+                            f.write(transfo_creation_string)
 
                     self.files_to_redirect.append(
                         os.path.join(
@@ -2064,7 +2079,9 @@ class Writer(AbstractWriter):
                         hasattr(i, "measuring_element")
                         and i.measuring_element is not None
                     ):
-                        txt += " Element={elt}".format(elt=i.measuring_element)
+                        txt += " Element=Line.{elt} Terminal=1".format(
+                            elt=i.measuring_element
+                        )
 
                     # Delay (CONTROL)
                     if hasattr(i, "delay") and i.delay is not None:
