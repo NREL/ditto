@@ -365,6 +365,17 @@ class Writer(AbstractWriter):
                             self.substations[-1]["KVLL"] = str(
                                 i.nominal_voltage * 10 ** -3
                             )
+                        elif (
+                            hasattr(i, "connecting_element")
+                            and i.connecting_element is not None
+                            and i.connecting_element in model.model_names
+                            and hasattr(model[i.connecting_element], "nominal_voltage")
+                            and model[i.connecting_element].nominal_voltage is not None
+                        ):
+                            voltage = model[i.connecting_element].nominal_voltage
+                            new_source_string += "," + str(voltage * 10 ** -3)
+                            self.sources[i.connecting_element] = str(voltage * 10 ** -3)
+                            self.substations[-1]["KVLL"] = str(voltage * 10 ** -3)
                         else:
                             new_source_string += ","
 
@@ -2270,19 +2281,20 @@ class Writer(AbstractWriter):
                     else:
                         new_regulator_string += ",,"
 
-                    if hasattr(i, "pt_phase") and i.pt_phase is not None:
-                        try:
-                            new_regulator_string += "," + str(i.pt_phase)
-                        except:
-                            new_regulator_string += ","
-                            pass
-                    else:
-                        new_regulator_string += ","
+                    # if hasattr(i, "pt_phase") and i.pt_phase is not None:
+                    #     try:
+                    #         new_regulator_string += "," + str(i.pt_phase)
+                    #     except:
+                    #         new_regulator_string += ","
+                    #         pass
+                    # else:
+                    #     new_regulator_string += ","
 
                     _KVA = 0
                     _KVLN = 0
                     _Rset = {"A": 0, "B": 0, "C": 0}
                     _Xset = {"A": 0, "B": 0, "C": 0}
+                    _regphases = []
                     if len(windings_local) >= 2:
                         try:
                             _KVA = windings_local[0].rated_power * 10 ** -3
@@ -2296,6 +2308,7 @@ class Writer(AbstractWriter):
                         ):
                             for phase_winding in winding1.phase_windings:
                                 try:
+                                    _regphases.append(phase_winding.phase)
                                     _Rset[
                                         phase_winding.phase
                                     ] = phase_winding.compensator_r
@@ -2304,6 +2317,10 @@ class Writer(AbstractWriter):
                                     ] = phase_winding.compensator_x
                                 except:
                                     pass
+
+                    new_regulator_string += ","
+                    for phase in _regphases:
+                        new_regulator_string += phase
 
                     _band = None
                     if hasattr(i, "bandwidth") and i.bandwidth is not None:
@@ -2823,10 +2840,10 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )
-                                            if transformer_object.is_center_tap == 1:
-                                                KVLLprim = round(
-                                                    KVLLprim / (3 ** 0.5), 2
-                                                )  # produces output in L-N format if center-tap rather than L-L
+                                            # if transformer_object.is_center_tap == 1:
+                                            #     KVLLprim = round(
+                                            #         KVLLprim / (3 ** 0.5), 2
+                                            #     )  # produces output in L-N format if center-tap rather than L-L
                                             voltageUnit = (
                                                 1
                                             )  # Voltage declared in KV, not in KVLL
