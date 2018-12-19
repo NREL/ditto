@@ -585,7 +585,18 @@ class Writer(AbstractWriter):
                                 txt += " Kv={kv}".format(
                                     kv=winding.nominal_voltage * 10 ** -3
                                 )  # OpenDSS in kvolts
-                                self._baseKV_.add(winding.nominal_voltage * 10 ** -3)
+                                if (
+                                    winding.nominal_voltage < 300
+                                ):  # Line-Neutral voltage for 120 V
+                                    self._baseKV_.add(
+                                        winding.nominal_voltage
+                                        * math.sqrt(3)
+                                        * 10 ** -3
+                                    )
+                                else:
+                                    self._baseKV_.add(
+                                        winding.nominal_voltage * 10 ** -3
+                                    )
 
                             # rated power
                             if (
@@ -744,7 +755,18 @@ class Writer(AbstractWriter):
                                 txt += " Kv={kv}".format(
                                     kv=winding.nominal_voltage * 10 ** -3
                                 )  # OpenDSS in kvolts
-                                self._baseKV_.add(winding.nominal_voltage * 10 ** -3)
+                                if (
+                                    winding.nominal_voltage < 300
+                                ):  # Line-Neutral voltage for 120 V
+                                    self._baseKV_.add(
+                                        winding.nominal_voltage
+                                        * math.sqrt(3)
+                                        * 10 ** -3
+                                    )
+                                else:
+                                    self._baseKV_.add(
+                                        winding.nominal_voltage * 10 ** -3
+                                    )
 
                             # rated power
                             if (
@@ -929,7 +951,10 @@ class Writer(AbstractWriter):
                     txt += " kV={volt}".format(
                         volt=i.nominal_voltage * 10 ** -3
                     )  # DiTTo in volts
-                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                    else:
+                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
 
                 # rated_power
                 if hasattr(i, "rated_power") and i.rated_power is not None:
@@ -1091,7 +1116,10 @@ class Writer(AbstractWriter):
                     txt += " kV={kV}".format(
                         kV=i.nominal_voltage * 10 ** -3
                     )  # DiTTo in volts
-                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                    else:
+                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
                 else:
                     parent = model[i.connecting_element]
                     if (
@@ -1101,7 +1129,14 @@ class Writer(AbstractWriter):
                         txt += " kV={kV}".format(
                             kV=parent.nominal_voltage * 10 ** -3
                         )  # DiTTo in volts
-                        self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
+                        if (
+                            parent.nominal_voltage < 300
+                        ):  # Line-Neutral voltage for 120 V
+                            self._baseKV_.add(
+                                parent.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            )
+                        else:
+                            self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
 
                 if hasattr(i, "active_rating") and i.active_rating is not None:
                     txt += " kW={kW}".format(
@@ -1225,6 +1260,8 @@ class Writer(AbstractWriter):
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                if substation_name + "_" + feeder_name not in self.timeseries_datasets:
+                    self.timeseries_datasets[substation_name + "_" + feeder_name] = {}
 
                 if (
                     hasattr(i, "data_location")
@@ -1239,7 +1276,8 @@ class Writer(AbstractWriter):
                         "..", "..", filename
                     )  # Assume the load is in a feeder and the data is two folders up. TODO Fix this correctly
                     if (
-                        i.data_location in self.timeseries_datasets
+                        i.data_location
+                        in self.timeseries_datasets[substation_name + "_" + feeder_name]
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
@@ -1256,7 +1294,9 @@ class Writer(AbstractWriter):
                         # data_location=i.data_location.split("/")[-1],
                         data_location=location,
                     )
-                    self.timeseries_datasets[i.data_location] = filename
+                    self.timeseries_datasets[substation_name + "_" + feeder_name][
+                        i.data_location
+                    ] = filename
 
                 elif (
                     hasattr(i, "data_location")
@@ -1274,7 +1314,8 @@ class Writer(AbstractWriter):
                         + i.data_location[-4:]
                     )
                     if (
-                        i.data_location in self.timeseries_datasets
+                        i.data_location
+                        in self.timeseries_datasets[substation_name + "_" + feeder_name]
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
@@ -1301,7 +1342,9 @@ class Writer(AbstractWriter):
                     pdb.set_trace()
                     pass  # problem
 
-                self.timeseries_datasets[i.data_location] = filename
+                self.timeseries_datasets[substation_name + "_" + feeder_name][
+                    i.data_location
+                ] = filename
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
 
                 # pass #TODO: write the timeseries data if it's in memory
@@ -1421,7 +1464,10 @@ class Writer(AbstractWriter):
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
-                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                    else:
+                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
 
                 # Vmin
                 if hasattr(i, "vmin") and i.vmin is not None:
@@ -1529,7 +1575,9 @@ class Writer(AbstractWriter):
                             and ts.data_location is not None
                             and os.path.isfile(ts.data_location)
                         ):
-                            filename = self.timeseries_datasets[ts.data_location]
+                            filename = self.timeseries_datasets[
+                                substation_name + "_" + feeder_name
+                            ][ts.data_location]
                             txt += " {ts_format}={filename}".format(
                                 ts_format=self.timeseries_format[filename],
                                 filename=filename,
@@ -1699,7 +1747,7 @@ class Writer(AbstractWriter):
                                     conns += mapp[i.windings[w].connection_type] + ", "
                             conns = conns[:-2]
                             conns += ")"
-                            if conns == " conns=(":
+                            if conns == " conns)":
                                 conns = ""
                             transfo_creation_string += conns
 
@@ -1708,8 +1756,22 @@ class Writer(AbstractWriter):
                             kvs = " kvs=("
                             for w, winding in enumerate(i.windings):
                                 if hasattr(i.windings[w], "nominal_voltage"):
-                                    kvs += str(i.windings[w].nominal_voltage) + ", "
-                                    self._baseKV_.add(i.windings[w].nominal_voltage)
+                                    kvs += (
+                                        str(i.windings[w].nominal_voltage * 10 ** -3)
+                                        + ", "
+                                    )
+                                    if (
+                                        i.windings[w].nominal_voltage < 300
+                                    ):  # Line-Neutral voltage for 120 V
+                                        self._baseKV_.add(
+                                            i.windings[w].nominal_voltage
+                                            * math.sqrt(3)
+                                            * 10 ** -3
+                                        )
+                                    else:
+                                        self._baseKV_.add(
+                                            i.windings[w].nominal_voltage * 10 ** -3
+                                        )
                             kvs = kvs[:-2]
                             kvs += ")"
                             transfo_creation_string += kvs
@@ -1920,9 +1982,6 @@ class Writer(AbstractWriter):
                     ) as fp:
                         fp.write(txt)
                     if len(transfo_creation_string) > 0:
-                        import pdb
-
-                        pdb.set_trace()
                         with open(
                             os.path.join(
                                 output_folder, self.output_filenames["transformers"]
@@ -2017,7 +2076,10 @@ class Writer(AbstractWriter):
                     txt += " Kv={volt}".format(
                         volt=i.nominal_voltage * 10 ** -3
                     )  # OpenDSS in Kvolts
-                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                    else:
+                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
 
                 # connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:
@@ -3054,7 +3116,12 @@ class Writer(AbstractWriter):
                         fp.write(
                             " basekV={volt}".format(volt=obj.nominal_voltage * 10 ** -3)
                         )  # DiTTo in volts
-                        self._baseKV_.add(obj.nominal_voltage * 10 ** -3)
+                        if obj.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                            self._baseKV_.add(
+                                obj.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            )
+                        else:
+                            self._baseKV_.add(obj.nominal_voltage * 10 ** -3)
 
                     if (
                         hasattr(obj, "positive_sequence_impedance")
