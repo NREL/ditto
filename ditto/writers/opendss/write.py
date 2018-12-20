@@ -3501,7 +3501,7 @@ class Writer(AbstractWriter):
         with open(
             os.path.join(self.output_path, self.output_filenames["master"]), "w"
         ) as fp:
-            fp.write("Clear\n\nNew Circuit.Name ")
+            fp.write("Clear\n\nNew Circuit.Full_Network ")
             for obj in model.models:
                 if (
                     isinstance(obj, PowerSource) and obj.is_sourcebus == 1
@@ -3634,7 +3634,26 @@ class Writer(AbstractWriter):
                     ),
                     "w",
                 ) as fp:
-                    fp.write("Clear\n\nNew Circuit.Name ")
+
+                    if (
+                        substation_name in self.substations_redirect
+                        and feeder_name == ""
+                    ):  # i.e. it's a substation
+                        fp.write(
+                            "Clear\n\nNew Circuit.substation_{name} ".format(
+                                name=i.name
+                            )
+                        )
+
+                    if (
+                        os.path.join(substation_name, feeder_name)
+                        in self.feeders_redirect
+                        and not os.path.join(substation_name, feeder_name).strip("/")
+                        in self.substations_redirect
+                    ):  # i.e. it's a feeder
+                        fp.write(
+                            "Clear\n\nNew Circuit.feeder_{name} ".format(name=i.name)
+                        )
                     fp.write("bus1={name} pu={pu}".format(name=i.name, pu=i.setpoint))
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         fp.write(
