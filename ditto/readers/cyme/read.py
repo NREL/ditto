@@ -26,6 +26,8 @@ from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.models.photovoltaic import Photovoltaic
+from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
 
 from ditto.models.base import Unicode
 
@@ -142,10 +144,15 @@ class Reader(AbstractReader):
     |        'converter_control_settings'       |           '[CONVERTER CONTROL SETTING]'    |
     +-------------------------------------------+--------------------------------------------+
     |           'photovoltaic_settings' '       |              [PHOTOVOLTAIC SETTINGS]'      |
+    |                                           |   [ELECTRONIC CONVERTER GENERATOR SETTING] |
     +-------------------------------------------+--------------------------------------------+
     |        'long_term_dynamics_curve_ext'     |          '[LONG TERM DYNAMICS CURVE EXT]'  |
     +-------------------------------------------+--------------------------------------------+
     |               'dggenerationmodel'         |                '[DGGENERATIONMODEL]'       |
+    +-------------------------------------------+--------------------------------------------+
+    |               'bess_settings'             |                '[BESS SETTINGS]'           |
+    +-------------------------------------------+--------------------------------------------+
+    |                   'bess'                  |                     '[BESS]'               |
     +-------------------------------------------+--------------------------------------------+
     """
 
@@ -266,6 +273,8 @@ class Reader(AbstractReader):
             ],
             "long_term_dynamics_curve_ext": ["[LONG TERM DYNAMICS CURVE EXT]"],
             "dggenerationmodel": ["[DGGENERATIONMODEL]"],
+            "bess_settings": ["[BESS SETTINGS]"],
+            "bess": ["[BESS]"],
             # SUBSTATIONS
             "substation": ["[SUBSTATION]"],
             "subnetwork_connections": ["[SUBNETWORK CONNECTIONS]"],
@@ -3749,6 +3758,9 @@ class Reader(AbstractReader):
             "fixedkvara": 7,
             "fixedkvarb": 8,
             "fixedkvarc": 9,
+            "switchedkvara": 13,
+            "switchedkvarb": 14,
+            "switchedkvarc": 15,
             "kv": 24,
             "controllingphase": 35,
         }
@@ -3802,6 +3814,9 @@ class Reader(AbstractReader):
                         "fixedkvara",
                         "fixedkvarb",
                         "fixedkvarc",
+                        "switchedkvara",
+                        "switchedkvarb",
+                        "switchedkvarc",
                         "kv",
                         "controllingphase",
                     ],
@@ -3991,6 +4006,7 @@ class Reader(AbstractReader):
                     "fixedkvara" in settings
                     and "fixedkvarb" in settings
                     and "fixedkvarc" in settings
+                    and max(float(settings["fixedkvara"]), max(float(settings["fixedkvarb"]), float(settings["fixedkvarc"]))) > 0
                 ):
                     try:
                         if p == "A":
@@ -4007,6 +4023,28 @@ class Reader(AbstractReader):
                             )  # Ditto in var
                     except:
                         pass
+                elif (
+                    "switchedkvara" in settings
+                    and "switchedkvarb" in settings
+                    and "switchedkvarc" in settings
+                    and max(float(settings["switchedkvara"]), max(float(settings["switchedkvarb"]), float(settings["switchedkvarc"]))) > 0
+                ):
+                    try:
+                        if p == "A":
+                            api_phaseCapacitor.var = (
+                                float(settings["switchedkvara"]) * 10 ** 3
+                            )  # Ditto in var
+                        if p == "B":
+                            api_phaseCapacitor.var = (
+                                float(settings["switchedkvarb"]) * 10 ** 3
+                            )  # Ditto in var
+                        if p == "C":
+                            api_phaseCapacitor.var = (
+                                float(settings["switchedkvarc"]) * 10 ** 3
+                            )  # Ditto in var
+                    except:
+                        pass
+ 
                 elif capacitor_data is not None:
                     try:
                         api_phaseCapacitor.var = (
@@ -5473,6 +5511,8 @@ class Reader(AbstractReader):
         self.converter_settings = {}
         self.long_term_dynamics = {}
         self.photovoltaic_settings = {}
+        self.bess = {}
+        self.bess_settings = {}
         self.dg_generation = {}
 
         mapp_converter = {
@@ -5506,6 +5546,25 @@ class Reader(AbstractReader):
             "devicenumber": 2,
             "equipmentid": 6,
             "ambienttemparature": 11,
+        }
+
+        mapp_bess = {
+            "id":0,
+            "ratedstorageenergy":1,
+            "maxchargingpower":2,
+            "maxdischargingpower":3,
+            "chargeefficiency":4,
+            "dischargeefficiency":5
+        }
+
+        mapp_bess_settings = {
+            "sectionid":0,
+            "devicenumber":2,
+            "equipmentid":6,
+            "phase":7,
+            "maximumsoc":10,
+            "minimumsoc":11,
+            "initialsoc":16,
         }
 
         mapp_long_term_dynamics = {
@@ -5604,6 +5663,23 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
+            #              BESS SETTINGS            #
+            #                                       #
+            #########################################
+
+            self.bess_settings.update(
+                self.parser_helper(
+                    line,
+                    ["bess_settings"],
+                    ["sectionid", "devicenumber", "equipmentid", "phase","maximumsoc", "minimumsoc", "initialsoc"],
+                    mapp_bess_settings,
+                    {"type": "bess_settings"},
+                )
+            )
+
+
+            #########################################
+            #                                       #
             #    LONG TERM DYNAMICS CURVE EXT       #
             #                                       #
             #########################################
@@ -5633,12 +5709,39 @@ class Reader(AbstractReader):
                 self.parser_helper(
                     line,
                     ["dggenerationmodel"],
-                    ["devicenumber", "devicetype", "activegeneration", "powerfactor"],
+                    ["devicenumber", "devicetype", "activegeneration", "powerfactor","loadmodelname"],
                     mapp_dg_generation_model,
                     {"type": "dg_generation_model"},
                 )
             )
+
+        #####################################################
+        #                                                   #
+        #                 EQUIPMENT FILE                    #
+        #                                                   #
+        #####################################################
+        #
+        # Open the equipment file
+        self.get_file_content("equipment")
+
+        # Loop over the equipment file
+        for line in self.content:
+
+            #########################################
+            #                                       #
+            #                  BESS                 #
+            #                                       #
+            #########################################
+            #
+            self.bess.update(
+                self.parser_helper(
+                    line, ["bess"], ["id", "ratedstorageenergy", "maxchargingpower", "maxdischargingpower", "chargeefficiency", "dischargeefficiency"], mapp_bess
+                )
+            )
+
+
         api_photovoltaics = {}
+        api_bessi = {}
         for sectionID, settings in self.photovoltaic_settings.items():
             try:
                 api_photovoltaic = Photovoltaic(model)
@@ -5671,100 +5774,225 @@ class Reader(AbstractReader):
             except:
                 pass
 
+
+        for sectionID, settings in self.bess_settings.items():
+            try:
+                api_bess = Storage(model)
+            except:
+                raise ValueError(
+                    "Unable to instanciate bess {id}".format(id=sectionID)
+                )
+            try:
+                api_bess.name = "BESS_" + settings["devicenumber"].lower()
+                api_bess.feeder_name = self.section_feeder_mapping[
+                    sectionID.lower()
+                ]
+                api_bessi[settings["devicenumber"].lower()] = api_bess
+            except:
+                raise ValueError(
+                    "Unable to set bess name for {id}".format(id=sectionID)
+                )
+
+            phase_storages = []
+            if "phase" in settings:
+                phases = self.phase_mapping(settings["phase"])
+            else:
+                phases = ['A','B','C']
+
+            for phase in phases:
+                phase_storage = PhaseStorage(model)
+                phase_storage.phase = phase
+                phase_storages.append(phase_storage)
+
+            api_bess.phase_storages = phase_storages
+
+
+
+
+            if "equipmentid" in settings:
+                dev_num = settings["equipmentid"]
+            else:
+                dev_num = None
+
+            if dev_num is not None and dev_num in self.bess:
+                bess_data = self.bess[dev_num]
+                try:
+                    api_bess.rated_kWh = float(bess_data["ratedstorageenergy"])
+                except:
+                    pass
+
+                try:
+                    api_bess.chargeefficiency = float(bess_data["chargingefficiency"])
+                except:
+                    pass
+
+                try:
+                    api_bess.dischargeefficiency = float(bess_data["dischargeefficiency"])
+                except:
+                    pass
+
+                try:
+                    charging = float("inf")
+                    discharging = float("inf") 
+                    if "maxchargingpower" in bess_data:
+                        charging = float(bess_data["maxchargingpower"])
+                    if "maxdischargingpower" in bess_data:
+                        discharging = float(bess_data["maxdischargingpower"])
+                    power = min(charging,discharging)*1000
+                    if power < float("inf"):
+                        average_power = power/float(len(phase_storages))
+                        for ps in phase_storages:
+                            ps.p = average_power
+                except:
+                    pass
+
+
+            
+
+            try:
+                api_bess.reserve = float(
+                    settings["maximumsoc"]
+                )   
+            except:
+                pass
+
+            try:
+                api_bess.stored_kWh = float(
+                    settings["initialsoc"]
+                )*api_bess.rated_kWh/100.0  
+            except:
+                pass
+
+            try:
+                api_bess.connecting_element = self.section_phase_mapping[
+                    sectionID.lower()
+                ]["fromnodeid"]
+            except:
+                pass
+
+
+
+
+
         for deviceID, settings in self.dg_generation.items():
             deviceID = deviceID.strip(
                 "*"
             ).lower()  # TODO: Deal with multiple configurations for the same location
             api_photovoltaic = api_photovoltaics[deviceID]
-            try:
-                api_photovoltaic.active_rating = (
-                    float(settings["activegeneration"]) * 1000
-                )
-            except:
-                pass
-            try:
-                api_photovoltaic.power_factor = float(settings["powerfactor"]) / 100.0
-            except:
-                pass
+
+            # Use the default setting if available
+            if "loadmodelname" in settings and settings["loadmodelname"].lower() == "default":
+                try:
+                    api_photovoltaic.active_rating = (
+                        float(settings["activegeneration"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.power_factor = float(settings["powerfactor"]) / 100.0
+                except:
+                    pass
 
         for deviceID, settings in self.converter.items():
 
             deviceID = deviceID.strip(
                 "*"
             ).lower()  # TODO: Deal with multiple configurations for the same location
-            api_photovoltaic = api_photovoltaics[deviceID]
-            try:
-                api_photovoltaic.rated_power = (
-                    float(settings["activepowerrating"]) * 1000
-                )
-            except:
-                pass
-            try:
-                api_photovoltaic.reactive_rating = (
-                    float(settings["reactivepowerrating"]) * 1000
-                )
-            except:
-                pass
-            try:
-                api_photovoltaic.min_powerfactor = (
-                    float(settings["minimumpowerfactor"]) / 100.0
-                )
-            except:
-                pass
-            try:
-                api_photovoltaic.fall_limit = float(settings["powerfalllimit"])
-            except:
-                pass
-            try:
-                api_photovoltaic.rise_limit = float(settings["powerriselimit"])
-            except:
-                pass
-            # TODO: check the units being used
+            if deviceID in api_photovoltaics:
+                api_photovoltaic = api_photovoltaics[deviceID]
+                try:
+                    api_photovoltaic.rated_power = (
+                        float(settings["activepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.reactive_rating = (
+                        float(settings["reactivepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.min_powerfactor = (
+                        float(settings["minimumpowerfactor"]) / 100.0
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.fall_limit = float(settings["powerfalllimit"])
+                except:
+                    pass
+                try:
+                    api_photovoltaic.rise_limit = float(settings["powerriselimit"])
+                except:
+                    pass
+                # TODO: check the units being used
+            elif deviceID in api_bessi:
+                api_bess = api_bessi[deviceID]
+                try:
+                    api_bess.rated_power = (
+                        float(settings["activepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_bess.reactive_rating = (
+                        float(settings["reactivepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_bess.min_powerfactor = (
+                        float(settings["minimumpowerfactor"]) / 100.0
+                    )
+                except:
+                    pass
 
         for deviceID, settings in self.converter_settings.items():
             deviceID = deviceID.strip(
                 "*"
             ).lower()  # TODO: Deal with multiple configurations for the same location
-            api_photovoltaic = api_photovoltaics[deviceID]
-            try:
-                control_type = str(settings["controltype"])
-                if control_type == "1":
-                    api_photovoltaic.control_type = "voltvar_vars_over_watts"
-                if control_type == "0":
-                    api_photovoltaic.control_type = "voltvar_watts_over_vars"
-                if control_type == "2":
-                    api_photovoltaic.control_type = "voltvar_fixedvars"
-                if control_type == "3":
-                    api_photovoltaic.control_type = "voltvar_novars"
-                if control_type == "5":
-                    api_photovoltaic.control_type = "voltwatt"
-                if control_type == "6":
-                    api_photovoltaic.control_type = "watt_powerfactor"
-                if control_type == "10":
-                    api_photovoltaic.control_type = "powerfactor"
-            except:
-                pass
-
-            try:
-                api_photovoltaic.var_injection = float(settings["fixedvarinjection"])
-            except:
-                pass
-            try:
-                curve = float(settings["convertercontrolid"])
-                if (
-                    api_photovoltaic.control_type == "voltvar_watts_over_vars"
-                    or api_photovoltaic.control_type == "voltvar_vars_over_watts"
-                ):
-                    api_photovoltaic.voltvar_curve = curve
-                if api_photovoltaic.control_type == "voltwatt":
-                    api_photovoltaic.voltwatt_curve = curve
-                if api_photovoltaic.control_type == "watt_powerfactor":
-                    api_photovoltaic.watt_powerfactor_curve = curve
-            except:
-                pass
-
-            try:
-                pf = float(settings["powerfactor"]) / 100.0
-                api_photovoltaic.power_factor = pf
-            except:
-                pass
+            if deviceID in api_photovoltaics:
+                api_photovoltaic = api_photovoltaics[deviceID]
+                try:
+                    control_type = str(settings["controltype"])
+                    if control_type == "1":
+                        api_photovoltaic.control_type = "voltvar_vars_over_watts"
+                    if control_type == "0":
+                        api_photovoltaic.control_type = "voltvar_watts_over_vars"
+                    if control_type == "2":
+                        api_photovoltaic.control_type = "voltvar_fixedvars"
+                    if control_type == "3":
+                        api_photovoltaic.control_type = "voltvar_novars"
+                    if control_type == "5":
+                        api_photovoltaic.control_type = "voltwatt"
+                    if control_type == "6":
+                        api_photovoltaic.control_type = "watt_powerfactor"
+                    if control_type == "10":
+                        api_photovoltaic.control_type = "powerfactor"
+                except:
+                    pass
+    
+                try:
+                    api_photovoltaic.var_injection = float(settings["fixedvarinjection"])
+                except:
+                    pass
+                try:
+                    curve = float(settings["convertercontrolid"])
+                    if (
+                        api_photovoltaic.control_type == "voltvar_watts_over_vars"
+                        or api_photovoltaic.control_type == "voltvar_vars_over_watts"
+                    ):
+                        api_photovoltaic.voltvar_curve = curve
+                    if api_photovoltaic.control_type == "voltwatt":
+                        api_photovoltaic.voltwatt_curve = curve
+                    if api_photovoltaic.control_type == "watt_powerfactor":
+                        api_photovoltaic.watt_powerfactor_curve = curve
+                except:
+                    pass
+    
+                try:
+                    pf = float(settings["powerfactor"]) / 100.0
+                    api_photovoltaic.power_factor = pf
+                except:
+                    pass
