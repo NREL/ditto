@@ -710,13 +710,13 @@ class Reader(AbstractReader):
         fuses = dss.utils.class_to_dataframe("Fuse")
         # import pdb;pdb.set_trace()
         fuses_names = [
-            d["MonitoredObj"][0].lower().split(".")[1] for name, d in fuses.items()
+            d["MonitoredObj"].lower().split(".")[1] for name, d in fuses.items()
         ]
 
         # In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe("recloser")
         reclosers_names = [
-            d["MonitoredObj"][0].lower().split(".")[1] for name, d in reclosers.items()
+            d["MonitoredObj"].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
         start = time.time()
@@ -842,7 +842,8 @@ class Reader(AbstractReader):
             #    pass
 
             # is_fuse
-            if line_name.replace("(", "").replace(")", "") in fuses_names:
+            # if line_name.replace("(", "").replace(")", "") in fuses_names:
+            if line_name in fuses_names:
                 api_line.is_fuse = 1
                 api_line.nameclass = line_name.split("(")[0]
             # is_recloser
