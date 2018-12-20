@@ -54,6 +54,11 @@ class Node(DiTToHasTraits):
         default_value=0,
     )
 
+    setpoint = Float(
+        help="""Value that the node must be set to. This is typically used for feeder head points""",
+        default_value=None,
+    )
+
     def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
 
         self._model = model
