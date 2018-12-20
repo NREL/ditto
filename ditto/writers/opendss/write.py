@@ -94,6 +94,8 @@ class Writer(AbstractWriter):
         self.all_cables = {}
 
         self.files_to_redirect = []
+        self.substations_redirect = {}
+        self.feeders_redirect = {}
 
         self.write_taps = False
         self.separate_feeders = False
@@ -122,6 +124,7 @@ class Writer(AbstractWriter):
         super(Writer, self).__init__(**kwargs)
 
         self._baseKV_ = set()
+        self._baseKV_feeders_ = {}
 
         self.logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
 
@@ -347,6 +350,7 @@ class Writer(AbstractWriter):
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
         for substation_name in substation_text_map:
+            all_substation_buses = []
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
                 feeder_name = feeder_name.replace(">", "-")
@@ -370,13 +374,21 @@ class Writer(AbstractWriter):
                         output_redirect = os.path.join(output_redirect, feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
-                    with open(
-                        os.path.join(output_folder, self.output_filenames["buses"]), "w"
-                    ) as fp:
-                        fp.write(txt)
-                        self.all_buses.append(txt)
-                    # Not currently redirecting buscoords to each subfolder - just use the aggregate in the root directory
-                    # self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['buses']))
+                    all_substation_buses.append(txt)
+                    self.all_buses.append(txt)
+                    if feeder_name != "":  # Substation elements are written separately
+                        with open(
+                            os.path.join(output_folder, self.output_filenames["buses"]),
+                            "w",
+                        ) as fp:
+                            fp.write(txt)
+                        # Not currently redirecting buscoords to each subfolder - just use the aggregate in the root directory
+                        # self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['buses']))
+            output_folder = os.path.join(self.output_path, substation_name)
+            with open(
+                os.path.join(output_folder, self.output_filenames["buses"]), "w"
+            ) as fp:
+                fp.write("\n".join(all_substation_buses))
         if len(self.all_buses) > 0:
             with open(
                 os.path.join(self.output_path, self.output_filenames["buses"]), "w"
@@ -586,9 +598,24 @@ class Writer(AbstractWriter):
                                     kv=winding.nominal_voltage * 10 ** -3
                                 )  # OpenDSS in kvolts
                                 if (
+                                    not substation_name + "_" + feeder_name
+                                    in self._baseKV_feeders_
+                                ):
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ] = set()
+
+                                if (
                                     winding.nominal_voltage < 300
                                 ):  # Line-Neutral voltage for 120 V
                                     self._baseKV_.add(
+                                        winding.nominal_voltage
+                                        * math.sqrt(3)
+                                        * 10 ** -3
+                                    )
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ].add(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
                                         * 10 ** -3
@@ -597,6 +624,9 @@ class Writer(AbstractWriter):
                                     self._baseKV_.add(
                                         winding.nominal_voltage * 10 ** -3
                                     )
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ].add(winding.nominal_voltage * 10 ** -3)
 
                             # rated power
                             if (
@@ -756,9 +786,23 @@ class Writer(AbstractWriter):
                                     kv=winding.nominal_voltage * 10 ** -3
                                 )  # OpenDSS in kvolts
                                 if (
+                                    not substation_name + "_" + feeder_name
+                                    in self._baseKV_feeders_
+                                ):
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ] = set()
+                                if (
                                     winding.nominal_voltage < 300
                                 ):  # Line-Neutral voltage for 120 V
                                     self._baseKV_.add(
+                                        winding.nominal_voltage
+                                        * math.sqrt(3)
+                                        * 10 ** -3
+                                    )
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ].add(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
                                         * 10 ** -3
@@ -767,6 +811,9 @@ class Writer(AbstractWriter):
                                     self._baseKV_.add(
                                         winding.nominal_voltage * 10 ** -3
                                     )
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ].add(winding.nominal_voltage * 10 ** -3)
 
                             # rated power
                             if (
@@ -873,6 +920,28 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         fp.write(txt)
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(
+                                feeder_name, self.output_filenames["transformers"]
+                            )
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["transformers"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["transformers"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(
                             output_redirect, self.output_filenames["transformers"]
@@ -951,10 +1020,20 @@ class Writer(AbstractWriter):
                     txt += " kV={volt}".format(
                         volt=i.nominal_voltage * 10 ** -3
                     )  # DiTTo in volts
+                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
+                        self._baseKV_feeders_[
+                            substation_name + "_" + feeder_name
+                        ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
                         self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                        )
                     else:
                         self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * 10 ** -3
+                        )
 
                 # rated_power
                 if hasattr(i, "rated_power") and i.rated_power is not None:
@@ -1056,6 +1135,26 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         fp.write(txt)
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(feeder_name, self.output_filenames["storage"])
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["storage"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["storage"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["storage"])
                     )
@@ -1116,10 +1215,20 @@ class Writer(AbstractWriter):
                     txt += " kV={kV}".format(
                         kV=i.nominal_voltage * 10 ** -3
                     )  # DiTTo in volts
+                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
+                        self._baseKV_feeders_[
+                            substation_name + "_" + feeder_name
+                        ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
                         self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                        )
                     else:
                         self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * 10 ** -3
+                        )
                 else:
                     parent = model[i.connecting_element]
                     if (
@@ -1130,13 +1239,26 @@ class Writer(AbstractWriter):
                             kV=parent.nominal_voltage * 10 ** -3
                         )  # DiTTo in volts
                         if (
+                            not substation_name + "_" + feeder_name
+                            in self._baseKV_feeders_
+                        ):
+                            self._baseKV_feeders_[
+                                substation_name + "_" + feeder_name
+                            ] = set()
+                        if (
                             parent.nominal_voltage < 300
                         ):  # Line-Neutral voltage for 120 V
                             self._baseKV_.add(
                                 parent.nominal_voltage * math.sqrt(3) * 10 ** -3
                             )
+                            self._baseKV_feeders_[
+                                substation_name + "_" + feeder_name
+                            ].add(parent.nominal_voltage * math.sqrt(3) * 10 ** -3)
                         else:
                             self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
+                            self._baseKV_feeders_[
+                                substation_name + "_" + feeder_name
+                            ].add(parent.nominal_voltage * 10 ** -3)
 
                 if hasattr(i, "active_rating") and i.active_rating is not None:
                     txt += " kW={kW}".format(
@@ -1217,6 +1339,29 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         fp.write(txt)
+
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(
+                                feeder_name, self.output_filenames["PVSystems"]
+                            )
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["PVSystems"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["PVSystems"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(
                             output_redirect, self.output_filenames["PVSystems"]
@@ -1380,6 +1525,28 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         fp.write(txt)
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(
+                                feeder_name, self.output_filenames["loadshapes"]
+                            )
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["loadshapes"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["loadshapes"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(
                             output_redirect, self.output_filenames["loadshapes"]
@@ -1464,10 +1631,20 @@ class Writer(AbstractWriter):
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
+                        self._baseKV_feeders_[
+                            substation_name + "_" + feeder_name
+                        ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
                         self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                        )
                     else:
                         self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * 10 ** -3
+                        )
 
                 # Vmin
                 if hasattr(i, "vmin") and i.vmin is not None:
@@ -1616,6 +1793,26 @@ class Writer(AbstractWriter):
                         os.path.join(output_folder, self.output_filenames["loads"]), "w"
                     ) as fp:
                         fp.write(txt)
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(feeder_name, self.output_filenames["loads"])
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["loads"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["loads"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["loads"])
                     )
@@ -1761,6 +1958,13 @@ class Writer(AbstractWriter):
                                         + ", "
                                     )
                                     if (
+                                        not substation_name + "_" + feeder_name
+                                        in self._baseKV_feeders_
+                                    ):
+                                        self._baseKV_feeders_[
+                                            substation_name + "_" + feeder_name
+                                        ] = set()
+                                    if (
                                         i.windings[w].nominal_voltage < 300
                                     ):  # Line-Neutral voltage for 120 V
                                         self._baseKV_.add(
@@ -1768,10 +1972,20 @@ class Writer(AbstractWriter):
                                             * math.sqrt(3)
                                             * 10 ** -3
                                         )
+                                        self._baseKV_feeders_[
+                                            substation_name + "_" + feeder_name
+                                        ].add(
+                                            winding.nominal_voltage
+                                            * math.sqrt(3)
+                                            * 10 ** -3
+                                        )
                                     else:
                                         self._baseKV_.add(
                                             i.windings[w].nominal_voltage * 10 ** -3
                                         )
+                                        self._baseKV_feeders_[
+                                            substation_name + "_" + feeder_name
+                                        ].add(winding.nominal_voltage * 10 ** -3)
                             kvs = kvs[:-2]
                             kvs += ")"
                             transfo_creation_string += kvs
@@ -1990,6 +2204,28 @@ class Writer(AbstractWriter):
                         ) as f:
                             f.write(transfo_creation_string)
 
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(
+                                feeder_name, self.output_filenames["regulators"]
+                            )
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["regulators"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["regulators"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(
                             output_redirect, self.output_filenames["regulators"]
@@ -2076,10 +2312,20 @@ class Writer(AbstractWriter):
                     txt += " Kv={volt}".format(
                         volt=i.nominal_voltage * 10 ** -3
                     )  # OpenDSS in Kvolts
+                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
+                        self._baseKV_feeders_[
+                            substation_name + "_" + feeder_name
+                        ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
                         self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                        )
                     else:
                         self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                            i.nominal_voltage * 10 ** -3
+                        )
 
                 # connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:
@@ -2206,6 +2452,29 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         fp.write(txt)
+
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(
+                                feeder_name, self.output_filenames["capacitors"]
+                            )
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["capacitors"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["capacitors"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(
                             output_redirect, self.output_filenames["capacitors"]
@@ -2459,6 +2728,27 @@ class Writer(AbstractWriter):
                         os.path.join(output_folder, self.output_filenames["lines"]), "w"
                     ) as fp:
                         fp.write(txt)
+
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(feeder_name, self.output_filenames["lines"])
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["lines"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["lines"]
+                        )
+
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["lines"])
                     )
@@ -2572,6 +2862,27 @@ class Writer(AbstractWriter):
             fp = open(
                 os.path.join(output_folder, self.output_filenames["wiredata"]), "w"
             )
+
+            if self.separate_substations and self.separate_feeders:
+                if substation_name not in self.substations_redirect:
+                    self.substations_redirect[substation_name] = []
+                self.substations_redirect[substation_name].append(
+                    os.path.join(feeder_name, self.output_filenames["wiredata"])
+                )
+            elif self.separate_substations:
+                if substation_name not in self.substations_redirect:
+                    self.substations_redirect[substation_name] = []
+                self.substations_redirect[substation_name].append(
+                    self.output_filenames["wiredata"]
+                )
+            if self.separate_feeders:
+                combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                if combined_feeder_sub not in self.feeders_redirect:
+                    self.feeders_redirect[combined_feeder_sub] = []
+                self.feeders_redirect[combined_feeder_sub].append(
+                    self.output_filenames["wiredata"]
+                )
+
             self.files_to_redirect.append(
                 os.path.join(output_redirect, self.output_filenames["wiredata"])
             )
@@ -2583,6 +2894,27 @@ class Writer(AbstractWriter):
 
         if len(self.all_cables) > 0:
             fp = open(os.path.join(output_folder, self.output_filenames["CNDATA"]), "w")
+
+            if self.separate_substations and self.separate_feeders:
+                if substation_name not in self.substations_redirect:
+                    self.substations_redirect[substation_name] = []
+                self.substations_redirect[substation_name].append(
+                    os.path.join(feeder_name, self.output_filenames["CNDATA"])
+                )
+            elif self.separate_substations:
+                if substation_name not in self.substations_redirect:
+                    self.substations_redirect[substation_name] = []
+                self.substations_redirect[substation_name].append(
+                    self.output_filenames["CNDATA"]
+                )
+            if self.separate_feeders:
+                combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                if combined_feeder_sub not in self.feeders_redirect:
+                    self.feeders_redirect[combined_feeder_sub] = []
+                self.feeders_redirect[combined_feeder_sub].append(
+                    self.output_filenames["CNDATA"]
+                )
+
             self.files_to_redirect.append(
                 os.path.join(output_redirect, self.output_filenames["CNDATA"])
             )
@@ -2656,6 +2988,26 @@ class Writer(AbstractWriter):
             fp = open(
                 os.path.join(output_folder, self.output_filenames["linegeometry"]), "w"
             )
+            if self.separate_substations and self.separate_feeders:
+                if substation_name not in self.substations_redirect:
+                    self.substations_redirect[substation_name] = []
+                self.substations_redirect[substation_name].append(
+                    os.path.join(feeder_name, self.output_filenames["linegeometry"])
+                )
+            elif self.separate_substations:
+                if substation_name not in self.substations_redirect:
+                    self.substations_redirect[substation_name] = []
+                self.substations_redirect[substation_name].append(
+                    self.output_filenames["linegeometry"]
+                )
+            if self.separate_feeders:
+                combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                if combined_feeder_sub not in self.feeders_redirect:
+                    self.feeders_redirect[combined_feeder_sub] = []
+                self.feeders_redirect[combined_feeder_sub].append(
+                    self.output_filenames["linegeometry"]
+                )
+
             self.files_to_redirect.append(
                 os.path.join(output_redirect, self.output_filenames["linegeometry"])
             )
@@ -2692,12 +3044,43 @@ class Writer(AbstractWriter):
             Therefore, when doing DSS--->DiTTo--->DSS for the same circuit, the new linecodes will have different names than the old ones.
         """
         cnt = 0
+        substation_text_map = {}
+        feeder_text_map = {}
+        substation_feeder_lookup = {}
         for i in list_of_lines:
             if isinstance(i, Line):
 
                 parsed_line = self.parse_line(i)
-
                 if len(parsed_line) > 0:
+
+                    if (
+                        self.separate_feeders
+                        and hasattr(i, "feeder_name")
+                        and i.feeder_name is not None
+                    ):
+                        feeder_name = i.feeder_name
+                    else:
+                        feeder_name = "DEFAULT"
+                    if (
+                        self.separate_substations
+                        and hasattr(i, "substation_name")
+                        and i.substation_name is not None
+                    ):
+                        substation_name = i.substation_name
+                    else:
+                        substation_name = "DEFAULT"
+
+                    if not substation_name in substation_text_map:
+                        substation_text_map[substation_name] = set([feeder_name])
+                    else:
+                        substation_text_map[substation_name].add(feeder_name)
+                    txt = {}
+                    if substation_name + "_" + feeder_name in feeder_text_map:
+                        txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    substation_feeder_lookup[substation_name + "_" + feeder_name] = (
+                        substation_name,
+                        feeder_name,
+                    )
 
                     if i.nameclass is not None:
                         if "nphases" in parsed_line:
@@ -2707,6 +3090,7 @@ class Writer(AbstractWriter):
                         nameclass_phase = i.nameclass + "_" + n_phases
                         if nameclass_phase not in self.all_linecodes:
                             self.all_linecodes[nameclass_phase] = parsed_line
+                            txt[nameclass_phase] = parsed_line
                             i.nameclass = nameclass_phase
                         else:
                             if self.all_linecodes[nameclass_phase] != parsed_line:
@@ -2723,6 +3107,7 @@ class Writer(AbstractWriter):
                                     self.all_linecodes[
                                         nameclass_phase + "_" + str(cnt)
                                     ] = parsed_line
+                                    txt[nameclass_phase + "_" + str(cnt)] = parsed_line
                                     i.nameclass = nameclass_phase + "_" + str(cnt)
                                     cnt += 1
                             else:
@@ -2750,42 +3135,79 @@ class Writer(AbstractWriter):
                             self.all_linecodes[
                                 "{class_}Code{N}".format(class_=nameclass, N=cnt)
                             ] = parsed_line
+                            txt[
+                                "{class_}Code{N}".format(class_=nameclass, N=cnt)
+                            ] = parsed_line
                             i.nameclass = "{class_}Code{N}".format(
                                 class_=nameclass, N=cnt
                             )
                             cnt += 1
+                    feeder_text_map[substation_name + "_" + feeder_name] = txt
 
-        if len(self.all_linecodes) > 0:
-            output_folder = None
-            output_redirect = None
-            if self.separate_substations and substation_name is not None:
-                output_folder = os.path.join(self.output_path, substation_name)
-                output_redirect = substation_name
-                if not os.path.exists(output_folder):
-                    os.makedirs(output_folder)
-            else:
-                output_folder = os.path.join(self.output_path)
-                output_redirect = ""
-                if not os.path.exists(output_folder):
-                    os.makedirs(output_folder)
+        for substation_name in substation_text_map:
+            for feeder_name in substation_text_map[substation_name]:
+                txt = feeder_text_map[substation_name + "_" + feeder_name]
+                feeder_name = feeder_name.replace(">", "-")
+                substation_name = substation_name.replace(">", "-")
+                if len(txt) != 0:
 
-            if self.separate_feeders and feeder_name is not None:
-                output_folder = os.path.join(output_folder, feeder_name)
-                output_redirect = os.path.join(output_redirect, feeder_name)
-                if not os.path.exists(output_folder):
-                    os.makedirs(output_folder)
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path, substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ""
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
 
-            fp = open(
-                os.path.join(output_folder, self.output_filenames["linecodes"]), "w"
-            )
-            self.files_to_redirect.append(
-                os.path.join(output_redirect, self.output_filenames["linecodes"])
-            )
-            for linecode_name, linecode_data in self.all_linecodes.items():
-                fp.write("New Linecode.{name}".format(name=linecode_name))
-                for k, v in linecode_data.items():
-                    fp.write(" {k}={v}".format(k=k, v=v))
-                fp.write("\n\n")
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder, feeder_name)
+                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_substations and self.separate_feeders:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            os.path.join(
+                                feeder_name, self.output_filenames["linecodes"]
+                            )
+                        )
+                    elif self.separate_substations:
+                        if substation_name not in self.substations_redirect:
+                            self.substations_redirect[substation_name] = []
+                        self.substations_redirect[substation_name].append(
+                            self.output_filenames["linecodes"]
+                        )
+                    if self.separate_feeders:
+                        combined_feeder_sub = os.path.join(substation_name, feeder_name)
+                        if combined_feeder_sub not in self.feeders_redirect:
+                            self.feeders_redirect[combined_feeder_sub] = []
+                        self.feeders_redirect[combined_feeder_sub].append(
+                            self.output_filenames["linecodes"]
+                        )
+
+                    self.files_to_redirect.append(
+                        os.path.join(
+                            output_redirect, self.output_filenames["linecodes"]
+                        )
+                    )
+
+                    fp = open(
+                        os.path.join(output_folder, self.output_filenames["linecodes"]),
+                        "w",
+                    )
+
+                    for linecode_name, linecode_data in txt.items():
+                        fp.write("New Linecode.{name}".format(name=linecode_name))
+                        for k, v in linecode_data.items():
+                            fp.write(" {k}={v}".format(k=k, v=v))
+                        fp.write("\n\n")
 
         return 1
 
@@ -3116,12 +3538,6 @@ class Writer(AbstractWriter):
                         fp.write(
                             " basekV={volt}".format(volt=obj.nominal_voltage * 10 ** -3)
                         )  # DiTTo in volts
-                        if obj.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                            self._baseKV_.add(
-                                obj.nominal_voltage * math.sqrt(3) * 10 ** -3
-                            )
-                        else:
-                            self._baseKV_.add(obj.nominal_voltage * 10 ** -3)
 
                     if (
                         hasattr(obj, "positive_sequence_impedance")
@@ -3202,3 +3618,64 @@ class Writer(AbstractWriter):
                 )  # The buscoords are also written to base folder as well as the subfolders
 
             fp.write("\nSolve")
+        for i in model.models:
+            if isinstance(i, Node) and i.is_substation_connection:
+                feeder_name = i.feeder_name
+                substation_name = i.substation_name
+                feeder_name = feeder_name.replace(">", "-")
+                substation_name = substation_name.replace(">", "-")
+                # Note that subtransmission has no substation_connection and hence doesn't have a master file, even though it does have other .dss files
+                with open(
+                    os.path.join(
+                        self.output_path,
+                        substation_name,
+                        feeder_name,
+                        self.output_filenames["master"],
+                    ),
+                    "w",
+                ) as fp:
+                    fp.write("Clear\n\nNew Circuit.Name ")
+                    fp.write("bus1={name} pu={pu}".format(name=i.name, pu=i.setpoint))
+                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                        fp.write(
+                            " basekV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                        )  # DiTTo in volts
+                    fp.write(
+                        " R1={R1} X1={X1}".format(R1=0.0001, X1=0.0001)
+                    )  # Infinite source bus
+                    fp.write(
+                        " R0={R0} X0={X0}".format(R0=0.0001, X0=0.0001)
+                    )  # Infinite source bus
+                    fp.write("\n\n")
+                    if (
+                        substation_name in self.substations_redirect
+                        and feeder_name == ""
+                    ):  # i.e. it's a substation
+                        for element in self.substations_redirect[substation_name]:
+                            fp.write("Redirect " + element + "\n")
+                    if (
+                        os.path.join(substation_name, feeder_name)
+                        in self.feeders_redirect
+                        and not os.path.join(substation_name, feeder_name).strip("/")
+                        in self.substations_redirect
+                    ):  # i.e. it's a feeder
+                        for element in self.feeders_redirect[
+                            os.path.join(substation_name, feeder_name)
+                        ]:
+                            fp.write("Redirect " + element + "\n")
+                    _baseKV_list_ = list(
+                        self._baseKV_feeders_[i.substation_name + "_" + i.feeder_name]
+                    )
+                    _baseKV_list_ = sorted(_baseKV_list_)
+                    fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
+
+                    fp.write("\nCalcvoltagebases\n\n")
+
+                    if (
+                        self.output_filenames["buses"] in self.files_to_redirect
+                    ):  # Only write combined bus file to masterfile
+                        fp.write(
+                            "Buscoords {f}\n".format(f=self.output_filenames["buses"])
+                        )  # The buscoords are also written to base folder as well as the subfolders
+
+                    fp.write("\nSolve")
