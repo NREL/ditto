@@ -29,8 +29,14 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.position import Position
 from ditto.models.base import Unicode
+
+from ditto.readers.synergi.length_units import (
+    convert_length_unit,
+    SynergiValueType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +141,20 @@ class Reader(AbstractReader):
         ## Feeder ID ##########
         ## This is used to separate different feeders ##
         FeederId = self.get_data("InstFeeders", "FeederId")
+        NominalKvll_src = self.get_data("InstFeeders", "NominalKvll")
+        ConnectionType_src = self.get_data("InstFeeders", "ConnectionType")
+        BusVoltageLevel = self.get_data("InstFeeders", "BusVoltageLevel")
+        PosSequenceResistance_src = self.get_data(
+            "InstFeeders", "PosSequenceResistance"
+        )
+        PosSequenceReactance_src = self.get_data("InstFeeders", "PosSequenceReactance")
+        ZeroSequenceResistance_src = self.get_data(
+            "InstFeeders", "ZeroSequenceResistance"
+        )
+        ZeroSequenceReactance_src = self.get_data(
+            "InstFeeders", "ZeroSequenceReactance"
+        )
+        ByPhVoltDegPh1 = self.get_data("InstFeeders", "ByPhVoltDegPh1")
 
         ## Node ###########
         NodeID = self.get_data("Node", "NodeId")
@@ -213,6 +233,7 @@ class Reader(AbstractReader):
         LineID = self.get_data("InstSection", "SectionId")
         # FeederId = self.get_data("InstSection", "FeederId")
         LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
         PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
         PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
         PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
@@ -225,6 +246,9 @@ class Reader(AbstractReader):
         IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
         IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
         AmpRating = self.get_data("InstSection", "AmpRating")
+        AveHeightAboveGround_MUL = self.get_data(
+            "InstSection", "AveHeightAboveGround_MUL"
+        )
 
         # Create mapping between section IDs and Feeder Ids
         self.section_feeder_mapping = create_mapping(
@@ -236,6 +260,66 @@ class Reader(AbstractReader):
         self.section_from_to_mapping = {}
         for idx, section in enumerate(LineID):
             self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
+
+        ## Reclosers #######
+        recloser_sectionID = self.get_data("InstReclosers", "SectionId")
+        recloser_deviceID = self.get_data("InstReclosers", "UniqueDeviceId")
+        recloser_rating = self.get_data("InstReclosers", "AmpRating")
+        RecloserIsOpen = self.get_data("InstReclosers", "RecloserIsOpen")
+        recloser_interrupting_rating = self.get_data(
+            "InstReclosers", "InterruptRatingAmps"
+        )
+
+        ## Switches ########
+        switch_sectionID = self.get_data("InstSwitches", "SectionId")
+        switch_deviceID = self.get_data("InstSwitches", "UniqueDeviceId")
+        SwitchType = self.get_data("InstSwitches", "SwitchType")
+        SwitchIsOpen = self.get_data("InstSwitches", "SwitchIsOpen")
+        SwitchName = self.get_data("DevSwitches", "SwitchName")
+        Switch_index_map = {}
+        for i in range(len(SwitchName)):
+            Switch_index_map[SwitchName[i]] = i
+
+        ContinuousCurrentRating_switch = self.get_data(
+            "DevSwitches", "ContinuousCurrentRating"
+        )
+        EmergencyCurrentRating_switch = self.get_data(
+            "DevSwitches", "EmergencyCurrentRating"
+        )
+
+        ## Fuses #########
+        fuse_sectionID = self.get_data("InstFuses", "SectionId")
+        fuse_deviceID = self.get_data("InstFuses", "UniqueDeviceId")
+        fuse_rating = self.get_data("InstFuses", "AmpRating")
+        fuse_blow_rating = self.get_data("InstFuses", "CutoffAmps")
+        fuse_connected_phases = self.get_data("InstFuses", "ConnectedPhases")
+        fuse_is_open = self.get_data("InstFuses", "FuseIsOpen")
+
+        ## Protective devices ############
+        protective_device_sectionID = self.get_data(
+            "InstProtectiveDevices", "SectionId"
+        )
+        protective_device_deviceID = self.get_data(
+            "InstProtectiveDevices", "UniqueDeviceId"
+        )
+        protective_device_connected_phases = self.get_data(
+            "InstProtectiveDevices", "ConnectedPhases"
+        )
+        ProtectiveDeviceTypeName = self.get_data(
+            "DevProtectiveDevices", "ProtectiveDeviceTypeName"
+        )
+        ProtectiveDeviceType = self.get_data(
+            "DevProtectiveDevices", "ProtectiveDeviceType"
+        )
+        protective_device_ContinuousCurrentRating = self.get_data(
+            "DevProtectiveDevices", "ContinuousCurrentRating"
+        )
+        protective_device_EmergencyCurrentRating = self.get_data(
+            "DevProtectiveDevices", "EmergencyCurrentRating"
+        )
+        protective_device_InterruptCurrentRating = self.get_data(
+            "DevProtectiveDevices", "InterruptCurrentRating"
+        )
 
         ## Configuration ########
         ConfigName = self.get_data("DevConfig", "ConfigName")
@@ -263,7 +347,7 @@ class Reader(AbstractReader):
 
         ## Wires ###########
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
-        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableDiamConductor = self.get_data("DevConductors", "CableDiamConductor_SUL")
         CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
         ConductorName = self.get_data("DevConductors", "ConductorName")
         PosSequenceResistance_PerLUL = self.get_data(
@@ -277,7 +361,7 @@ class Reader(AbstractReader):
         )
         ZeroSequenceReactance_PerLUL = self.get_data(
             "DevConductors", "ZeroSequenceReactance_PerLUL"
-        )
+            )
         ContinuousCurrentRating = self.get_data(
             "DevConductors", "ContinuousCurrentRating"
         )
@@ -285,11 +369,18 @@ class Reader(AbstractReader):
             "DevConductors", "InterruptCurrentRating"
         )
 
+        ### Concentric Neutral Data ###
+        CableConNeutStrandDiameter_SUL = self.get_data("DevConductors", "CableConNeutStrandDiameter_SUL")
+        CableConNeutResistance_PerLUL = self.get_data("DevConductors", "CableConNeutResistance_PerLUL")
+        CableConNeutStrandCount = self.get_data("DevConductors", "CableConNeutStrandCount")
+        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableDiamOverInsul = self.get_data("DevConductors", "CableDiamOverInsul_SUL")
+
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
                 "CableGMR": CableGMR[idx],
-                "CableDiamOutside": CableDiamOutside[idx],
+                "CableDiamConductor": CableDiamConductor[idx],
                 "CableResistance": CableResistance[idx],
                 "PosSequenceResistance_PerLUL": PosSequenceResistance_PerLUL[idx],
                 "PosSequenceReactance_PerLUL": PosSequenceReactance_PerLUL[idx],
@@ -297,6 +388,12 @@ class Reader(AbstractReader):
                 "ZeroSequenceReactance_PerLUL": ZeroSequenceReactance_PerLUL[idx],
                 "ContinuousCurrentRating": ContinuousCurrentRating[idx],
                 "InterruptCurrentRating": InterruptCurrentRating[idx],
+                "CableConNeutStrandDiameter_SUL": CableConNeutStrandDiameter_SUL[idx],
+                "CableConNeutResistance_PerLUL": CableConNeutResistance_PerLUL[idx],
+                "CableConNeutStrandCount": CableConNeutStrandCount[idx],
+                "CableDiamOutside": CableDiamOutside[idx],
+                "CableDiamOverInsul": CableDiamOverInsul[idx],
+
             }
 
         ## Loads #############
@@ -419,6 +516,57 @@ class Reader(AbstractReader):
 
         ####################################################################################
         #                                                                                  #
+        #                                   SOURCES                                        #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Sources...")
+        for i, obj in enumerate(FeederId):
+
+            # Create a DiTTo PowerSource object
+            api_source = PowerSource(model)
+
+            # Set the name
+            api_source.name = obj.lower().replace(" ", "_") + "_src"
+
+            # Set the nominal voltage
+            api_source.nominal_voltage = NominalKvll_src[i] * 10 ** 3  # DiTTo in volts
+
+            # Set the per unit
+            api_source.per_unit = (
+                BusVoltageLevel[i] / 120.0
+            )  # This value should already be in volts
+
+            # Set the phases
+            # TODO: Change this. I couln't find where this is defined
+            api_source.phases.append("A")
+            api_source.phases.append("B")
+            api_source.phases.append("C")
+
+            # Set the sourcebus flag to True
+            api_source.is_sourcebus = 1
+
+            # Set the connection type
+            api_source.connection_type = ConnectionType_src[i]
+
+            # Set the angle of the first phase
+            api_source.phase_angle = ByPhVoltDegPh1[i]
+
+            # Set the positive sequence impedance of the source
+            api_source.positive_sequence_impedance = complex(
+                PosSequenceResistance_src[i], PosSequenceReactance_src[i]
+            )
+
+            # Set the zero sequence impedance of the source
+            api_source.zero_sequence_impedance = complex(
+                ZeroSequenceResistance_src[i], ZeroSequenceReactance_src[i]
+            )
+
+            # Set the connecting element of the source
+            api_source.connecting_element = obj.lower().replace(" ", "_")
+
+        ####################################################################################
+        #                                                                                  #
         #                                     NODES                                        #
         #                                                                                  #
         ####################################################################################
@@ -500,7 +648,15 @@ class Reader(AbstractReader):
             # Assumes MUL is medium unit length and this is feets
             # Converts to meters then
             #
-            api_line.length = LineLength[i] * 0.3048
+            api_line.length = convert_length_unit(
+                LineLength[i],
+                SynergiValueType.MUL,
+                LengthUnits
+            )
+            if LineHeight[i] <0:
+                api_line.line_type = "underground"
+            else:
+                api_line.line_type = "overhead"
 
             # From element
             # Replace spaces with "_"
@@ -511,6 +667,93 @@ class Reader(AbstractReader):
             # Replace spaces with "_"
             #
             api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
+
+            # Switching devices and network protection devices
+            # Set ratings to Nones
+            #
+            eqt_rating = None
+            eqt_interrupting_rating = None
+            eqt_open = None
+
+            # Recloser
+            if recloser_sectionID is not None and obj in recloser_sectionID.values:
+                idd = np.argwhere(recloser_sectionID.values == obj).flatten()
+
+                # Set the is_recloser flag to True
+                api_line.is_recloser = 1
+
+                # Get the interrupting rating (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_interrupting_rating = recloser_interrupting_rating[idd[0]]
+                    eqt_rating = recloser_rating[idd[0]]
+                    eqt_open = RecloserIsOpen[idd[0]]
+
+            # Switch
+            if switch_sectionID is not None and obj in switch_sectionID.values:
+                idd_db= np.argwhere(switch_sectionID.values == obj).flatten()
+
+                # Set the is_switch flag to True
+                api_line.is_switch = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd_db) == 1:
+                    idd_warehouse = Switch_index_map[SwitchType[idd_db[0]]]
+                    eqt_rating = ContinuousCurrentRating_switch[idd_warehouse]
+                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd_warehouse]
+                    eqt_open = SwitchIsOpen[idd_db[0]]
+
+            # Fuse
+            if fuse_sectionID is not None and obj in fuse_sectionID.values:
+                idd = np.argwhere(fuse_sectionID.values == obj).flatten()
+
+                # Set the is_fuse flag to True
+                api_line.is_fuse = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_rating = fuse_rating[idd[0]]
+                    eqt_interrupting_rating = fuse_blow_rating[idd[0]]
+                    eqt_open = fuse_is_open[idd[0]]
+
+            # Protection Devices
+            if (
+                protective_device_sectionID is not None
+                and obj in protective_device_sectionID.values
+            ):
+                idd = np.argwhere(protective_device_sectionID.values == obj).flatten()
+
+                # Get the type of protector
+                if len(idd) == 1:
+
+                    if (
+                        protective_device_deviceID[idd[0]]
+                        in ProtectiveDeviceTypeName.values
+                    ):
+                        eqt_id = np.argwhere(
+                            ProtectiveDeviceTypeName.values
+                            == protective_device_deviceID[idd[0]]
+                        ).flatten()
+
+                        if len(eqt_id) == 1:
+
+                            # Get the type
+                            protect_type = ProtectiveDeviceType[eqt_id].lower()
+
+                            # Try to map this type to one supported by DiTTo
+                            if "fuse" in protect_type:
+                                api_line.is_fuse = 1
+                            elif "sectionalizer" in protect_type:
+                                api_line.is_sectionalizer = 1
+                            elif "breaker" in protect_type:
+                                api_line.is_breaker = 1
+                            elif "recloser" in protect_type:
+                                api_line.is_recloser = 1
+                            # If nothing more specific was found, map to a network protector
+                            else:
+                                api_line.is_network_protector = 1
+
+                            eqt_rating = ContinuousCurrentRating[eqt_id]
+                            eqt_interrupting_rating = InterruptCurrentRating[eqt_id]
 
             ### Line Phases##################
             #
@@ -540,14 +783,106 @@ class Reader(AbstractReader):
                 # Set the phase
                 api_wire.phase = phase
 
+                # Is_recloser
+                if api_line.is_recloser == 1:
+
+                    # Set the flag to True if the line has been identified as a Recloser
+                    api_wire.is_recloser = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the interrupting rating
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    api_wire.interrupting_rating = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_switch
+                if api_line.is_switch == 1:
+
+                    # Set the flag to True if the line has been identified as a Switch
+                    api_wire.is_switch = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_fuse
+                if api_line.is_fuse == 1:
+
+                    # Set the flag to True if the line has been identified as a Fuse
+                    api_wire.is_fuse = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the interrupting_rating
+                    api_wire.interrupting_rating = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_sectionalizer
+                if api_line.is_sectionalizer == 1:
+
+                    # Set the flag to True if the line has been identified as a sectionalizer
+                    api_wire.is_sectionalizer = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                # Is_network_protector
+                if api_line.is_network_protector == 1:
+
+                    # Set the flag to True if the line has been identified as a network protector
+                    api_wire.is_network_protector = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
                 # The Neutral will be handled seperately
                 if phase != "N":
-
-                    # Assumes MUL is medium unit length = ft
-                    # Convert to meters
-                    #
-                    coeff = 0.3048
-
                     # Set the position of the first wire
                     if (
                         idx == 0
@@ -556,14 +891,19 @@ class Reader(AbstractReader):
                         and "Position1_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = (
-                            config["Position1_X_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        api_wire.X = convert_length_unit(
+                            config["Position1_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                         # Set Y
-                        api_wire.Y = (
-                            config["Position1_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        # Add the reference height
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                     # Set the position of the second wire
                     if (
@@ -573,14 +913,19 @@ class Reader(AbstractReader):
                         and "Position2_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = (
-                            config["Position2_X_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        api_wire.X = convert_length_unit(
+                            config["Position2_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                         # Set Y
-                        api_wire.Y = (
-                            config["Position2_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        # Add the reference height
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                     # Set the position of the third wire
                     if (
@@ -590,14 +935,19 @@ class Reader(AbstractReader):
                         and "Position3_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = (
-                            config["Position3_X_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        api_wire.X = convert_length_unit(
+                            config["Position3_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                         # Set Y
-                        api_wire.Y = (
-                            config["Position3_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        # Add the reference height
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                     # Set the characteristics of the first wire. Use PhaseConductorID
                     #
@@ -685,29 +1035,22 @@ class Reader(AbstractReader):
                         conductor_name_raw = NeutralConductorID[i]
 
                     # Set the Spacing of the neutral
-                    #
-                    # Assumes MUL is medium unit length = ft
-                    # Convert to meters
-                    #
-                    coeff = 0.3048
-
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
 
                         # Set X
-                        api_wire.X = (
-                            config["Neutral_X_MUL"] * coeff
+                        api_wire.X = convert_length_unit(
+                            config["Neutral_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
                         )  # DiTTo is in meters
 
                         # Set Y
-                        api_wire.Y = (
-                            config["Neutral_Y_MUL"] * coeff
-                        )  # DiTTo is in meters
-
-                # Looks like zero-height wires are possible in Synergi but not
-                # in some other formats like OpenDSS
-                #
-                if api_wire.Y == 0:
-                    api_wire.Y += 0.01
+                        # Add the reference height
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                 # Set the characteristics of the wire:
                 # - GMR
@@ -723,40 +1066,58 @@ class Reader(AbstractReader):
                     # Set the GMR of the conductor
                     # DiTTo is in meters and GMR is assumed to be given in feets
                     #
-                    api_wire.gmr = (
-                        conductor_mapping[conductor_name_raw]["CableGMR"] * 0.3048
+                    api_wire.gmr = convert_length_unit(
+                        conductor_mapping[conductor_name_raw]["CableGMR"],
+                        SynergiValueType.MUL,
+                        LengthUnits
                     )
 
                     # Set the Diameter of the conductor
                     # Diameter is assumed to be given in inches and is converted to meters here
                     #
-                    api_wire.diameter = (
-                        conductor_mapping[conductor_name_raw]["CableDiamOutside"]
-                        * 0.0254
+                    api_wire.diameter = convert_length_unit(
+                        conductor_mapping[conductor_name_raw]["CableDiamConductor"],
+                        SynergiValueType.SUL,
+                        LengthUnits
                     )
 
                     # Set the Ampacity of the conductor
                     #
-                    api_wire.ampacity = conductor_mapping[conductor_name_raw][
-                        "ContinuousCurrentRating"
-                    ]
+                    # If ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.ampacity is None:
+                        api_wire.ampacity = conductor_mapping[conductor_name_raw][
+                            "ContinuousCurrentRating"
+                        ]
 
                     # Set the Emergency ampacity of the conductor
                     #
-                    api_wire.emergency_ampacity = conductor_mapping[conductor_name_raw][
-                        "InterruptCurrentRating"
-                    ]
+                    # If emergency ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.emergency_ampacity is None:
+                        api_wire.emergency_ampacity = conductor_mapping[
+                            conductor_name_raw
+                        ]["InterruptCurrentRating"]
 
                     # Set the resistance of the conductor
-                    # TODO: Change this once resistance is the per unit length resistance
+                    # Represented in Ohms per meter
                     #
                     if api_line.length is not None:
-                        api_wire.resistance = (
-                            conductor_mapping[conductor_name_raw]["CableResistance"]
-                            * api_line.length
-                            * 1.0
-                            / 1609.34
+                        api_wire.resistance = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableResistance"],
+                            SynergiValueType.Per_LUL,
+                            LengthUnits
                         )
+
+                    # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
+                    if conductor_mapping[conductor_name_raw]["CableDiamOutside"] > conductor_mapping[conductor_name_raw]["CableDiamConductor"]:
+                        api_wire.concentric_neutral_resistance = conductor_mapping[conductor_name_raw]["CableConNeutResistance_PerLUL"] /160934
+                        api_wire.concentric_neutral_diameter = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]*0.0254 # multiplied by short unit length scale
+                        api_wire.concentric_neutral_gmr = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]/2.0*0.7788*0.0254 # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
+                        api_wire.concentric_neutral_outside_diameter = conductor_mapping[conductor_name_raw]["CableDiamOutside"]* 0.0254 # multiplied by short unit length scale
+                        api_wire.concentric_neutral_nstrand = int(conductor_mapping[conductor_name_raw]["CableConNeutStrandCount"])
+                        api_wire.insulation_thickness = (conductor_mapping[conductor_name_raw]["CableDiamOverInsul"]- conductor_mapping[conductor_name_raw]["CableDiamConductor"])/2.0*0.0254
+
+
+                        
 
                 # Add the new Wire to the line's list of wires
                 #
@@ -799,29 +1160,16 @@ class Reader(AbstractReader):
                 #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
                 #         --------------------------
 
-                # TODO: Check that the following is correct...
-                # If LengthUnits is set to English2 or not defined , then assume miles
-                if LengthUnits == "English2" or LengthUnits is None:
-                    coeff = 0.000621371
-                # Else, if LengthUnits is set to English1, assume kft
-                elif LengthUnits == "English1":
-                    coeff = 3.28084 * 10 ** -3
-                # Else, if LengthUnits is set to Metric, assume km
-                elif LengthUnits == "Metric":
-                    coeff = 10 ** -3
-                else:
-                    raise ValueError(
-                        "LengthUnits <{}> is not valid.".format(LengthUnits)
-                    )
-
-                # Multiply by 1/3
-                coeff *= 1.0 / 3.0
+                r0 = convert_length_unit(r0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                r1 = convert_length_unit(r1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                x0 = convert_length_unit(x0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                x1 = convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
 
                 # One phase case (One phase + neutral)
                 #
                 if NPhase == 2:
                     impedance_matrix = [
-                        [coeff * complex(float(r0) + float(r1), float(x0) + float(x1))]
+                        [complex(float(r0) + float(r1), float(x0) + float(x1))]
                     ]
 
                 # Two phase case (Two phases + neutral)
@@ -840,9 +1188,9 @@ class Reader(AbstractReader):
                     if b2 == 0:
                         b2 = float(x1)
 
-                    b = coeff * complex(b1, b2)
+                    b = complex(b1, b2)
 
-                    a = coeff * complex(
+                    a = complex(
                         (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
                     )
 
@@ -851,7 +1199,7 @@ class Reader(AbstractReader):
                 # Three phases case (Three phases + neutral)
                 #
                 if NPhase == 4:
-                    a = coeff * complex(
+                    a = complex(
                         (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
                     )
                     b1 = float(r0) - float(r1)
@@ -866,7 +1214,7 @@ class Reader(AbstractReader):
                     if b2 == 0:
                         b2 = float(x1)
 
-                    b = coeff * complex(b1, b2)
+                    b = complex(b1, b2)
 
                     impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
 
@@ -1394,8 +1742,8 @@ class Reader(AbstractReader):
 
             if PVGenType[i] == "PhotoVoltaic":
 
-                # Create a PowerSource object
-                api_PV = PowerSource(model)
+                # Create a Photovoltaic object
+                api_PV = Photovoltaic(model)
 
                 # Set the name
                 api_PV.name = obj.replace(" ", "_").lower()
@@ -1441,8 +1789,8 @@ class Reader(AbstractReader):
 
             if Count is not None and GeneratorTypeDev[Count] == "PV":
 
-                # Create a PowerSource DiTTo object
-                api_PV = PowerSource(model)
+                # Create a Photovoltaic DiTTo object
+                api_PV = Photovoltaic(model)
 
                 # Set the PV name
                 api_PV.name = GeneratorSectionID[i].lower().replace(" ", "_")

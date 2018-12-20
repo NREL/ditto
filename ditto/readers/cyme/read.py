@@ -25,6 +25,9 @@ from ditto.models.power_source import PowerSource
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.photovoltaic import Photovoltaic
+from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
 
 from ditto.models.base import Unicode
 
@@ -133,6 +136,23 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |                     'loads'               |                     '[LOADS]'              |
     +-------------------------------------------+--------------------------------------------+
+    |                              DISTRIBUTED GENERATION PARSER                             |
+    +-------------------------------------------+--------------------------------------------+
+    |                   'converter'             |                  '[CONVERTER]'             |
+    +-------------------------------------------+--------------------------------------------+
+    |        'converter_control_settings'       |           '[CONVERTER CONTROL SETTING]'    |
+    +-------------------------------------------+--------------------------------------------+
+    |           'photovoltaic_settings' '       |              [PHOTOVOLTAIC SETTINGS]'      |
+    |                                           |   [ELECTRONIC CONVERTER GENERATOR SETTING] |
+    +-------------------------------------------+--------------------------------------------+
+    |        'long_term_dynamics_curve_ext'     |          '[LONG TERM DYNAMICS CURVE EXT]'  |
+    +-------------------------------------------+--------------------------------------------+
+    |               'dggenerationmodel'         |                '[DGGENERATIONMODEL]'       |
+    +-------------------------------------------+--------------------------------------------+
+    |               'bess_settings'             |                '[BESS SETTINGS]'           |
+    +-------------------------------------------+--------------------------------------------+
+    |                   'bess'                  |                     '[BESS]'               |
+    +-------------------------------------------+--------------------------------------------+
     """
 
     register_names = ["cyme", "Cyme", "CYME"]
@@ -180,62 +200,82 @@ class Reader(AbstractReader):
         # Modification done by the 'update_header_mapping' method
         #
         self.header_mapping = {  # NODES
-            "node": "[NODE]",
+            "node": ["[NODE]"],
             # LINES
-            "overhead_unbalanced_line_settings": "[OVERHEADLINEUNBALANCED SETTING]",
-            "overhead_line_settings": "[OVERHEADLINE SETTING]",
-            "overhead_byphase_settings": "[OVERHEAD BYPHASE SETTING]",
-            "underground_line_settings": "[UNDERGROUNDLINE SETTING]",
-            "switch": "[SWITCH]",
-            "switch_settings": "[SWITCH SETTING]",
-            "sectionalizer": "[SECTIONALIZER]",
-            "sectionalizer_settings": "[SECTIONALIZER SETTING]",
-            "fuse": "[FUSE]",
-            "fuse_settings": "[FUSE SETTING]",
-            "recloser": "[RECLOSER]",
-            "recloser_settings": "[RECLOSER SETTING]",
-            "breaker": "[BREAKER]",
-            "breaker_settings": "[BREAKER SETTING]",
-            "section": "[SECTION]",
-            "line": "[LINE]",
-            "unbalanced_line": "[LINE UNBALANCED]",
-            "spacing_table": "[SPACING TABLE FOR LINE]",
-            "conductor": "[CONDUCTOR]",
-            "cable": "[CABLE]",
-            "concentric_neutral_cable": "[CABLE CONCENTRIC NEUTRAL]",
-            "network_protector": "[NETWORKPROTECTOR]",
-            "network_protector_settings": "[NETWORKPROTECTOR SETTING]",
+            "overhead_unbalanced_line_settings": ["[OVERHEADLINEUNBALANCED SETTING]"],
+            "overhead_line_settings": ["[OVERHEADLINE SETTING]"],
+            "overhead_byphase_settings": ["[OVERHEAD BYPHASE SETTING]"],
+            "underground_line_settings": ["[UNDERGROUNDLINE SETTING]"],
+            "switch": ["[SWITCH]"],
+            "switch_settings": ["[SWITCH SETTING]"],
+            "sectionalizer": ["[SECTIONALIZER]"],
+            "sectionalizer_settings": ["[SECTIONALIZER SETTING]"],
+            "fuse": ["[FUSE]"],
+            "fuse_settings": ["[FUSE SETTING]"],
+            "recloser": ["[RECLOSER]"],
+            "recloser_settings": ["[RECLOSER SETTING]"],
+            "breaker": ["[BREAKER]"],
+            "breaker_settings": ["[BREAKER SETTING]"],
+            "section": ["[SECTION]"],
+            "line": ["[LINE]"],
+            "unbalanced_line": ["[LINE UNBALANCED]"],
+            "spacing_table": ["[SPACING TABLE FOR LINE]"],
+            "conductor": ["[CONDUCTOR]"],
+            "cable": ["[CABLE]"],
+            "concentric_neutral_cable": [
+                "[CABLE CONCENTRIC NEUTRAL]",
+                "[CONCENTRIC NEUTRAL CABLE]",
+            ],
+            "network_protector": ["[NETWORKPROTECTOR]"],
+            "network_protector_settings": ["[NETWORKPROTECTOR SETTING]"],
             # CAPACITORS
-            "serie_capacitor_settings": "[SERIE CAPACITOR SETTING]",
-            "shunt_capacitor_settings": "[SHUNT CAPACITOR SETTING]",
-            "serie_capacitor": "[SERIE CAPACITOR]",
-            "shunt_capacitor": "[SHUNT CAPACITOR]",
+            "serie_capacitor_settings": ["[SERIES CAPACITOR SETTING]"],
+            "shunt_capacitor_settings": ["[SHUNT CAPACITOR SETTING]"],
+            "serie_capacitor": ["[SERIES CAPACITOR]"],
+            "shunt_capacitor": ["[SHUNT CAPACITOR]"],
             # TRANSFORMERS
-            "auto_transformer_settings": "[AUTO TRANSFORMER SETTING]",
-            "grounding_transformer_settings": "[GROUNDINGTRANSFORMER SETTINGS]",
-            "three_winding_auto_transformer_settings": "[THREE WINDING AUTO TRANSFORMER SETTING]",
-            "three_winding_transformer_settings": "[THREE WINDING TRANSFORMER SETTING]",
-            "transformer_settings": "[TRANSFORMER SETTING]",
-            "phase_shifter_transformer_settings": "[PHASE SHIFTER TRANSFORMER SETTING]",
-            "auto_transformer": "[AUTO TRANSFORMER]",
-            "grounding_transformer": "[GROUNDING TRANSFORMER]",
-            "three_winding_auto_transformer": "[THREE WINDING AUTO TRANSFORMER]",
-            "three_winding_transformer": "[THREE WINDING TRANSFORMER]",
-            "transformer": "[TRANSFORMER]",
-            "phase_shifter_transformer": "[PHASE SHIFTER TRANSFORMER]",
+            "auto_transformer_settings": ["[AUTO TRANSFORMER SETTING]"],
+            "grounding_transformer_settings": ["[GROUNDINGTRANSFORMER SETTINGS]"],
+            "three_winding_auto_transformer_settings": [
+                "[THREE WINDING AUTO TRANSFORMER SETTING]"
+            ],
+            "three_winding_transformer_settings": [
+                "[THREE WINDING TRANSFORMER SETTING]"
+            ],
+            "transformer_settings": ["[TRANSFORMER SETTING]"],
+            "phase_shifter_transformer_settings": [
+                "[PHASE SHIFTER TRANSFORMER SETTING]"
+            ],
+            "auto_transformer": ["[AUTO TRANSFORMER]"],
+            "grounding_transformer": ["[GROUNDING TRANSFORMER]"],
+            "three_winding_auto_transformer": ["[THREE WINDING AUTO TRANSFORMER]"],
+            "three_winding_transformer": ["[THREE WINDING TRANSFORMER]"],
+            "transformer": ["[TRANSFORMER]"],
+            "phase_shifter_transformer": ["[PHASE SHIFTER TRANSFORMER]"],
             # REGULATORS
-            "regulator_settings": "[REGULATOR SETTING]",
-            "regulator": "[REGULATOR]",
+            "regulator_settings": ["[REGULATOR SETTING]"],
+            "regulator": ["[REGULATOR]"],
             # LOADS
-            "customer_loads": "[CUSTOMER LOADS]",
-            "customer_class": "[CUSTOMER CLASS]",
-            "loads": "[LOADS]",
-            "source": "[SOURCE]",
-            "headnodes": "[HEADNODES]",
-            "source_equivalent": "[SOURCE EQUIVALENT]",
+            "customer_loads": ["[CUSTOMER LOADS]"],
+            "customer_class": ["[CUSTOMER CLASS]"],
+            "loads": ["[LOADS]"],
+            "source": ["[SOURCE]"],
+            "headnodes": ["[HEADNODES]"],
+            "source_equivalent": ["[SOURCE EQUIVALENT]"],
+            # DISTRIBUTED GENERATION
+            "converter": ["[CONVERTER]"],
+            "converter_control_settings": ["[CONVERTER CONTROL SETTING]"],
+            "photovoltaic_settings": [
+                "[PHOTOVOLTAIC SETTINGS]",
+                "[ELECTRONIC CONVERTER GENERATOR SETTING]",
+            ],
+            "long_term_dynamics_curve_ext": ["[LONG TERM DYNAMICS CURVE EXT]"],
+            "dggenerationmodel": ["[DGGENERATIONMODEL]"],
+            "bess_settings": ["[BESS SETTINGS]"],
+            "bess": ["[BESS]"],
             # SUBSTATIONS
-            "substation": "[SUBSTATION]",
-            "subnetwork_connections": "[SUBNETWORK CONNECTIONS]",
+            "substation": ["[SUBSTATION]"],
+            "subnetwork_connections": ["[SUBNETWORK CONNECTIONS]"],
         }
 
     def update_header_mapping(self, update):
@@ -259,14 +299,14 @@ class Reader(AbstractReader):
             )
 
         # Instanciate new header mapping
-        new_mapping = {}
+        new_mapping = {k: [] for k in self.header_mapping.keys()}
 
         # Loop over the default header mapping and update as requested
         for key, value in self.header_mapping.items():
-            if key in update and value != update[key]:
-                new_mapping[key] = update[key]
+            if key in update and update[key] not in value:
+                new_mapping[key].append(update[key])
             else:
-                new_mapping[key] = value
+                new_mapping[key].append(value)
 
         # Basic safety check
         if len(new_mapping) != len(self.header_mapping):
@@ -539,7 +579,7 @@ class Reader(AbstractReader):
                 or value == "3"
                 or value.lower() == "open delta"
                 or value == "4"
-                or value == "closed delta"
+                or value.lower() == "closed delta"
             ):
                 return "D"
             if value == "5" or value.lower() == "zg":
@@ -699,7 +739,7 @@ class Reader(AbstractReader):
                 )
             )
 
-        return self.header_mapping[obj] in line
+        return np.any([x in line for x in self.header_mapping[obj]])
 
     def parser_helper(self, line, obj_list, attribute_list, mapping, *args):
         """
@@ -755,8 +795,7 @@ class Reader(AbstractReader):
             # At this point, we should have the mapping for the parameters of interest
             # while next_line[0] not in ['[','',' ','\n','\r\n']:
             while len(next_line) > 2:
-
-                if "=" not in next_line.lower() or "node" in obj_list:
+                if "=" not in next_line.lower():
 
                     data = next_line.split(",")
 
@@ -819,6 +858,7 @@ class Reader(AbstractReader):
         else:
             logger.info("Parsing the Headnodes...")
             self.parse_head_nodes(model)
+        model.set_names()
 
     def parse_header(self):
         """
@@ -1327,7 +1367,7 @@ class Reader(AbstractReader):
 
         # Set the emergency ampacity of the wire
         try:
-            api_wire.ampacity_emergency = float(conductor_data["withstandrating"])
+            api_wire.emergency_ampacity = float(conductor_data["withstandrating"])
         except:
             pass
 
@@ -1440,6 +1480,7 @@ class Reader(AbstractReader):
                     elif (
                         "format_feeder" in line.lower()
                         or "format_substation" in line.lower()
+                        or "format_generalnetwork" in line.lower()
                     ):
                         format_feeder = list(
                             map(
@@ -1452,8 +1493,13 @@ class Reader(AbstractReader):
                     elif len(line) >= 7 and (
                         line[:7].lower() == "feeder="
                         or line[:11].lower() == "substation="
+                        or line[:11].lower() == "substation="
+                        or line[:15].lower() == "generalnetwork="
                     ):
-                        if line[:7].lower() == "feeder=":
+                        if (
+                            line[:7].lower() == "feeder="
+                            or line[:15].lower() == "generalnetwork="
+                        ):
                             self.network_type = "feeder"
                         if line[:11].lower() == "substation=":
                             self.network_type = "substation"
@@ -2301,6 +2347,11 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         switch_data["nameclass"] = new_line["nameclass"]
 
+                    try:
+                        new_line["nominal_voltage"] = float(switch_data["kvll"]) * 1000
+                    except:
+                        pass
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2376,6 +2427,13 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         sectionalizer_data["nameclass"] = new_line["nameclass"]
 
+                    try:
+                        new_line["nominal_voltage"] = (
+                            float(sectionalizer_data["kvll"]) * 1000
+                        )
+                    except:
+                        pass
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2450,6 +2508,11 @@ class Reader(AbstractReader):
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         fuse_data["nameclass"] = new_line["nameclass"]
+
+                    try:
+                        new_line["nominal_voltage"] = float(fuse_data["kvll"]) * 1000
+                    except:
+                        pass
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -2527,6 +2590,13 @@ class Reader(AbstractReader):
                     if "nameclass" in new_line:
                         recloser_data["nameclass"] = new_line["nameclass"]
 
+                    try:
+                        new_line["nominal_voltage"] = (
+                            float(recloser_data["kvll"]) * 1000
+                        )
+                    except:
+                        pass
+
                     # Create the wires
                     for p in phases + ["N"]:
                         if p in closedphase and closedphase.lower() != "none":
@@ -2601,6 +2671,11 @@ class Reader(AbstractReader):
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         breaker_data["nameclass"] = new_line["nameclass"]
+
+                    try:
+                        new_line["nominal_voltage"] = float(breaker_data["kvll"]) * 1000
+                    except:
+                        pass
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -2682,6 +2757,13 @@ class Reader(AbstractReader):
                     # Pass the nameclass to the wires
                     if "nameclass" in new_line:
                         network_protector_data["nameclass"] = new_line["nameclass"]
+
+                    try:
+                        new_line["nominal_voltage"] = (
+                            float(network_protector_data["kvll"]) * 1000
+                        )
+                    except:
+                        pass
 
                     # Create the wires
                     for p in phases + ["N"]:
@@ -3569,6 +3651,9 @@ class Reader(AbstractReader):
             "fixedkvara": 7,
             "fixedkvarb": 8,
             "fixedkvarc": 9,
+            "switchedkvara": 13,
+            "switchedkvarb": 14,
+            "switchedkvarc": 15,
             "kv": 24,
             "controllingphase": 35,
         }
@@ -3622,6 +3707,9 @@ class Reader(AbstractReader):
                         "fixedkvara",
                         "fixedkvarb",
                         "fixedkvarc",
+                        "switchedkvara",
+                        "switchedkvarb",
+                        "switchedkvarc",
                         "kv",
                         "controllingphase",
                     ],
@@ -3811,6 +3899,13 @@ class Reader(AbstractReader):
                     "fixedkvara" in settings
                     and "fixedkvarb" in settings
                     and "fixedkvarc" in settings
+                    and max(
+                        float(settings["fixedkvara"]),
+                        max(
+                            float(settings["fixedkvarb"]), float(settings["fixedkvarc"])
+                        ),
+                    )
+                    > 0
                 ):
                     try:
                         if p == "A":
@@ -3827,6 +3922,35 @@ class Reader(AbstractReader):
                             )  # Ditto in var
                     except:
                         pass
+                elif (
+                    "switchedkvara" in settings
+                    and "switchedkvarb" in settings
+                    and "switchedkvarc" in settings
+                    and max(
+                        float(settings["switchedkvara"]),
+                        max(
+                            float(settings["switchedkvarb"]),
+                            float(settings["switchedkvarc"]),
+                        ),
+                    )
+                    > 0
+                ):
+                    try:
+                        if p == "A":
+                            api_phaseCapacitor.var = (
+                                float(settings["switchedkvara"]) * 10 ** 3
+                            )  # Ditto in var
+                        if p == "B":
+                            api_phaseCapacitor.var = (
+                                float(settings["switchedkvarb"]) * 10 ** 3
+                            )  # Ditto in var
+                        if p == "C":
+                            api_phaseCapacitor.var = (
+                                float(settings["switchedkvarc"]) * 10 ** 3
+                            )  # Ditto in var
+                    except:
+                        pass
+
                 elif capacitor_data is not None:
                     try:
                         api_phaseCapacitor.var = (
@@ -5268,3 +5392,509 @@ class Reader(AbstractReader):
                     self._loads[sectionID] = api_load
 
         return 1
+
+    def parse_dg(self, model):
+        """ Parse the Distributed Generation from CYME to DiTTo. May be respresented as ECGs or PVs.
+            This reads the objets [CONVERTER], [CONVERTER CONTROL SETTING], [LONG TERM DYNAMICS CURVE EXT] [DGGENERATIONMODEL] and in the case when PV is included [PHOTOVOLTAIC SETTINGS]"""
+        self._dgs = []
+        self.converter = {}
+        self.converter_settings = {}
+        self.long_term_dynamics = {}
+        self.photovoltaic_settings = {}
+        self.bess = {}
+        self.bess_settings = {}
+        self.dg_generation = {}
+
+        mapp_converter = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "converterrating": 2,
+            "activepowerrating": 3,
+            "reactivepowerrating": 4,
+            "minimumpowerfactor": 5,
+            "powerfalllimit": 23,
+            "powerriselimit": 24,
+            "risefallunit": 25,
+        }
+
+        mapp_converter_settings = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "controlindex": 2,
+            "timetriggerindex": 3,
+            "controltype": 4,
+            "fixedvarinjection": 5,
+            "injectionreference": 6,
+            "convertercontrolid": 7,
+            "powerreference": 8,
+            "powerfactor": 9,
+        }
+
+        mapp_photovoltaic_settings = {
+            "sectionid": 0,
+            "location": 1,
+            "devicenumber": 2,
+            "equipmentid": 6,
+            "ambienttemparature": 11,
+        }
+
+        mapp_bess = {
+            "id": 0,
+            "ratedstorageenergy": 1,
+            "maxchargingpower": 2,
+            "maxdischargingpower": 3,
+            "chargeefficiency": 4,
+            "dischargeefficiency": 5,
+        }
+
+        mapp_bess_settings = {
+            "sectionid": 0,
+            "devicenumber": 2,
+            "equipmentid": 6,
+            "phase": 7,
+            "maximumsoc": 10,
+            "minimumsoc": 11,
+            "initialsoc": 16,
+        }
+
+        mapp_long_term_dynamics = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "adjustmentsettings": 2,
+            "powercurvemodel": 3,
+        }
+
+        mapp_dg_generation_model = {
+            "devicenumber": 0,
+            "devicetype": 1,
+            "loadmodelname": 2,
+            "activegeneration": 3,
+            "powerfactor": 4,
+        }
+
+        #####################################################
+        #                                                   #
+        #                   NETWORK FILE                    #
+        #                                                   #
+        #####################################################
+        #
+        # Open the network file
+        self.get_file_content("network")
+
+        # Loop over the network file
+        for line in self.content:
+
+            #########################################
+            #                                       #
+            #              CONVERTER                #
+            #                                       #
+            #########################################
+
+            self.converter.update(
+                self.parser_helper(
+                    line,
+                    ["converter"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "converterrating",
+                        "activepowerrating",
+                        "reactivepowerrating",
+                        "minimumpowerfactor",
+                        "powerfalllimit",
+                        "powerriselimit",
+                        "risefallunit",
+                    ],
+                    mapp_converter,
+                    {"type": "converter"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #    CONVERTER CONTROL SETTINGS         #
+            #                                       #
+            #########################################
+
+            self.converter_settings.update(
+                self.parser_helper(
+                    line,
+                    ["converter_control_settings"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "controltype",
+                        "fixedvarinjection",
+                        "injectionreference",
+                        "convertercontrolid",
+                        "powerreference",
+                        "powerfactor",
+                    ],
+                    mapp_converter_settings,
+                    {"type": "converter_settings"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #      PHOTOVOLTAIC SETTINGS            #
+            #                                       #
+            #########################################
+
+            self.photovoltaic_settings.update(
+                self.parser_helper(
+                    line,
+                    ["photovoltaic_settings"],
+                    ["sectionid", "devicenumber", "ambienttemparature"],
+                    mapp_photovoltaic_settings,
+                    {"type": "photovoltaic_settings"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #              BESS SETTINGS            #
+            #                                       #
+            #########################################
+
+            self.bess_settings.update(
+                self.parser_helper(
+                    line,
+                    ["bess_settings"],
+                    [
+                        "sectionid",
+                        "devicenumber",
+                        "equipmentid",
+                        "phase",
+                        "maximumsoc",
+                        "minimumsoc",
+                        "initialsoc",
+                    ],
+                    mapp_bess_settings,
+                    {"type": "bess_settings"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #    LONG TERM DYNAMICS CURVE EXT       #
+            #                                       #
+            #########################################
+
+            self.long_term_dynamics.update(
+                self.parser_helper(
+                    line,
+                    ["long_term_dynamics_curve_ext"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "adjustmentsettings",
+                        "powercurvemodel",
+                    ],
+                    mapp_long_term_dynamics,
+                    {"type": "long_term_dynamics"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #         DGGENERATIONMODEL             #
+            #                                       #
+            #########################################
+
+            self.dg_generation.update(
+                self.parser_helper(
+                    line,
+                    ["dggenerationmodel"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "activegeneration",
+                        "powerfactor",
+                        "loadmodelname",
+                    ],
+                    mapp_dg_generation_model,
+                    {"type": "dg_generation_model"},
+                )
+            )
+
+        #####################################################
+        #                                                   #
+        #                 EQUIPMENT FILE                    #
+        #                                                   #
+        #####################################################
+        #
+        # Open the equipment file
+        self.get_file_content("equipment")
+
+        # Loop over the equipment file
+        for line in self.content:
+
+            #########################################
+            #                                       #
+            #                  BESS                 #
+            #                                       #
+            #########################################
+            #
+            self.bess.update(
+                self.parser_helper(
+                    line,
+                    ["bess"],
+                    [
+                        "id",
+                        "ratedstorageenergy",
+                        "maxchargingpower",
+                        "maxdischargingpower",
+                        "chargeefficiency",
+                        "dischargeefficiency",
+                    ],
+                    mapp_bess,
+                )
+            )
+
+        api_photovoltaics = {}
+        api_bessi = {}
+        for sectionID, settings in self.photovoltaic_settings.items():
+            try:
+                api_photovoltaic = Photovoltaic(model)
+            except:
+                raise ValueError(
+                    "Unable to instanciate photovoltaic {id}".format(id=sectionID)
+                )
+            try:
+                api_photovoltaic.name = "PV_" + settings["devicenumber"].lower()
+                api_photovoltaic.feeder_name = self.section_feeder_mapping[
+                    sectionID.lower()
+                ]
+                api_photovoltaics[settings["devicenumber"].lower()] = api_photovoltaic
+            except:
+                raise ValueError(
+                    "Unable to set photovoltaic name for {id}".format(id=sectionID)
+                )
+
+            try:
+                api_photovoltaic.temperature = float(
+                    settings["ambienttemperature"]
+                )  # Not included in ECG SETTINGS
+            except:
+                pass
+
+            try:
+                api_photovoltaic.connecting_element = self.section_phase_mapping[
+                    sectionID.lower()
+                ]["fromnodeid"]
+            except:
+                pass
+
+        for sectionID, settings in self.bess_settings.items():
+            try:
+                api_bess = Storage(model)
+            except:
+                raise ValueError("Unable to instanciate bess {id}".format(id=sectionID))
+            try:
+                api_bess.name = "BESS_" + settings["devicenumber"].lower()
+                api_bess.feeder_name = self.section_feeder_mapping[sectionID.lower()]
+                api_bessi[settings["devicenumber"].lower()] = api_bess
+            except:
+                raise ValueError(
+                    "Unable to set bess name for {id}".format(id=sectionID)
+                )
+
+            phase_storages = []
+            if "phase" in settings:
+                phases = self.phase_mapping(settings["phase"])
+            else:
+                phases = ["A", "B", "C"]
+
+            for phase in phases:
+                phase_storage = PhaseStorage(model)
+                phase_storage.phase = phase
+                phase_storages.append(phase_storage)
+
+            api_bess.phase_storages = phase_storages
+
+            if "equipmentid" in settings:
+                dev_num = settings["equipmentid"]
+            else:
+                dev_num = None
+
+            if dev_num is not None and dev_num in self.bess:
+                bess_data = self.bess[dev_num]
+                try:
+                    api_bess.rated_kWh = float(bess_data["ratedstorageenergy"])
+                except:
+                    pass
+
+                try:
+                    api_bess.chargeefficiency = float(bess_data["chargingefficiency"])
+                except:
+                    pass
+
+                try:
+                    api_bess.dischargeefficiency = float(
+                        bess_data["dischargeefficiency"]
+                    )
+                except:
+                    pass
+
+                try:
+                    charging = float("inf")
+                    discharging = float("inf")
+                    if "maxchargingpower" in bess_data:
+                        charging = float(bess_data["maxchargingpower"])
+                    if "maxdischargingpower" in bess_data:
+                        discharging = float(bess_data["maxdischargingpower"])
+                    power = min(charging, discharging) * 1000
+                    if power < float("inf"):
+                        average_power = power / float(len(phase_storages))
+                        for ps in phase_storages:
+                            ps.p = average_power
+                except:
+                    pass
+
+            try:
+                api_bess.reserve = float(settings["maximumsoc"])
+            except:
+                pass
+
+            try:
+                api_bess.stored_kWh = (
+                    float(settings["initialsoc"]) * api_bess.rated_kWh / 100.0
+                )
+            except:
+                pass
+
+            try:
+                api_bess.connecting_element = self.section_phase_mapping[
+                    sectionID.lower()
+                ]["fromnodeid"]
+            except:
+                pass
+
+        for deviceID, settings in self.dg_generation.items():
+            deviceID = deviceID.strip(
+                "*"
+            ).lower()  # TODO: Deal with multiple configurations for the same location
+            api_photovoltaic = api_photovoltaics[deviceID]
+
+            # Use the default setting if available
+            if (
+                "loadmodelname" in settings
+                and settings["loadmodelname"].lower() == "default"
+            ):
+                try:
+                    api_photovoltaic.active_rating = (
+                        float(settings["activegeneration"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.power_factor = (
+                        float(settings["powerfactor"]) / 100.0
+                    )
+                except:
+                    pass
+
+        for deviceID, settings in self.converter.items():
+
+            deviceID = deviceID.strip(
+                "*"
+            ).lower()  # TODO: Deal with multiple configurations for the same location
+            if deviceID in api_photovoltaics:
+                api_photovoltaic = api_photovoltaics[deviceID]
+                try:
+                    api_photovoltaic.rated_power = (
+                        float(settings["activepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.reactive_rating = (
+                        float(settings["reactivepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.min_powerfactor = (
+                        float(settings["minimumpowerfactor"]) / 100.0
+                    )
+                except:
+                    pass
+                try:
+                    api_photovoltaic.fall_limit = float(settings["powerfalllimit"])
+                except:
+                    pass
+                try:
+                    api_photovoltaic.rise_limit = float(settings["powerriselimit"])
+                except:
+                    pass
+                # TODO: check the units being used
+            elif deviceID in api_bessi:
+                api_bess = api_bessi[deviceID]
+                try:
+                    api_bess.rated_power = float(settings["activepowerrating"]) * 1000
+                except:
+                    pass
+                try:
+                    api_bess.reactive_rating = (
+                        float(settings["reactivepowerrating"]) * 1000
+                    )
+                except:
+                    pass
+                try:
+                    api_bess.min_powerfactor = (
+                        float(settings["minimumpowerfactor"]) / 100.0
+                    )
+                except:
+                    pass
+
+        for deviceID, settings in self.converter_settings.items():
+            deviceID = deviceID.strip(
+                "*"
+            ).lower()  # TODO: Deal with multiple configurations for the same location
+            if deviceID in api_photovoltaics:
+                api_photovoltaic = api_photovoltaics[deviceID]
+                try:
+                    control_type = str(settings["controltype"])
+                    if control_type == "1":
+                        api_photovoltaic.control_type = "voltvar_vars_over_watts"
+                    if control_type == "0":
+                        api_photovoltaic.control_type = "voltvar_watts_over_vars"
+                    if control_type == "2":
+                        api_photovoltaic.control_type = "voltvar_fixedvars"
+                    if control_type == "3":
+                        api_photovoltaic.control_type = "voltvar_novars"
+                    if control_type == "5":
+                        api_photovoltaic.control_type = "voltwatt"
+                    if control_type == "6":
+                        api_photovoltaic.control_type = "watt_powerfactor"
+                    if control_type == "10":
+                        api_photovoltaic.control_type = "powerfactor"
+                except:
+                    pass
+
+                try:
+                    api_photovoltaic.var_injection = float(
+                        settings["fixedvarinjection"]
+                    )
+                except:
+                    pass
+                try:
+                    curve = float(settings["convertercontrolid"])
+                    if (
+                        api_photovoltaic.control_type == "voltvar_watts_over_vars"
+                        or api_photovoltaic.control_type == "voltvar_vars_over_watts"
+                    ):
+                        api_photovoltaic.voltvar_curve = curve
+                    if api_photovoltaic.control_type == "voltwatt":
+                        api_photovoltaic.voltwatt_curve = curve
+                    if api_photovoltaic.control_type == "watt_powerfactor":
+                        api_photovoltaic.watt_powerfactor_curve = curve
+                except:
+                    pass
+
+                try:
+                    pf = float(settings["powerfactor"]) / 100.0
+                    api_photovoltaic.power_factor = pf
+                except:
+                    pass

@@ -190,7 +190,7 @@ class system_structure_modifier(Modifier):
                         name_cleaned
                     )  # This should not be the case because of name conflicts
                 else:
-                    cleaned_headnodes = [h.strip("%") for h in headnodes]
+                    cleaned_headnodes = [h.strip("x") for h in headnodes]
 
                     if name_cleaned in cleaned_headnodes:
                         obj.headnode = headnodes[cleaned_headnodes.index(name_cleaned)]
@@ -432,21 +432,29 @@ class system_structure_modifier(Modifier):
                                     "Feeder_" + elt.name
                                 )  # Change the feeder naming convention here...
 
-    def replace_first_switch_with_recloser(self):
+    def replace_kth_switch_with_recloser(self):
         """
-        For every feeder, replace the first switch downstream of the substation with a recloser.
+        For every feeder, replace a switch downstream of the feeder head with a recloser. The depth of the switch is chosen at random with the distribution [0.7,0.25, 0.05]
         """
+        np.random.seed(0)
         # Loop over the objects
         for elt in self.model.models:
-            # If we get a Transformer
-            if isinstance(elt, PowerTransformer):
+            # If we get a substation connection
+            if (
+                hasattr(elt, "is_substation_connection")
+                and elt.is_substation_connection
+            ):
 
-                # Which is also a substation
-                if hasattr(elt, "is_substation") and elt.is_substation == 1:
+                switch_cnt = 0
+                target_depth = np.random.choice([1, 2, 3], p=[0.7, 0.25, 0.05])
+                if (
+                    hasattr(elt, "nominal_voltage") and elt.nominal_voltage < 69000
+                ):  # To avoid the high connection of the substations
+
                     should_continue = True
 
                     # Get the downstream node
-                    from_node = elt.to_element
+                    from_node = elt.name
 
                     while should_continue:
                         # Get sucessor node
@@ -467,10 +475,18 @@ class system_structure_modifier(Modifier):
                         except:
                             break
 
-                        if hasattr(_obj, "is_switch") and _obj.is_switch == 1:
-                            _obj.is_recloser = 1
-                            _obj.is_switch = 0
-                            should_continue = False
+                        if (
+                            hasattr(_obj, "is_switch")
+                            and _obj.is_switch == 1
+                            and hasattr(_obj, "wires")
+                            and len(_obj.wires) > 0
+                            and not _obj.wires[0].is_open
+                        ):
+                            switch_cnt += 1
+                            if switch_cnt == target_depth:
+                                _obj.is_recloser = 1
+                                _obj.is_switch = 0
+                                should_continue = False
 
                         # Go downstream...
                         from_node = end_node

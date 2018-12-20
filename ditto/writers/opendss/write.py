@@ -25,6 +25,7 @@ from ditto.models.winding import Winding
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 from ditto.models.power_source import PowerSource
+from ditto.models.photovoltaic import Photovoltaic
 
 from ditto.writers.abstract_writer import AbstractWriter
 
@@ -79,6 +80,7 @@ class Writer(AbstractWriter):
 
     author: Nicolas Gensollen. October 2017.
     """
+
     register_names = ["dss", "opendss", "OpenDSS", "DSS"]
 
     def __init__(self, **kwargs):
@@ -89,6 +91,7 @@ class Writer(AbstractWriter):
         self.all_wires = {}
         self.all_geometries = {}
         self.compensator = {}
+        self.all_cables = {}
 
         self.files_to_redirect = []
 
@@ -112,6 +115,7 @@ class Writer(AbstractWriter):
             "storage": "Storage.dss",
             "PVSystems": "PVSystems.dss",
             "master": "Master.dss",
+            "CNDATA": "CNData.dss",
         }
 
         # Call super
@@ -119,7 +123,7 @@ class Writer(AbstractWriter):
 
         self._baseKV_ = set()
 
-        self.logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
+        logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
 
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
@@ -155,7 +159,7 @@ class Writer(AbstractWriter):
             self.separate_substations = False
 
         # Write the bus coordinates
-        self.logger.info("Writing the bus coordinates...")
+        logger.info("Writing the bus coordinates...")
         if self.verbose:
             logger.debug("Writing the bus coordinates...")
         s = self.write_bus_coordinates(model)
@@ -163,7 +167,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the transformers
-        self.logger.info("Writing the transformers...")
+        logger.info("Writing the transformers...")
         if self.verbose:
             logger.debug("Writing the transformers...")
         s = self.write_transformers(model)
@@ -171,7 +175,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the regulators
-        self.logger.info("Writing the regulators...")
+        logger.info("Writing the regulators...")
         if self.verbose:
             logger.debug("Writing the regulators...")
         s = self.write_regulators(model)
@@ -179,7 +183,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the capacitors
-        self.logger.info("Writing the capacitors...")
+        logger.info("Writing the capacitors...")
         if self.verbose:
             logger.debug("Writing the capacitors...")
         s = self.write_capacitors(model)
@@ -187,7 +191,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # write the timeseries
-        self.logger.info("Writing the timeseries...")
+        logger.info("Writing the timeseries...")
         if self.verbose:
             logger.debug("Writing the timeseries...")
         s = self.write_timeseries(model)
@@ -195,7 +199,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # write the loads
-        self.logger.info("Writing the loads...")
+        logger.info("Writing the loads...")
         if self.verbose:
             logger.debug("Writing the loads...")
         s = self.write_loads(model)
@@ -203,7 +207,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the lines
-        self.logger.info("Writting the lines...")
+        logger.info("Writting the lines...")
         if self.verbose:
             logger.debug("Writting the lines...")
         s = self.write_lines(model)
@@ -211,7 +215,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the storage elements
-        self.logger.info("Writting the storage devices...")
+        logger.info("Writting the storage devices...")
         if self.verbose:
             logger.debug("Writting the storage devices...")
         s = self.write_storages(model)
@@ -219,7 +223,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the PV
-        self.logger.info("Writting the PVs...")
+        logger.info("Writting the PVs...")
         if self.verbose:
             logger.debug("Writting the PVs...")
         s = self.write_PVs(model)
@@ -227,14 +231,14 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the Master file
-        self.logger.info("Writting the master file...")
+        logger.info("Writting the master file...")
         if self.verbose:
             logger.debug("Writting the master file...")
         s = self.write_master_file(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
-        self.logger.info("Done.")
+        logger.info("Done.")
         if self.verbose:
             logger.debug("Writting done.")
 
@@ -447,7 +451,7 @@ class Writer(AbstractWriter):
                         ):
                             N_phases.append(len(winding.phase_windings))
                     if len(np.unique(N_phases)) != 1:
-                        self.logger.error(
+                        logger.error(
                             "Did not find the same number of phases accross windings of transformer {name}".format(
                                 name=i.name
                             )
@@ -457,7 +461,7 @@ class Writer(AbstractWriter):
                         txt += " phases={Np}".format(Np=N_phases[0])
                         txt += " windings={N}".format(N=len(i.windings))
                     except:
-                        self.logger.error(
+                        logger.error(
                             "Could not write the number of phases for transformer {name}".format(
                                 name=i.name
                             )
@@ -565,7 +569,7 @@ class Writer(AbstractWriter):
                                 elif winding.connection_type == "D":
                                     txt += " conn=delta"
                                 else:
-                                    self.logger.error(
+                                    logger.error(
                                         "Unsupported type of connection {conn} for transformer {name}".format(
                                             conn=winding.connection_type, name=i.name
                                         )
@@ -668,7 +672,7 @@ class Writer(AbstractWriter):
                             # Since we are in the case of 2 windings, we should only have one reactance
                             if isinstance(i.reactances, list):
                                 if len(i.reactances) != 1:
-                                    self.logger.error(
+                                    logger.error(
                                         "Number of reactances incorrect for transformer {name}. Expected 1, got {N}".format(
                                             name=i.name, N=len(i.reactances)
                                         )
@@ -679,7 +683,7 @@ class Writer(AbstractWriter):
                             elif isinstance(i.reactances, (int, float)):
                                 txt += " XHL={reac}".format(reac=i.reactances)
                             else:
-                                self.logger.error(
+                                logger.error(
                                     "Reactances not understood for transformer {name}.".format(
                                         name=i.name
                                     )
@@ -704,7 +708,7 @@ class Writer(AbstractWriter):
                                 elif winding.connection_type == "D":
                                     txt += " conn=delta"
                                 else:
-                                    self.logger.error(
+                                    logger.error(
                                         "Unsupported type of connection {conn} for transformer {name}".format(
                                             conn=winding.connection_type, name=i.name
                                         )
@@ -801,7 +805,7 @@ class Writer(AbstractWriter):
                                     XHT=i.reactances[2],
                                 )
                             else:
-                                self.logger.error(
+                                logger.error(
                                     "Wrong number of reactances for transformer {name}".format(
                                         name=i.name
                                     )
@@ -1038,106 +1042,116 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
         substation_text_map = {}
         for i in model.models:
-            if isinstance(i, PowerSource):
+            if isinstance(i, Photovoltaic):
                 # If is_sourcebus is set to 1, then the object represents a source and not a PV system
-                if hasattr(i, "is_sourcebus") and i.is_sourcebus == 0:
+                if (
+                    self.separate_feeders
+                    and hasattr(i, "feeder_name")
+                    and i.feeder_name is not None
+                ):
+                    feeder_name = i.feeder_name
+                else:
+                    feeder_name = "DEFAULT"
+                if (
+                    self.separate_substations
+                    and hasattr(i, "substation_name")
+                    and i.substation_name is not None
+                ):
+                    substation_name = i.substation_name
+                else:
+                    substation_name = "DEFAULT"
+
+                if not substation_name in substation_text_map:
+                    substation_text_map[substation_name] = set([feeder_name])
+                else:
+                    substation_text_map[substation_name].add(feeder_name)
+                txt = ""
+                if substation_name + "_" + feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+
+                # Name
+                if hasattr(i, "name") and i.name is not None:
+                    txt += "New Generator.{name}".format(name=i.name)
+
+                # Phases
+                if hasattr(i, "phases") and i.phases is not None:
+                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
+
+                # connecting element
+                if (
+                    hasattr(i, "connecting_element")
+                    and i.connecting_element is not None
+                ):
+                    txt += " bus1={connecting_elt}".format(
+                        connecting_elt=i.connecting_element
+                    )
+
+                # nominal voltage
+                if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                    txt += " kV={kV}".format(
+                        kV=i.nominal_voltage * 10 ** -3
+                    )  # DiTTo in volts
+                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                else:
+                    parent = model[i.connecting_element]
                     if (
-                        self.separate_feeders
-                        and hasattr(i, "feeder_name")
-                        and i.feeder_name is not None
+                        hasattr(parent, "nominal_voltage")
+                        and parent.nominal_voltage is not None
                     ):
-                        feeder_name = i.feeder_name
+                        txt += " kV={kV}".format(
+                            kV=parent.nominal_voltage * 10 ** -3
+                        )  # DiTTo in volts
+                        self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
+
+                if hasattr(i, "active_rating") and i.active_rating is not None:
+                    txt += " kW={kW}".format(
+                        kW=i.active_rating * 10 ** -3
+                    )  # DiTTo in watts
+
+                # connection type
+                if hasattr(i, "connection_type") and i.connection_type is not None:
+                    mapps = {"D": "delta", "Y": "wye"}
+                    if i.connection_type in mapps:
+                        txt += " conn={conn}".format(conn=mapps[i.connection_type])
                     else:
-                        feeder_name = "DEFAULT"
-                    if (
-                        self.separate_substations
-                        and hasattr(i, "substation_name")
-                        and i.substation_name is not None
-                    ):
-                        substation_name = i.substation_name
-                    else:
-                        substation_name = "DEFAULT"
-
-                    if not substation_name in substation_text_map:
-                        substation_text_map[substation_name] = set([feeder_name])
-                    else:
-                        substation_text_map[substation_name].add(feeder_name)
-                    txt = ""
-                    if substation_name + "_" + feeder_name in feeder_text_map:
-                        txt = feeder_text_map[substation_name + "_" + feeder_name]
-
-                    # Name
-                    if hasattr(i, "name") and i.name is not None:
-                        txt += "New PVSystem.{name}".format(name=i.name)
-
-                    # Phases
-                    if hasattr(i, "phases") and i.phases is not None:
-                        txt += " phases={n_phases}".format(n_phases=len(i.phases))
-
-                    # connecting element
-                    if (
-                        hasattr(i, "connecting_element")
-                        and i.connecting_element is not None
-                    ):
-                        txt += " bus1={connecting_elt}".format(
-                            connecting_elt=i.connecting_element
+                        raise NotImplementedError(
+                            "Connection {conn} for PV systems is currently not supported.".format(
+                                conn=i.connection_type
+                            )
                         )
 
-                    # nominal voltage
-                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                        txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10 ** -3
-                        )  # DiTTo in volts
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                # cutout_percent
+                if hasattr(i, "cutout_percent") and i.cutout_percent is not None:
+                    txt += " %Cutout={cutout}".format(cutout=i.cutout_percent)
 
-                    # rated power
-                    if hasattr(i, "rated_power") and i.rated_power is not None:
-                        txt += " kVA={kVA}".format(
-                            kVA=i.rated_power * 10 ** -3
-                        )  # DiTTo in vars
+                # cutin_percent
+                if hasattr(i, "cutin_percent") and i.cutin_percent is not None:
+                    txt += " %Cutin={cutin}".format(cutin=i.cutin_percent)
 
-                    # connection type
-                    if hasattr(i, "connection_type") and i.connection_type is not None:
-                        mapps = {"D": "delta", "Y": "wye"}
-                        if i.connection_type in mapps:
-                            txt += " conn={conn}".format(conn=mapps[i.connection_type])
-                        else:
-                            raise NotImplementedError(
-                                "Connection {conn} for PV systems is currently not supported.".format(
-                                    conn=i.connection_type
-                                )
-                            )
+                # resistance
+                if hasattr(i, "resistance") and i.resistance is not None:
+                    txt += " %R={resistance}".format(resistance=i.resistance)
 
-                    # cutout_percent
-                    if hasattr(i, "cutout_percent") and i.cutout_percent is not None:
-                        txt += " %Cutout={cutout}".format(cutout=i.cutout_percent)
+                # reactance
+                if hasattr(i, "reactance") and i.reactance is not None:
+                    txt += " %X={reactance}".format(reactance=i.reactance)
 
-                    # cutin_percent
-                    if hasattr(i, "cutin_percent") and i.cutin_percent is not None:
-                        txt += " %Cutin={cutin}".format(cutin=i.cutin_percent)
+                # v_max_pu
+                if hasattr(i, "v_max_pu") and i.v_max_pu is not None:
+                    txt += " Vmaxpu={v_max_pu}".format(v_max_pu=i.v_max_pu)
 
-                    # resistance
-                    if hasattr(i, "resistance") and i.resistance is not None:
-                        txt += " %R={resistance}".format(resistance=i.resistance)
+                # v_min_pu
+                if hasattr(i, "v_min_pu") and i.v_min_pu is not None:
+                    txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
 
-                    # reactance
-                    if hasattr(i, "reactance") and i.reactance is not None:
-                        txt += " %X={reactance}".format(reactance=i.reactance)
+                # power_factor
+                if hasattr(i, "power_factor") and i.power_factor is not None:
+                    txt += " Model=1 pf={power_factor}".format(
+                        power_factor=i.power_factor
+                    )
 
-                    # v_max_pu
-                    if hasattr(i, "v_max_pu") and i.v_max_pu is not None:
-                        txt += " Vmaxpu={v_max_pu}".format(v_max_pu=i.v_max_pu)
-
-                    # v_min_pu
-                    if hasattr(i, "v_min_pu") and i.v_min_pu is not None:
-                        txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
-
-                    # power_factor
-                    if hasattr(i, "power_factor") and i.power_factor is not None:
-                        txt += " pf={power_factor}".format(power_factor=i.power_factor)
-
-                    txt += "\n"
-                    feeder_text_map[substation_name + "_" + feeder_name] = txt
+                txt += "\n"
+                feeder_text_map[substation_name + "_" + feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
@@ -1674,7 +1688,10 @@ class Writer(AbstractWriter):
                         if hasattr(i, "windings") and i.windings is not None:
                             kvs = " kvs=("
                             for w, winding in enumerate(i.windings):
-                                if hasattr(i.windings[w], "nominal_voltage"):
+                                if (
+                                    hasattr(i.windings[w], "nominal_voltage")
+                                    and i.windings[w].nominal_voltage is not None
+                                ):
                                     kvs += str(i.windings[w].nominal_voltage) + ", "
                                     self._baseKV_.add(i.windings[w].nominal_voltage)
                             kvs = kvs[:-2]
@@ -1715,7 +1732,7 @@ class Writer(AbstractWriter):
                                         i.reactances[0]
                                     )
                             except:
-                                self.logger.warning(
+                                logger.warning(
                                     "Could not extract XHL from regulator {name}".format(
                                         name=i.name
                                     )
@@ -1728,7 +1745,7 @@ class Writer(AbstractWriter):
                                         i.reactances[1]
                                     )
                             except:
-                                self.logger.warning(
+                                logger.warning(
                                     "Could not extract XLT from regulator {name}".format(
                                         name=i.name
                                     )
@@ -1741,7 +1758,7 @@ class Writer(AbstractWriter):
                                         i.reactances[2]
                                     )
                             except:
-                                self.logger.warning(
+                                logger.warning(
                                     "Could not extract XHT from regulator {name}".format(
                                         name=i.name
                                     )
@@ -1816,7 +1833,7 @@ class Writer(AbstractWriter):
                                 x=list(self.compensator[i.name]["X"])[0]
                             )
                         else:
-                            self.logger.warning(
+                            logger.warning(
                                 """Compensator_x not the same for all windings of transformer {name}.
                                                    Using the first value for regControl {name2}.""".format(
                                     name=i.connected_transformer, name2=i.name
@@ -1834,7 +1851,7 @@ class Writer(AbstractWriter):
                                 r=list(self.compensator[i.name]["R"])[0]
                             )
                         else:
-                            self.logger.warning(
+                            logger.warning(
                                 """Compensator_r not the same for all windings of transformer {name}.
                                                    Using the first value for regControl {name2}.""".format(
                                     name=i.connected_transformer, name2=i.name
@@ -1984,7 +2001,7 @@ class Writer(AbstractWriter):
                     elif i.connection_type == "D":
                         txt += " conn=delta"
                     else:
-                        self.logger.error(
+                        logger.error(
                             "Unknown connection type in capacitor {name}".format(
                                 name=i.name
                             )
@@ -2003,7 +2020,7 @@ class Writer(AbstractWriter):
                             try:
                                 total_var += phase_capacitor.var
                             except:
-                                self.logger.error(
+                                logger.error(
                                     "Cannot compute Var of capacitor {name}".format(
                                         name=name
                                     )
@@ -2129,19 +2146,60 @@ class Writer(AbstractWriter):
         for i in model.models:
             if isinstance(i, Line):
                 use_linecodes = False
-                for wire in i.wires:
-                    # If we are missing the position of at least one wire, default to linecodes
-                    if wire.X is None or wire.Y is None:
+
+                # Find out if we have all the information we need to export
+                # the line using geometries. If we miss something, use LineCodes.
+                #
+                # For overhead (and undefined lines...)
+                if i.line_type != "underground":
+                    if len(i.wires) == 0:
                         use_linecodes = True
-                    # If we are missing the GMR of at least one wire, default to linecodes
-                    if wire.gmr is None:
-                        use_linecodes = True
-                    # If we are missing the diameter of at least one wire, default to linecodes
-                    if wire.diameter is None:
-                        use_linecodes = True
-                    # If we are missing the ampacity of at least one wire, default to linecodes
-                    if wire.ampacity is None:
-                        use_linecodes = True
+                    for wire in i.wires:
+                        # If we are missing the position of at least one wire, default to linecodes
+                        if wire.X is None or wire.Y is None:
+                            use_linecodes = True
+                        # If we are missing the GMR of at least one wire, default to linecodes
+                        if wire.gmr is None:
+                            use_linecodes = True
+                        # If we are missing the diameter of at least one wire, default to linecodes
+                        if wire.diameter is None:
+                            use_linecodes = True
+                        # If we are missing the ampacity of at least one wire, default to linecodes
+                        if wire.ampacity is None:
+                            use_linecodes = True
+                # For underground lines, we need a lot of data...
+                else:
+                    if len(i.wires) == 0:
+                        use_linecodes = True  # For empty lines
+                    for wire in i.wires:
+                        # If we are missing the position of at least one wire, default to linecodes
+                        if wire.X is None or wire.Y is None:
+                            use_linecodes = True
+                        # If we are missing the GMR of at least one phase conductor, default to linecodes
+                        if wire.gmr is None:
+                            use_linecodes = True
+                        # If we are missing the diameter of at least one phase conductor, default to linecodes
+                        if wire.diameter is None:
+                            use_linecodes = True
+                        # If we are missing the ampacity of at least one wire, default to linecodes
+                        if wire.ampacity is None:
+                            use_linecodes = True
+                        # If we are missing the neutral strand GMR for at least one cable, default to linecodes
+                        if wire.concentric_neutral_gmr is None:
+                            use_linecodes = True
+                        # If we are missing the neutral strand resistance for at least one cable, default to linecodes
+                        if wire.concentric_neutral_resistance is None:
+                            use_linecodes = True
+                        # If we are missing the neutral strand diameter for at least one cable, default to linecodes
+                        if wire.concentric_neutral_diameter is None:
+                            use_linecodes = True
+                        # If we are missing the outside diameter for at least one cable, default to linecodes
+                        if wire.concentric_neutral_outside_diameter is None:
+                            use_linecodes = True
+                        # If we are missing the number of neutral strands for at least one cable, default to linecodes
+                        if wire.concentric_neutral_nstrand is None:
+                            use_linecodes = True
+
                 if use_linecodes:
                     lines_to_linecodify.append(i)
                 else:
@@ -2193,7 +2251,9 @@ class Writer(AbstractWriter):
                 # Length
                 if hasattr(i, "length") and i.length is not None:
                     txt += " Length={length}".format(
-                        length=self.convert_from_meters(np.real(i.length), u"km")
+                        length=max(
+                            0.001, self.convert_from_meters(np.real(i.length), u"km")
+                        )
                     )
 
                 # nominal_voltage (Not mapped)
@@ -2252,6 +2312,20 @@ class Writer(AbstractWriter):
                     fuse_line = "New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y".format(
                         name=i.name
                     )
+                    if hasattr(i, "wires") and i.wires is not None:
+                        currt_rating = -1
+                        all_current_ratings = [
+                            w.interrupting_rating
+                            for w in i.wires
+                            if w.interrupting_rating is not None
+                        ]
+                        if len(all_current_ratings) > 0:
+                            current_rating = max(all_current_ratings)
+                            if current_rating > 0:
+                                fuse_line += " ratedcurrent={curr}".format(
+                                    curr=current_rating
+                                )
+
                 else:
                     fuse_line = ""
 
@@ -2320,38 +2394,76 @@ class Writer(AbstractWriter):
         for i in list_of_lines:
             # If we get a line object
             if isinstance(i, Line):
-                # Loop over the wires of this line
-                for wire in i.wires:
-                    # Parse the wire to get a dictionary with all the available attributes
-                    parsed_wire = self.parse_wire(wire)
-                    if len(parsed_wire) > 0:
-                        # If we have a nameclass, then use it to ID the wire
-                        if wire.nameclass is not None:
-                            # If the nameclass is not in self.all_wires, then just add it
-                            if wire.nameclass not in self.all_wires:
-                                self.all_wires[wire.nameclass] = parsed_wire
-                            # Otherwise, there is nothing to do unless the dictionary we previously has is not
-                            # exactly the one we currently have
+                # If the line is overhead, then export to WireData
+                # If line_type wasn't defined, try to export as for overhead...
+                if i.line_type != "underground":
+                    # Loop over the wires of this line
+                    for wire in i.wires:
+                        # Parse the wire to get a dictionary with all the available attributes
+                        parsed_wire = self.parse_wire(wire)
+                        if len(parsed_wire) > 0:
+                            # If we have a nameclass, then use it to ID the wire
+                            if wire.nameclass is not None:
+                                # If the nameclass is not in self.all_wires, then just add it
+                                if wire.nameclass not in self.all_wires:
+                                    self.all_wires[wire.nameclass] = parsed_wire
+                                # Otherwise, there is nothing to do unless the dictionary we previously has is not
+                                # exactly the one we currently have
+                                else:
+                                    if self.all_wires[wire.nameclass] != parsed_wire:
+                                        self.all_wires[
+                                            wire.nameclass + "_" + str(cnt)
+                                        ] = parsed_wire
+                                        wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                        cnt += 1
+                            # If we don't have a nameclass, we use fake names "wire_1", "wire_2"...
                             else:
-                                if self.all_wires[wire.nameclass] != parsed_wire:
+                                wire_found = False
+                                for k, v in self.all_wires.items():
+                                    if parsed_wire == v:
+                                        wire_found = True
+                                        wire.nameclass = k
+                                if not wire_found:
                                     self.all_wires[
-                                        wire.nameclass + "_" + str(cnt)
+                                        "Wire_{n}".format(n=cnt)
                                     ] = parsed_wire
-                                    wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                    wire.nameclass = "Wire_{n}".format(n=cnt)
                                     cnt += 1
-                        # If we don't have a nameclass, we use fake names "wire_1", "wire_2"...
-                        else:
-                            wire_found = False
-                            for k, v in self.all_wires.items():
-                                if parsed_wire == v:
-                                    wire_found = True
-                                    wire.nameclass = k
-                            if not wire_found:
-                                self.all_wires["Wire_{n}".format(n=cnt)] = parsed_wire
-                                wire.nameclass = "Wire_{n}".format(n=cnt)
-                                cnt += 1
+                else:
+                    # Loop over the wires of this line
+                    for wire in i.wires:
+                        # Parse the wire to get a dictionary with all the available attributes
+                        parsed_cable = self.parse_cable(wire)
+                        if len(parsed_cable) > 0:
+                            # If we have a nameclass, then use it to ID the wire
+                            if wire.nameclass is not None:
+                                # If the nameclass is not in self.all_wires, then just add it
+                                if wire.nameclass not in self.all_cables:
+                                    self.all_cables[wire.nameclass] = parsed_cable
+                                # Otherwise, there is nothing to do unless the dictionary we previously has is not
+                                # exactly the one we currently have
+                                else:
+                                    if self.all_cables[wire.nameclass] != parsed_cable:
+                                        self.all_cables[
+                                            wire.nameclass + "_" + str(cnt)
+                                        ] = parsed_cable
+                                        wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                        cnt += 1
+                            # If we don't have a nameclass, we use fake names "cncable_1", "cncable_2"...
+                            else:
+                                cable_found = False
+                                for k, v in self.all_cables.items():
+                                    if parsed_cable == v:
+                                        cable_found = True
+                                        wire.nameclass = k
+                                if not cable_found:
+                                    self.all_cables[
+                                        "CNCable_{n}".format(n=cnt)
+                                    ] = parsed_cable
+                                    wire.nameclass = "CNCable_{n}".format(n=cnt)
+                                    cnt += 1
 
-        if len(self.all_wires) > 0:
+        if len(self.all_wires) > 0 or len(self.all_cables) > 0:
             output_folder = None
             output_redirect = None
             if self.separate_substations and substation_name is not None:
@@ -2371,6 +2483,7 @@ class Writer(AbstractWriter):
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
 
+        if len(self.all_wires) > 0:
             fp = open(
                 os.path.join(output_folder, self.output_filenames["wiredata"]), "w"
             )
@@ -2380,6 +2493,17 @@ class Writer(AbstractWriter):
             for wire_name, wire_data in self.all_wires.items():
                 fp.write("New WireData.{name}".format(name=wire_name))
                 for key, value in wire_data.items():
+                    fp.write(" {k}={v}".format(k=key, v=value))
+                fp.write("\n\n")
+
+        if len(self.all_cables) > 0:
+            fp = open(os.path.join(output_folder, self.output_filenames["CNDATA"]), "w")
+            self.files_to_redirect.append(
+                os.path.join(output_redirect, self.output_filenames["CNDATA"])
+            )
+            for cable_name, cable_data in self.all_cables.items():
+                fp.write("New CNDATA.{name}".format(name=cable_name))
+                for key, value in cable_data.items():
                     fp.write(" {k}={v}".format(k=key, v=value))
                 fp.write("\n\n")
 
@@ -2618,7 +2742,7 @@ class Writer(AbstractWriter):
                 R = np.real(Z)  # Resistance matrix
                 X = np.imag(Z)  # Reactance  matrix
             except:
-                self.logger.error(
+                logger.error(
                     "Problem with impedance matrix in line {name}".format(
                         name=line.name
                     )
@@ -2628,6 +2752,7 @@ class Writer(AbstractWriter):
             (hasattr(line, "is_switch") and line.is_switch)
             or (hasattr(line, "is_breaker") and line.is_breaker)
             or (hasattr(line, "is_fuse") and line.is_fuse)
+            or (hasattr(line, "is_recloser") and line.is_recloser)
             and "nphases" in result
         ):
             X = [
@@ -2699,10 +2824,92 @@ class Writer(AbstractWriter):
             hasattr(line, "wires")
             and line.wires is not None
             and len(line.wires) > 0
-            and hasattr(line.wires[0], "ampacity_emergency")
+            and hasattr(line.wires[0], "emergency_ampacity")
             and line.wires[0].emergency_ampacity is not None
         ):
             result["emergamps"] = line.wires[0].emergency_ampacity
+
+        return result
+
+    def parse_cable(self, wire):
+        """
+        Takes a wire DiTTo object as input and outputs a dictionary with the attribute of
+        the concentric neutral cable it represents.
+
+        :param wire: Wire diTTo object
+        :type wire: Wire diTTo object
+        :returns: result
+        :rtype: dict
+        """
+        result = {}
+        # Insulator thickness
+        if (
+            hasattr(wire, "insulation_thickness")
+            and wire.insulation_thickness is not None
+        ):
+            result["InsLayer"] = wire.insulation_thickness
+            if hasattr(wire, "diameter") and wire.diameter is not None:
+                result["DiaIns"] = wire.diameter + 2 * wire.insulation_thickness
+
+        # Number of concentric neutral strands
+        if (
+            hasattr(wire, "concentric_neutral_nstrand")
+            and wire.concentric_neutral_nstrand is not None
+        ):
+            result["k"] = wire.concentric_neutral_nstrand
+
+        # Diameter of the neutral strands
+        if (
+            hasattr(wire, "concentric_neutral_diameter")
+            and wire.concentric_neutral_diameter is not None
+        ):
+            result["DiaStrand"] = wire.concentric_neutral_diameter
+
+        # Resistance of the neutral strand
+        if (
+            hasattr(wire, "concentric_neutral_resistance")
+            and wire.concentric_neutral_resistance is not None
+        ):
+            result["Rstrand"] = wire.concentric_neutral_resistance
+
+        # Diameter of the phase conductor
+        # Here wire.diameter is used
+        #
+        if hasattr(wire, "diameter") and wire.diameter is not None:
+            result["Diam"] = wire.diameter
+
+        # Outside diameter of the cable
+        if (
+            hasattr(wire, "concentric_neutral_outside_diameter")
+            and wire.concentric_neutral_outside_diameter is not None
+        ):
+            result["DiaCable"] = wire.concentric_neutral_outside_diameter
+
+        # Resistance of the phase conductor
+        # Here wire.resistance is used
+        # since the neutral resistance has its own attribute, there is no confict
+        #
+        if hasattr(wire, "resistance") and wire.resistance is not None:
+            result["Rac"] = wire.resistance
+
+        # GMR of the neutral strand
+        if (
+            hasattr(wire, "concentric_neutral_gmr")
+            and wire.concentric_neutral_gmr is not None
+        ):
+            result["GmrStrand"] = wire.concentric_neutral_gmr
+
+        # GMR of the phase conductor
+        # Here wire.gmr is used
+        #
+        if hasattr(wire, "gmr") and wire.gmr is not None:
+            result["GMRac"] = wire.gmr
+
+        # While the units are being integrated into DiTTo, we assume that
+        # everything is in meters here, even if it doesn't make much sense for cable properties...
+        result["Runits"] = "m"
+        result["Radunits"] = "m"
+        result["GMRunits"] = "m"
 
         return result
 
@@ -2720,12 +2927,12 @@ class Writer(AbstractWriter):
         # GMR
         if hasattr(wire, "gmr") and wire.gmr is not None:
             result["GMRac"] = wire.gmr
-            result["GMRunits"] = "km"  # Let OpenDSS know we are in meters here
+            result["GMRunits"] = "m"  # Let OpenDSS know we are in meters here
 
         # Diameter
         if hasattr(wire, "diameter") and wire.diameter is not None:
             result["Diam"] = wire.diameter
-            result["Radunits"] = "km"  # Let OpenDSS know we are in meters here
+            result["Radunits"] = "m"  # Let OpenDSS know we are in meters here
 
         # Ampacity
         if hasattr(wire, "ampacity") and wire.ampacity is not None:
@@ -2757,7 +2964,7 @@ class Writer(AbstractWriter):
         result["nconds"] = len(wire_list)
         phase_wires = [w for w in wire_list if w.phase in ["A", "B", "C"]]
         result["nphases"] = len(phase_wires)
-        result["units"] = "km"
+        result["units"] = "m"
         result["conductor_list"] = []
         for cond, wire in enumerate(wire_list):
             result["conductor_list"].append({})
@@ -2765,6 +2972,8 @@ class Writer(AbstractWriter):
             result["conductor_list"][-1]["cond"] = cond
             if wire.nameclass in self.all_wires:
                 result["conductor_list"][-1]["Wire"] = wire.nameclass
+            elif wire.nameclass in self.all_cables:
+                result["conductor_list"][-1]["CNCable"] = wire.nameclass
             else:
                 raise ValueError("Wire {name} not found.".format(name=wire.nameclass))
 
@@ -2783,7 +2992,10 @@ class Writer(AbstractWriter):
             ):
                 result["conductor_list"][-1]["Emergamps"] = wire.emergency_ampacity
 
-        result["Reduce"] = "n"
+        if len(phase_wires) != len(wire_list):
+            result["reduce"] = "y"
+        else:
+            result["reduce"] = "n"
 
         return result
 
@@ -2806,7 +3018,9 @@ class Writer(AbstractWriter):
                         and obj.connecting_element is not None
                     ):
                         fp.write(
-                            "bus1={name} pu=1.0".format(name=obj.connecting_element)
+                            "bus1={name} pu={pu}".format(
+                                name=obj.connecting_element, pu=obj.per_unit
+                            )
                         )
                     else:
                         logger.warning(
@@ -2814,7 +3028,11 @@ class Writer(AbstractWriter):
                                 cleaned_name
                             )
                         )
-                        fp.write("bus1={name} pu=1.0".format(name=cleaned_name))
+                        fp.write(
+                            "bus1={name} pu={pu}".format(
+                                name=cleaned_name, pu=obj.per_unit
+                            )
+                        )
 
                     if (
                         hasattr(obj, "nominal_voltage")
@@ -2849,6 +3067,13 @@ class Writer(AbstractWriter):
                     "Redirect {f}\n".format(f=self.output_filenames["wiredata"])
                 )  # Currently wire data is in the base folder
                 self.files_to_redirect.remove(self.output_filenames["wiredata"])
+
+            # Write CNDATA.dss first if it exists
+            if self.output_filenames["CNDATA"] in self.files_to_redirect:
+                fp.write(
+                    "Redirect {f}\n".format(f=self.output_filenames["CNDATA"])
+                )  # Currently wire data is in the base folder
+                self.files_to_redirect.remove(self.output_filenames["CNDATA"])
 
             # Write LineGeometry.dss then if it exists
             if self.output_filenames["linegeometry"] in self.files_to_redirect:

@@ -412,10 +412,34 @@ class NetworkAnalyzer(object):
                 if isinstance(obj, Node):
                     if obj.name in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.name]
-                        obj.substation_name = self.substations[obj.feeder_name]
+                        if obj.feeder_name in self.substations:
+                            obj.substation_name = self.substations[obj.feeder_name]
                     else:
-                        obj.feeder_name = "subtransmission"
-                        obj.substation_name = ""
+                        curr_name = obj.name
+                        done_looping = False
+
+                        while not done_looping:
+                            try:
+                                predecessor = next(
+                                    self.G.digraph.predecessors(curr_name)
+                                )
+                            except StopIteration:
+                                done_looping = True
+                                break
+                            prev_obj = self.model[predecessor]
+                            curr_name = (
+                                predecessor
+                            )  # Only decent along the branch of the last predecessor for simplicity
+                            if (
+                                hasattr(prev_obj, "feeder_name")
+                                and prev_obj.feeder_name is not None
+                                and prev_obj.feeder_name is not ""
+                            ):
+                                obj.feeder_name = prev_obj.feeder_name
+                                obj.substation_name = prev_obj.substation_name
+                                done_looping = True
+                                break
+
                         logger.debug(
                             "Node {name} was not found in feeder mapping".format(
                                 name=obj.name
@@ -427,10 +451,32 @@ class NetworkAnalyzer(object):
                         obj.feeder_name = self.node_feeder_mapping[
                             obj.connecting_element
                         ]
-                        obj.substation_name = self.substations[obj.feeder_name]
+                        if obj.feeder_name in self.substations:
+                            obj.substation_name = self.substations[obj.feeder_name]
                     else:
-                        obj.feeder_name = "subtransmission"
-                        obj.substation_name = ""
+                        curr_name = obj.connecting_element
+                        done_looping = False
+                        while not done_looping:
+                            try:
+                                predecessor = next(
+                                    self.G.digraph.predecessors(curr_name)
+                                )
+                            except StopIteration:
+                                done_looping = True
+                                break
+                            prev_obj = self.model[predecessor]
+                            curr_name = (
+                                predecessor
+                            )  # Only decent along the branch of the last predecessor for simplicity
+                            if (
+                                hasattr(prev_obj, "feeder_name")
+                                and prev_obj.feeder_name is not None
+                                and prev_obj.feeder_name is not ""
+                            ):
+                                obj.feeder_name = prev_obj.feeder_name
+                                obj.substation_name = prev_obj.substation_name
+                                done_looping = True
+                                break
 
                         logger.debug(
                             "Object {name} connecting element {namec} was not found in feeder mapping".format(
@@ -440,10 +486,32 @@ class NetworkAnalyzer(object):
                 elif hasattr(obj, "from_element"):
                     if obj.from_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.from_element]
-                        obj.substation_name = self.substations[obj.feeder_name]
+                        if obj.feeder_name in self.substations:
+                            obj.substation_name = self.substations[obj.feeder_name]
                     else:
-                        obj.feeder_name = "subtransmission"
-                        obj.substation_name = ""
+                        curr_name = obj.from_element
+                        done_looping = False
+                        while not done_looping:
+                            try:
+                                predecessor = next(
+                                    self.G.digraph.predecessors(curr_name)
+                                )
+                            except StopIteration:
+                                done_looping = True
+                                break
+                            prev_obj = self.model[predecessor]
+                            curr_name = (
+                                predecessor
+                            )  # Only decent along the branch of the last predecessor for simplicity
+                            if (
+                                hasattr(prev_obj, "feeder_name")
+                                and prev_obj.feeder_name is not None
+                                and prev_obj.feeder_name is not ""
+                            ):
+                                obj.feeder_name = prev_obj.feeder_name
+                                obj.substation_name = prev_obj.substation_name
+                                done_looping = True
+                                break
 
                         logger.debug(
                             "Object {name} from element {namec} was not found in feeder mapping".format(
@@ -1215,12 +1283,12 @@ class NetworkAnalyzer(object):
                                 total_load_kva += math.sqrt(pl.p ** 2 + pl.q ** 2)
                 # ...compute the transformer KVA
                 if hasattr(obj, "windings") and obj.windings is not None:
-                    transformer_kva = sum(
+                    transformer_kva = max(
                         [
                             wdg.rated_power
                             for wdg in obj.windings
                             if wdg.rated_power is not None
-                        ]
+                        ]  # The kva values should be the same on all windings but we take the max
                     )
                     self.results[feeder_name]["transformer_kva_distribution"].append(
                         transformer_kva
@@ -1262,7 +1330,9 @@ class NetworkAnalyzer(object):
                         ):
                             self.results[feeder_name][
                                 "sum_distribution_transformer_mva"
-                            ] += (obj.windings[0].rated_power * 10 ** -6)  # DiTTo in va
+                            ] += (
+                                obj.windings[0].rated_power * 10 ** -6
+                            )  # DiTTo in va
 
                     if (
                         hasattr(obj.windings[0], "phase_windings")

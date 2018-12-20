@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
+
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -107,7 +108,7 @@ class Reader(AbstractReader):
 
         self.is_opendssdirect_built = False
         self.all_object_names = []
-        self.logger.info("OpenDSS--->DiTTo reader instanciated")
+        logger.info("OpenDSS--->DiTTo reader instanciated")
 
     def set_dss_file_names(self, new_names):
         """Specify the path to some required DSS files.
@@ -119,7 +120,7 @@ class Reader(AbstractReader):
         :rtype: int
         """
         if not isinstance(new_names, dict):
-            self.logger.error("set_dss_file_names() expects a dictionary")
+            logger.error("set_dss_file_names() expects a dictionary")
             return -1
         for key, value in new_names.items():
             if key not in ["Nodes", "master"]:
@@ -137,7 +138,7 @@ class Reader(AbstractReader):
         try:
             return dss.run_command(string)
         except:
-            self.logger.error("Unable to execute the following command: \n" + string)
+            logger.error("Unable to execute the following command: \n" + string)
 
     def phase_mapping(self, dss_phase):
         """Map the phases of OpenDSS (1, 2, or 3) into DiTTo phases ('A', 'B', or 'C').
@@ -183,12 +184,12 @@ class Reader(AbstractReader):
 
         .. warning:: Calling this function before parsing is required.
         """
-        self.logger.info("Reading DSS file {name}...".format(name=master_dss_file))
+        logger.info("Reading DSS file {name}...".format(name=master_dss_file))
 
         try:
             self.function("redirect {master_file}".format(master_file=master_dss_file))
         except:
-            self.logger.error(
+            logger.error(
                 "Unable to redirect master file: {filename}".format(
                     filename=master_dss_file
                 )
@@ -199,10 +200,10 @@ class Reader(AbstractReader):
 
         # Disable Pandas such that we deal only with dictionaries
         # This remove one dependancy
-        self.logger.info("Turning off pandas in OpenDSSdirect.")
+        logger.info("Turning off pandas in OpenDSSdirect.")
         dss.utils.is_pandas_installed = False
 
-        self.logger.info("build_opendssdirect succesful")
+        logger.info("build_opendssdirect succesful")
 
         return 1
 
@@ -222,7 +223,7 @@ class Reader(AbstractReader):
         # In order to parse, we need that opendssdirect was previously run
         if not self.is_opendssdirect_built:
             self.build_opendssdirect(self.DSS_file_names["master"])
-            # self.logger.error('Trying to parse before building opendssdirect.')
+            # logger.error('Trying to parse before building opendssdirect.')
             # return -1
         end = time.time()
         logger.debug("Build OpenDSSdirect= {}".format(end - start))
@@ -362,6 +363,12 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            # Set the per unit value of the source
+            try:
+                api_power_source.per_unit = float(source_data["pu"])
+            except:
+                pass
+
             # Set the source_bus flag to True
             try:
                 api_power_source.is_sourcebus = (
@@ -489,7 +496,7 @@ class Reader(AbstractReader):
                     )
                     name = name.lower()
                 except:
-                    self.logger.warning("Could not parse line : " + str(line))
+                    logger.warning("Could not parse line : " + str(line))
                     name = None
                     X = None
                     Y = None
@@ -499,7 +506,7 @@ class Reader(AbstractReader):
                     X = float(X)
                     Y = float(Y)
                 except:
-                    self.logger.warning(
+                    logger.warning(
                         "Could not cast coordinates {X}, {Y} for bus {name}".format(
                             X=X, Y=Y, name=name
                         )
@@ -512,9 +519,7 @@ class Reader(AbstractReader):
                     if name not in self.all_object_names:
                         self.all_object_names.append(name)
                     else:
-                        self.logger.warning(
-                            "Duplicate object Node {name}".format(name=name)
-                        )
+                        logger.warning("Duplicate object Node {name}".format(name=name))
                 else:
                     buses[name]["positions"] = [X, Y]
 
@@ -553,9 +558,7 @@ class Reader(AbstractReader):
                 if b1_name not in self.all_object_names:
                     self.all_object_names.append(b1_name)
                 else:
-                    self.logger.warning(
-                        "Duplicate object Node {name}".format(name=b1_name)
-                    )
+                    logger.warning("Duplicate object Node {name}".format(name=b1_name))
                 buses[b1_name] = {}
                 buses[b1_name]["positions"] = None
                 buses[b1_name]["phases"] = b1_phases
@@ -570,9 +573,7 @@ class Reader(AbstractReader):
                 if b2_name not in self.all_object_names:
                     self.all_object_names.append(b2_name)
                 else:
-                    self.logger.warning(
-                        "Duplicate object Node {name}".format(name=b2_name)
-                    )
+                    logger.warning("Duplicate object Node {name}".format(name=b2_name))
                 buses[b2_name] = {}
                 buses[b2_name]["positions"] = None
                 buses[b2_name]["phases"] = b2_phases
@@ -605,7 +606,7 @@ class Reader(AbstractReader):
                     if b_name not in self.all_object_names:
                         self.all_object_names.append(b_name)
                     else:
-                        self.logger.warning(
+                        logger.warning(
                             "Duplicate object Node {name}".format(name=b_name)
                         )
                     buses[b_name] = {}
@@ -639,9 +640,7 @@ class Reader(AbstractReader):
                 if b1_name not in self.all_object_names:
                     self.all_object_names.append(b1_name)
                 else:
-                    self.logger.warning(
-                        "Duplicate object Node {name}".format(name=b1_name)
-                    )
+                    logger.warning("Duplicate object Node {name}".format(name=b1_name))
                 buses[b1_name] = {}
                 buses[b1_name]["positions"] = None
                 buses[b1_name]["phases"] = b1_phases
@@ -737,7 +736,7 @@ class Reader(AbstractReader):
                 if line_name not in self.all_object_names:
                     self.all_object_names.append(line_name)
                 else:
-                    self.logger.warning(
+                    logger.warning(
                         "Duplicate object Line {name}".format(name=line_name)
                     )
                 api_line.name = line_name
@@ -776,7 +775,7 @@ class Reader(AbstractReader):
                 try:
                     line_unit = linecode_data["units"]
                 except:
-                    self.logger.warning(
+                    logger.warning(
                         "Could not find the distance unit for line {name}. Using feet instead...".format(
                             name=name
                         )
@@ -822,7 +821,7 @@ class Reader(AbstractReader):
                 pass
 
             if phases_bus1 != phases_bus2:
-                self.logger.warning(
+                logger.warning(
                     "Phases do not match for line {name}. Bus1={b1}. Bus2={b2}".format(
                         name=name, b1=data["bus1"], b2=data["bus2"]
                     )
@@ -1000,7 +999,7 @@ class Reader(AbstractReader):
 
             # Try to get the geometry code if it exists
             try:
-                line_geometry_code = data["geometry"]
+                line_geometry_code = data["geometry"].lower()
             except:
                 line_geometry_code = None
                 pass
@@ -1013,9 +1012,11 @@ class Reader(AbstractReader):
             if line_geometry_code is not None:
                 try:
                     line_geometries = dss.utils.class_to_dataframe("linegeometry")
-                    this_line_geometry = line_geometries[line_geometry_code]
+                    this_line_geometry = line_geometries[
+                        "linegeometry.{}".format(line_geometry_code)
+                    ]
                 except:
-                    self.logger.warning(
+                    logger.warning(
                         "Could not get the geometry {line_geom} data of line {line_name}".format(
                             line_geom=line_geometry_code, line_name=name
                         )
@@ -1026,9 +1027,18 @@ class Reader(AbstractReader):
                 this_line_geometry = None
 
             # wires
+            # Try to get the number of conductors from the geometry if we have one:
+            if this_line_geometry is not None and "nconds" in this_line_geometry:
+                number_of_conductors = int(this_line_geometry["nconds"])
+            # Otherwise, use the number of phases
+            else:
+                number_of_conductors = N_phases
+
+            # Initialize empty list to store the wires
             wires = []
-            # As many wires as phases plus neutral
-            for p in range(N_phases + 1):
+
+            # Loop over the wires and create the Wire DiTTo objects one by one.
+            for p in range(number_of_conductors):
 
                 wires.append(Wire(model))
 
@@ -1095,55 +1105,105 @@ class Reader(AbstractReader):
 
                     # nameclass
                     try:
-                        wires[p].nameclass = this_line_geometry["wire"]
+                        wires[p].nameclass = this_line_geometry["wires"][0].split(" ")[
+                            p
+                        ]
                     except:
                         pass
 
                     # Get the unit for the distances
-                    try:
+                    # NOTE: It is possible to specify different units for the different wires
+                    # Get the units from the list.
+                    if isinstance(this_line_geometry["units"], list):
+                        line_geometry_unit = this_line_geometry["units"][p]
+                    elif isinstance(this_line_geometry["units"], str):
                         line_geometry_unit = this_line_geometry["units"]
-                    # If not present, assume the same unit as the line
-                    except:
-                        self.logger(
+                    else:
+                        logger(
                             "Could not find the lineGeometry distance unit for line {name}.".format(
                                 name=name
                             )
                         )
                         if unit is not None:
-                            self.logger.info(
+                            logger.info(
                                 "Using the line unit instead: {unit}".format(unit=unit)
                             )
                             line_geometry_unit = unit
                         # If we do not have units for the line either, then w'd rather set everything to None...
                         else:
                             line_geometry_unit = None
-                        pass
 
                     # X
                     # If we have a valid distance unit
                     if line_geometry_unit is not None:
-                        try:
-                            wires[p].X = self.convert_to_meters(
-                                this_line_geometry["X"], line_geometry_unit
-                            )
-                        except:
-                            pass
+                        if "x" in this_line_geometry:
+                            if isinstance(this_line_geometry["x"], list):
+                                try:
+                                    geom_x = float(this_line_geometry["x"][p])
+                                except:
+                                    geom_x = None
+                                    pass
+                            elif isinstance(this_line_geometry["x"], (str, int, float)):
+                                geom_x = float(this_line_geometry["x"])
+                            else:
+                                geom_x = None
+
+                            try:
+                                wires[p].X = self.convert_to_meters(
+                                    geom_x, line_geometry_unit
+                                )
+                            except:
+                                pass
 
                     # Y
                     # If we have a valid distance unit
                     if line_geometry_unit is not None:
-                        try:
-                            wires[p].Y = self.convert_to_meters(
-                                this_line_geometry["H"], line_geometry_unit
-                            )
-                        except:
-                            pass
+                        if "h" in this_line_geometry:
+                            if isinstance(this_line_geometry["h"], list):
+                                try:
+                                    geom_y = float(this_line_geometry["h"][p])
+                                except:
+                                    geom_y = None
+                                    pass
+                            elif isinstance(this_line_geometry["h"], (str, int, float)):
+                                geom_y = float(this_line_geometry["h"])
+                            else:
+                                geom_y = None
+                            try:
+                                wires[p].Y = self.convert_to_meters(
+                                    geom_y, line_geometry_unit
+                                )
+                            except:
+                                pass
 
                     # Check if we have wireData that we can use
-                    try:
-                        this_line_wireData_code = this_line_geometry["wire"]
-                    except:
-                        this_line_wireData_code = None
+                    if "wires" in this_line_geometry:
+                        if isinstance(this_line_geometry["wires"], list):
+                            if (
+                                len(this_line_geometry["wires"]) == 1
+                                and " " in this_line_geometry["wires"][0]
+                            ):
+                                this_line_wireData_code = (
+                                    this_line_geometry["wires"][0].split(" ")[p].lower()
+                                )
+                            else:
+                                try:
+                                    this_line_wireData_code = this_line_geometry[
+                                        "wires"
+                                    ][p].lower()
+                                except:
+                                    this_line_wireData_code = None
+                                    pass
+                        elif isinstance(this_line_geometry["wires"], str):
+                            this_line_wireData_code = this_line_geometry["wires"]
+                        else:
+                            this_line_wireData_code = None
+                        if (
+                            this_line_wireData_code is None
+                            and "wire" in this_line_geometry
+                            and isinstance(this_line_geometry["wire"], str)
+                        ):
+                            this_line_wireData_code = this_line_geometry["wire"]
 
                     # If empty, convert it to None
                     if this_line_wireData_code == "":
@@ -1153,9 +1213,11 @@ class Reader(AbstractReader):
                     if this_line_wireData_code is not None:
                         try:
                             all_wire_data = dss.utils.class_to_dataframe("wiredata")
-                            this_line_wireData = all_wire_data[this_line_wireData_code]
+                            this_line_wireData = all_wire_data[
+                                "wiredata.{}".format(this_line_wireData_code)
+                            ]
                         except:
-                            self.logger.warning(
+                            logger.warning(
                                 "Could not get the wireData {wiredata} of lineGeometry {line_geom}".format(
                                     wiredata=this_line_wireData_code,
                                     line_geom=this_line_geometry,
@@ -1170,16 +1232,16 @@ class Reader(AbstractReader):
 
                         # Get the unit for the radius distance
                         try:
-                            wire_radius_unit = this_line_wireData["Radunits"]
+                            wire_radius_unit = this_line_wireData["radunits"]
                         # If not present, assume the same unit as the lineGeometry
                         except:
-                            self.logger(
+                            logger(
                                 "Could not find the wireData radius distance unit for Wiredata {name}.".format(
                                     name=this_line_wireData_code
                                 )
                             )
                             if line_geometry_unit is not None:
-                                self.logger.info(
+                                logger.info(
                                     "Using the lineGeometry unit instead: {unit}".format(
                                         unit=line_geometry_unit
                                     )
@@ -1195,7 +1257,7 @@ class Reader(AbstractReader):
                         if wire_radius_unit is not None:
                             try:
                                 wires[p].diameter = self.convert_to_meters(
-                                    this_line_wireData["Diam"], wire_radius_unit
+                                    float(this_line_wireData["diam"]), wire_radius_unit
                                 )
                             except:
                                 pass
@@ -1205,13 +1267,13 @@ class Reader(AbstractReader):
                             wire_gmr_unit = this_line_wireData["GMRunits"]
                         # If not present, assume the same unit as the lineGeometry
                         except:
-                            self.logger(
+                            logger(
                                 "Could not find the wireData GMR distance unit for Wiredata {name}.".format(
                                     name=this_line_wireData_code
                                 )
                             )
                             if line_geometry_unit is not None:
-                                self.logger.info(
+                                logger.info(
                                     "Using the lineGeometry unit instead: {unit}".format(
                                         unit=line_geometry_unit
                                     )
@@ -1227,22 +1289,22 @@ class Reader(AbstractReader):
                         if wire_gmr_unit is not None:
                             try:
                                 wires[p].gmr = self.convert_to_meters(
-                                    this_line_wireData["GMRac"], wire_gmr_unit
+                                    float(this_line_wireData["GMRac"]), wire_gmr_unit
                                 )
                             except:
                                 pass
 
                         # ampacity
                         try:
-                            wires[p].ampacity = this_line_wireData["Normamps"]
+                            wires[p].ampacity = float(this_line_wireData["normamps"])
                         except:
                             pass
 
                         # ampacity emergency
                         try:
-                            wires[p].ampacity_emergency = this_line_wireData[
-                                "Emergamps"
-                            ]
+                            wires[p].emergency_ampacity = float(
+                                this_line_wireData["emergamps"]
+                            )
                         except:
                             pass
 
@@ -1252,10 +1314,10 @@ class Reader(AbstractReader):
                         # We have to make sure that the line length is in the same unit
                         #
                         # First, check if we have a valid line length, otherwise there is no point...
-                        if length is not None:
+                        if api_line.length is not None:
                             # Try to get the per unit resistance
                             try:
-                                Rac = this_line_wireData["Rac"]
+                                Rac = float(this_line_wireData["Rac"])
                             except:
                                 Rac = None
                                 pass
@@ -1267,13 +1329,13 @@ class Reader(AbstractReader):
                                 # If not present, assume it is the same as the line unit
                                 # But log this, because it might not be the case. Assume the user is responsible here....
                                 except:
-                                    self.logger.warning(
+                                    logger.warning(
                                         "Could not find the resistance unit for wire {wire}".format(
                                             wire=this_line_wireData_code
                                         )
                                     )
                                     if unit is not None:
-                                        self.logger.info(
+                                        logger.info(
                                             "Using line length unit instead: {unit}".format(
                                                 unit=unit
                                             )
@@ -1284,15 +1346,13 @@ class Reader(AbstractReader):
                                     pass
                                 # If we have a valid unit for the resistance
                                 if Runits is not None:
-                                    try:
-                                        # Convert the length of the line to the right unit
-                                        # (99.9999% of the time they should match, but just for safety...)
-                                        new_length = self.unit_conversion(
-                                            length, unit, Runits
+
+                                    wires[p].resistance = (
+                                        self.convert_to_meters(
+                                            Rac, Runits, inverse=True
                                         )
-                                        wires[p].resistance = Rac * new_length
-                                    except:
-                                        pass
+                                        * api_line.length
+                                    )
 
                     if wires[p].ampacity is None and "normamps" in data:
                         try:
@@ -1300,15 +1360,14 @@ class Reader(AbstractReader):
                         except:
                             pass
 
-                    if wires[p].ampacity_emergency is None and "emergamps" in data:
+                    if wires[p].emergency_ampacity is None and "emergamps" in data:
                         try:
-                            wires[p].ampacity_emergency = float(data["emergamps"])
+                            wires[p].emergency_ampacity = float(data["emergamps"])
                         except:
                             pass
 
                     # is_switch
                     wires[p].is_switch = api_line.is_switch
-
             api_line.wires = wires
             self._lines.append(api_line)
 
@@ -1344,7 +1403,7 @@ class Reader(AbstractReader):
                 if trans_name not in self.all_object_names:
                     self.all_object_names.append(trans_name)
                 else:
-                    self.logger.warning(
+                    logger.warning(
                         "Duplicate object Transformer {name}".format(
                             name=transformer_name
                         )
@@ -1467,7 +1526,7 @@ class Reader(AbstractReader):
                 api_transformer.is_center_tap = 1
 
             if not 1 <= N_phases <= 3:
-                self.logger.warning(
+                logger.warning(
                     "Number of phases should be between 1 and 3, got {N} for transformer {name}".format(
                         N=N_phases, name=name
                     )
@@ -1490,7 +1549,7 @@ class Reader(AbstractReader):
                 # rated_power removed from powerTransformer and added to Winding by Nicolas
                 try:
                     windings[w].rated_power = (
-                        float(data["kVAs"][w]) * 10 ** 3 / float(N_windings)
+                        float(data["kVAs"][w]) * 10 ** 3
                     )  # DiTTo in volt ampere
                 except:
                     windings[w].rated_power = None
@@ -1500,7 +1559,7 @@ class Reader(AbstractReader):
                 # emergency_power removed from powerTransformer and added to Winding by Tarek
                 try:
                     windings[w].emergency_power = (
-                        float(data["emerghkVA"]) * 10 ** 3 / float(N_windings)
+                        float(data["emerghkVA"]) * 10 ** 3
                     )  # DiTTo in volt ampere
                 except:
                     windings[w].emergency_power = None
@@ -1596,7 +1655,7 @@ class Reader(AbstractReader):
                 if reg_name not in self.all_object_names:
                     self.all_object_names.append(reg_name)
                 else:
-                    self.logger.warning(
+                    logger.warning(
                         "Duplicate object Regulator {name}".format(name=reg_name)
                     )
                 api_regulator.name = reg_name
@@ -1662,7 +1721,7 @@ class Reader(AbstractReader):
                     if "kVAs" in trans:
                         try:
                             api_regulator.windings[w].rated_power = (
-                                float(trans["kVAs"][w]) * 10 ** 3 / float(N_windings)
+                                float(trans["kVAs"][w]) * 10 ** 3
                             )  # DiTTo in volt ampere
                         except:
                             pass
@@ -1730,7 +1789,7 @@ class Reader(AbstractReader):
                                 pass
 
             else:
-                self.logger.warning(
+                logger.warning(
                     "Could not find the transformer data for regulator {name}".format(
                         name=name
                     )
@@ -1848,7 +1907,7 @@ class Reader(AbstractReader):
                 if cap_name not in self.all_object_names:
                     self.all_object_names.append(cap_name)
                 else:
-                    self.logger.warning(
+                    logger.warning(
                         "Duplicate object Capacitor {name}".format(name=cap_name)
                     )
                 api_capacitor.name = cap_name
@@ -2057,7 +2116,7 @@ class Reader(AbstractReader):
                 if load_name not in self.all_object_names:
                     self.all_object_names.append(load_name)
                 else:
-                    self.logger.warning(
+                    logger.warning(
                         "Duplicate object Load {name}".format(name=load_name)
                     )
                 api_load.name = load_name
@@ -2139,7 +2198,7 @@ class Reader(AbstractReader):
 
             if N_phases != len(phases):
                 if N_phases is None and phases is None:
-                    self.logger.warning(
+                    logger.warning(
                         "No Phase information for load {name}".format(name=name)
                     )
                 elif N_phases is None and phases is not None:
@@ -2147,13 +2206,13 @@ class Reader(AbstractReader):
                 elif phases is None and N_phases == 3:
                     phases = ["A", "B", "C"]
                 elif phases is None and N_phases != 3:
-                    self.logger.warning(
+                    logger.warning(
                         "No Phase information for load {name}".format(name=name)
                     )
                 elif api_load.connection_type == "D":
                     phases = phases[:N_phases]
                 else:
-                    self.logger.warning(
+                    logger.warning(
                         "Phases do not match for load {name}".format(name=name)
                     )
 
@@ -2245,7 +2304,7 @@ class Reader(AbstractReader):
                         if not np.allclose(sum(ZIPV[:2]), 1.0) or not np.allclose(
                             sum(ZIPV[3:-1]), 1.0
                         ):
-                            self.logger.warning(
+                            logger.warning(
                                 "ZIPV coefficients for load {name} do not sum properly".format(
                                     name=name
                                 )
