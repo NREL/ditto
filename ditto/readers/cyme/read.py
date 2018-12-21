@@ -30,6 +30,7 @@ from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 
 from ditto.models.base import Unicode
+from ditto.modify.system_structure import system_structure_modifier
 
 logger = logging.getLogger(__name__)
 
@@ -859,6 +860,10 @@ class Reader(AbstractReader):
             logger.info("Parsing the Headnodes...")
             self.parse_head_nodes(model)
         model.set_names()
+        modifier = system_structure_modifier(model)
+        modifier.set_nominal_voltages_recur()
+        modifier.set_nominal_voltages_recur_line()
+
 
     def parse_header(self):
         """
