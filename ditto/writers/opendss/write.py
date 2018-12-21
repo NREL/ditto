@@ -1073,10 +1073,6 @@ class Writer(AbstractWriter):
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Generator.{name}".format(name=i.name)
 
-                # Phases
-                if hasattr(i, "phases") and i.phases is not None:
-                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
-
                 # connecting element
                 if (
                     hasattr(i, "connecting_element")
@@ -1085,6 +1081,14 @@ class Writer(AbstractWriter):
                     txt += " bus1={connecting_elt}".format(
                         connecting_elt=i.connecting_element
                     )
+                    if hasattr(i, "phases") and i.phases is not None:
+                        for phase in i.phases:
+                            txt+='.'+str(self.phase_mapping(phase.default_value))
+
+                # Phases
+                if hasattr(i, "phases") and i.phases is not None:
+                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
+
 
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
