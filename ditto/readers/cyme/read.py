@@ -5191,6 +5191,10 @@ class Reader(AbstractReader):
                 )
             )
 
+        duplicate_loads = set()
+        for sectionID in self.customer_loads.keys():
+            if sectionID.endswith('*'):
+                duplicate_loads.add(sectionID.lower().strip('*'))
         for sectionID, settings in self.customer_loads.items():
 
             sectionID = sectionID.strip("*").lower()
@@ -5268,15 +5272,24 @@ class Reader(AbstractReader):
                     else:
                         phases = []
 
-                    if sectionID in self._loads:
+                    if sectionID in duplicate_loads:
                         fusion = True
-                        api_load = self._loads[sectionID]
+                        if sectionID in self._loads:
+                            api_load = self._loads[sectionID]
+                        elif p!=0:
+                            api_load = Load(model)
                     else:
                         fusion = False
                         api_load = Load(model)
 
+                    if fusion and p == 0:
+                        #logger.warning(
+                        #    "WARNING:: Skipping duplicate load on section {} with p=0".format(sectionID)
+                        #)
+                        continue
+
                     try:
-                        if fusion:
+                        if fusion and sectionID in self._loads:
                             api_load.name += "_" + reduce(
                                 lambda x, y: x + "_" + y, phases
                             )
@@ -5291,7 +5304,7 @@ class Reader(AbstractReader):
                         pass
 
                     try:
-                        if not fusion:
+                        if not (fusion and sectionID in self._loads):
                             if connectedkva is not None:
                                 api_load.transformer_connected_kva = (
                                     connectedkva * 10 ** 3
@@ -5309,14 +5322,14 @@ class Reader(AbstractReader):
                         pass
 
                     try:
-                        if not fusion:
+                        if not (fusion and sectionID in self._loads):
                             api_load.connection_type = self.connection_configuration_mapping(
                                 load_data["connection"]
                             )
                     except:
                         pass
 
-                    if not fusion:
+                    if not (fusion and sectionID in self._loads):
                         if (
                             "loadtype" in settings
                             and settings["loadtype"] in self.customer_class
@@ -5326,7 +5339,7 @@ class Reader(AbstractReader):
                             load_type_data = {}
 
                     try:
-                        if not fusion:
+                        if not (fusion and sectionID in self._loads):
                             api_load.connecting_element = self.section_phase_mapping[
                                 sectionID
                             ]["fromnodeid"]
@@ -5435,7 +5448,8 @@ class Reader(AbstractReader):
             "location": 1,
             "devicenumber": 2,
             "equipmentid": 6,
-            "ambienttemparature": 11,
+            "eqphase": 7,
+            "ambienttemperature": 11,
         }
 
         mapp_bess = {
@@ -5545,7 +5559,7 @@ class Reader(AbstractReader):
                 self.parser_helper(
                     line,
                     ["photovoltaic_settings"],
-                    ["sectionid", "devicenumber", "ambienttemparature"],
+                    ["sectionid", "devicenumber", "eqphase", "ambienttemperature"],
                     mapp_photovoltaic_settings,
                     {"type": "photovoltaic_settings"},
                 )
@@ -5679,6 +5693,10 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            try:
+                api_photovoltaic.phases = [Unicode(k) for k in list(settings["eqphase"])]
+            except:
+                pass
             try:
                 api_photovoltaic.connecting_element = self.section_phase_mapping[
                     sectionID.lower()
