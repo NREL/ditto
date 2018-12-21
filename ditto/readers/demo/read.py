@@ -6,6 +6,7 @@ from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
 from ditto.models.node import Node
 from ditto.models.line import Line
+from ditto.models.position import Position
 
 logger = logging.getLogger(__name__)
 
