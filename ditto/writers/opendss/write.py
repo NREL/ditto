@@ -1083,12 +1083,11 @@ class Writer(AbstractWriter):
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
-                            txt+='.'+str(self.phase_mapping(phase.default_value))
+                            txt += "." + str(self.phase_mapping(phase.default_value))
 
                 # Phases
                 if hasattr(i, "phases") and i.phases is not None:
                     txt += " phases={n_phases}".format(n_phases=len(i.phases))
-
 
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
