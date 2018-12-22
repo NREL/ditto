@@ -864,7 +864,6 @@ class Reader(AbstractReader):
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
 
-
     def parse_header(self):
         """
         Parse the information available in the header.
@@ -5198,8 +5197,8 @@ class Reader(AbstractReader):
 
         duplicate_loads = set()
         for sectionID in self.customer_loads.keys():
-            if sectionID.endswith('*'):
-                duplicate_loads.add(sectionID.lower().strip('*'))
+            if sectionID.endswith("*"):
+                duplicate_loads.add(sectionID.lower().strip("*"))
         for sectionID, settings in self.customer_loads.items():
 
             sectionID = sectionID.strip("*").lower()
@@ -5281,16 +5280,16 @@ class Reader(AbstractReader):
                         fusion = True
                         if sectionID in self._loads:
                             api_load = self._loads[sectionID]
-                        elif p!=0:
+                        elif p != 0:
                             api_load = Load(model)
                     else:
                         fusion = False
                         api_load = Load(model)
 
                     if fusion and p == 0:
-                        #logger.warning(
+                        # logger.warning(
                         #    "WARNING:: Skipping duplicate load on section {} with p=0".format(sectionID)
-                        #)
+                        # )
                         continue
 
                     try:
@@ -5699,7 +5698,9 @@ class Reader(AbstractReader):
                 pass
 
             try:
-                api_photovoltaic.phases = [Unicode(k) for k in list(settings["eqphase"])]
+                api_photovoltaic.phases = [
+                    Unicode(k) for k in list(settings["eqphase"])
+                ]
             except:
                 pass
             try:
