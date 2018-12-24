@@ -172,7 +172,9 @@ class Network:
                 self.digraph[edge[1]][edge[0]]["equipment_name"] = edge_equipment_name[
                     edge
                 ]
-        graph_nodes = set(self.graph.nodes())
+        graph_nodes = set(
+            self.digraph.nodes()
+        )  # Some nodes might not be included now from the original graph
         graph_edges = set(
             self.digraph.edges()
         )  # Use the ordering provided from the BFS order
