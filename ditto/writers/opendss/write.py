@@ -3092,6 +3092,9 @@ class Writer(AbstractWriter):
                             self.all_linecodes[nameclass_phase] = parsed_line
                             txt[nameclass_phase] = parsed_line
                             i.nameclass = nameclass_phase
+                        elif nameclass_phase not in txt:
+                            txt[nameclass_phase] = parsed_line
+                            i.nameclass = nameclass_phase
                         else:
                             if self.all_linecodes[nameclass_phase] != parsed_line:
                                 found_subnumber = False
