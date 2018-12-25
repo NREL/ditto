@@ -1630,7 +1630,12 @@ class Writer(AbstractWriter):
 
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                    if i.nominal_voltage < 300:
+                        txt += " kV={volt}".format(
+                            volt=i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                        )
+                    else:
+                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
