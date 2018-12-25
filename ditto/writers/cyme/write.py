@@ -1094,15 +1094,41 @@ class Writer(AbstractWriter):
 
                         elif line_type == "underground":
                             tt = {}
+                            frequency = 60  # Need to make this changable
+                            if hasattr(i, "nominal_voltage") and i.nominal_voltage:
+                                if (
+                                    i.nominal_voltage is not None
+                                    and i.nominal_voltage < 600
+                                ):  # LV lines are assigned as triplex
+                                    tt["cabletype"] = 2
+                                else:
+                                    tt["cabletype"] = 0
+
+                            else:
+                                tt["cabletype"] = 0
+
                             if (
                                 hasattr(i, "impedance_matrix")
                                 and i.impedance_matrix is not None
                             ):
+                                z_diag = 0
+                                z_offdiag = 0
                                 try:
-                                    zero_seq_imp = i.impedance_matrix[0][0]
+                                    for kk in range(len(i.impedance_matrix)):
+                                        if i.impedance_matrix[kk][kk] != 0:
+                                            z_diag = i.impedance_matrix[kk][kk]
+                                            for jj in range(len(i.impedance_matrix)):
+                                                if jj == kk:
+                                                    continue
+                                                if i.impedance_matrix[kk][jj] != 0:
+                                                    z_offdiag = i.impedance_matrix[kk][
+                                                        jj
+                                                    ]
+
                                 except:
                                     try:
-                                        zero_seq_imp = i.impedance_matrix[0]
+                                        z_diag = i.impedance_matrix[0]
+                                        z_offdiag = i.impedance_matrix[0]
                                     except:
                                         raise ValueError(
                                             "Cannot get a value from impedance matrix for line {}".format(
@@ -1110,26 +1136,75 @@ class Writer(AbstractWriter):
                                             )
                                         )
                                 coeff = 10 ** 3
-                                tt["R0"] = zero_seq_imp.real * coeff
-                                tt["X0"] = zero_seq_imp.imag * coeff
+                                z0 = z_diag + 2 * z_offdiag
+                                z1 = z_diag - z_offdiag
+
+                                tt["R0"] = z0.real * coeff
+                                tt["X0"] = z0.imag * coeff
                                 try:
                                     pos_seq_imp = i.impedance_matrix[1][1]
-                                    tt["R1"] = pos_seq_imp.real * coeff
-                                    tt["X1"] = pos_seq_imp.imag * coeff
+                                    tt["R1"] = z1.real * coeff
+                                    tt["X1"] = z1.imag * coeff
                                 except:
                                     tt["R1"] = tt["R0"]
                                     tt["X1"] = tt["X0"]
                                     pass
                                 try:
                                     neg_seq_imp = i.impedance_matrix[2][2]
-                                    tt["R2"] = neg_seq_imp.real * coeff
-                                    tt["X2"] = neg_seq_imp.imag * coeff
+                                    tt["R2"] = z1.real * coeff
+                                    tt["X2"] = z1.imag * coeff
                                 except:
                                     tt["R2"] = tt["R1"]
                                     tt["X2"] = tt["X1"]
                                     pass
-                                tt["B1"] = 0
-                                tt["B0"] = 0
+
+                                if (
+                                    hasattr(i, "capacitance_matrix")
+                                    and i.capacitance_matrix is not None
+                                ):
+                                    c_diag = 0
+                                    c_offdiag = 0
+                                    try:
+                                        for kk in range(len(i.impedance_matrix)):
+                                            if i.capacitance_matrix[kk][kk] != 0:
+                                                c_diag = i.capacitance_matrix[kk][kk]
+                                                for jj in range(
+                                                    len(i.capacitance_matrix)
+                                                ):
+                                                    if jj == kk:
+                                                        continue
+                                                    if (
+                                                        i.capacitance_matrix[kk][jj]
+                                                        != 0
+                                                    ):
+                                                        c_offdiag = i.capacitance_matrix[
+                                                            kk
+                                                        ][
+                                                            jj
+                                                        ]
+
+                                    except:
+                                        try:
+                                            z_diag = i.capacitance_matrix[0]
+                                            z_offdiag = i.capacitance_matrix[0]
+                                        except:
+                                            raise ValueError(
+                                                "Cannot get a value from impedance matrix for line {}".format(
+                                                    i.name
+                                                )
+                                            )
+                                    coeff = 10 ** 3
+                                    c0 = c_diag + 2 * c_offdiag
+                                    c1 = c_diag - c_offdiag
+
+                                    tt["B0"] = (
+                                        c0.real * 2 * math.pi * frequency
+                                    )  # Don't multiply by km conversion since cyme output in micro siemens
+                                    tt["B1"] = c1.real * 2 * math.pi * frequency  #
+
+                                else:
+                                    tt["B1"] = 0
+                                    tt["B0"] = 0
                                 try:
                                     tt["amps"] = i.wires[0].ampacity
                                 except:
@@ -3951,14 +4026,14 @@ class Writer(AbstractWriter):
             #
             f.write("\n[CABLE]\n")
             f.write(
-                "FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,UserDefinedImpedances,Frequency,Temperature\n"
+                "FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,CableType,UserDefinedImpedances,Frequency,Temperature\n"
             )
             f.write(
-                "DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,1,60.000000,25.000000\n"
+                "DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,0,1,60.000000,25.000000\n"
             )
             for ID, data in self.cablecodes.items():
                 f.write(str(ID))
-                for key in ["R1", "R0", "X1", "X0", "B1", "B0", "amps"]:
+                for key in ["R1", "R0", "X1", "X0", "B1", "B0", "amps", "cabletype"]:
                     if key in data:
                         f.write("," + str(data[key]))
                     else:
