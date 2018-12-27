@@ -602,6 +602,13 @@ class Writer(AbstractWriter):
                             if i.line_type.lower() == "underground":
                                 line_type = "underground"
 
+                            if (
+                                hasattr(i, "nominal_voltage")
+                                and i.nominal_voltage is not None
+                                and i.nominal_voltage < 600
+                            ):
+                                line_type = "underground"  # for triplex lines
+
                         if hasattr(i, "is_fuse") and i.is_fuse == 1:
                             line_type = "fuse"
 
@@ -718,6 +725,47 @@ class Writer(AbstractWriter):
 
                                 if hasattr(wire, "gmr") and wire.gmr is not None:
                                     new_code += ",{}".format(wire.gmr)
+                                elif wire.gmr is None and len(i.impedance_matrix) == 1:
+
+                                    if isinstance(i.impedance_matrix, list):
+                                        x_in_miles = i.impedance_matrix[0][0].imag
+                                    else:
+                                        x_in_miles = i.impedance_matrix[0].imag
+                                    x_in_miles = (
+                                        x_in_miles * 1609.34
+                                    )  # internally impedance per meter
+                                    coeff1 = 0.12134
+                                    coeff2 = 7.93402
+                                    gmr_in_feet = 1 / (
+                                        math.exp((x_in_miles / coeff1) - coeff2)
+                                    )  # Solving Kerstin 4.41 for GMR
+                                    gmr_in_cm = 30.48 * gmr_in_feet
+                                    new_code += ",{}".format(gmr_in_cm)
+                                else:
+                                    new_code += ","
+
+                                if (
+                                    hasattr(wire, "resistance")
+                                    and wire.resistance is not None
+                                ):
+                                    new_code += ",{}".format(wire.resistance)
+                                elif (
+                                    wire.resistance is None
+                                    and len(i.impedance_matrix) == 1
+                                ):  # Calculate the resistance from the impedance matrix
+                                    if isinstance(i.impedance_matrix, list):
+                                        r_in_miles = i.impedance_matrix[0][0].real
+                                    else:
+                                        r_in_miles = i.impedance_matrix[0].real
+                                    r_in_miles = (
+                                        r_in_miles * 1609.34
+                                    )  # internally impedance per meter
+                                    resistance = r_in_miles - 0.09530  # From Kersting
+                                    resistance = (
+                                        resistance / 1.60934
+                                    )  # output in ohms per km
+                                    new_code += ",{}".format(resistance)
+
                                 else:
                                     new_code += ","
 
@@ -725,7 +773,7 @@ class Writer(AbstractWriter):
                                     hasattr(wire, "ampacity")
                                     and wire.ampacity is not None
                                 ):
-                                    new_code += "{},".format(wire.ampacity)
+                                    new_code += ",{}".format(wire.ampacity)
                                 else:
                                     new_code += ","
 
@@ -733,7 +781,9 @@ class Writer(AbstractWriter):
                                     hasattr(wire, "emergency_ampacity")
                                     and wire.emergency_ampacity is not None
                                 ):
-                                    new_code += "{}".format(wire.emergency_ampacity)
+                                    new_code += ",{}".format(wire.emergency_ampacity)
+                                else:
+                                    new_code += ",".format(wire.emergency_ampacity)
 
                                 # if line_type=='underground':
                                 # If we have a name for the wire, we use it as the equipment id
@@ -4096,13 +4146,13 @@ class Writer(AbstractWriter):
             # Conductors
             #
             f.write("\n[CONDUCTOR]\n")
-            f.write("FORMAT_CONDUCTOR=ID,Diameter,GMR,Amps,WithstandRating\n")
-            f.write("DEFAULT,1.000001,1.000001,2000.000000,2000.000000\n")
+            f.write("FORMAT_CONDUCTOR=ID,Diameter,GMR,R25,Amps,WithstandRating\n")
+            f.write("DEFAULT,1.000001,1.000001,0.7,2000.000000,2000.000000\n")
             if len(self.conductors) > 0:
                 for ID, data in self.conductors.items():
                     if ID == "DEFAULT":
                         continue
-                    f.write(ID + ",")
+                    f.write(ID)
                     f.write(data)
                     f.write("\n")
 
