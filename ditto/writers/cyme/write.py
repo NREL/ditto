@@ -1145,11 +1145,15 @@ class Writer(AbstractWriter):
                         elif line_type == "underground":
                             tt = {}
                             frequency = 60  # Need to make this changable
-                            if hasattr(i, "nominal_voltage") and i.nominal_voltage:
+                            if (
+                                hasattr(i, "nominal_voltage")
+                                and i.nominal_voltage is not None
+                            ):
                                 if (
                                     i.nominal_voltage is not None
                                     and i.nominal_voltage < 600
-                                ):  # LV lines are assigned as triplex
+                                    and len(i.wires) <= 2
+                                ):  # LV lines are assigned as triplex unless they're three phase
                                     tt["cabletype"] = 2
                                 else:
                                     tt["cabletype"] = 0
@@ -1868,6 +1872,8 @@ class Writer(AbstractWriter):
                         hasattr(i, "phase_capacitors")
                         and i.phase_capacitors is not None
                     ):
+                        total_var = 0
+                        switched_vars = {}
                         # new_capacitor_line+=','
                         for phase_capacitor in i.phase_capacitors:
                             if (
@@ -1878,17 +1884,41 @@ class Writer(AbstractWriter):
                                 if new_section is not None:
                                     new_section += str(phase_capacitor.phase)
 
-                        if (
-                            hasattr(phase_capacitor, "var")
-                            and phase_capacitor.var is not None
-                        ):
-                            try:
-                                new_capacitor_object_line += (
-                                    str(phase_capacitor.var * 10 ** -3) + ","
-                                )
-                            except:
-                                new_capacitor_object_line += ","
-                                pass
+                            if (
+                                hasattr(phase_capacitor, "var")
+                                and phase_capacitor.var is not None
+                            ):
+                                total_var += phase_capacitor.var
+                            if (
+                                phase_capacitor.var is not None
+                                and phase_capacitor.phase is not None
+                            ):
+                                switched_vars[
+                                    phase_capacitor.phase.upper()
+                                ] = phase_capacitor.var
+                        if "A" in switched_vars:
+                            new_capacitor_line += "," + str(
+                                switched_vars["A"] * 10 ** -3
+                            )
+                        else:
+                            new_capacitor_line += ","
+                        if "B" in switched_vars:
+                            new_capacitor_line += "," + str(
+                                switched_vars["B"] * 10 ** -3
+                            )
+                        else:
+                            new_capacitor_line += ","
+                        if "C" in switched_vars:
+                            new_capacitor_line += "," + str(
+                                switched_vars["C"] * 10 ** -3
+                            )
+                        else:
+                            new_capacitor_line += ","
+                        if total_var > 0:
+                            new_capacitor_object_line += str(total_var * 10 ** -3) + ","
+                        else:
+                            new_capacitor_object_line += ","
+                            pass
 
                     # KV
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
@@ -1912,6 +1942,34 @@ class Writer(AbstractWriter):
                             new_capacitor_line += ","
                             new_capacitor_object_line += ","
                             pass
+
+                    if hasattr(i, "mode") and i.mode is not None:
+                        if i.mode.lower() == "currentFlow":
+                            new_capacitor_line += ",2"
+                        elif i.mode.lower() == "voltage":
+                            new_capacitor_line += ",1"
+                        elif i.mode.lower() == "activepower":
+                            new_capacitor_line += ",4"
+                        elif i.mode.lower() == "reactivepower":
+                            new_capacitor_line += ",7"
+                        elif i.mode.lower() == "timescheduled":
+                            new_capacitor_line += ",6"
+                        else:
+                            new_capacitor_line += ",0"
+
+                    if hasattr(i, "low") and i.low is not None:
+                        new_capacitor_line += (
+                            "," + str(i.low) + "," + str(i.low) + "," + str(i.low)
+                        )
+                    else:
+                        new_capacitor_line += ",,,"
+
+                    if hasattr(i, "high") and i.high is not None:
+                        new_capacitor_line += (
+                            "," + str(i.high) + "," + str(i.high) + "," + str(i.high)
+                        )
+                    else:
+                        new_capacitor_line += ",,,"
 
                     found = False
                     for k, d in self.capcodes.items():
@@ -2425,7 +2483,9 @@ class Writer(AbstractWriter):
                             _KVA = windings_local[0].rated_power * 10 ** -3
                         except:
                             pass
-                        _KVLN = windings_local[-1].nominal_voltage * 10 ** -3
+                        _KVLN = (
+                            windings_local[-1].nominal_voltage / math.sqrt(3) * 10 ** -3
+                        )
 
                         if (
                             hasattr(winding1, "phase_windings")
@@ -3834,7 +3894,7 @@ class Writer(AbstractWriter):
             if len(capacitor_string_list) > 0:
                 f.write("\n[SHUNT CAPACITOR SETTING]\n")
                 f.write(
-                    "FORMAT_SHUNTCAPACITORSETTING=SectionID,Connection,KV,DeviceNumber,ShuntCapacitorID,Location,ConnectionStatus\n"
+                    "FORMAT_SHUNTCAPACITORSETTING=SectionID,Connection,SwitchedKVARA,SwitchedKVARB,SwitchedKVARC,KV,Control,OnValueA,OnValueB,OnValueC,OffValueA,OffValueB,OffValueC,DeviceNumber,ShuntCapacitorID,Location,ConnectionStatus\n"
                 )
                 for capacitor_string in capacitor_string_list:
                     f.write(capacitor_string + "\n")
