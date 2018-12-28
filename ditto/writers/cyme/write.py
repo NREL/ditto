@@ -1873,6 +1873,7 @@ class Writer(AbstractWriter):
                         and i.phase_capacitors is not None
                     ):
                         total_var = 0
+                        one_var = 0
                         switched_vars = {}
                         # new_capacitor_line+=','
                         for phase_capacitor in i.phase_capacitors:
@@ -1900,22 +1901,25 @@ class Writer(AbstractWriter):
                             new_capacitor_line += "," + str(
                                 switched_vars["A"] * 10 ** -3
                             )
+                            one_var = switched_vars["A"]
                         else:
                             new_capacitor_line += ","
                         if "B" in switched_vars:
                             new_capacitor_line += "," + str(
                                 switched_vars["B"] * 10 ** -3
                             )
+                            one_var = switched_vars["B"]
                         else:
                             new_capacitor_line += ","
                         if "C" in switched_vars:
                             new_capacitor_line += "," + str(
                                 switched_vars["C"] * 10 ** -3
                             )
+                            one_var = switched_vars["C"]
                         else:
                             new_capacitor_line += ","
                         if total_var > 0:
-                            new_capacitor_object_line += str(total_var * 10 ** -3) + ","
+                            new_capacitor_object_line += str(one_var * 10 ** -3) + ","
                         else:
                             new_capacitor_object_line += ","
                             pass
