@@ -71,6 +71,31 @@ class Writer(AbstractWriter):
         else:
             raise ValueError("Unknown configuration {}".format(value))
 
+    def smallest_perimeter(
+        self, n
+    ):  # Used for calculating panel dimensions with smallest perimiter
+        n_orig = n
+        factors = []
+        i = 2
+        while i * i <= n:
+            if n % i:
+                i += 1
+            else:
+                n = n / i
+                factors.append(i)
+        if n > 1:
+            factors.append(n)
+        cnt = 1
+        res = factors[-1]
+        print(n_orig, factors)
+        while cnt < len(factors):
+            cnt += 1
+            tmp = res * factors[-1 * cnt]
+            if tmp * tmp > n_orig:
+                break
+            res = tmp
+        return (res, n_orig / res)
+
     def transformer_connection_configuration_mapping(
         self, value1, value2, transformer_table="transformer"
     ):
@@ -263,7 +288,6 @@ class Writer(AbstractWriter):
         converter_string_list = []
         converter_control_string_list = []
         pv_settings_string_list = []
-        long_term_dynamics_string_list = []
         dg_generation_string_list = []
 
         # The linecodes dictionary is used to group lines which have the same properties
@@ -287,6 +311,7 @@ class Writer(AbstractWriter):
         self.fusecodes = {}
         self.reclosercodes = {}
         self.breakercodes = {}
+        self.irradiance_profiles = {}
 
         intermediate_nodes = []
 
@@ -1581,7 +1606,6 @@ class Writer(AbstractWriter):
                     new_converter_string = ""
                     new_converter_control_setting_string = ""
                     new_pv_setting_string = ""
-                    new_long_term_dynamics = ""
                     new_dg_generation_string = ""
                     if (
                         hasattr(i, "name")
@@ -1649,6 +1673,7 @@ class Writer(AbstractWriter):
                                 self.section_headnode_mapping[
                                     i.feeder_name
                                 ] = i.substation_name
+
                         new_converter_string += (
                             new_section_ID + ",45,"
                         )  # 45 is the CYME code for PV devices
@@ -1661,27 +1686,103 @@ class Writer(AbstractWriter):
                         new_dg_generation_string += new_section_ID + "45,DEFAULT,"
                         # DGGENERATIONMODEL is not included as this just sets the LoadModelName which is DEFAULT
 
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            panel_area = math.ceil(
+                                i.rated_power / 1000 / 0.08
+                            )  # Each panel produces 0.08 kw
+                            num_x, num_y = self.smallest_perimeter(panel_area)
+                            print(panel_area, num_x, num_y)
+                            if min(num_x, num_y) == 1:
+                                num_x, num_y = self.smallest_perimeter(
+                                    panel_area + 1
+                                )  # if area is prime
+                            new_pv_setting_string += str(num_x) + "," + str(num_y) + ","
+                        elif (
+                            hasattr(i, "active_rating") and i.active_rating is not None
+                        ):
+                            panel_area = math.ceil(
+                                i.active_rating / 1.1 / 1000 / 0.08
+                            )  # Each panel produces 0.08 kw. Assume 10% inverter oversize
+                            num_x, num_y = self.smallest_perimeter(panel_area)
+                            if min(num_x, num_y) == 1:
+                                num_x, num_y = self.smallest_perimeter(
+                                    panel_area + 1
+                                )  # if area is prime
+                            new_pv_setting_string += str(num_x) + "," + str(num_y) + ","
+                        else:
+                            new_pv_setting_string += (
+                                ",,"
+                            )  # This will produce garbage output power
+
                         if hasattr(i, "temperature") and i.temperature is not None:
                             new_pv_setting_string += str(i.temperature)
 
                         new_pv_setting_string += "," + phases
 
-                        if hasattr(i, "rated_power") and i.rated_power is not None:
-                            new_converter_string += str(i.rated_power / 1000.0) + ","
-                            new_converter_string += str(i.rated_power / 1000.0) + ","
+                        if hasattr(i, "active_rating") and i.active_rating is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + i.active_rating ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.active_rating / 1000.0) + ","
+                                )
+                            new_converter_string += str(i.active_rating / 1000.0) + ","
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + (i.rated_power * 1.1) ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.rated_power * 1.1 / 1000.0) + ","
+                                )
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10%
                         else:
                             new_converter_string += ",,"
-                        if hasattr(i, "active_rating") and i.active_rating is not None:
-                            new_dg_generation_string += str(i.active_rating / 1000.0)
-                        elif hasattr(i, "rated_power") and i.rated_power is not None:
-                            new_dg_generation_string += str(i.rated_power / 1000.0)
-                        new_dg_generation_string += ","
+
                         if (
                             hasattr(i, "reactive_rating")
                             and i.reactive_rating is not None
                         ):
-                            new_converter_string += str(i.reactive_rating / 1000.0)
-                        new_converter_string += ","
+                            new_converter_string += (
+                                str(i.reactive_rating / 1000.0) + ","
+                            )
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10% and active=reactive
+                        else:
+                            new_converter_string += ","
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        new_dg_generation_string += ","
                         if (
                             hasattr(i, "min_powerfactor")
                             and i.min_powerfactor is not None
@@ -1702,7 +1803,10 @@ class Writer(AbstractWriter):
                             new_converter_string += "0"  # Using units of % per minute
 
                         if hasattr(i, "control_type") and i.control_type is not None:
-                            if i.control_type.lower() == "voltvar_vars_over_watts":
+                            if (
+                                i.control_type.lower() == "voltvar_vars_over_watts"
+                                or i.control_type.lower() == "voltvar"
+                            ):  # use default voltvar curve in cyme
                                 new_converter_control_setting_string += "1"
                             if i.control_type.lower() == "voltvar_watts_over_vars":
                                 new_converter_control_setting_string += "0"
@@ -1763,11 +1867,21 @@ class Writer(AbstractWriter):
                                 "10,,,,,100"
                             )  # Use Powerfactor as default
 
-                        if hasattr(i, "timeseries") and i.timeseries is not None:
-                            new_long_term_dynamics += (
-                                new_section_ID + ",45,3,4"
-                            )  # 45 is for PV, 3 is for insolation curve and 4 is for insolation
-                            # TODO: connect the timeseries data correctly here.
+                        if (
+                            hasattr(i, "timeseries")
+                            and i.timeseries is not None
+                            and len(i.timeseries) > 0
+                            and i.timeseries[0].data_label is not None
+                            and i.timeseries[0].data_location is not None
+                        ):
+                            new_pv_setting_string += ",0,{loc}".format(
+                                loc=i.timeseries[0].data_label
+                            )
+                            self.irradiance_profiles[
+                                i.timeseries[0].data_label
+                            ] = i.timeseries[0].data_location
+                        else:
+                            new_pv_setting_string += ",1,"
 
                     else:
                         if hasattr(i, "name"):
@@ -1787,8 +1901,6 @@ class Writer(AbstractWriter):
                         )
                     if new_pv_setting_string != "":
                         pv_settings_string_list.append(new_pv_setting_string)
-                    if new_long_term_dynamics != "":
-                        long_term_dynamics_string_list.append(new_long_term_dynamics)
                     if new_dg_generation_string != "":
                         dg_generation_string_list.append(new_dg_generation_string)
 
@@ -2689,8 +2801,8 @@ class Writer(AbstractWriter):
                         bandcenter = 0
                         if hasattr(i, "bandcenter") and i.bandcenter is not None:
                             bandcenter = i.bandcenter
-                        LowerBandwidth = str(abs(bandcenter - i.bandwidth / 2.0))
-                        UpperBandwidth = str(abs(bandcenter + i.bandwidth / 2.0))
+                        LowerBandwidth = str(abs(bandcenter - i.bandwidth))
+                        UpperBandwidth = str(abs(bandcenter + i.bandwidth))
 
                     if hasattr(i, "highstep") and i.highstep is not None:
                         MaxBoost = str(i.highstep)
@@ -3959,18 +4071,9 @@ class Writer(AbstractWriter):
             if len(pv_settings_string_list) > 0:
                 f.write("\n[PHOTOVOLTAIC SETTINGS]\n")
                 f.write(
-                    "FORMAT_PHOTOVOLTAICSETTING=SectionID,Location,DeviceNumber,EquipmentID,AmbientTemperature,Phase\n"
+                    "FORMAT_PHOTOVOLTAICSETTING=SectionID,Location,DeviceNumber,EquipmentID,NS,NP,AmbientTemperature,Phase,ConstantInsolation,InsolationModelID\n"
                 )
                 for i in pv_settings_string_list:
-                    f.write(i)
-                    f.write("\n")
-
-            if len(long_term_dynamics_string_list) > 0:
-                f.write("\n[LONG TERM DYNAMICS CURVE EXT]\n")
-                f.write(
-                    "FORMAT_LONGTERMDYNAMICSCURVEEXT=DeviceNumber,DeviceType,AdjustmentSettings,PowerCurveModel\n"
-                )
-                for i in long_term_dynamics_string_list:
                     f.write(i)
                     f.write("\n")
 
@@ -4293,6 +4396,17 @@ class Writer(AbstractWriter):
                 for ID, data in self.reg_codes.items():
                     f.write("regulator_" + str(ID) + ",")
                     f.write(data.strip(","))
+                    f.write("\n")
+
+            if len(self.irradiance_profiles) > 0:
+                f.write("\n[INSOLATION MODEL] \n")
+                f.write("FORMAT_INSOLATIONMODEL=ID,FromFile,FileName\n")
+                for i in self.irradiance_profiles:
+                    f.write(
+                        "{label},1,{loc}".format(
+                            label=i, loc=self.irradiance_profiles[i]
+                        )
+                    )
                     f.write("\n")
 
     def write_load_file(self, model, **kwargs):
