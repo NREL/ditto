@@ -86,14 +86,15 @@ class Writer(AbstractWriter):
         if n > 1:
             factors.append(n)
         cnt = 1
-        res = factors[-1]
-        print(n_orig, factors)
-        while cnt < len(factors):
-            cnt += 1
+        res = 1
+        bst = float("inf")
+        while cnt < len(factors):  # Go greedily until can't improve
             tmp = res * factors[-1 * cnt]
-            if tmp * tmp > n_orig:
+            if tmp + n_orig / tmp > bst:
                 break
             res = tmp
+            bst = res + n_orig / res
+            cnt += 1
         return (res, n_orig / res)
 
     def transformer_connection_configuration_mapping(
@@ -1691,7 +1692,6 @@ class Writer(AbstractWriter):
                                 i.rated_power / 1000 / 0.08
                             )  # Each panel produces 0.08 kw
                             num_x, num_y = self.smallest_perimeter(panel_area)
-                            print(panel_area, num_x, num_y)
                             if min(num_x, num_y) == 1:
                                 num_x, num_y = self.smallest_perimeter(
                                     panel_area + 1
