@@ -4006,7 +4006,13 @@ class Reader(AbstractReader):
                     "fixedkvara" in settings
                     and "fixedkvarb" in settings
                     and "fixedkvarc" in settings
-                    and max(float(settings["fixedkvara"]), max(float(settings["fixedkvarb"]), float(settings["fixedkvarc"]))) > 0
+                    and max(
+                        float(settings["fixedkvara"]),
+                        max(
+                            float(settings["fixedkvarb"]), float(settings["fixedkvarc"])
+                        ),
+                    )
+                    > 0
                 ):
                     try:
                         if p == "A":
@@ -4027,7 +4033,14 @@ class Reader(AbstractReader):
                     "switchedkvara" in settings
                     and "switchedkvarb" in settings
                     and "switchedkvarc" in settings
-                    and max(float(settings["switchedkvara"]), max(float(settings["switchedkvarb"]), float(settings["switchedkvarc"]))) > 0
+                    and max(
+                        float(settings["switchedkvara"]),
+                        max(
+                            float(settings["switchedkvarb"]),
+                            float(settings["switchedkvarc"]),
+                        ),
+                    )
+                    > 0
                 ):
                     try:
                         if p == "A":
@@ -4044,7 +4057,7 @@ class Reader(AbstractReader):
                             )  # Ditto in var
                     except:
                         pass
- 
+
                 elif capacitor_data is not None:
                     try:
                         api_phaseCapacitor.var = (
@@ -4645,9 +4658,9 @@ class Reader(AbstractReader):
                 XR = float(transformer_data["xr"])
                 XR0 = float(transformer_data["xr0"])
                 R1 = Z1 / math.sqrt(1 + XR * XR)
-                R0 = Z0 / math.sqrt(1 + XR * XR)
-                X1 = Z1 / math.sqrt(1 + XR0 * XR0)
-                X0 = Z0 / math.sqrt(1 + XR0 * XR0)
+                R0 = Z0 / math.sqrt(1 + XR0 * XR0)
+                X1 = Z1 / math.sqrt(1 + 1 / (XR * XR))
+                X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
                 complex1 = complex(R0, X0)
                 complex2 = complex(R1, X1)
                 matrix = np.matrix(
@@ -5549,22 +5562,22 @@ class Reader(AbstractReader):
         }
 
         mapp_bess = {
-            "id":0,
-            "ratedstorageenergy":1,
-            "maxchargingpower":2,
-            "maxdischargingpower":3,
-            "chargeefficiency":4,
-            "dischargeefficiency":5
+            "id": 0,
+            "ratedstorageenergy": 1,
+            "maxchargingpower": 2,
+            "maxdischargingpower": 3,
+            "chargeefficiency": 4,
+            "dischargeefficiency": 5,
         }
 
         mapp_bess_settings = {
-            "sectionid":0,
-            "devicenumber":2,
-            "equipmentid":6,
-            "phase":7,
-            "maximumsoc":10,
-            "minimumsoc":11,
-            "initialsoc":16,
+            "sectionid": 0,
+            "devicenumber": 2,
+            "equipmentid": 6,
+            "phase": 7,
+            "maximumsoc": 10,
+            "minimumsoc": 11,
+            "initialsoc": 16,
         }
 
         mapp_long_term_dynamics = {
@@ -5671,12 +5684,19 @@ class Reader(AbstractReader):
                 self.parser_helper(
                     line,
                     ["bess_settings"],
-                    ["sectionid", "devicenumber", "equipmentid", "phase","maximumsoc", "minimumsoc", "initialsoc"],
+                    [
+                        "sectionid",
+                        "devicenumber",
+                        "equipmentid",
+                        "phase",
+                        "maximumsoc",
+                        "minimumsoc",
+                        "initialsoc",
+                    ],
                     mapp_bess_settings,
                     {"type": "bess_settings"},
                 )
             )
-
 
             #########################################
             #                                       #
@@ -5709,7 +5729,13 @@ class Reader(AbstractReader):
                 self.parser_helper(
                     line,
                     ["dggenerationmodel"],
-                    ["devicenumber", "devicetype", "activegeneration", "powerfactor","loadmodelname"],
+                    [
+                        "devicenumber",
+                        "devicetype",
+                        "activegeneration",
+                        "powerfactor",
+                        "loadmodelname",
+                    ],
                     mapp_dg_generation_model,
                     {"type": "dg_generation_model"},
                 )
@@ -5735,10 +5761,19 @@ class Reader(AbstractReader):
             #
             self.bess.update(
                 self.parser_helper(
-                    line, ["bess"], ["id", "ratedstorageenergy", "maxchargingpower", "maxdischargingpower", "chargeefficiency", "dischargeefficiency"], mapp_bess
+                    line,
+                    ["bess"],
+                    [
+                        "id",
+                        "ratedstorageenergy",
+                        "maxchargingpower",
+                        "maxdischargingpower",
+                        "chargeefficiency",
+                        "dischargeefficiency",
+                    ],
+                    mapp_bess,
                 )
             )
-
 
         api_photovoltaics = {}
         api_bessi = {}
@@ -5774,19 +5809,14 @@ class Reader(AbstractReader):
             except:
                 pass
 
-
         for sectionID, settings in self.bess_settings.items():
             try:
                 api_bess = Storage(model)
             except:
-                raise ValueError(
-                    "Unable to instanciate bess {id}".format(id=sectionID)
-                )
+                raise ValueError("Unable to instanciate bess {id}".format(id=sectionID))
             try:
                 api_bess.name = "BESS_" + settings["devicenumber"].lower()
-                api_bess.feeder_name = self.section_feeder_mapping[
-                    sectionID.lower()
-                ]
+                api_bess.feeder_name = self.section_feeder_mapping[sectionID.lower()]
                 api_bessi[settings["devicenumber"].lower()] = api_bess
             except:
                 raise ValueError(
@@ -5797,7 +5827,7 @@ class Reader(AbstractReader):
             if "phase" in settings:
                 phases = self.phase_mapping(settings["phase"])
             else:
-                phases = ['A','B','C']
+                phases = ["A", "B", "C"]
 
             for phase in phases:
                 phase_storage = PhaseStorage(model)
@@ -5805,9 +5835,6 @@ class Reader(AbstractReader):
                 phase_storages.append(phase_storage)
 
             api_bess.phase_storages = phase_storages
-
-
-
 
             if "equipmentid" in settings:
                 dev_num = settings["equipmentid"]
@@ -5827,39 +5854,36 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_bess.dischargeefficiency = float(bess_data["dischargeefficiency"])
+                    api_bess.dischargeefficiency = float(
+                        bess_data["dischargeefficiency"]
+                    )
                 except:
                     pass
 
                 try:
                     charging = float("inf")
-                    discharging = float("inf") 
+                    discharging = float("inf")
                     if "maxchargingpower" in bess_data:
                         charging = float(bess_data["maxchargingpower"])
                     if "maxdischargingpower" in bess_data:
                         discharging = float(bess_data["maxdischargingpower"])
-                    power = min(charging,discharging)*1000
+                    power = min(charging, discharging) * 1000
                     if power < float("inf"):
-                        average_power = power/float(len(phase_storages))
+                        average_power = power / float(len(phase_storages))
                         for ps in phase_storages:
                             ps.p = average_power
                 except:
                     pass
 
-
-            
-
             try:
-                api_bess.reserve = float(
-                    settings["maximumsoc"]
-                )   
+                api_bess.reserve = float(settings["maximumsoc"])
             except:
                 pass
 
             try:
-                api_bess.stored_kWh = float(
-                    settings["initialsoc"]
-                )*api_bess.rated_kWh/100.0  
+                api_bess.stored_kWh = (
+                    float(settings["initialsoc"]) * api_bess.rated_kWh / 100.0
+                )
             except:
                 pass
 
@@ -5870,10 +5894,6 @@ class Reader(AbstractReader):
             except:
                 pass
 
-
-
-
-
         for deviceID, settings in self.dg_generation.items():
             deviceID = deviceID.strip(
                 "*"
@@ -5881,7 +5901,10 @@ class Reader(AbstractReader):
             api_photovoltaic = api_photovoltaics[deviceID]
 
             # Use the default setting if available
-            if "loadmodelname" in settings and settings["loadmodelname"].lower() == "default":
+            if (
+                "loadmodelname" in settings
+                and settings["loadmodelname"].lower() == "default"
+            ):
                 try:
                     api_photovoltaic.active_rating = (
                         float(settings["activegeneration"]) * 1000
@@ -5889,7 +5912,9 @@ class Reader(AbstractReader):
                 except:
                     pass
                 try:
-                    api_photovoltaic.power_factor = float(settings["powerfactor"]) / 100.0
+                    api_photovoltaic.power_factor = (
+                        float(settings["powerfactor"]) / 100.0
+                    )
                 except:
                     pass
 
@@ -5930,9 +5955,7 @@ class Reader(AbstractReader):
             elif deviceID in api_bessi:
                 api_bess = api_bessi[deviceID]
                 try:
-                    api_bess.rated_power = (
-                        float(settings["activepowerrating"]) * 1000
-                    )
+                    api_bess.rated_power = float(settings["activepowerrating"]) * 1000
                 except:
                     pass
                 try:
@@ -5972,9 +5995,11 @@ class Reader(AbstractReader):
                         api_photovoltaic.control_type = "powerfactor"
                 except:
                     pass
-    
+
                 try:
-                    api_photovoltaic.var_injection = float(settings["fixedvarinjection"])
+                    api_photovoltaic.var_injection = float(
+                        settings["fixedvarinjection"]
+                    )
                 except:
                     pass
                 try:
@@ -5990,7 +6015,7 @@ class Reader(AbstractReader):
                         api_photovoltaic.watt_powerfactor_curve = curve
                 except:
                     pass
-    
+
                 try:
                     pf = float(settings["powerfactor"]) / 100.0
                     api_photovoltaic.power_factor = pf
