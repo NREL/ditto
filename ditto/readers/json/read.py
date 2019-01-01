@@ -23,9 +23,12 @@ from ditto.models.phase_winding import PhaseWinding
 from ditto.models.load import Load
 from ditto.models.phase_load import PhaseLoad
 from ditto.models.capacitor import Capacitor
+from ditto.models.storage import Storage
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.base import Unicode
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.base import Int
+from ditto.models.base import Float
 
 
 class Reader(AbstractReader):
@@ -81,6 +84,7 @@ class Reader(AbstractReader):
 
     Author: Nicolas Gensollen. January 2018
     """
+
     register_names = ["json", "Json", "JSON"]
 
     def __init__(self, **kwargs):
@@ -90,7 +94,7 @@ class Reader(AbstractReader):
         else:
             raise ValueError("No input file provided to the reader.")
 
-    def parse(self):
+    def parse(self, model):
         """Parse a JSON file to a DiTTo model."""
         # Open the input file and get the data
         with open(self.input_file, "r") as f:
@@ -112,10 +116,11 @@ class Reader(AbstractReader):
             "PhaseCapacitor",
             "Feeder_metadata",
             "Regulator",
+            "Storage",
         ]
 
         # Create a new empty model
-        self.model = Store()
+        self.model = model
 
         # Loop over the objects...
         for _object in input_data:
@@ -364,6 +369,14 @@ class Reader(AbstractReader):
                                     complex(element["value"][0], element["value"][1])
                                 )
 
+                            # Or it's a ditto base element
+                            elif "ditto." in element_type:
+
+                                base_type = element_type.split(".")[-1]
+                                list_first_level.append(
+                                    eval(base_type)(element["value"])
+                                )
+
                             # Otherwise, it is either None or a standard type
                             elif element_type != "NoneType":
 
@@ -395,3 +408,4 @@ class Reader(AbstractReader):
                             object_property,
                             eval(property_type)(property_value["value"]),
                         )
+        print("Finished reading from json")
