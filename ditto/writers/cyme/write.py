@@ -751,7 +751,18 @@ class Writer(AbstractWriter):
 
                                 if hasattr(wire, "gmr") and wire.gmr is not None:
                                     new_code += ",{}".format(wire.gmr)
-                                elif wire.gmr is None and len(i.impedance_matrix) == 1:
+
+                                # These calculations require no neutral wire as output (since these equations assume no kron reduction)
+                                # They serve the purpose of getting the impedance matrix output in CYME to match the impedance matrix from DiTTo
+                                # NOTE: a 2x2 impedance matrix is probably derived from R1, R0, X1, X0 and isn't actually a 2-wire or even a kron reduced matrix.
+                                # To get the cross-terms to match would require a kron reduction, often of imaginary wire resistances to get the cross-terms to match
+                                # For that reason, we let CYME apply the cross terms with their default spacing. This may cause some differences in the powerflow
+                                # i.e. WARNING - 2x2 matrix cross terms won't match
+
+                                elif wire.gmr is None and (
+                                    len(i.impedance_matrix) == 1
+                                    or len(i.impedance_matrix) == 2
+                                ):
 
                                     if isinstance(i.impedance_matrix, list):
                                         x_in_miles = i.impedance_matrix[0][0].imag
@@ -775,9 +786,9 @@ class Writer(AbstractWriter):
                                     and wire.resistance is not None
                                 ):
                                     new_code += ",{}".format(wire.resistance)
-                                elif (
-                                    wire.resistance is None
-                                    and len(i.impedance_matrix) == 1
+                                elif wire.resistance is None and (
+                                    len(i.impedance_matrix) == 1
+                                    or len(i.impedance_matrix) == 2
                                 ):  # Calculate the resistance from the impedance matrix
                                     if isinstance(i.impedance_matrix, list):
                                         r_in_miles = i.impedance_matrix[0][0].real
@@ -3127,7 +3138,7 @@ class Writer(AbstractWriter):
                                 #    pass
 
                                 if hasattr(winding, "nominal_voltage"):
-                                    # If we have a one phase transformer, we specify voltage in KV, not in KVLL
+                                    # If we have a one phase transformer or a delta transformer, we specify voltage in KV, not in KVLL
                                     # This is done by setting the voltageUnit keyword to 1
                                     if (
                                         len(
@@ -3136,6 +3147,12 @@ class Writer(AbstractWriter):
                                             ].phase_windings
                                         )
                                         == 1
+                                        or len(
+                                            transformer_object.windings[
+                                                0
+                                            ].phase_windings
+                                        )
+                                        == 2
                                     ):
                                         if w == 0:
                                             KVLLprim = (
