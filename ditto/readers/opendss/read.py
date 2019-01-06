@@ -1589,7 +1589,9 @@ class Reader(AbstractReader):
                     pass
 
                 phase_windings = []
-                for p in range(N_phases):
+                for p in range(
+                    len(b1_phases)
+                ):  # need to use info from the bus since N_phases may not match number of connections
 
                     phase_windings.append(PhaseWinding(model))
 
