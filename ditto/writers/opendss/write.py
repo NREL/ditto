@@ -6,6 +6,7 @@ from builtins import super, range, zip, round, map
 import os
 import math
 import logging
+import decimal
 
 import numpy as np
 import pandas as pd
@@ -127,6 +128,12 @@ class Writer(AbstractWriter):
         self._baseKV_feeders_ = {}
 
         self.logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
+
+    def float_to_str(self, f):
+        """ Used to create floats without being in scientific notation"""
+        ctx = decimal.Context()
+        d1 = ctx.create_decimal(repr(f))
+        return format(d1, "f")
 
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
@@ -345,7 +352,7 @@ class Writer(AbstractWriter):
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
 
                     txt += "{name} {X} {Y}\n".format(
-                        name=i.name.lower(), X=i.positions[0].lat, Y=i.positions[0].long
+                        name=i.name.lower(), X=i.positions[0].long, Y=i.positions[0].lat
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
@@ -687,6 +694,9 @@ class Writer(AbstractWriter):
                                         winding.connection_type == "D"
                                         and len(winding.phase_windings) == 1
                                     ):
+                                        print(
+                                            "Warning - only one phase specified for a delta system - adding another connection"
+                                        )
                                         if self.phase_mapping(phase_winding.phase) == 1:
                                             txt += ".2"
                                         if self.phase_mapping(phase_winding.phase) == 2:
@@ -767,9 +777,45 @@ class Writer(AbstractWriter):
                                 if cnt == 0:
                                     txt += ".{}".format(
                                         self.phase_mapping(
-                                            winding.phase_windings[0].phase
+                                            winding.phase_windings[
+                                                0
+                                            ].phase  # Should beOnly one phase if it's a Wye transformer
                                         )
                                     )
+                                    if (
+                                        len(winding.phase_windings) > 1
+                                        and winding.connection_type == "Y"
+                                    ):
+                                        print(
+                                            "Warning - Wye center-tap transformer with more than one phase connection. Only using first one"
+                                        )
+                                    if (
+                                        winding.connection_type == "D"
+                                        and len(winding.phase_windings) >= 2
+                                    ):
+                                        txt += ".{}".format(
+                                            self.phase_mapping(
+                                                winding.phase_windings[1].phase
+                                            )
+                                        )
+                                        if len(winding.phase_windings) > 2:
+                                            print(
+                                                "Warning - Delta center-tap transformer with more than two phase connection. Only using first two"
+                                            )
+                                    if (
+                                        winding.connection_type == "D"
+                                        and len(winding.phase_windings) == 1
+                                    ):
+                                        print(
+                                            "Warning - only one phase specified for a delta system - adding another connection"
+                                        )
+                                        if self.phase_mapping(phase_winding.phase) == 1:
+                                            txt += ".2"
+                                        if self.phase_mapping(phase_winding.phase) == 2:
+                                            txt += ".3"
+                                        if self.phase_mapping(phase_winding.phase) == 3:
+                                            txt += ".1"
+
                                 if cnt == 1:
                                     txt += ".1.0"
                                 if cnt == 2:
@@ -3743,7 +3789,11 @@ class Writer(AbstractWriter):
                     ):
                         R1 = obj.positive_sequence_impedance.real
                         X1 = obj.positive_sequence_impedance.imag
-                        fp.write(" R1={R1} X1={X1}".format(R1=R1, X1=X1))
+                        fp.write(
+                            " R1={R1} X1={X1}".format(
+                                R1=self.float_to_str(R1), X1=self.float_to_str(X1)
+                            )
+                        )
 
                     if (
                         hasattr(obj, "zero_sequence_impedance")
@@ -3751,7 +3801,11 @@ class Writer(AbstractWriter):
                     ):
                         R0 = obj.zero_sequence_impedance.real
                         X0 = obj.zero_sequence_impedance.imag
-                        fp.write(" R0={R0} X0={X0}".format(R0=R0, X0=X0))
+                        fp.write(
+                            " R0={R0} X0={X0}".format(
+                                R0=self.float_to_str(R0), X0=self.float_to_str(X0)
+                            )
+                        )
 
             fp.write("\n\n")
 
@@ -3858,10 +3912,10 @@ class Writer(AbstractWriter):
                             " basekV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
                         )  # DiTTo in volts
                     fp.write(
-                        " R1={R1} X1={X1}".format(R1=0.0001, X1=0.0001)
+                        " R1={R1} X1={X1}".format(R1=0.00001, X1=0.00001)
                     )  # Infinite source bus
                     fp.write(
-                        " R0={R0} X0={X0}".format(R0=0.0001, X0=0.0001)
+                        " R0={R0} X0={X0}".format(R0=0.00001, X0=0.00001)
                     )  # Infinite source bus
                     fp.write("\n\n")
                     if (
