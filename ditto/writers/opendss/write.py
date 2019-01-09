@@ -1009,6 +1009,7 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
         for i in model.models:
             if isinstance(i, Storage):
+                # import pdb;pdb.set_trace()
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
@@ -1060,6 +1061,13 @@ class Writer(AbstractWriter):
                     and i.connecting_element is not None
                 ):
                     txt += " Bus1={elt}".format(elt=i.connecting_element)
+                    if (
+                        hasattr(i, "phase_storages")
+                        and i.phase_storages is not None
+                        and len(i.phase_storages) > 0
+                    ):
+                        for phase_storage in i.phase_storages:
+                            txt += "." + str(self.phase_mapping(phase_storage.phase))
 
                 # nominal_voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
@@ -1080,6 +1088,13 @@ class Writer(AbstractWriter):
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
                             i.nominal_voltage * 10 ** -3
                         )
+                    if hasattr(i, "active_rating") and i.active_rating is not None:
+                        pf_local = 1.0
+                        if i.power_factor is not None:
+                            pf_local = abs(i.power_factor)
+                        txt += " kVA={kva}".format(
+                            kva=i.active_rating / pf_local * 10 ** -3
+                        )  # DiTTo in watts
 
                 # rated_power
                 if hasattr(i, "rated_power") and i.rated_power is not None:
@@ -1089,11 +1104,11 @@ class Writer(AbstractWriter):
 
                 # rated_kWh
                 if hasattr(i, "rated_kWh") and i.rated_kWh is not None:
-                    txt += " kWhRated={kWh}".format(kWh=i.rated_kWh)
+                    txt += " kWhRated={kWh}".format(kWh=i.rated_kWh * 10 ** -3)
 
                 # stored_kWh
                 if hasattr(i, "stored_kWh") and i.stored_kWh is not None:
-                    txt += " kWhStored={stored}".format(stored=i.stored_kWh)
+                    txt += " kWhStored={stored}".format(stored=i.stored_kWh * 10 ** -3)
 
                 # state
                 if hasattr(i, "state") and i.state is not None:
@@ -1103,7 +1118,7 @@ class Writer(AbstractWriter):
 
                 # reserve
                 if hasattr(i, "reserve") and i.reserve is not None:
-                    txt += " %reserve={reserve}".format(reserve=i.reserve)
+                    txt += " %reserve={reserve}".format(reserve=i.reserve * 10 ** -3)
 
                 # discharge_rate
                 if hasattr(i, "discharge_rate") and i.discharge_rate is not None:
@@ -1213,8 +1228,6 @@ class Writer(AbstractWriter):
         feeder_voltvar_map = {}
         feeder_voltwatt_map = {}
         substation_text_map = {}
-        inv_txt_voltvar = "New XYCurve.VoltVarCurve npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.93,0.97,1.03,1.06,1.5)\n\n"  # Default voltvar curve used
-        inv_txt_voltwatt = "New XYCurve.VoltWattCurve npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n"  # Default volt-watt curve used
         for i in model.models:
             if isinstance(i, Photovoltaic):
                 # If is_sourcebus is set to 1, then the object represents a source and not a PV system
@@ -1257,14 +1270,7 @@ class Writer(AbstractWriter):
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
-                    if (
-                        hasattr(i, "timeseries")
-                        and i.timeseries is not None
-                        and len(i.timeseries) > 0
-                    ):
-                        txt += "New PVSystem.{name}".format(name=i.name)
-                    else:
-                        txt += "New Generator.{name}".format(name=i.name)
+                    txt += "New PVSystem.{name}".format(name=i.name)
 
                 # connecting element
                 if (
@@ -1344,28 +1350,7 @@ class Writer(AbstractWriter):
                                 substation_name + "_" + feeder_name
                             ].add(parent.nominal_voltage * 10 ** -3)
 
-                if (
-                    hasattr(i, "active_rating")
-                    and i.active_rating is not None
-                    and not (
-                        hasattr(i, "timeseries")
-                        and i.timeseries is not None
-                        and len(i.timeseries) > 0
-                    )
-                ):
-                    txt += " kW={kW}".format(
-                        kW=i.active_rating * 10 ** -3
-                    )  # DiTTo in watts
-
-                if (
-                    hasattr(i, "active_rating")
-                    and i.active_rating is not None
-                    and (
-                        hasattr(i, "timeseries")
-                        and i.timeseries is not None
-                        and len(i.timeseries) > 0
-                    )
-                ):
+                if hasattr(i, "active_rating") and i.active_rating is not None:
                     pf_local = 1.0
                     if i.power_factor is not None:
                         pf_local = abs(i.power_factor)
@@ -1382,30 +1367,14 @@ class Writer(AbstractWriter):
                             ** -3  # Set the inverter to be oversized by 10% if active rating not specified
                         )  # DiTTo in watts
 
-                if (
-                    hasattr(i, "rated_power")
-                    and i.rated_power is not None
-                    and (
-                        hasattr(i, "timeseries")
-                        and i.timeseries is not None
-                        and len(i.timeseries) > 0
-                    )
-                ):
+                if hasattr(i, "rated_power") and i.rated_power is not None:
                     txt += " Pmpp={kw}".format(
                         kw=i.rated_power
                         * 10
                         ** -3  # Set the inverter to be oversized by 10% if active rating not specified
                     )  # DiTTo in watts
 
-                if (
-                    hasattr(i, "reactive_rating")
-                    and i.reactive_rating is not None
-                    and (
-                        hasattr(i, "timeseries")
-                        and i.timeseries is not None
-                        and len(i.timeseries) > 0
-                    )
-                ):
+                if hasattr(i, "reactive_rating") and i.reactive_rating is not None:
                     txt += " kvarlimit={kvar}".format(
                         kvar=i.reactive_rating
                         * 10
@@ -1425,23 +1394,11 @@ class Writer(AbstractWriter):
                         )
 
                 # cutout_percent
-                if (
-                    hasattr(i, "cutout_percent")
-                    and i.cutout_percent is not None
-                    and hasattr(i, "timeseries")
-                    and i.timeseries is not None
-                    and len(i.timeseries) > 0
-                ):
+                if hasattr(i, "cutout_percent") and i.cutout_percent is not None:
                     txt += " %Cutout={cutout}".format(cutout=i.cutout_percent)
 
                 # cutin_percent
-                if (
-                    hasattr(i, "cutin_percent")
-                    and i.cutin_percent is not None
-                    and hasattr(i, "timeseries")
-                    and i.timeseries is not None
-                    and len(i.timeseries) > 0
-                ):
+                if hasattr(i, "cutin_percent") and i.cutin_percent is not None:
                     txt += " %Cutin={cutin}".format(cutin=i.cutin_percent)
 
                 # resistance
@@ -1526,8 +1483,10 @@ class Writer(AbstractWriter):
                 substation_name = substation_name.replace(">", "-")
                 inv_txt = ""
                 if len(voltvar_nodes) > 0:
-                    inv_txt += inv_txt_voltvar
-                    inv_txt += "New InvControl.InvPVCtrVV_{loc} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve VV_RefReactivePower=VARMAX_VARS DeltaQ_factor=0.5 PVSystemlist=[".format(
+                    inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.93,0.97,1.03,1.06,1.5)\n\n".format(
+                        loc=substation_name + "_" + feeder_name
+                    )  # Default voltvar curve used
+                    inv_txt += "New InvControl.InvPVCtrVV_{loc} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS DeltaQ_factor=0.5 PVSystemlist=[".format(
                         loc=substation_name + "_" + feeder_name
                     )
                     for node in voltvar_nodes:
@@ -1536,8 +1495,10 @@ class Writer(AbstractWriter):
                     inv_txt += "]\n\n"
 
                 if len(voltwatt_nodes) > 0:
-                    inv_txt += inv_txt_voltwatt
-                    inv_txt += "New InvControl.InvPVCtrVW_{loc} mode=VOLTWATT voltage_curvex_ref=rated VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve eventlog=yes DeltaP_factor=0.25 PVSystemlist=[".format(
+                    inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format(
+                        loc=substation_name + "_" + feeder_name
+                    )  # Default volt-watt curve used
+                    inv_txt += "New InvControl.InvPVCtrVW_{loc} mode=VOLTWATT voltage_curvex_ref=rated VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaP_factor=0.25 PVSystemlist=[".format(
                         loc=substation_name + "_" + feeder_name
                     )
                     for node in voltwatt_nodes:
@@ -3346,6 +3307,8 @@ class Writer(AbstractWriter):
                                     ):
                                         i.nameclass = nameclass_phase + "_" + str(j)
                                         found_subnumber = True
+                                        if i.nameclass not in txt:
+                                            txt[i.nameclass] = parsed_line
                                         break
                                 if not found_subnumber:
                                     self.all_linecodes[
@@ -3877,6 +3840,10 @@ class Writer(AbstractWriter):
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
                 # Note that subtransmission has no substation_connection and hence doesn't have a master file, even though it does have other .dss files
+                if (
+                    feeder_name == "" and i.nominal_voltage < 30000
+                ):  # A hack to deal with dangling feeders. TODO: Fix this in layerstack
+                    continue
                 with open(
                     os.path.join(
                         self.output_path,
