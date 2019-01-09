@@ -1988,6 +1988,8 @@ class Writer(AbstractWriter):
                         except:
                             new_capacitor_line += ","
                             pass
+                    else:
+                        new_capacitor_line += ","
 
                     # KVAR and Phase
                     phases = []
@@ -3146,7 +3148,7 @@ class Writer(AbstractWriter):
                                                 0
                                             ].phase_windings
                                         )
-                                        == 1
+                                        <= 1
                                         or len(
                                             transformer_object.windings[
                                                 0
