@@ -1,5 +1,6 @@
 # coding: utf8
 
+import hashlib
 import math
 import cmath
 from datetime import datetime
@@ -23,6 +24,8 @@ from ditto.models.winding import Winding
 from ditto.models.power_source import PowerSource
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
 
 from ditto.network.network import Network
 
@@ -289,6 +292,7 @@ class Writer(AbstractWriter):
         converter_string_list = []
         converter_control_string_list = []
         pv_settings_string_list = []
+        bess_settings_string_list = []
         dg_generation_string_list = []
 
         # The linecodes dictionary is used to group lines which have the same properties
@@ -307,6 +311,8 @@ class Writer(AbstractWriter):
         ID_trans_3w = 0
         self.three_windings_trans_codes = {}
         ID_cond = 0
+        self.bess_codes = {}
+        ID_bess = 0
         self.conductors = {}
         self.switchcodes = {}
         self.fusecodes = {}
@@ -343,6 +349,24 @@ class Writer(AbstractWriter):
                     self.node_connector_string_mapping[
                         (i.from_element, i.from_element_connection_index)
                     ] = "{f}_{t}".format(f=i.from_element, t=i.to_element)
+                    if (
+                        len(
+                            self.node_connector_string_mapping[
+                                (i.from_element, i.from_element_connection_index)
+                            ]
+                        )
+                        > 64
+                    ):
+                        hasher = hashlib.sha1()
+                        hasher.update(
+                            self.node_connector_string_mapping[
+                                (i.from_element, i.from_element_connection_index)
+                            ].encode("utf-8")
+                        )
+                        self.node_connector_string_mapping[
+                            (i.from_element, i.from_element_connection_index)
+                        ] = hasher.hexdigest()
+
                 if (
                     hasattr(i, "to_element")
                     and i.to_element is not None
@@ -352,6 +376,23 @@ class Writer(AbstractWriter):
                     self.node_connector_string_mapping[
                         (i.to_element, i.to_element_connection_index)
                     ] = "{f}_{t}".format(f=i.from_element, t=i.to_element)
+                    if (
+                        len(
+                            self.node_connector_string_mapping[
+                                (i.to_element, i.to_element_connection_index)
+                            ]
+                        )
+                        > 64
+                    ):
+                        hasher = hashlib.sha1()
+                        hasher.update(
+                            self.node_connector_string_mapping[
+                                (i.to_element, i.to_element_connection_index)
+                            ].encode("utf-8")
+                        )
+                        self.node_connector_string_mapping[
+                            (i.to_element, i.to_element_connection_index)
+                        ] = hasher.hexdigest()
 
             # Loop over the DiTTo objects
             for i in model.models:
@@ -655,19 +696,29 @@ class Writer(AbstractWriter):
                             and hasattr(i, "to_element")
                             and i.to_element is not None
                         ):
-                            new_sectionID = "{f}_{t}".format(
+                            new_section_ID = "{f}_{t}".format(
                                 f=i.from_element, t=i.to_element
                             )
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     while (
-                                        new_sectionID
+                                        new_section_ID
                                         in self.section_feeder_mapping[i.feeder_name]
                                     ):
-                                        new_sectionID = (
-                                            new_sectionID + "*"
+                                        new_section_ID = (
+                                            new_section_ID + "*"
                                         )  # This is used to deal with duplicate lines from same from and to nodes
-                            new_line_string += new_sectionID
+                                        if len(new_section_ID) > 64:
+                                            hasher = hashlib.sha1()
+                                            hasher.update(
+                                                new_section_ID.encode("utf-8")
+                                            )
+                                            new_section_ID = hasher.hexdigest()
+                            if len(new_section_ID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_section_ID.encode("utf-8"))
+                                new_section_ID = hasher.hexdigest()
+                            new_line_string += new_section_ID
                             from_index = 0
                             to_index = 0
                             if (
@@ -681,7 +732,7 @@ class Writer(AbstractWriter):
                             ):
                                 to_index = i.to_element_connection_index
                             new_section_line = "{id},{f},{fi},{t},{ti}".format(
-                                id=new_sectionID,
+                                id=new_section_ID,
                                 f=i.from_element,
                                 fi=from_index,
                                 t=i.to_element,
@@ -690,11 +741,11 @@ class Writer(AbstractWriter):
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(
-                                        new_sectionID
+                                        new_section_ID
                                     )
                                 else:
                                     self.section_feeder_mapping[i.feeder_name] = [
-                                        new_sectionID
+                                        new_section_ID
                                     ]
                                 if (
                                     hasattr(i, "substation_name")
@@ -718,7 +769,7 @@ class Writer(AbstractWriter):
                             for seg_number, position in enumerate(i.positions):
                                 intermediate_nodes.append(
                                     [
-                                        new_sectionID,
+                                        new_section_ID,
                                         seg_number,
                                         position.long,
                                         position.lat,
@@ -1381,13 +1432,7 @@ class Writer(AbstractWriter):
                             if len(phases) == 3:
 
                                 tt.update(
-                                    {
-                                        "SpacingID": "DEFAULT",
-                                        "Ba": 0,
-                                        "Bb": 0,
-                                        "Bc": 0,
-                                        "UserDefinedImpedances": 1,
-                                    }
+                                    {"SpacingID": "DEFAULT", "UserDefinedImpedances": 1}
                                 )
 
                                 for k, p1 in enumerate(phases):
@@ -1399,6 +1444,20 @@ class Writer(AbstractWriter):
                                             tt["X{p}".format(p=p1)] = (
                                                 i.impedance_matrix[k][j].imag * 10 ** 3
                                             )
+                                            if len(i.capacitance_matrix) == len(
+                                                i.impedance_matrix
+                                            ):
+                                                tt["B{p}".format(p=p1)] = (
+                                                    i.capacitance_matrix[k][j].real
+                                                    * 2
+                                                    * math.pi
+                                                    * frequency
+                                                    * 10 ** 3
+                                                )
+                                            else:
+                                                tt["Ba"] = 0
+                                                tt["Bb"] = 0
+                                                tt["Bc"] = 0
                                         elif j > k:
                                             if p1 == "A" and p2 == "C":
                                                 tt["MutualResistanceCA"] = (
@@ -1409,6 +1468,18 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
+                                                if len(i.capacitance_matrix) == len(
+                                                    i.impedance_matrix
+                                                ):
+                                                    tt["MutualShuntSusceptanceCA"] = (
+                                                        i.capacitance_matrix[k][j].real
+                                                        * 2
+                                                        * math.pi
+                                                        * frequency
+                                                        * 10 ** 3
+                                                    )
+                                                else:
+                                                    tt["MutualShuntSusceptanceCA"] = 0
                                             else:
                                                 tt[
                                                     "MutualResistance{p1}{p2}".format(
@@ -1426,6 +1497,23 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
+                                                if len(i.capacitance_matrix) == len(
+                                                    i.impedance_matrix
+                                                ):
+                                                    tt[
+                                                        "MutualShuntSusceptance{p1}{p2}".format(
+                                                            p1=p1, p2=p2
+                                                        )
+                                                    ] = (
+                                                        i.capacitance_matrix[k][j].real
+                                                        * 2
+                                                        * math.pi
+                                                        * frequency
+                                                        * 10 ** 3
+                                                    )
+                                                else:
+                                                    tt["MutualShuntSusceptanceAB"] = 0
+                                                    tt["MutualShuntSusceptanceBC"] = 0
 
                                 if (
                                     hasattr(i, "nameclass")
@@ -1464,7 +1552,7 @@ class Writer(AbstractWriter):
 
                                 # Add device number and phase conductor IDs
                                 new_line_string += ",{device},{condIDA},{condIDB},{condIDC}".format(
-                                    device=new_sectionID,
+                                    device=new_section_ID,
                                     condIDA=tt["CondID_A"],
                                     condIDB=tt["CondID_B"],
                                     condIDC=tt["CondID_C"],
@@ -1567,7 +1655,7 @@ class Writer(AbstractWriter):
                             or line_type == "recloser"
                             or line_type == "breaker"
                         ):
-                            new_line_string += "," + new_sectionID
+                            new_line_string += "," + new_section_ID
 
                         if line_type == "underground":
                             new_line_string += (
@@ -1612,6 +1700,302 @@ class Writer(AbstractWriter):
                             except:
                                 pass
 
+                if isinstance(i, Storage):
+                    bess_string = ""
+                    new_bess_setting_string = ""
+                    new_converter_string = ""
+                    new_converter_control_setting_string = ""
+
+                    if (
+                        hasattr(i, "name")
+                        and i.name is not None
+                        and hasattr(i, "connecting_element")
+                        and i.connecting_element is not None
+                        and (
+                            i.connecting_element in model.model_names
+                            or "load_" + i.connecting_element in model.model_names
+                        )
+                    ):
+                        new_section_ID = "{f}_{t}".format(
+                            f=i.connecting_element, t=i.name
+                        )
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+
+                        new_section = (
+                            new_section_ID
+                            + ",{f},0,{t},0,".format(  # Assume only one index for the load connection point
+                                f=i.connecting_element, t=i.name
+                            )
+                        )
+
+                        new_node_string = "{n}".format(n=i.name)
+                        if hasattr(i, "positions") and i.positions is not None:
+                            try:
+                                new_node_string += "," + str(i.positions[0].long)
+                            except:
+                                new_node_string += ",0"
+                                pass
+
+                            try:
+                                new_node_string += "," + str(i.positions[0].lat)
+                            except:
+                                new_node_string += ",0"
+                                pass
+                        else:
+                            new_node_string += ",0,0"
+                        self.node_string_list.append(new_node_string)
+
+                        phases = ""
+                        if i.phase_storages is not None:
+                            for ps in i.phase_storages:
+                                if ps.phase in ["A", "B", "C"]:
+                                    new_section += ps.phase
+                                    phases += ps.phase
+
+                        # If the object is inside of a substation...
+                        if hasattr(i, "is_substation") and i.is_substation == 1:
+                            # ...it should have the name of the substation specified in the 'substation_name' attribute
+                            if (
+                                hasattr(i, "substation_name")
+                                and i.substation_name is not None
+                                and i.substation_name != ""
+                            ):
+                                # Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                ff_name = "substation_{}".format(i.substation_name)
+                                self.network_have_substations = True
+
+                        # If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                        elif (
+                            hasattr(i, "feeder_name")
+                            and i.feeder_name is not None
+                            and i.feeder_name != ""
+                        ):
+                            ff_name = i.feeder_name
+
+                        self.section_line_list.append(new_section)
+                        if ff_name in self.section_line_feeder_mapping:
+                            self.section_line_feeder_mapping[ff_name].append(
+                                new_section
+                            )
+                        else:
+                            self.section_line_feeder_mapping[ff_name] = [new_section]
+
+                        new_converter_string += (
+                            new_section_ID + ",80,"
+                        )  # 45 is the CYME code for PV devices
+                        new_converter_control_setting_string += (
+                            new_section_ID + ",80,0,0,"
+                        )  # The controlindex and timetrigger indices are both zero
+
+                        if hasattr(i, "rated_kWh") and i.rated_kWh is not None:
+                            bess_string += str(i.rated_kWh * 10 ** -3)
+                        bess_string += ","
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            bess_string += str(i.rated_power * 10 ** -3)
+                        bess_string += ","
+
+                        # Use for both charging and discharging power
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            bess_string += str(i.rated_power * 10 ** -3)
+                        bess_string += ","
+
+                        if (
+                            hasattr(i, "charging_efficiency")
+                            and i.charging_efficiency is not None
+                        ):
+                            bess_string += str(i.charging_efficiency)
+                        bess_string += ","
+
+                        if (
+                            hasattr(i, "discharging_efficiency")
+                            and i.discharging_efficiency is not None
+                        ):
+                            bess_string += str(i.discharging_efficiency)
+
+                        bess_type = ""
+                        if bess_string in self.bess_codes:
+                            bess_type = self.bess_codes[bess_string]
+                        else:
+                            ID_bess += 1
+                            bess_type = "BESS_" + str(ID_bess)
+                            self.bess_codes[bess_string] = bess_type
+
+                        bess_string = bess_type + "," + bess_string
+
+                        new_bess_setting_string += (
+                            new_section_ID
+                            + ",M,"
+                            + new_section_ID
+                            + ","
+                            + bess_type
+                            + ","
+                            + phases
+                            + ","
+                        )
+
+                        if (
+                            hasattr(i, "stored_kWh")
+                            and i.stored_kWh is not None
+                            and hasattr(i, "rated_kWh")
+                            and i.rated_kWh is not None
+                            and i.rated_kWh != 0
+                        ):
+                            new_bess_setting_string += str(
+                                int(i.stored_kWh / i.rated_kWh * 100)
+                            )
+
+                        if hasattr(i, "active_rating") and i.active_rating is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + i.active_rating ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.active_rating / 1000.0) + ","
+                                )
+                            new_converter_string += str(i.active_rating / 1000.0) + ","
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + (i.rated_power * 1.1) ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.rated_power * 1.1 / 1000.0) + ","
+                                )
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10%
+                        else:
+                            new_converter_string += ",,"
+
+                        if (
+                            hasattr(i, "reactive_rating")
+                            and i.reactive_rating is not None
+                        ):
+                            new_converter_string += (
+                                str(i.reactive_rating / 1000.0) + ","
+                            )
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10% and active=reactive
+                        else:
+                            new_converter_string += ","
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        new_dg_generation_string += ","
+                        if (
+                            hasattr(i, "min_powerfactor")
+                            and i.min_powerfactor is not None
+                        ):
+                            new_converter_string += str(i.powerfactor * 100)
+                            new_dg_generation_string += str(i.powerfactor * 100)
+                        new_dg_generation_string += ","
+                        new_converter_string += ","
+                        if hasattr(i, "fall_limit") and i.fall_limit is not None:
+                            new_converter_string += str(i.fall_limit)
+                        new_converter_string += ","
+                        if hasattr(i, "rise_limit") and i.rise_limit is not None:
+                            new_converter_string += str(i.rise_limit)
+                        new_converter_string += ","
+                        if (hasattr(i, "fall_limit") and i.fall_limit is not None) or (
+                            hasattr(i, "rise_limit") and i.rise_limit is not None
+                        ):
+                            new_converter_string += "0"  # Using units of % per minute
+
+                        if hasattr(i, "control_type") and i.control_type is not None:
+                            if (
+                                i.control_type.lower() == "voltvar_vars_over_watts"
+                                or i.control_type.lower() == "voltvar"
+                            ):  # use default voltvar curve in cyme
+                                new_converter_control_setting_string += "1"
+                            if i.control_type.lower() == "voltvar_watts_over_vars":
+                                new_converter_control_setting_string += "0"
+                            if i.control_type.lower() == "voltvar_fixed_vars":
+                                new_converter_control_setting_string += "2"
+                            if i.control_type.lower() == "voltvar_novars":
+                                new_converter_control_setting_string += "3"
+                            if i.control_type.lower() == "voltwatt":
+                                new_converter_control_setting_string += "5"
+                            if i.control_type.lower() == "watt_powerfactor":
+                                new_converter_control_setting_string += "6"
+                            if i.control_type.lower() == "powerfactor":
+                                new_converter_control_setting_string += "10"
+
+                            new_converter_control_setting_string += ","
+                            if (
+                                i.control_type.lower() == "voltvar_fixed_vars"
+                                and i.var_injection is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    str(i.var_injection) + ",2,"
+                                )  # 2 is the code for the pecentage reactive power available
+                            else:
+                                new_converter_control_setting_string += ",,"
+                            if (
+                                i.control_type.lower() == "voltvar_watts_over_vars"
+                                or i.control_type.lower() == "voltvar_vars_over_watts"
+                            ) and i.voltvar_curve is not None:
+                                new_converter_control_setting_string += (
+                                    i.voltvar_curve + ",,"
+                                )
+                            elif (
+                                i.control_type.lower() == "voltwatt"
+                                and i.voltwatt_curve is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    i.voltwatt_curve + ",0,"
+                                )  # 0 is the code for using the active power rating
+                            elif (
+                                i.control_type.lower() == "watt_powerfactor"
+                                and i.watt_powerfactor_curve is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    i.watt_powerfactor_curve + ",0,"
+                                )  # 0 is the code for using the active power rating
+                            else:
+                                new_converter_control_setting_string += ",,"
+                        else:
+                            new_converter_control_setting_string += "10" + "," * 5
+
+                    if new_converter_string != "":
+                        converter_string_list.append(new_converter_string)
+                    if new_converter_control_setting_string != "":
+                        converter_control_string_list.append(
+                            new_converter_control_setting_string
+                        )
+
+                    if new_bess_setting_string != "":
+                        bess_settings_string_list.append(new_bess_setting_string)
+
                 # If we get a Photovoltaic object
 
                 if isinstance(i, Photovoltaic):
@@ -1632,8 +2016,16 @@ class Writer(AbstractWriter):
                         new_section_ID = "{f}_{t}".format(
                             f=i.connecting_element, t=i.name
                         )
-                        new_section = "{f}_{t},{f},0,{t},0,".format(  # Assume only one index for the load connection point
-                            f=i.connecting_element, t=i.name
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+
+                        new_section = (
+                            new_section_ID
+                            + ",{f},0,{t},0,".format(  # Assume only one index for the load connection point
+                                f=i.connecting_element, t=i.name
+                            )
                         )
 
                         new_node_string = "{n}".format(n=i.name)
@@ -1937,8 +2329,15 @@ class Writer(AbstractWriter):
                             new_section_ID = "{f}_{t}".format(
                                 f=i.connecting_element, t=i.name
                             )
-                            new_section = "{f}_{t},{f},0,{t},0,".format(  # assume only one connection point for capacitors
-                                f=i.connecting_element, t=i.name
+                            if len(new_section_ID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_section_ID.encode("utf-8"))
+                                new_section_ID = hasher.hexdigest()
+                            new_section = (
+                                new_section_ID
+                                + ",{f},0,{t},0,".format(  # assume only one connection point for capacitors
+                                    f=i.connecting_element, t=i.name
+                                )
                             )
                             new_capacitor_line += new_section_ID
                             if i.connecting_element not in self.nodeID_list:
@@ -1965,11 +2364,11 @@ class Writer(AbstractWriter):
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(
-                                        new_sectionID
+                                        new_section_ID
                                     )
                                 else:
                                     self.section_feeder_mapping[i.feeder_name] = [
-                                        new_sectionID
+                                        new_section_ID
                                     ]
                                 if (
                                     hasattr(i, "substation_name")
@@ -2178,20 +2577,24 @@ class Writer(AbstractWriter):
                             and i.to_element_connection_index is not None
                         ):
                             to_index = i.to_element_connection_index
-                        new_section = "{f}_{t},{f},{fi},{t},{ti},".format(
-                            f=i.from_element, fi=from_index, t=i.to_element, ti=to_index
-                        )
                         new_section_ID = "{f}_{t}".format(
                             f=i.from_element, t=i.to_element
+                        )
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+                        new_section = new_section_ID + ",{f},{fi},{t},{ti},".format(
+                            f=i.from_element, fi=from_index, t=i.to_element, ti=to_index
                         )
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
                             if i.feeder_name in self.section_feeder_mapping:
                                 self.section_feeder_mapping[i.feeder_name].append(
-                                    new_sectionID
+                                    new_section_ID
                                 )
                             else:
                                 self.section_feeder_mapping[i.feeder_name] = [
-                                    new_sectionID
+                                    new_section_ID
                                 ]
                             if (
                                 hasattr(i, "substation_name")
@@ -2249,29 +2652,40 @@ class Writer(AbstractWriter):
                             new_trans_sectionID = "{f}_{t}".format(
                                 f=from_element, t=to_element + "_reg"
                             )
-                            new_trans_section = "{f}_{t},{f},{fi},{t},{ti},".format(
-                                f=from_element,
-                                fi=from_index,
-                                t=to_element + "_reg",
-                                ti=to_index,
+                            if len(new_trans_sectionID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_trans_sectionID.encode("utf-8"))
+                                new_trans_sectionID = hasher.hexdigest()
+                            new_trans_section = (
+                                new_trans_sectionID
+                                + ",{f},{fi},{t},{ti},".format(
+                                    f=from_element,
+                                    fi=from_index,
+                                    t=to_element + "_reg",
+                                    ti=to_index,
+                                )
                             )
-                            new_section = "{f}_{t},{f},{fi},{t},{ti},".format(
+                            new_section_ID = "{f}_{t}".format(
+                                f=to_element + "_reg", t=to_element
+                            )
+                            if len(new_section_ID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_section_ID.encode("utf-8"))
+                                new_section_ID = hasher.hexdigest()
+                            new_section = new_section_ID + ",{f},{fi},{t},{ti},".format(
                                 f=to_element + "_reg",
                                 fi=from_index,
                                 t=to_element,
                                 ti=to_index,
                             )
-                            new_section_ID = "{f}_{t}".format(
-                                f=to_element + "_reg", t=to_element
-                            )
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(
-                                        new_sectionID
+                                        new_section_ID
                                     )
                                 else:
                                     self.section_feeder_mapping[i.feeder_name] = [
-                                        new_sectionID
+                                        new_section_ID
                                     ]
                                 if (
                                     hasattr(i, "substation_name")
@@ -2780,25 +3194,31 @@ class Writer(AbstractWriter):
                             is not None
                         ):
                             to_index = transformer_object.to_element_connection_index
-                        new_section = "{f}_{t},{f},{fi},{t},{ti},".format(
+
+                        new_section_ID = "{f}_{t}".format(
+                            f=transformer_object.from_element,
+                            t=transformer_object.to_element,
+                        )
+
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+                        new_section = new_section_ID + ",{f},{fi},{t},{ti},".format(
                             f=transformer_object.from_element,
                             fi=from_index,
                             t=transformer_object.to_element,
                             ti=to_index,
                         )
-                        new_section_ID = "{f}_{t}".format(
-                            f=transformer_object.from_element,
-                            t=transformer_object.to_element,
-                        )
                         # If it's a regulator, use the regulator object to find the feeder and substation if they're set
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
                             if i.feeder_name in self.section_feeder_mapping:
                                 self.section_feeder_mapping[i.feeder_name].append(
-                                    new_sectionID
+                                    new_section_ID
                                 )
                             else:
                                 self.section_feeder_mapping[i.feeder_name] = [
-                                    new_sectionID
+                                    new_section_ID
                                 ]
                             if (
                                 hasattr(i, "substation_name")
@@ -3266,9 +3686,9 @@ class Writer(AbstractWriter):
                                     + new_section_ID
                                 )
 
-                            new_transformer_line += (
-                                ",M,100,100,None,0"
-                            )  # .format(PhaseShiftType=phase_shift)#Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
+                            new_transformer_line += ",{PhaseShiftType},M,100,100,None,0".format(
+                                PhaseShiftType=phase_shift
+                            )  # Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
 
                             try:
                                 TAP = 1.0 / float(
@@ -4041,7 +4461,7 @@ class Writer(AbstractWriter):
             if len(two_windings_transformer_string_list) > 0:
                 f.write("\n[TRANSFORMER SETTING]\n")
                 f.write(
-                    "FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n"
+                    "FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,PhaseShiftType,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n"
                 )
                 for transformer_string in two_windings_transformer_string_list:
                     f.write(transformer_string + "\n")
@@ -4109,6 +4529,15 @@ class Writer(AbstractWriter):
                 f.write("\n[NODE CONNECTOR]\n")
                 f.write("FORMAT_NODECONNECTOR=NodeID,CoordX,CoordY,SectionID\n")
                 for i in self.node_connector_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(bess_settings_string_list) > 0:
+                f.write("\n[BESS SETTINGS]\n")
+                f.write(
+                    "FORMAT_BESSSETTING=SectionID,Location,DeviceNumber,EquipmentID,Phase,InitialSOC\n"
+                )
+                for i in bess_settings_string_list:
                     f.write(i)
                     f.write("\n")
 
@@ -4281,7 +4710,7 @@ class Writer(AbstractWriter):
             if len(self.linecodes_overhead) > 0:
                 f.write("\n[LINE UNBALANCED]\n")
                 f.write(
-                    "FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n"
+                    "FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,Ba,Bb,Bc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,MutualShuntSusceptanceAB,MutualShuntSusceptanceBC,MutualShuntSusceptanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n"
                 )
 
                 for ID, data in self.linecodes_overhead.items():
@@ -4293,21 +4722,24 @@ class Writer(AbstractWriter):
                         "XA",
                         "XB",
                         "XC",
+                        "Ba",
+                        "Bb",
+                        "Bc",
                         "MutualResistanceAB",
                         "MutualResistanceBC",
                         "MutualResistanceCA",
                         "MutualReactanceAB",
                         "MutualReactanceBC",
                         "MutualReactanceCA",
+                        "MutualShuntSusceptanceAB",
+                        "MutualShuntSusceptanceBC",
+                        "MutualShuntSusceptanceCA",
                         "CondID_A",
                         "CondID_B",
                         "CondID_C",
                         "CondID_N1",
                         "CondID_N2",
                         "SpacingID",
-                        "Ba",
-                        "Bb",
-                        "Bc",
                         "AmpsA",
                         "AmpsB",
                         "AmpsC",
@@ -4428,6 +4860,15 @@ class Writer(AbstractWriter):
                     )
                     f.write("\n")
 
+            if len(self.bess_codes) > 0:
+                f.write("\n[BESS] \n")
+                f.write(
+                    "FORMAT_BESS=ID,RatedStorageEnergy,MaxChargingPower,MaxDischargingPower,ChargeEfficiency,DischargeEfficiency\n"
+                )
+                for value in self.bess_codes:
+                    f.write(self.bess_codes[value] + "," + value + "\n")
+                f.write("\n")
+
     def write_load_file(self, model, **kwargs):
         """Loop over the DiTTo objects and write the CYME load file."""
         # Output load file
@@ -4456,8 +4897,15 @@ class Writer(AbstractWriter):
                         new_section_ID = "{f}_{t}".format(
                             f=i.connecting_element, t=i.name
                         )
-                        new_section = "{f}_{t},{f},0,{t},0,".format(  # Assume loads only have one connection point
-                            f=i.connecting_element, t=i.name
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+                        new_section = (
+                            new_section_ID
+                            + ",{f},0,{t},0,".format(  # Assume loads only have one connection point
+                                f=i.connecting_element, t=i.name
+                            )
                         )
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
                             if i.feeder_name in self.section_feeder_mapping:
