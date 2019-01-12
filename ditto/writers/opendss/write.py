@@ -477,7 +477,15 @@ class Writer(AbstractWriter):
                         )
 
                     try:
-                        txt += " phases={Np}".format(Np=N_phases[0])
+                        # phase-phase connection defined with phase=1 even though it's two phase.
+                        if (
+                            len(i.windings) == 3
+                            and i.windings[0].connection_type is not None
+                            and i.windings[0].connection_type == "D"
+                        ):
+                            txt += " phases={Np}".format(Np=N_phases[0] - 1)
+                        else:
+                            txt += " phases={Np}".format(Np=N_phases[0])
                         txt += " windings={N}".format(N=len(i.windings))
                     except:
                         self.logger.error(
@@ -1955,7 +1963,7 @@ class Writer(AbstractWriter):
                             and os.path.isfile(ts.data_location)
                         ):
                             filename = self.timeseries_datasets[
-                                substation_name + "_" + feeder_name
+                                ts.substation_name + "_" + ts.feeder_name
                             ][ts.data_location]
                             txt += " {ts_format}={filename}".format(
                                 ts_format=self.timeseries_format[filename],
