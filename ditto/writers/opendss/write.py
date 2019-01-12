@@ -3901,9 +3901,12 @@ class Writer(AbstractWriter):
                             os.path.join(substation_name, feeder_name)
                         ]:
                             fp.write("Redirect " + element + "\n")
-                    _baseKV_list_ = list(
-                        self._baseKV_feeders_[i.substation_name + "_" + i.feeder_name]
-                    )
+                    if i.substation_name + "_" + i.feeder_name in self._baseKV_feeders_:
+                        _baseKV_list_ = list(
+                            self._baseKV_feeders_[i.substation_name + "_" + i.feeder_name]
+                        )
+                    else:
+                        _baseKV_list_ = []
                     _baseKV_list_ = sorted(_baseKV_list_)
                     fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 
