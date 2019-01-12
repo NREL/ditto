@@ -10,6 +10,10 @@ class Storage(DiTToHasTraits):
     connecting_element = Unicode(
         help="""Name of the bus the storage is connected to.""", default_value=None
     )
+    positions = List(
+        Instance(Position),
+        help="""This parameter is a list of positional points describing the power source - it should only contain one. The positions are objects containing elements of long, lat and elevation.""",
+    )
     nominal_voltage = Float(
         help="""Nominal voltage for the storage element.""", default_value=None
     )
