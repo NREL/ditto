@@ -3073,19 +3073,19 @@ class Writer(AbstractWriter):
                 os.path.join(output_folder, self.output_filenames["wiredata"]), "w"
             )
 
-            if self.separate_substations and self.separate_feeders:
+            if self.separate_substations and self.separate_feeders and feeder_name is not None and substation_name is not None:
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
                     os.path.join(feeder_name, self.output_filenames["wiredata"])
                 )
-            elif self.separate_substations:
+            elif self.separate_substations and substation_name is not None:
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
                     self.output_filenames["wiredata"]
                 )
-            if self.separate_feeders:
+            if self.separate_feeders and feeder_name is not None:
                 combined_feeder_sub = os.path.join(substation_name, feeder_name)
                 if combined_feeder_sub not in self.feeders_redirect:
                     self.feeders_redirect[combined_feeder_sub] = []
@@ -3105,19 +3105,19 @@ class Writer(AbstractWriter):
         if len(self.all_cables) > 0:
             fp = open(os.path.join(output_folder, self.output_filenames["CNDATA"]), "w")
 
-            if self.separate_substations and self.separate_feeders:
+            if self.separate_substations and self.separate_feeders and feeder_name is not None and substation_name is not None:
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
                     os.path.join(feeder_name, self.output_filenames["CNDATA"])
                 )
-            elif self.separate_substations:
+            elif self.separate_substations and substation_name is not None:
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
                     self.output_filenames["CNDATA"]
                 )
-            if self.separate_feeders:
+            if self.separate_feeders and feeder_name is not None:
                 combined_feeder_sub = os.path.join(substation_name, feeder_name)
                 if combined_feeder_sub not in self.feeders_redirect:
                     self.feeders_redirect[combined_feeder_sub] = []
@@ -3198,19 +3198,19 @@ class Writer(AbstractWriter):
             fp = open(
                 os.path.join(output_folder, self.output_filenames["linegeometry"]), "w"
             )
-            if self.separate_substations and self.separate_feeders:
+            if self.separate_substations and self.separate_feeders and substation_name is not None and feeder_name is not None:
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
                     os.path.join(feeder_name, self.output_filenames["linegeometry"])
                 )
-            elif self.separate_substations:
+            elif self.separate_substations and substation_name is not None:
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
                     self.output_filenames["linegeometry"]
                 )
-            if self.separate_feeders:
+            if self.separate_feeders and feeder_name is not None:
                 combined_feeder_sub = os.path.join(substation_name, feeder_name)
                 if combined_feeder_sub not in self.feeders_redirect:
                     self.feeders_redirect[combined_feeder_sub] = []
@@ -3686,6 +3686,8 @@ class Writer(AbstractWriter):
             result["conductor_list"][-1]["cond"] = cond
             if wire.nameclass in self.all_wires:
                 result["conductor_list"][-1]["Wire"] = wire.nameclass
+            elif wire.nameclass in self.all_cables:
+                result["conductor_list"][-1]["CNCable"] = wire.nameclass
             else:
                 raise ValueError("Wire {name} not found.".format(name=wire.nameclass))
 
