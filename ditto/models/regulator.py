@@ -6,87 +6,111 @@ from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Insta
 from .position import Position
 from .winding import Winding
 
+from ..constant import S, DEG, V, OHM, A
+
 
 class Regulator(DiTToHasTraits):
 
-    name = Unicode(help="""Name of the regulator object""", default_value="")
+    name = Unicode(help="""Name of the regulator object""", default_value="", unit=None)
     delay = Float(
-        help="""The delay for first tap change operation""", default_value=None
+        help="""The delay for first tap change operation""", default_value=None, unit=S
     )
     highstep = Int(
         help="""The hightest possible tap step position from neutral""",
         default_value=None,
+        unit=None,
     )
     lowstep = Int(
         help="""The lowest possible tap step position from neutral""",
         default_value=None,
+        unit=None,
     )
     pt_ratio = Float(
         help="""The turns ratio used for the power transducer with a line-drop compensator.""",
         default_value=None,
+        unit=None,
     )
     ct_ratio = Float(
         help="""The turns ratio used for the current transducer with a line-drop compensator.""",
         default_value=None,
+        unit=None,
     )
     phase_shift = Float(
-        help="""The degree phase shift that the regulator causes.""", default_value=None
+        help="""The degree phase shift that the regulator causes.""",
+        default_value=None,
+        unit=DEG,
     )
     ltc = Int(
         help="""1 if this regulator is a load tap changer, 0 otherwise.""",
         default_value=None,
+        unit=None,
     )
     bandwidth = Float(
-        help="""The band before a change occurs in the regulator""", default_value=None
+        help="""The band before a change occurs in the regulator""",
+        default_value=None,
+        unit=V,
     )
     bandcenter = Float(
         help="""This is the target value for the regulator. Should often be the nominal voltage""",
         default_value=None,
+        unit=V,
     )
     voltage_limit = Float(
-        help="""The maximum voltage allowed on the PT secondary""", default_value=None
+        help="""The maximum voltage allowed on the PT secondary""",
+        default_value=None,
+        unit=V,
     )
     from_element = Any(
         help="""The node which connects to the 'from' end of the regulator""",
         default_value=None,
+        unit=None,
     )
     to_element = Any(
         help="""'The node which connects to the 'to' end of the regulator""",
         default_value=None,
+        unit=None,
     )
     connected_transformer = Unicode(
         help="""The name of the transformer that the voltage regulator is attached to""",
         default_value=None,
+        unit=None,
     )
     pt_phase = Unicode(
-        help="""The phase being used to monitor the voltage""", default_value=None
+        help="""The phase being used to monitor the voltage""",
+        default_value=None,
+        unit=None,
     )
     positions = List(
         Instance(Position),
         help="""This parameter is a list of positional points describing the regulator (typically just one). The positions are objects containing elements of long, lat and elevation (See Position object documentation).""",
         default_value=None,
+        unit=None,
     )
     reactances = List(
         (Int(), Int(), Float()),
         help="""Reactances are described between all the windings. There are n*(n-1)/2 reactances (where n is the number of windings). For two a winding transformer this gives one value, and for a 3 winding transformer it gives 3.  The list elements have (from_winding, to_winding, reactance) where from_winding and to_winding are the 1-based indices of the windings list.""",
         default_value=None,
+        unit=OHM,
     )
 
     windings = List(
         Instance(Winding),
         help=""" This is a list containing one element for each winding in the voltage regulator. It describes attributes of the winding. This paramter is required to describe many compontants of the regulator. The simplest versions have two windings representing a high and low voltage.""",
         default_value=None,
+        unit=None,
     )
 
     # Added by Nicolas (August 2017)
     winding = Int(
         help="""Number of the winding of the transformer element that the RegControl is monitoring.""",
         default_value=None,
+        unit=None,
     )
 
     ct_prim = Float(
         help="""Rating, in Amperes, of the primary CT rating for converting the line amps to control amps""",
         default_value=None,
+        unit=A,
     )
 
     # Added by Tarek (September 26)
@@ -94,6 +118,7 @@ class Regulator(DiTToHasTraits):
     noload_loss = Float(
         help="""The no-load loss for a zero sequence short-circuit test on the regulator""",
         default_value=None,
+        unit=None,
     )
 
     # Modification: Nicolas (December 2017)
@@ -103,21 +128,24 @@ class Regulator(DiTToHasTraits):
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
         default=None,
+        unit=None,
     )
     feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
+        help="""The name of the feeder the object is on.""", default=None, unit=None
     )
 
     # Modification: Tarek (April 2018)
     setpoint = Float(
         help="""The percentage p.u. voltage setpoint of the regulator""",
         default_value=None,
+        unit=None,
     )
 
     # Modification: Nicolas (May 2018)
     is_substation = Int(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
         default_value=0,
+        unit=None,
     )
 
     def build(self, model):

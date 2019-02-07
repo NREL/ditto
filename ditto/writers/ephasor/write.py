@@ -125,8 +125,8 @@ class Writer(AbstractWriter):
                     logger.debug(
                         "{name} {X} {Y}\n".format(
                             name=i.name.lower(),
-                            X=i.positions[0].lat,
-                            Y=i.positions[0].long,
+                            X=i.positions[0].latitude,
+                            Y=i.positions[0].longitude,
                         )
                     )
 

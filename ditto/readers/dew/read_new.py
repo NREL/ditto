@@ -126,8 +126,12 @@ class Reader:
                     # Posiiton information can be used if required (not stored and not included in ditto)
                     try:
                         position = Position(model)
-                        position.lat = float(entries[13][:-1])  # X position in EDD DEW
-                        position.long = float(entries[14][:-1])  # Y posiiton in EDD
+                        position.latitude = float(
+                            entries[13][:-1]
+                        )  # X position in EDD DEW
+                        position.longitude = float(
+                            entries[14][:-1]
+                        )  # Y posiiton in EDD
                         position.elevation = 0
                         api_node.positions.append(position)
                     except AttributeError:

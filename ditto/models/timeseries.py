@@ -12,32 +12,40 @@ class Timeseries(DiTToHasTraits):
         "pandas.DataFrame",
         help="""This is the data that is stored in the timeseries object.""",
         default_value=None,
+        unit=None,
     )
     data_label = Unicode(
         help="The label assigned to the dataset. This describes what the name should be when it is outputted to through the writers"
         "",
         default_value=None,
+        unit=None,
     )
     interval = Float(
         help="""This is the interval in the default units that the timeseries data is recorded at. E.g. minute data would have an interval of 60 for a unit of seconds""",
         default=None,
+        unit=None,  # PROBLEM HERE
     )
     data_location = Unicode(
-        help="""The absolute location on disk of the data""", default_value=None
+        help="""The absolute location on disk of the data""",
+        default_value=None,
+        unit=None,
     )
 
     data_type = Unicode(
         help="""This is the python datatype of the timeseries e.g. float, complex etc.""",
         default_value=None,
+        unit=None,
     )
     loaded = Int(
         help="""A boolean describing whether the data is in memory or on disk. If this is 1, the data is loaded into the data field. Otherwise it is not in memory and is on disk at data_location""",
         default=None,
+        unit=None,
     )
 
     scale_factor = Float(
         help="""A number to multiply the entire timeseries by for scaling purposes""",
         default_value=1,
+        unit=None,
     )
 
     def build(self, model):

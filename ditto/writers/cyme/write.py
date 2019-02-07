@@ -444,13 +444,13 @@ class Writer(AbstractWriter):
                     # CoordX and CoordY
                     if hasattr(i, "positions") and i.positions is not None:
                         try:
-                            new_node_string += "," + str(i.positions[0].long)
+                            new_node_string += "," + str(i.positions[0].longitude)
                         except:
                             new_node_string += ",0"
                             pass
 
                         try:
-                            new_node_string += "," + str(i.positions[0].lat)
+                            new_node_string += "," + str(i.positions[0].latitude)
                         except:
                             new_node_string += ",0"
                             pass
@@ -578,8 +578,8 @@ class Writer(AbstractWriter):
                                     [
                                         new_sectionID,
                                         seg_number,
-                                        position.long,
-                                        position.lat,
+                                        position.longitude,
+                                        position.latitude,
                                     ]
                                 )
 
@@ -1588,8 +1588,8 @@ class Writer(AbstractWriter):
                             if i.name not in self.nodeID_list:
                                 if hasattr(i, "positions") and i.positions is not None:
                                     try:
-                                        X = i.positions[0].long
-                                        Y = i.positions[0].lat
+                                        X = i.positions[0].longitude
+                                        Y = i.positions[0].latitude
                                     except:
                                         X = 0
                                         Y = 0
@@ -1911,10 +1911,10 @@ class Writer(AbstractWriter):
                             if hasattr(i, "positions") and i.positions is not None:
                                 try:
                                     new_transformer_line += "," + str(
-                                        i.positions[0].long
+                                        i.positions[0].longitude
                                     )
                                     new_transformer_line += "," + str(
-                                        i.positions[0].lat
+                                        i.positions[0].latitude
                                     )
                                 except:
                                     new_transformer_line += ",,"
@@ -2133,8 +2133,8 @@ class Writer(AbstractWriter):
                     # CoordX and CoordY
                     if hasattr(i, "positions") and i.positions is not None:
                         try:
-                            new_regulator_string += "," + str(i.positions[0].long)
-                            new_regulator_string += "," + str(i.positions[0].lat)
+                            new_regulator_string += "," + str(i.positions[0].longitude)
+                            new_regulator_string += "," + str(i.positions[0].latitude)
                         except:
                             new_regulator_string += ",,"
                             pass
@@ -2469,10 +2469,10 @@ class Writer(AbstractWriter):
                             ):
                                 try:
                                     new_transformer_line += "," + str(
-                                        transformer_object.positions[0].long
+                                        transformer_object.positions[0].longitude
                                     )
                                     new_transformer_line += "," + str(
-                                        transformer_object.positions[0].lat
+                                        transformer_object.positions[0].latitude
                                     )
                                 except:
                                     new_transformer_line += ",,"
@@ -2833,10 +2833,10 @@ class Writer(AbstractWriter):
                             ):
                                 try:
                                     new_transformer_line += "," + str(
-                                        transformer_object.positions[0].long
+                                        transformer_object.positions[0].longitude
                                     )
                                     new_transformer_line += "," + str(
-                                        transformer_object.positions[0].lat
+                                        transformer_object.positions[0].latitude
                                     )
                                 except:
                                     new_transformer_line += ",,"
@@ -3333,11 +3333,11 @@ class Writer(AbstractWriter):
                                 isinstance(obj, Node)
                                 and len(obj.positions) > 0
                                 and obj.positions[0] is not None
-                                and obj.positions[0].lat is not None
-                                and obj.positions[0].long is not None
+                                and obj.positions[0].latitude is not None
+                                and obj.positions[0].longitude is not None
                             ):
-                                all_coordsX.append(obj.positions[0].long)
-                                all_coordsY.append(obj.positions[0].lat)
+                                all_coordsX.append(obj.positions[0].longitude)
+                                all_coordsY.append(obj.positions[0].latitude)
                             # (CASE 1) - Since we don't know what the LV value is beforehand, we store all coordinates by nominal voltage
                             # in the dictionaries by_nominal_voltage_X and by_nominal_voltage_Y.
                             if (
@@ -3351,8 +3351,8 @@ class Writer(AbstractWriter):
                                         and obj.positions[0] is not None
                                     ):
                                         if (
-                                            obj.positions[0].lat is not None
-                                            and obj.positions[0].long is not None
+                                            obj.positions[0].latitude is not None
+                                            and obj.positions[0].longitude is not None
                                         ):
                                             if (
                                                 obj.nominal_voltage
@@ -3362,17 +3362,17 @@ class Writer(AbstractWriter):
                                             ):
                                                 by_nominal_voltage_X[
                                                     obj.nominal_voltage
-                                                ].append(obj.positions[0].long)
+                                                ].append(obj.positions[0].longitude)
                                                 by_nominal_voltage_Y[
                                                     obj.nominal_voltage
-                                                ].append(obj.positions[0].lat)
+                                                ].append(obj.positions[0].latitude)
                                             else:
                                                 by_nominal_voltage_X[
                                                     obj.nominal_voltage
-                                                ] = [obj.positions[0].long]
+                                                ] = [obj.positions[0].longitude]
                                                 by_nominal_voltage_Y[
                                                     obj.nominal_voltage
-                                                ] = [obj.positions[0].lat]
+                                                ] = [obj.positions[0].latitude]
                                 # (CASE 2) - If the nominal voltage was None, then add the coordinates to the default list
                                 else:
                                     if (
@@ -3380,11 +3380,11 @@ class Writer(AbstractWriter):
                                         and obj.positions[0] is not None
                                     ):
                                         if (
-                                            obj.positions[0].lat is not None
-                                            and obj.positions[0].long is not None
+                                            obj.positions[0].latitude is not None
+                                            and obj.positions[0].longitude is not None
                                         ):
-                                            defaultX.append(obj.positions[0].long)
-                                            defaultY.append(obj.positions[0].lat)
+                                            defaultX.append(obj.positions[0].longitude)
+                                            defaultY.append(obj.positions[0].latitude)
                         # (CASE 1)
                         if len(list(by_nominal_voltage_X.keys())) > 0:
                             low_voltage = min(list(by_nominal_voltage_X.keys()))
@@ -3445,8 +3445,8 @@ class Writer(AbstractWriter):
                                 # We also need the coordinates of this connection.
                                 # Use the coordinates of the Node
                                 if obj.positions is not None and len(obj.positions) > 0:
-                                    X = obj.positions[0].long
-                                    Y = obj.positions[0].lat
+                                    X = obj.positions[0].longitude
+                                    Y = obj.positions[0].latitude
                                 # If we don't have coordinates, then set to (0,0)....
                                 else:
                                     X = 0
@@ -3980,8 +3980,8 @@ class Writer(AbstractWriter):
                             self.nodeID_list.append(i.name)
                             if hasattr(i, "positions") and i.positions is not None:
                                 try:
-                                    X = i.positions[0].long
-                                    Y = i.positions[0].lat
+                                    X = i.positions[0].longitude
+                                    Y = i.positions[0].latitude
                                 except:
                                     X = 0
                                     Y = 0

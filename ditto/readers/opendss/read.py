@@ -664,8 +664,8 @@ class Reader(AbstractReader):
 
             try:
                 node_pos = Position(model)
-                node_pos.long = data["positions"][0]
-                node_pos.lat = data["positions"][1]
+                node_pos.longitude = data["positions"][0]
+                node_pos.latitude = data["positions"][1]
                 api_node.positions.append(node_pos)
             except:
                 pass

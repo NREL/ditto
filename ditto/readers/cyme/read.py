@@ -1274,8 +1274,8 @@ class Reader(AbstractReader):
             # Set the coordinates
             try:
                 position = Position(model)
-                position.long = float(node["coordx"])
-                position.lat = float(node["coordy"])
+                position.longitude = float(node["coordx"])
+                position.latitude = float(node["coordy"])
                 position.elevation = 0
                 api_node.positions.append(position)
             except:
@@ -2298,8 +2298,8 @@ class Reader(AbstractReader):
             # Set the position
             try:
                 position = Position(model)
-                position.long = float(settings["coordx"])
-                position.lat = float(settings["coordy"])
+                position.longitude = float(settings["coordx"])
+                position.latitude = float(settings["coordy"])
                 position.elevation = 0
                 new_line["position"] = position
             except:
@@ -3810,8 +3810,8 @@ class Reader(AbstractReader):
             # Position
             try:
                 position = Position(model)
-                position.long = float(settings["coordx"])
-                position.lat = float(settings["coordy"])
+                position.longitude = float(settings["coordx"])
+                position.latitude = float(settings["coordy"])
                 position.elevation = 0
                 api_capacitor.position.append(position)
             except:
@@ -4426,8 +4426,8 @@ class Reader(AbstractReader):
             # Set the position
             try:
                 position = Position(model)
-                position.long = float(settings["coordx"])
-                position.lat = float(settings["coordy"])
+                position.longitude = float(settings["coordx"])
+                position.latitude = float(settings["coordy"])
                 position.elevation = 0
                 api_transformer.positions.append(position)
             except:
@@ -4944,8 +4944,8 @@ class Reader(AbstractReader):
 
                 try:
                     position = Position(model)
-                    position.long = float(reg_set["coordx"])
-                    position.lat = float(reg_set["coordy"])
+                    position.longitude = float(reg_set["coordx"])
+                    position.latitude = float(reg_set["coordy"])
                     position.elevation = 0
                     api_regulator.positions.append(position)
                 except:
