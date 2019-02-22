@@ -1531,6 +1531,19 @@ class Reader(AbstractReader):
                     )
                 )
 
+
+            if N_windings >= 2 and data["conns"][0].lower() == "wye" and data["conns"][1].lower() == "wye":
+                api_transformer.phase_shift = 0
+
+            if N_windings >= 2 and data["conns"][0].lower() == "delta" and data["conns"][1].lower() == "delta":
+                api_transformer.phase_shift = 0
+
+            if N_windings >= 2 and data["conns"][0].lower() == "wye" and data["conns"][1].lower() == "delta":
+                api_transformer.phase_shift = -30
+
+            if N_windings >= 2 and data["conns"][0].lower() == "delta" and data["conns"][1].lower() == "wye":
+                api_transformer.phase_shift = -30
+
             for w in range(N_windings):
 
                 windings.append(Winding(model))
