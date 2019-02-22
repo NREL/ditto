@@ -21,7 +21,7 @@ New Line.OH_B4904 bus1=B4909.1.2.3 bus2=B4904.1.2.3 length=161.84879 units=m lin
 New Line.OH_B18944 bus1=B18941.1.2.3 bus2=B18944.1.2.3 length=141.1224 units=m linecode=OH-3X_4CU_4CUN phases=3 enabled=True
 
 New Capacitor.B4909-1 bus=B4909 kV=12.47 kvar=900 conn=wye
-New Capcontrol.B4909-1 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
+New Capcontrol.B4909-2 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
 ~ type=volt ON=120.5 OFF=125 PTphase=2 PTratio=60
 
 New Capcontrol.B4909-1 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
@@ -31,7 +31,7 @@ New Capacitor.B18944-1 bus=B18941 kV=12.47 kvar=1200 conn=wye
 New Capcontrol.B18944-1 Capacitor=B18944-1 element=Line.OH_B18944 terminal=1 Delay=31
 ~ type=volt ON=118 OFF=124 PTphase=1 PTratio=60
 
-New Capcontrol.B18944-1 Capacitor=B18944-1 element=Line.OH_B18944 terminal=1 Delay=31
+New Capcontrol.B18944-2 Capacitor=B18944-1 element=Line.OH_B18944 terminal=1 Delay=31
 ~ type=volt Vmin=118 Vmax=124 PTphase=1 PTratio=60
 
 ! Capacitors from ieee 8500-node test feeder
