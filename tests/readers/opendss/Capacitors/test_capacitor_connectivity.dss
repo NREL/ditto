@@ -24,9 +24,15 @@ New Capacitor.B4909-1 bus=B4909 kV=12.47 kvar=900 conn=wye
 New Capcontrol.B4909-1 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
 ~ type=volt ON=120.5 OFF=125 PTphase=2 PTratio=60
 
+New Capcontrol.B4909-1 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
+~ type=volt Vmin=120.5 Vmax=125 PTphase=2 PTratio=60
+
 New Capacitor.B18944-1 bus=B18941 kV=12.47 kvar=1200 conn=wye
 New Capcontrol.B18944-1 Capacitor=B18944-1 element=Line.OH_B18944 terminal=1 Delay=31
 ~ type=volt ON=118 OFF=124 PTphase=1 PTratio=60
+
+New Capcontrol.B18944-1 Capacitor=B18944-1 element=Line.OH_B18944 terminal=1 Delay=31
+~ type=volt Vmin=118 Vmax=124 PTphase=1 PTratio=60
 
 ! Capacitors from ieee 8500-node test feeder
 New Capacitor.CAPBank0A  Bus1=R42246.1  kv=7.2  kvar=400  phases=1 conn=wye
