@@ -1793,6 +1793,12 @@ class Reader(AbstractReader):
                             api_regulator.windings[w].phase_windings[
                                 p
                             ].tap_position = float(trans["taps"][w])
+                        if "tapnum" in data:
+                            api_regulator.windings[w].phase_windings[
+                                p
+                            ].tap_position = float(data["tapnum"][w])
+
+
 
                         # compensator_r
                         if "R" in data:
