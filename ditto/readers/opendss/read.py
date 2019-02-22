@@ -1695,6 +1695,18 @@ class Reader(AbstractReader):
                 # Total number of windings
                 N_windings = int(trans["windings"])
 
+                if N_windings >= 2 and data["conns"][0].lower() == "wye" and data["conns"][1].lower() == "wye":
+                    api_regulator.phase_shift = 0
+
+                if N_windings >= 2 and data["conns"][0].lower() == "delta" and data["conns"][1].lower() == "delta":
+                    api_regulator.phase_shift = 0
+
+                if N_windings >= 2 and data["conns"][0].lower() == "wye" and data["conns"][1].lower() == "delta":
+                    api_regulator.phase_shift = -30
+
+                if N_windings >= 2 and data["conns"][0].lower() == "delta" and data["conns"][1].lower() == "wye":
+                    api_regulator.phase_shift = -30
+
                 # Initialize the list of Windings
                 api_regulator.windings = [Winding(model) for _ in range(N_windings)]
 
