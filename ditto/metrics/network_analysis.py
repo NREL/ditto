@@ -156,7 +156,7 @@ class NetworkAnalyzer(object):
             self.edge_equipment = None
             self.edge_equipment_name = None
 
-        modifier = system_structure_modifier(self.model, "st_mat")
+        modifier = system_structure_modifier(self.model, source)
         modifier.set_nominal_voltages()
         # IMPORTANT: the following two parameters define what is LV and what is MV.
         # - Object is LV if object.nominal_voltage<=LV_threshold
