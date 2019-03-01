@@ -236,7 +236,7 @@ class Network:
                                     ] = getattr(i, attr)
 
     def set_attributes(self, model):
-        graph_nodes = set(self.graph.nodes())
+        graph_nodes = set(self.digraph.nodes())
         graph_edges = set(
             self.digraph.edges()
         )  # Use the ordering provided from the BFS order

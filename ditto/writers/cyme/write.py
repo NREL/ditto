@@ -1327,9 +1327,10 @@ class Writer(AbstractWriter):
 
                                     except:
                                         try:
-                                            z_diag = i.capacitance_matrix[0]
-                                            z_offdiag = i.capacitance_matrix[0]
+                                            c_diag = i.capacitance_matrix[0]
+                                            c_offdiag = i.capacitance_matrix[0]
                                         except:
+                                            import pdb;pdb.set_trace()
                                             raise ValueError(
                                                 "Cannot get a value from impedance matrix for line {}".format(
                                                     i.name
@@ -1379,10 +1380,7 @@ class Writer(AbstractWriter):
                                             ] = tt
                                             new_line_string += ",cable_" + str(ID_cable)
 
-                        elif (
-                            hasattr(i, "impedance_matrix")
-                            and i.impedance_matrix is not None
-                        ):
+                        else: # We use impedance_matrix if it exists and we have 3 phases. otherwise we use by_phase. TODO: change to by_phase whenever we have the wire information for it.
                             # try:
                             tt = {}
                             if "A" in cond_id:
@@ -1429,7 +1427,7 @@ class Writer(AbstractWriter):
                                                 pass
 
                             # If we have 3 phases, use OVERHEADLINE SETTING
-                            if len(phases) == 3:
+                            if len(phases) == 3 and i.impedance_matrix is not None:
 
                                 tt.update(
                                     {"SpacingID": "DEFAULT", "UserDefinedImpedances": 1}
@@ -1444,7 +1442,7 @@ class Writer(AbstractWriter):
                                             tt["X{p}".format(p=p1)] = (
                                                 i.impedance_matrix[k][j].imag * 10 ** 3
                                             )
-                                            if len(i.capacitance_matrix) == len(
+                                            if i.capacitance_matrix is not None and len(i.capacitance_matrix) == len(
                                                 i.impedance_matrix
                                             ):
                                                 tt["B{p}".format(p=p1)] = (
@@ -1468,7 +1466,7 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
-                                                if len(i.capacitance_matrix) == len(
+                                                if i.capacitance_matrix is not None and len(i.capacitance_matrix) == len(
                                                     i.impedance_matrix
                                                 ):
                                                     tt["MutualShuntSusceptanceCA"] = (
@@ -1497,7 +1495,7 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
-                                                if len(i.capacitance_matrix) == len(
+                                                if i.capacitance_matrix is not None and len(i.capacitance_matrix) == len(
                                                     i.impedance_matrix
                                                 ):
                                                     tt[
@@ -2484,6 +2482,8 @@ class Writer(AbstractWriter):
                             new_capacitor_line += ",6"
                         else:
                             new_capacitor_line += ",0"
+                    else:
+                        new_capacitor_line+=","
 
                     if hasattr(i, "low") and i.low is not None:
                         new_capacitor_line += (
@@ -4965,6 +4965,8 @@ class Writer(AbstractWriter):
                                 new_load_string += ","
                                 pass
 
+                    else:
+                        new_load_string+=","
                     phases = ""
                     if hasattr(i, "phase_loads") and i.phase_loads is not None:
                         P = 0
