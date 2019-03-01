@@ -392,6 +392,8 @@ class Writer(AbstractWriter):
                         # Not currently redirecting buscoords to each subfolder - just use the aggregate in the root directory
                         # self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['buses']))
             output_folder = os.path.join(self.output_path, substation_name)
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
             with open(
                 os.path.join(output_folder, self.output_filenames["buses"]), "w"
             ) as fp:
@@ -3073,7 +3075,12 @@ class Writer(AbstractWriter):
                 os.path.join(output_folder, self.output_filenames["wiredata"]), "w"
             )
 
-            if self.separate_substations and self.separate_feeders and feeder_name is not None and substation_name is not None:
+            if (
+                self.separate_substations
+                and self.separate_feeders
+                and feeder_name is not None
+                and substation_name is not None
+            ):
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
@@ -3105,7 +3112,12 @@ class Writer(AbstractWriter):
         if len(self.all_cables) > 0:
             fp = open(os.path.join(output_folder, self.output_filenames["CNDATA"]), "w")
 
-            if self.separate_substations and self.separate_feeders and feeder_name is not None and substation_name is not None:
+            if (
+                self.separate_substations
+                and self.separate_feeders
+                and feeder_name is not None
+                and substation_name is not None
+            ):
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
@@ -3198,7 +3210,12 @@ class Writer(AbstractWriter):
             fp = open(
                 os.path.join(output_folder, self.output_filenames["linegeometry"]), "w"
             )
-            if self.separate_substations and self.separate_feeders and substation_name is not None and feeder_name is not None:
+            if (
+                self.separate_substations
+                and self.separate_feeders
+                and substation_name is not None
+                and feeder_name is not None
+            ):
                 if substation_name not in self.substations_redirect:
                     self.substations_redirect[substation_name] = []
                 self.substations_redirect[substation_name].append(
@@ -3913,7 +3930,9 @@ class Writer(AbstractWriter):
                             fp.write("Redirect " + element + "\n")
                     if i.substation_name + "_" + i.feeder_name in self._baseKV_feeders_:
                         _baseKV_list_ = list(
-                            self._baseKV_feeders_[i.substation_name + "_" + i.feeder_name]
+                            self._baseKV_feeders_[
+                                i.substation_name + "_" + i.feeder_name
+                            ]
                         )
                     else:
                         _baseKV_list_ = []
