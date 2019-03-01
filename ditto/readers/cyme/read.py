@@ -3500,7 +3500,7 @@ class Reader(AbstractReader):
                         gmr_list = []
                         resistance_list = []
 
-                        perform_kron_reduction = True
+                        perform_kron_reduction = False
 
                         # Get GMR and resistance of valid conductor
                         for idx, p in enumerate(phases):
