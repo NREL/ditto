@@ -70,7 +70,7 @@ class AbstractReader(object):
         matrix2 += matrix2.T
 
         for i in range(N_cols):
-            matrix2[i, i] *= .5
+            matrix2[i, i] *= 0.5
 
         return matrix2.tolist()
 
@@ -393,7 +393,7 @@ class AbstractReader(object):
         phase_impedance_matrix = np.array(phase_impedance_matrix)
         # If we have a 3 by 3 phase impedance matrix
         if phase_impedance_matrix.shape == (3, 3):
-            a = cmath.exp(complex(0, 2. / 3 * cmath.pi))
+            a = cmath.exp(complex(0, 2.0 / 3 * cmath.pi))
             A = np.array(
                 [
                     [complex(1.0, 0), complex(1.0, 0), complex(1.0, 0)],
@@ -402,7 +402,7 @@ class AbstractReader(object):
                 ]
             )
             A_inv = (
-                1.
+                1.0
                 / 3.0
                 * np.array(
                     [
@@ -415,7 +415,7 @@ class AbstractReader(object):
         # if we have a 2 by 2 phase impedance matrix
         elif phase_impedance_matrix.shape == (2, 2):
             A = np.array([[1.0, 1.0], [1.0, -1.0]])
-            A_inv = np.array([[.5, .5], [.5, -.5]])
+            A_inv = np.array([[0.5, 0.5], [0.5, -0.5]])
         else:
             return []
         return np.dot(A_inv, np.dot(phase_impedance_matrix, A))
@@ -438,13 +438,13 @@ class AbstractReader(object):
             raise ValueError("GMR is None. Cannot compute Carson's equation.")
         if GMRi == 0:
             raise ValueError("GMR is zero. Cannot compute Carson's equation.")
-        return complex(ri + .0953, .12134 * (np.log(1.0 / GMRi) + 7.93402))
+        return complex(ri + 0.0953, 0.12134 * (np.log(1.0 / GMRi) + 7.93402))
 
     def carson_equation(self, Dij):
         """Carson's equation for mutual impedance."""
         if Dij == 0:
             raise ValueError("Distance Dij is zero. Cannot compute Carson's equation.")
-        return complex(.09530, .12134 * (np.log(1.0 / Dij) + 7.93402))
+        return complex(0.09530, 0.12134 * (np.log(1.0 / Dij) + 7.93402))
 
     def get_primitive_impedance_matrix(self, dist_matrix, GMR_list, r_list):
         """Get primitive impedance matrix from distance matrix between the wires, GMR list, and resistance list."""
@@ -557,6 +557,20 @@ class AbstractReader(object):
         if self.verbose:
             self.logger.info("Parsing done.")
 
+        if self.DSS_file_names["default_values_file"]:
+            if self.verbose:
+                self.logger.info("Parsing the default values...")
+            s = self.parse_default_values(model)
+            if self.verbose and s != -1:
+                self.logger.info("Succesful!")
+
+        if self.DSS_file_names["remove_default_values_flag"]:
+            if self.verbose:
+                self.logger.info("Removing the default values...")
+            s = self.remove_default_values(model)
+            if self.verbose and s != -1:
+                self.logger.info("Succesful!")
+
         return 1
 
     def parse_nodes(self, model):
@@ -598,5 +612,17 @@ class AbstractReader(object):
     def parse_dg(self, model):
         """Parse the distributed generation (e.g. PV).
         .. note:: Has to be implemented in subclasses.
+        """
+        pass
+
+    def parse_default_values(self, model):
+        """
+        Parse the default values.
+        """
+        pass
+
+    def remove_default_values(self, model):
+        """
+        Remove the default values.
         """
         pass

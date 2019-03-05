@@ -37,6 +37,7 @@ from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
+from ditto.default_values.default_values_json import Default_Values
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
@@ -46,7 +47,6 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
-
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -102,6 +102,18 @@ class Reader(AbstractReader):
             self.coordinates_delimiter = kwargs["coordinates_delimiter"]
         else:
             self.coordinates_delimiter = ","
+
+        if "default_values_file" in kwargs:
+            self.DSS_file_names["default_values_file"] = kwargs["default_values_file"]
+        else:
+            self.DSS_file_names[
+                "default_values_file"
+            ] = "../../default_values/opendss_default_values.json"
+
+        if "remove_default_values_flag" in kwargs:
+            self.DSS_file_names["remove_default_values_flag"] = True
+        else:
+            self.DSS_file_names["remove_default_values_flag"] = False
 
         # self.DSS_file_names={'Nodes': 'buscoords.dss',
         #                     'master': 'master.dss'}
@@ -206,6 +218,23 @@ class Reader(AbstractReader):
         logger.info("build_opendssdirect succesful")
 
         return 1
+
+    def parse_default_values(self, model):
+        model.set_names()
+
+        d_v = Default_Values(self.DSS_file_names["default_values_file"])
+        parsed_values = d_v.parse()
+        for obj in model.models:
+            if hasattr(obj, "faultrate"):
+                setattr(obj, "faultrate", parsed_values["Line"]["faultrate"])
+
+    def remove_default_values(self, model):
+        model.set_names()
+
+        if self.DSS_file_names["remove_default_values_flag"]:
+            for obj in model.models:
+                if hasattr(obj, "faultrate"):
+                    setattr(obj, "faultrate", None)
 
     def parse(self, model, **kwargs):
         """General parse function.
