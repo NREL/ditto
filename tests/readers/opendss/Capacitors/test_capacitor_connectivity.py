@@ -220,6 +220,50 @@ def test_capacitor_connectivity():
         phase_capacitor.normalsections
         for phase_capacitor in m["b4909-1"].phase_capacitors
     ] == [None, None, None]
+
+    assert len(m["b4909-2"].phase_capacitors) == 3  # b4909-2 is a three phase capacitor
+    assert sum(
+        [phase_capacitor.var for phase_capacitor in m["b4909-2"].phase_capacitors]
+    ) == pytest.approx(900 * 10 ** 3, 0.0001)
+    assert m["b4909-2"].name == "b4909-2"
+    assert m["b4909-2"].nominal_voltage == float(12.47) * 10 ** 3
+    assert m["b4909-2"].connection_type == "Y"
+    assert m["b4909-2"].delay == 30
+    assert m["b4909-2"].mode == "voltage"
+    assert m["b4909-2"].low == 120.5
+    assert m["b4909-2"].high == 125
+    # assert m["b4909-2"].resistance is None # 0.0
+    # assert m["b4909-2"].resistance0 is None # Not implemented for now
+    # assert m["b4909-2"].reactance is None # 0.0
+    # assert m["b4909-2"].reactance0 is None # Not implemented for now
+    assert m["b4909-2"].susceptance is None
+    # assert m["b4909-2"].susceptance0 is None # Not implemented for now
+    assert m["b4909-2"].conductance is None
+    # assert m["b4909-2"].conductance0 is None # Not implemented for now
+    assert m["b4909-2"].pt_ratio == 60
+    # assert m["b4909-2"].ct_ratio is None # 60
+    assert m["b4909-2"].pt_phase == "B"
+    assert m["b4909-2"].connecting_element == "b4909"
+    #    assert m["b4909-2"].positions is None # []
+    assert m["b4909-2"].measuring_element == "Line.OH_B4904"
+    #    assert m["b4909-2"].substation_name == '' # Not implemented for now
+    assert m["b4909-2"].feeder_name == "sourcebus_src"
+    # assert m["b4909-2"].is_substation == 0 # Not implemented for now
+
+    assert set([pc.phase for pc in m["b4909-2"].phase_capacitors]) == set(
+        ["A", "B", "C"]
+    )
+    assert [
+        phase_capacitor.switch for phase_capacitor in m["b4909-2"].phase_capacitors
+    ] == [None, None, None]
+    assert [
+        phase_capacitor.sections for phase_capacitor in m["b4909-2"].phase_capacitors
+    ] == [None, None, None]
+    assert [
+        phase_capacitor.normalsections
+        for phase_capacitor in m["b4909-2"].phase_capacitors
+    ] == [None, None, None]
+
     # oh_b4904
     # assert len(m["oh_b4904"].wires) == 4  # Number of wires # Neutral wire is not counted. TBD
     #    Phases of the different wires
@@ -317,6 +361,52 @@ def test_capacitor_connectivity():
         phase_capacitor.normalsections
         for phase_capacitor in m["b18944-1"].phase_capacitors
     ] == [None, None, None]
+
+    assert (
+        len(m["b18944-2"].phase_capacitors) == 3
+    )  # b18944-2 is a three phase capacitor
+    assert sum(
+        [phase_capacitor.var for phase_capacitor in m["b18944-2"].phase_capacitors]
+    ) == pytest.approx(1200 * 10 ** 3, 0.0001)
+    assert m["b18944-2"].name == "b18944-2"
+    assert m["b18944-2"].nominal_voltage == float(12.47) * 10 ** 3
+    assert m["b18944-2"].connection_type == "Y"
+    assert m["b18944-2"].delay == 31
+    assert m["b18944-2"].mode == "voltage"
+    assert m["b18944-2"].low == 118
+    assert m["b18944-2"].high == 124
+    # assert m["b18944-2"].resistance is None # 0.0
+    assert m["b18944-2"].resistance0 is None
+    # assert m["b18944-2"].reactance is None # 0.0
+    assert m["b18944-2"].reactance0 is None
+    assert m["b18944-2"].susceptance is None
+    assert m["b18944-2"].susceptance0 is None
+    assert m["b18944-2"].conductance is None
+    assert m["b18944-2"].conductance0 is None
+    assert m["b18944-2"].pt_ratio == 60
+    # assert m["b18944-2"].ct_ratio is None # 60.0
+    assert m["b18944-2"].pt_phase == "A"
+    assert m["b18944-2"].connecting_element == "b18941"
+    #    assert m["b18944-2"].positions is None # []
+    assert m["b18944-2"].measuring_element == "Line.OH_B18944"
+    #    assert m["b18944-2"].substation_name is None # ''
+    assert m["b18944-2"].feeder_name == "sourcebus_src"
+    assert m["b18944-2"].is_substation == 0
+
+    assert set([pc.phase for pc in m["b18944-2"].phase_capacitors]) == set(
+        ["A", "B", "C"]
+    )
+    assert [
+        phase_capacitor.switch for phase_capacitor in m["b18944-2"].phase_capacitors
+    ] == [None, None, None]
+    assert [
+        phase_capacitor.sections for phase_capacitor in m["b18944-2"].phase_capacitors
+    ] == [None, None, None]
+    assert [
+        phase_capacitor.normalsections
+        for phase_capacitor in m["b18944-2"].phase_capacitors
+    ] == [None, None, None]
+
     # oh_b18944
     # assert len(m["oh_b18944"].wires) == 4  # Number of wires # Neutral wire is not counted. TBD
     #    Phases of the different wires

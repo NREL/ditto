@@ -31,7 +31,7 @@ New RegControl.sb5_p4uhs0_4_reg_439 transformer=sb5_p4uhs0_4_trans_439 winding=2
 
 ! Rural regulator from SMART-DS rural region
 New Transformer.trans_reg_creduladortension phases=3 windings=2 buses=(rdt222-rdt298x.1.2.3, rdt222.1.2.3) conns=(wye,wye) kvs = (12.47,12.47) kvas=(10000,10000)
-New RegControl.reg_creguladortension transformer=trans_reg_creduladortension phases=3 winding=2 ptratio=60 band=2.4 vreg=123.6a vlimit=12.6 CTPrim=0.2 TapNum=2
+New RegControl.reg_creguladortension transformer=trans_reg_creduladortension phases=3 winding=2 ptratio=60 band=2.4 vreg=123.6 vlimit=12.6 CTPrim=0.2 TapNum=2
 
 
 ! Regulator from IEEE 13 node feeder
@@ -47,5 +47,3 @@ new regcontrol.Reg2  transformer=Reg2 winding=2  vreg=122  band=2  ptratio=20 ct
 New Transformer.Reg3 phases=1 XHL=0.01 kVAs=[1666 1666]
 ~ Buses=[650.3 RG60.3] kVs=[2.4  2.4] %LoadLoss=0.01
 new regcontrol.Reg3  transformer=Reg3 winding=2  vreg=122  band=2  ptratio=20 ctprim=700  R=3   X=9
-
-

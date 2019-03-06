@@ -41,7 +41,7 @@ def test_regulators():
     assert m["vreg2_a"].feeder_name == "sourcebus_src"
     #    assert m["vreg2_a"].noload_loss == None # 0.0 #loadloss or noloadloss?
     assert m["vreg2_a"].loadloss == 0.01  # loadloss or noloadloss?
-    assert m["vreg2_a"].phase_shift == None
+    assert m["vreg2_a"].phase_shift == 0
     # assert m["vreg2_a"].is_substation == 0 # Not implemented for now
     #    assert m["vreg2_a"].normhkva == None # 11000.0
     # assert m["vreg2_a"].install_type == None # Not implemented for now
@@ -106,7 +106,7 @@ def test_regulators():
     assert m["regulator_vreg2_a"].to_element == "190-8593"
     assert m["regulator_vreg2_a"].pt_phase == "A"
     assert m["regulator_vreg2_a"].reactances == [0.1]
-    assert m["regulator_vreg2_a"].phase_shift == None
+    assert m["regulator_vreg2_a"].phase_shift == 0
     # assert m["regulator_vreg2_a"].ltc == None  # Not implemented for now
     #    assert m["regulator_vreg2_a"].positions == None # []  # Not implemented for now
     #    assert m["regulator_vreg2_a"].substation_name == None # ''  # Not implemented for now
@@ -114,11 +114,48 @@ def test_regulators():
     # assert m["regulator_vreg2_a"].is_substation == 0  # Not implemented for now
     assert m["regulator_vreg2_a"].setpoint == None
 
+    assert m["regulator_vreg2_a"].windings[0].connection_type == "Y"
+    assert m["regulator_vreg2_a"].windings[1].connection_type == "Y"
+
+    assert m["regulator_vreg2_a"].windings[0].rated_power == 10000 * 10 ** 3
+    assert m["regulator_vreg2_a"].windings[1].rated_power == 10000 * 10 ** 3
+
+    #    assert m["regulator_vreg2_a"].windings[0].emergency_power == None # 15000000.0
+    #     assert m["regulator_vreg2_a"].windings[1].emergency_power == None # 15000000.0
+
+    #    assert m["regulator_vreg2_a"].windings[0].resistance == None # 0.005
+    #    assert m["regulator_vreg2_a"].windings[1].resistance == None # 0.005
+
+    assert m["regulator_vreg2_a"].windings[0].voltage_type == None
+    assert m["regulator_vreg2_a"].windings[1].voltage_type == None
+
+    assert m["regulator_vreg2_a"].windings[0].voltage_limit == None
+    assert m["regulator_vreg2_a"].windings[1].voltage_limit == None
+
+    assert m["regulator_vreg2_a"].windings[0].reverse_resistance == None
+    assert m["regulator_vreg2_a"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_vreg2_a"].windings[0].phase_windings[0].tap_position == None # 1.0
+
+    #    assert m["regulator_vreg2_a"].windings[1].phase_windings[0].tap_position == None # 1.0
+
+    assert m["regulator_vreg2_a"].windings[0].phase_windings[0].phase == "A"
+
+    assert m["regulator_vreg2_a"].windings[1].phase_windings[0].phase == "A"
+
+    #    assert m["regulator_vreg2_a"].windings[0].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_vreg2_a"].windings[1].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_vreg2_a"].windings[0].phase_windings[0].compensator_x == None # 0.0
+
+    #    assert m["regulator_vreg2_a"].windings[1].phase_windings[0].compensator_x == None # 0.0
+
     assert m["vreg2_b"].name == "vreg2_b"
     assert m["vreg2_b"].feeder_name == "sourcebus_src"
     #    assert m["vreg2_b"].noload_loss == None # 0.0 #loadloss or noloadloss?
     assert m["vreg2_b"].loadloss == 0.01  # loadloss or noloadloss?
-    assert m["vreg2_b"].phase_shift == None
+    assert m["vreg2_b"].phase_shift == 0
     # assert m["vreg2_b"].is_substation == 0  # Not implemented for now
     #    assert m["vreg2_b"].normhkva == None # 11000.0
     # assert m["vreg2_b"].install_type == None  # Not implemented for now
@@ -183,7 +220,7 @@ def test_regulators():
     assert m["regulator_vreg2_b"].to_element == "190-8593"
     assert m["regulator_vreg2_b"].pt_phase == "B"
     assert m["regulator_vreg2_b"].reactances == [0.1]
-    assert m["regulator_vreg2_b"].phase_shift == None
+    assert m["regulator_vreg2_b"].phase_shift == 0
     # assert m["regulator_vreg2_b"].ltc == None  # Not implemented for now
     #    assert m["regulator_vreg2_b"].positions == None # []  # Not implemented for now
     #    assert m["regulator_vreg2_b"].substation_name == None # ''  # Not implemented for now
@@ -191,11 +228,48 @@ def test_regulators():
     # assert m["regulator_vreg2_b"].is_substation == 0  # Not implemented for now
     assert m["regulator_vreg2_b"].setpoint == None
 
+    assert m["regulator_vreg2_b"].windings[0].connection_type == "Y"
+    assert m["regulator_vreg2_b"].windings[1].connection_type == "Y"
+
+    assert m["regulator_vreg2_b"].windings[0].rated_power == 10000 * 10 ** 3
+    assert m["regulator_vreg2_b"].windings[1].rated_power == 10000 * 10 ** 3
+
+    #    assert m["regulator_vreg2_b"].windings[0].emergency_power == None # 15000000.0
+    #     assert m["regulator_vreg2_b"].windings[1].emergency_power == None # 15000000.0
+
+    #    assert m["regulator_vreg2_b"].windings[0].resistance == None # 0.005
+    #    assert m["regulator_vreg2_b"].windings[1].resistance == None # 0.005
+
+    assert m["regulator_vreg2_b"].windings[0].voltage_type == None
+    assert m["regulator_vreg2_b"].windings[1].voltage_type == None
+
+    assert m["regulator_vreg2_b"].windings[0].voltage_limit == None
+    assert m["regulator_vreg2_b"].windings[1].voltage_limit == None
+
+    assert m["regulator_vreg2_b"].windings[0].reverse_resistance == None
+    assert m["regulator_vreg2_b"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_vreg2_b"].windings[0].phase_windings[0].tap_position == None # 1.0
+
+    #    assert m["regulator_vreg2_b"].windings[1].phase_windings[0].tap_position == None # 1.0
+
+    assert m["regulator_vreg2_b"].windings[0].phase_windings[0].phase == "B"
+
+    assert m["regulator_vreg2_b"].windings[1].phase_windings[0].phase == "B"
+
+    #    assert m["regulator_vreg2_b"].windings[0].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_vreg2_b"].windings[1].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_vreg2_b"].windings[0].phase_windings[0].compensator_x == None # 0.0
+
+    #    assert m["regulator_vreg2_b"].windings[1].phase_windings[0].compensator_x == None # 0.0s
+
     assert m["vreg2_c"].name == "vreg2_c"
     assert m["vreg2_c"].feeder_name == "sourcebus_src"
     #    assert m["vreg2_c"].noload_loss == None # 0.0 #loadloss or noloadloss?
     assert m["vreg2_c"].loadloss == 0.01  # loadloss or noloadloss?
-    assert m["vreg2_c"].phase_shift == None
+    assert m["vreg2_c"].phase_shift == 0
     # assert m["vreg2_c"].is_substation == 0  # Not implemented for now
     #    assert m["vreg2_c"].normhkva == None # 11000.0
     # assert m["vreg2_c"].install_type == None  # Not implemented for now
@@ -260,13 +334,50 @@ def test_regulators():
     assert m["regulator_vreg2_c"].to_element == "190-8593"
     assert m["regulator_vreg2_c"].pt_phase == "C"
     assert m["regulator_vreg2_c"].reactances == [0.1]
-    assert m["regulator_vreg2_c"].phase_shift == None
+    assert m["regulator_vreg2_c"].phase_shift == 0
     # assert m["regulator_vreg2_c"].ltc == None # Not implemented for now
     #    assert m["regulator_vreg2_c"].positions == None # [] # Not implemented for now
     #    assert m["regulator_vreg2_c"].substation_name == None # '' # Not implemented for now
     assert m["regulator_vreg2_c"].feeder_name == "sourcebus_src"
     # assert m["regulator_vreg2_c"].is_substation == 0 # Not implemented for now
     assert m["regulator_vreg2_c"].setpoint == None
+
+    assert m["regulator_vreg2_c"].windings[0].connection_type == "Y"
+    assert m["regulator_vreg2_c"].windings[1].connection_type == "Y"
+
+    assert m["regulator_vreg2_c"].windings[0].rated_power == 10000 * 10 ** 3
+    assert m["regulator_vreg2_c"].windings[1].rated_power == 10000 * 10 ** 3
+
+    #    assert m["regulator_vreg2_c"].windings[0].emergency_power == None # 15000000.0
+    #     assert m["regulator_vreg2_c"].windings[1].emergency_power == None # 15000000.0
+
+    #    assert m["regulator_vreg2_c"].windings[0].resistance == None # 0.005
+    #    assert m["regulator_vreg2_c"].windings[1].resistance == None # 0.005
+
+    assert m["regulator_vreg2_c"].windings[0].voltage_type == None
+    assert m["regulator_vreg2_c"].windings[1].voltage_type == None
+
+    assert m["regulator_vreg2_c"].windings[0].voltage_limit == None
+    assert m["regulator_vreg2_c"].windings[1].voltage_limit == None
+
+    assert m["regulator_vreg2_c"].windings[0].reverse_resistance == None
+    assert m["regulator_vreg2_c"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_vreg2_c"].windings[0].phase_windings[0].tap_position == None # 1.0
+
+    #    assert m["regulator_vreg2_c"].windings[1].phase_windings[0].tap_position == None # 1.0
+
+    assert m["regulator_vreg2_c"].windings[0].phase_windings[0].phase == "C"
+
+    assert m["regulator_vreg2_c"].windings[1].phase_windings[0].phase == "C"
+
+    #    assert m["regulator_vreg2_c"].windings[0].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_vreg2_c"].windings[1].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_vreg2_c"].windings[0].phase_windings[0].compensator_x == None # 0.0
+
+    #    assert m["regulator_vreg2_c"].windings[1].phase_windings[0].compensator_x == None # 0.0
 
     # Regulator No. 2 from IEEE 8500 test case
     assert m["regxfmr_b18865"].name == "regxfmr_b18865"
@@ -279,7 +390,7 @@ def test_regulators():
     assert m["regxfmr_b18865"].feeder_name == "sourcebus_src"
     #    assert m["regxfmr_b18865"].noload_loss == None # 0.0 #loadloss or noloadloss?
     #    assert m["regxfmr_b18865"].loadloss == None # 0.4
-    assert m["regxfmr_b18865"].phase_shift == None
+    assert m["regxfmr_b18865"].phase_shift == 0
     # assert m["regxfmr_b18865"].is_substation == 0 # Not implemented for now
     # assert m["regxfmr_b18865"].normhkva == None # 11000.0
     # assert m["regxfmr_b18865"].install_type == None # Not implemented for now
@@ -344,13 +455,50 @@ def test_regulators():
     assert m["regulator_regxfmr_b18865_ctrl"].to_element == "b18865reg"
     assert m["regulator_regxfmr_b18865_ctrl"].pt_phase == "C"
     assert m["regulator_regxfmr_b18865_ctrl"].reactances == [0.01]
-    assert m["regulator_regxfmr_b18865_ctrl"].phase_shift == None
+    assert m["regulator_regxfmr_b18865_ctrl"].phase_shift == 0
     # assert m["regulator_regxfmr_b18865_ctrl"].ltc == None # Not implemented for now
     #    assert m["regulator_regxfmr_b18865_ctrl"].positions == None # [] # Not implemented for now
     #    assert m["regulator_regxfmr_b18865_ctrl"].substation_name == None # '' # Not implemented for now
     assert m["regulator_regxfmr_b18865_ctrl"].feeder_name == "sourcebus_src"
     # assert m["regulator_regxfmr_b18865_ctrl"].is_substation == 0 # Not implemented for now
     assert m["regulator_regxfmr_b18865_ctrl"].setpoint == None
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].connection_type == "Y"
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].connection_type == "Y"
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].rated_power == 10000 * 10 ** 3
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].rated_power == 10000 * 10 ** 3
+
+    # assert m["regulator_regxfmr_b18865_ctrl"].windings[0].emergency_power == None # 15000000.0
+    # assert m["regulator_regxfmr_b18865_ctrl"].windings[1].emergency_power == None # 15000000.0
+
+    # assert m["regulator_regxfmr_b18865_ctrl"].windings[0].resistance == None # 0.2
+    # assert m["regulator_regxfmr_b18865_ctrl"].windings[1].resistance == None # 0.2
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].voltage_type == None
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].voltage_type == None
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].voltage_limit == None
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].voltage_limit == None
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].reverse_resistance == None
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].phase_windings[0].tap_position == None # 1.0
+
+    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].phase_windings[0].tap_position == None # 1.0
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].phase_windings[0].phase == "C"
+
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].phase_windings[0].phase == "C"
+
+    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].phase_windings[0].compensator_r == None # 0.0
+
+    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].phase_windings[0].compensator_x == None # 0.0
+
+    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].phase_windings[0].compensator_x == None # 0.0
 
     # Substation regulator from SMART-DS P4U region
     assert m["sb5_p4uhs0_4_trans_439"].name == "sb5_p4uhs0_4_trans_439"
@@ -363,7 +511,7 @@ def test_regulators():
     assert m["sb5_p4uhs0_4_trans_439"].feeder_name == "sourcebus_src"
     # assert m["sb5_p4uhs0_4_trans_439"].noload_loss == None # 0.0 #loadloss or noloadloss?
     # assert m["sb5_p4uhs0_4_trans_439"].loadloss == None # 0.9616652 ?? taken from XHL Value
-    assert m["sb5_p4uhs0_4_trans_439"].phase_shift == None
+    assert m["sb5_p4uhs0_4_trans_439"].phase_shift == -30
     # assert m["sb5_p4uhs0_4_trans_439"].is_substation == 0 # Not implemented for now
     # assert m["sb5_p4uhs0_4_trans_439"].normhkva == None # 8800.0
     # assert m["sb5_p4uhs0_4_trans_439"].install_type == None # Not implemented for now
@@ -453,7 +601,7 @@ def test_regulators():
     assert m["regulator_sb5_p4uhs0_4_reg_439"].reactances == [
         pytest.approx(0.9616652224137047)
     ]
-    assert m["regulator_sb5_p4uhs0_4_reg_439"].phase_shift == None
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].phase_shift == -30
     # assert m["regulator_sb5_p4uhs0_4_reg_439"].ltc == None # Not implemented for now
     #    assert m["regulator_sb5_p4uhs0_4_reg_439"].positions == None # [] # Not implemented for now
     #    assert m["regulator_sb5_p4uhs0_4_reg_439"].substation_name == None # '' # Not implemented for now
@@ -461,22 +609,91 @@ def test_regulators():
     # assert m["regulator_sb5_p4uhs0_4_reg_439"].is_substation == 0 # Not implemented for now
     assert m["regulator_sb5_p4uhs0_4_reg_439"].setpoint == None
 
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].connection_type == "D"
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].connection_type == "Y"
+
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].rated_power == 8000 * 10 ** 3
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].rated_power == 8000 * 10 ** 3
+
+    # assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].emergency_power == None # 12000000.0
+    # assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].emergency_power == None # 12000000.0
+
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].resistance == pytest.approx(
+        0.4808326112068522
+    )
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].resistance == pytest.approx(
+        0.4808326112068522
+    )
+
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].voltage_type == None
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].voltage_type == None
+
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].voltage_limit == None
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].voltage_limit == None
+
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].reverse_resistance == None
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    assert (
+        m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[0].phase == "A"
+    )
+    assert (
+        m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[1].phase == "B"
+    )
+    assert (
+        m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[2].phase == "C"
+    )
+
+    assert (
+        m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[0].phase == "A"
+    )
+    assert (
+        m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[1].phase == "B"
+    )
+    assert (
+        m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[2].phase == "C"
+    )
+
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[0].compensator_r == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[1].compensator_r == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[2].compensator_r == None # 0.0
+
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[0].compensator_r == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[1].compensator_r == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[2].compensator_r == None # 0.0
+
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[0].compensator_x == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[1].compensator_x == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].phase_windings[2].compensator_x == None # 0.0
+
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[0].compensator_x == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[1].compensator_x == None # 0.0
+    #    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].phase_windings[2].compensator_x == None # 0.0
+
     # Rural regulator from SMART-DS rural region
     assert m["trans_reg_creduladortension"].name == "trans_reg_creduladortension"
     assert (
         len(m["trans_reg_creduladortension"].windings) == 2
     )  # Transformer trans_reg_creduladortension should have 2 Windings
     assert (
-        m["trans_reg_creduladortension"].windings[0].nominal_voltage == 124700 * 10 ** 3
+        m["trans_reg_creduladortension"].windings[0].nominal_voltage == 12.47 * 10 ** 3
     )
     assert (
-        m["trans_reg_creduladortension"].windings[1].nominal_voltage == 124700 * 10 ** 3
+        m["trans_reg_creduladortension"].windings[1].nominal_voltage == 12.47 * 10 ** 3
     )
 
     assert m["trans_reg_creduladortension"].feeder_name == "sourcebus_src"
     # assert m["trans_reg_creduladortension"].noload_loss == 0.0 # 0.0 #loadloss or noloadloss?
     # assert m["trans_reg_creduladortension"].loadloss == None # 0.4
-    assert m["trans_reg_creduladortension"].phase_shift == None
+    assert m["trans_reg_creduladortension"].phase_shift == 0
     # assert m["trans_reg_creduladortension"].is_substation == 0 # Not implemented for now
     # assert m["trans_reg_creduladortension"].normhkva == None # 11000.0
     # assert m["trans_reg_creduladortension"].install_type == None # Not implemented for now
@@ -562,13 +779,82 @@ def test_regulators():
     assert m["regulator_reg_creguladortension"].to_element == "rdt222"
     assert m["regulator_reg_creguladortension"].pt_phase == "A"
     # assert m["regulator_reg_creguladortension"].reactances == None
-    assert m["regulator_reg_creguladortension"].phase_shift == None
+    assert m["regulator_reg_creguladortension"].phase_shift == 0
     # assert m["regulator_reg_creguladortension"].ltc == None # Not implemented for now
     #    assert m["regulator_reg_creguladortension"].positions == None # [] # Not implemented for now
     #    assert m["regulator_reg_creguladortension"].substation_name == None # '' # Not implemented for now
     assert m["regulator_reg_creguladortension"].feeder_name == "sourcebus_src"
     # assert m["regulator_reg_creguladortension"].is_substation == 0 # Not implemented for now
     assert m["regulator_reg_creguladortension"].setpoint == None
+
+    assert m["regulator_reg_creguladortension"].windings[0].connection_type == "Y"
+    assert m["regulator_reg_creguladortension"].windings[1].connection_type == "Y"
+
+    assert (
+        m["regulator_reg_creguladortension"].windings[0].rated_power == 10000 * 10 ** 3
+    )
+    assert (
+        m["regulator_reg_creguladortension"].windings[1].rated_power == 10000 * 10 ** 3
+    )
+
+    # assert m["regulator_reg_creguladortension"].windings[0].emergency_power == None # 15000000.0
+    # assert m["regulator_reg_creguladortension"].windings[1].emergency_power == None # 15000000.0
+
+    # assert m["regulator_reg_creguladortension"].windings[0].resistance == None # 0.2
+    # assert m["regulator_reg_creguladortension"].windings[1].resistance == None # 0.2
+
+    assert m["regulator_reg_creguladortension"].windings[0].voltage_type == None
+    assert m["regulator_reg_creguladortension"].windings[1].voltage_type == None
+
+    assert m["regulator_reg_creguladortension"].windings[0].voltage_limit == None
+    assert m["regulator_reg_creguladortension"].windings[1].voltage_limit == None
+
+    assert m["regulator_reg_creguladortension"].windings[0].reverse_resistance == None
+    assert m["regulator_reg_creguladortension"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    assert (
+        m["regulator_reg_creguladortension"].windings[0].phase_windings[0].phase == "A"
+    )
+    assert (
+        m["regulator_reg_creguladortension"].windings[0].phase_windings[1].phase == "B"
+    )
+    assert (
+        m["regulator_reg_creguladortension"].windings[0].phase_windings[2].phase == "C"
+    )
+
+    assert (
+        m["regulator_reg_creguladortension"].windings[1].phase_windings[0].phase == "A"
+    )
+    assert (
+        m["regulator_reg_creguladortension"].windings[1].phase_windings[1].phase == "B"
+    )
+    assert (
+        m["regulator_reg_creguladortension"].windings[1].phase_windings[2].phase == "C"
+    )
+
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[0].compensator_r == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[1].compensator_r == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[2].compensator_r == None # 0.0
+
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[0].compensator_r == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[1].compensator_r == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[2].compensator_r == None # 0.0
+
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[0].compensator_x == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[1].compensator_x == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[0].phase_windings[2].compensator_x == None # 0.0
+
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[0].compensator_x == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[1].compensator_x == None # 0.0
+    #    assert m["regulator_reg_creguladortension"].windings[1].phase_windings[2].compensator_x == None # 0.0
 
     #  Regulator from IEEE 13 node feeder
     assert m["reg1"].name == "reg1"
@@ -579,7 +865,7 @@ def test_regulators():
     assert m["reg1"].feeder_name == "sourcebus_src"
     # assert m["reg1"].noload_loss == None # 0.0 #loadloss or noloadloss?
     assert m["reg1"].loadloss == 0.01
-    assert m["reg1"].phase_shift == None
+    assert m["reg1"].phase_shift == 0
     # assert m["reg1"].is_substation == 0 # Not implemented for now
     # assert m["reg1"].normhkva == None # 1832.6
     # assert m["reg1"].install_type == None # Not implemented for now
@@ -645,13 +931,51 @@ def test_regulators():
     assert m["regulator_reg1"].to_element == "rg60"
     assert m["regulator_reg1"].pt_phase == "A"
     assert m["regulator_reg1"].reactances == [0.01]
-    assert m["regulator_reg1"].phase_shift == None
+    assert m["regulator_reg1"].phase_shift == 0
     # assert m["regulator_reg1"].ltc == None # Not implemented for now
     #    assert m["regulator_reg1"].positions == None # [] # Not implemented for now
     #    assert m["regulator_reg1"].substation_name == None # '' # Not implemented for now
     assert m["regulator_reg1"].feeder_name == "sourcebus_src"
     # assert m["regulator_reg1"].is_substation == 0 # Not implemented for now
     assert m["regulator_reg1"].setpoint == None
+
+    assert m["regulator_reg1"].windings[0].connection_type == "Y"
+    assert m["regulator_reg1"].windings[1].connection_type == "Y"
+
+    assert m["regulator_reg1"].windings[0].rated_power == 1666 * 10 ** 3
+    assert m["regulator_reg1"].windings[1].rated_power == 1666 * 10 ** 3
+
+    # assert m["regulator_reg1"].windings[0].emergency_power == None # 2499000.0
+    # assert m["regulator_reg1"].windings[1].emergency_power == None # 2499000.0
+
+    # assert m["regulator_reg1"].windings[0].resistance == None # 0.005
+    # assert m["regulator_reg1"].windings[1].resistance == None # 0.005
+
+    assert m["regulator_reg1"].windings[0].voltage_type == None
+    assert m["regulator_reg1"].windings[1].voltage_type == None
+
+    assert m["regulator_reg1"].windings[0].voltage_limit == None
+    assert m["regulator_reg1"].windings[1].voltage_limit == None
+
+    assert m["regulator_reg1"].windings[0].reverse_resistance == None
+    assert m["regulator_reg1"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_reg1"].windings[0].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg1"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg1"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    #    assert m["regulator_reg1"].windings[1].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg1"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg1"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    assert m["regulator_reg1"].windings[0].phase_windings[0].phase == "A"
+
+    assert m["regulator_reg1"].windings[1].phase_windings[0].phase == "A"
+
+    assert m["regulator_reg1"].windings[0].phase_windings[0].compensator_r == float(3)
+    assert m["regulator_reg1"].windings[1].phase_windings[0].compensator_r == float(3)
+    assert m["regulator_reg1"].windings[0].phase_windings[0].compensator_x == float(9)
+    assert m["regulator_reg1"].windings[1].phase_windings[0].compensator_x == float(9)
 
     assert m["reg2"].name == "reg2"
     assert len(m["reg2"].windings) == 2  # Transformer reg2 should have 2 Windings
@@ -661,7 +985,7 @@ def test_regulators():
     assert m["reg2"].feeder_name == "sourcebus_src"
     # assert m["reg2"].noload_loss == None # 0.0 #loadloss or noloadloss?
     assert m["reg2"].loadloss == 0.01
-    assert m["reg2"].phase_shift == None
+    assert m["reg2"].phase_shift == 0
     # assert m["reg2"].is_substation == 0 # Not implemented for now
     # assert m["reg2"].normhkva == None # 1832.6
     # assert m["reg2"].install_type == None # Not implemented for now
@@ -727,13 +1051,51 @@ def test_regulators():
     assert m["regulator_reg2"].to_element == "rg60"
     assert m["regulator_reg2"].pt_phase == "B"
     assert m["regulator_reg2"].reactances == [0.01]
-    assert m["regulator_reg2"].phase_shift == None
+    assert m["regulator_reg2"].phase_shift == 0
     # assert m["regulator_reg2"].ltc == None # Not implemented for now
     #    assert m["regulator_reg2"].positions == None # [] # Not implemented for now
     #    assert m["regulator_reg2"].substation_name == None # '' # Not implemented for now
     assert m["regulator_reg2"].feeder_name == "sourcebus_src"
     # assert m["regulator_reg2"].is_substation == 0 # Not implemented for now
     assert m["regulator_reg2"].setpoint == None
+
+    assert m["regulator_reg2"].windings[0].connection_type == "Y"
+    assert m["regulator_reg2"].windings[1].connection_type == "Y"
+
+    assert m["regulator_reg2"].windings[0].rated_power == 1666 * 10 ** 3
+    assert m["regulator_reg2"].windings[1].rated_power == 1666 * 10 ** 3
+
+    # assert m["regulator_reg2"].windings[0].emergency_power == None # 2499000.0
+    # assert m["regulator_reg2"].windings[1].emergency_power == None # 2499000.0
+
+    # assert m["regulator_reg2"].windings[0].resistance == None # 0.005
+    # assert m["regulator_reg2"].windings[1].resistance == None # 0.005
+
+    assert m["regulator_reg2"].windings[0].voltage_type == None
+    assert m["regulator_reg2"].windings[1].voltage_type == None
+
+    assert m["regulator_reg2"].windings[0].voltage_limit == None
+    assert m["regulator_reg2"].windings[1].voltage_limit == None
+
+    assert m["regulator_reg2"].windings[0].reverse_resistance == None
+    assert m["regulator_reg2"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_reg2"].windings[0].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg2"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg2"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    #    assert m["regulator_reg2"].windings[1].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg2"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg2"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    assert m["regulator_reg2"].windings[0].phase_windings[0].phase == "B"
+
+    assert m["regulator_reg2"].windings[1].phase_windings[0].phase == "B"
+
+    assert m["regulator_reg2"].windings[0].phase_windings[0].compensator_r == float(3)
+    assert m["regulator_reg2"].windings[1].phase_windings[0].compensator_r == float(3)
+    assert m["regulator_reg2"].windings[0].phase_windings[0].compensator_x == float(9)
+    assert m["regulator_reg2"].windings[1].phase_windings[0].compensator_x == float(9)
 
     assert m["reg3"].name == "reg3"
     assert len(m["reg3"].windings) == 2  # Transformer reg3 should have 2 Windings
@@ -743,7 +1105,7 @@ def test_regulators():
     assert m["reg3"].feeder_name == "sourcebus_src"
     # assert m["reg3"].noload_loss == None # 0.0 #loadloss or noloadloss?
     assert m["reg3"].loadloss == 0.01
-    assert m["reg3"].phase_shift == None
+    assert m["reg3"].phase_shift == 0
     # assert m["reg3"].is_substation == 0 # Not implemented for now
     # assert m["reg3"].normhkva == None # 1832.6
     # assert m["reg3"].install_type == None # Not implemented for now
@@ -809,10 +1171,48 @@ def test_regulators():
     assert m["regulator_reg3"].to_element == "rg60"
     assert m["regulator_reg3"].pt_phase == "C"
     assert m["regulator_reg3"].reactances == [0.01]
-    assert m["regulator_reg3"].phase_shift == None
+    assert m["regulator_reg3"].phase_shift == 0
     # assert m["regulator_reg3"].ltc == None # Not implemented for now
     #    assert m["regulator_reg3"].positions == None # [] # Not implemented for now
     #    assert m["regulator_reg3"].substation_name == None # '' # Not implemented for now
     assert m["regulator_reg3"].feeder_name == "sourcebus_src"
     # assert m["regulator_reg3"].is_substation == 0 # Not implemented for now
     assert m["regulator_reg3"].setpoint == None
+
+    assert m["regulator_reg3"].windings[0].connection_type == "Y"
+    assert m["regulator_reg3"].windings[1].connection_type == "Y"
+
+    assert m["regulator_reg3"].windings[0].rated_power == 1666 * 10 ** 3
+    assert m["regulator_reg3"].windings[1].rated_power == 1666 * 10 ** 3
+
+    # assert m["regulator_reg3"].windings[0].emergency_power == None # 2499000.0
+    # assert m["regulator_reg3"].windings[1].emergency_power == None # 2499000.0
+
+    # assert m["regulator_reg3"].windings[0].resistance == None # 0.005
+    # assert m["regulator_reg3"].windings[1].resistance == None # 0.005
+
+    assert m["regulator_reg3"].windings[0].voltage_type == None
+    assert m["regulator_reg3"].windings[1].voltage_type == None
+
+    assert m["regulator_reg3"].windings[0].voltage_limit == None
+    assert m["regulator_reg3"].windings[1].voltage_limit == None
+
+    assert m["regulator_reg3"].windings[0].reverse_resistance == None
+    assert m["regulator_reg3"].windings[1].reverse_resistance == None
+
+    #    assert m["regulator_reg3"].windings[0].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg3"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg3"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    #    assert m["regulator_reg3"].windings[1].phase_windings[0].tap_position == None # 1.0
+    #    assert m["regulator_reg3"].windings[1].phase_windings[1].tap_position == None # 1.0
+    #    assert m["regulator_reg3"].windings[1].phase_windings[2].tap_position == None # 1.0
+
+    assert m["regulator_reg3"].windings[0].phase_windings[0].phase == "C"
+
+    assert m["regulator_reg3"].windings[1].phase_windings[0].phase == "C"
+
+    assert m["regulator_reg3"].windings[0].phase_windings[0].compensator_r == float(3)
+    assert m["regulator_reg3"].windings[1].phase_windings[0].compensator_r == float(3)
+    assert m["regulator_reg3"].windings[0].phase_windings[0].compensator_x == float(9)
+    assert m["regulator_reg3"].windings[1].phase_windings[0].compensator_x == float(9)
