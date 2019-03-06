@@ -1,13 +1,15 @@
 {
   "Line": {
-      "faultrate": 0.1,
-      "normamps" : 400.0,
-      "emergamps" : 600.0,
+      "faultrate": 0.2,
       "R1" : 0.0580,
       "X1" : 0.1206,
       "R0" : 0.1784,
       "X0" : 0.4047,
       "C1" : 3.4e-9,
       "C0" : 1.6e-9
-   }
+   },
+  "Wire": {
+   "ampacity" : 400.0,
+   "emergency_ampacity" : 600.0,
+ }
 }

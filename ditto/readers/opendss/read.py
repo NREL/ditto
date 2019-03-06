@@ -227,6 +227,14 @@ class Reader(AbstractReader):
         for obj in model.models:
             if hasattr(obj, "faultrate"):
                 setattr(obj, "faultrate", parsed_values["Line"]["faultrate"])
+            if hasattr(obj, "ampacity"):
+                setattr(obj, "ampacity", parsed_values["Wire"]["ampacity"])
+            if hasattr(obj, "emergency_ampacity"):
+                setattr(
+                    obj,
+                    "emergency_ampacity",
+                    parsed_values["Wire"]["emergency_ampacity"],
+                )
 
     def remove_default_values(self, model):
         model.set_names()
@@ -235,6 +243,10 @@ class Reader(AbstractReader):
             for obj in model.models:
                 if hasattr(obj, "faultrate"):
                     setattr(obj, "faultrate", None)
+                if hasattr(obj, "ampacity"):
+                    setattr(obj, "ampacity", None)
+                if hasattr(obj, "emergency_ampacity"):
+                    setattr(obj, "emergency_ampacity", None)
 
     def parse(self, model, **kwargs):
         """General parse function.
