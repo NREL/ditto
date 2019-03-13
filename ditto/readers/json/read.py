@@ -31,6 +31,7 @@ from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.models.base import Int
 from ditto.models.base import Float
 from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
 
 class_mapping = {
     "PowerSource": PowerSource,
