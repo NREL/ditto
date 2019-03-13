@@ -27,6 +27,7 @@ class Storage(DiTToHasTraits):
         help="""Rated reactive power of the inverter. In watts.""", default_value=None
     )
     power_factor = Float(help="""Default power factor. In watts.""", default_value=None)
+
     min_powerfactor = Float(
         help="""Minimum power factor of the device""", default_value=None
     )

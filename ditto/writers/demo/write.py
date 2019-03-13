@@ -27,42 +27,7 @@ class Writer(AbstractWriter):
     register_names = ["demo", "Demo"]
 
     def __init__(self, **kwargs):
-
-        if "log_file" in kwargs:
-            log_file = kwargs["log_file"]
-        else:
-            log_file = "demo_writer.log"
-
-        if "output_path" in kwargs:
-            self.output_path = kwargs["output_path"]
-        else:
-            self.output_path = "./"
-
-        print(self.output_path)
-        # create logger
-        self.logger = logging.getLogger("demo_writer")
-        self.logger.setLevel(logging.INFO)
-
-        # create file handler which logs everything
-        self.fh = logging.FileHandler(log_file)
-        self.fh.setLevel(logging.INFO)
-
-        # create console handler with WARNING log level
-        self.ch = logging.StreamHandler()
-        self.ch.setLevel(logging.WARNING)
-
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        self.fh.setFormatter(formatter)
-        self.ch.setFormatter(formatter)
-
-        # add the handlers to the logger
-        self.logger.addHandler(self.fh)
-        self.logger.addHandler(self.ch)
-
-        self.logger.info("DiTTo--->Demo writer successfuly instanciated.")
+        super().__init__(**kwargs)
 
     def write(self, model, **kwargs):
         """
@@ -86,7 +51,7 @@ class Writer(AbstractWriter):
         with open(os.path.join(self.output_path, "Model.txt"), "w") as fp:
 
             # Write lines
-            self.logger.info("Writing the Lines...")
+            logger.info("Writing the Lines...")
             if self.verbose:
                 logger.debug("Writing the Lines...")
             s = self.write_lines(model, fp)

@@ -33,6 +33,11 @@ from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.position import Position
 from ditto.models.base import Unicode
 
+from ditto.readers.synergi.length_units import (
+    convert_length_unit,
+    SynergiValueType,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -228,6 +233,7 @@ class Reader(AbstractReader):
         LineID = self.get_data("InstSection", "SectionId")
         # FeederId = self.get_data("InstSection", "FeederId")
         LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
         PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
         PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
         PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
@@ -270,6 +276,10 @@ class Reader(AbstractReader):
         SwitchType = self.get_data("InstSwitches", "SwitchType")
         SwitchIsOpen = self.get_data("InstSwitches", "SwitchIsOpen")
         SwitchName = self.get_data("DevSwitches", "SwitchName")
+        Switch_index_map = {}
+        for i in range(len(SwitchName)):
+            Switch_index_map[SwitchName[i]] = i
+
         ContinuousCurrentRating_switch = self.get_data(
             "DevSwitches", "ContinuousCurrentRating"
         )
@@ -337,7 +347,7 @@ class Reader(AbstractReader):
 
         ## Wires ###########
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
-        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableDiamConductor = self.get_data("DevConductors", "CableDiamConductor_SUL")
         CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
         ConductorName = self.get_data("DevConductors", "ConductorName")
         PosSequenceResistance_PerLUL = self.get_data(
@@ -351,7 +361,7 @@ class Reader(AbstractReader):
         )
         ZeroSequenceReactance_PerLUL = self.get_data(
             "DevConductors", "ZeroSequenceReactance_PerLUL"
-        )
+            )
         ContinuousCurrentRating = self.get_data(
             "DevConductors", "ContinuousCurrentRating"
         )
@@ -359,11 +369,18 @@ class Reader(AbstractReader):
             "DevConductors", "InterruptCurrentRating"
         )
 
+        ### Concentric Neutral Data ###
+        CableConNeutStrandDiameter_SUL = self.get_data("DevConductors", "CableConNeutStrandDiameter_SUL")
+        CableConNeutResistance_PerLUL = self.get_data("DevConductors", "CableConNeutResistance_PerLUL")
+        CableConNeutStrandCount = self.get_data("DevConductors", "CableConNeutStrandCount")
+        CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        CableDiamOverInsul = self.get_data("DevConductors", "CableDiamOverInsul_SUL")
+
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
                 "CableGMR": CableGMR[idx],
-                "CableDiamOutside": CableDiamOutside[idx],
+                "CableDiamConductor": CableDiamConductor[idx],
                 "CableResistance": CableResistance[idx],
                 "PosSequenceResistance_PerLUL": PosSequenceResistance_PerLUL[idx],
                 "PosSequenceReactance_PerLUL": PosSequenceReactance_PerLUL[idx],
@@ -371,6 +388,12 @@ class Reader(AbstractReader):
                 "ZeroSequenceReactance_PerLUL": ZeroSequenceReactance_PerLUL[idx],
                 "ContinuousCurrentRating": ContinuousCurrentRating[idx],
                 "InterruptCurrentRating": InterruptCurrentRating[idx],
+                "CableConNeutStrandDiameter_SUL": CableConNeutStrandDiameter_SUL[idx],
+                "CableConNeutResistance_PerLUL": CableConNeutResistance_PerLUL[idx],
+                "CableConNeutStrandCount": CableConNeutStrandCount[idx],
+                "CableDiamOutside": CableDiamOutside[idx],
+                "CableDiamOverInsul": CableDiamOverInsul[idx],
+
             }
 
         ## Loads #############
@@ -625,7 +648,15 @@ class Reader(AbstractReader):
             # Assumes MUL is medium unit length and this is feets
             # Converts to meters then
             #
-            api_line.length = LineLength[i] * 0.3048
+            api_line.length = convert_length_unit(
+                LineLength[i],
+                SynergiValueType.MUL,
+                LengthUnits
+            )
+            if LineHeight[i] <0:
+                api_line.line_type = "underground"
+            else:
+                api_line.line_type = "overhead"
 
             # From element
             # Replace spaces with "_"
@@ -659,16 +690,17 @@ class Reader(AbstractReader):
 
             # Switch
             if switch_sectionID is not None and obj in switch_sectionID.values:
-                idd = np.argwhere(switch_sectionID.values == obj).flatten()
+                idd_db= np.argwhere(switch_sectionID.values == obj).flatten()
 
                 # Set the is_switch flag to True
                 api_line.is_switch = 1
 
                 # Get the current ratings (to be used in the wires)
-                if len(idd) == 1:
-                    eqt_rating = ContinuousCurrentRating_switch[idd[0]]
-                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd[0]]
-                    eqt_open = SwitchIsOpen[idd[0]]
+                if len(idd_db) == 1:
+                    idd_warehouse = Switch_index_map[SwitchType[idd_db[0]]]
+                    eqt_rating = ContinuousCurrentRating_switch[idd_warehouse]
+                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd_warehouse]
+                    eqt_open = SwitchIsOpen[idd_db[0]]
 
             # Fuse
             if fuse_sectionID is not None and obj in fuse_sectionID.values:
@@ -851,12 +883,6 @@ class Reader(AbstractReader):
 
                 # The Neutral will be handled seperately
                 if phase != "N":
-
-                    # Assumes MUL is medium unit length = ft
-                    # Convert to meters
-                    #
-                    coeff = 0.3048
-
                     # Set the position of the first wire
                     if (
                         idx == 0
@@ -865,15 +891,19 @@ class Reader(AbstractReader):
                         and "Position1_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = (
-                            config["Position1_X_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        api_wire.X = convert_length_unit(
+                            config["Position1_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"]
-                        ) * coeff  # DiTTo is in meters
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                     # Set the position of the second wire
                     if (
@@ -883,15 +913,19 @@ class Reader(AbstractReader):
                         and "Position2_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = (
-                            config["Position2_X_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        api_wire.X = convert_length_unit(
+                            config["Position2_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"]
-                        ) * coeff  # DiTTo is in meters
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                     # Set the position of the third wire
                     if (
@@ -901,15 +935,19 @@ class Reader(AbstractReader):
                         and "Position3_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = (
-                            config["Position3_X_MUL"] * coeff
-                        )  # DiTTo is in meters
+                        api_wire.X = convert_length_unit(
+                            config["Position3_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"]
-                        ) * coeff  # DiTTo is in meters
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                     # Set the characteristics of the first wire. Use PhaseConductorID
                     #
@@ -997,24 +1035,22 @@ class Reader(AbstractReader):
                         conductor_name_raw = NeutralConductorID[i]
 
                     # Set the Spacing of the neutral
-                    #
-                    # Assumes MUL is medium unit length = ft
-                    # Convert to meters
-                    #
-                    coeff = 0.3048
-
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
 
                         # Set X
-                        api_wire.X = (
-                            config["Neutral_X_MUL"] * coeff
+                        api_wire.X = convert_length_unit(
+                            config["Neutral_X_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
                         )  # DiTTo is in meters
 
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
-                        ) * coeff  # DiTTo is in meters
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits
+                        )
 
                 # Set the characteristics of the wire:
                 # - GMR
@@ -1030,16 +1066,19 @@ class Reader(AbstractReader):
                     # Set the GMR of the conductor
                     # DiTTo is in meters and GMR is assumed to be given in feets
                     #
-                    api_wire.gmr = (
-                        conductor_mapping[conductor_name_raw]["CableGMR"] * 0.3048
+                    api_wire.gmr = convert_length_unit(
+                        conductor_mapping[conductor_name_raw]["CableGMR"],
+                        SynergiValueType.MUL,
+                        LengthUnits
                     )
 
                     # Set the Diameter of the conductor
                     # Diameter is assumed to be given in inches and is converted to meters here
                     #
-                    api_wire.diameter = (
-                        conductor_mapping[conductor_name_raw]["CableDiamOutside"]
-                        * 0.0254
+                    api_wire.diameter = convert_length_unit(
+                        conductor_mapping[conductor_name_raw]["CableDiamConductor"],
+                        SynergiValueType.SUL,
+                        LengthUnits
                     )
 
                     # Set the Ampacity of the conductor
@@ -1059,15 +1098,26 @@ class Reader(AbstractReader):
                         ]["InterruptCurrentRating"]
 
                     # Set the resistance of the conductor
-                    # TODO: Change this once resistance is the per unit length resistance
+                    # Represented in Ohms per meter
                     #
                     if api_line.length is not None:
-                        api_wire.resistance = (
-                            conductor_mapping[conductor_name_raw]["CableResistance"]
-                            * api_line.length
-                            * 1.0
-                            / 1609.34
+                        api_wire.resistance = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableResistance"],
+                            SynergiValueType.Per_LUL,
+                            LengthUnits
                         )
+
+                    # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
+                    if conductor_mapping[conductor_name_raw]["CableDiamOutside"] > conductor_mapping[conductor_name_raw]["CableDiamConductor"]:
+                        api_wire.concentric_neutral_resistance = conductor_mapping[conductor_name_raw]["CableConNeutResistance_PerLUL"] /160934
+                        api_wire.concentric_neutral_diameter = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]*0.0254 # multiplied by short unit length scale
+                        api_wire.concentric_neutral_gmr = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]/2.0*0.7788*0.0254 # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
+                        api_wire.concentric_neutral_outside_diameter = conductor_mapping[conductor_name_raw]["CableDiamOutside"]* 0.0254 # multiplied by short unit length scale
+                        api_wire.concentric_neutral_nstrand = int(conductor_mapping[conductor_name_raw]["CableConNeutStrandCount"])
+                        api_wire.insulation_thickness = (conductor_mapping[conductor_name_raw]["CableDiamOverInsul"]- conductor_mapping[conductor_name_raw]["CableDiamConductor"])/2.0*0.0254
+
+
+                        
 
                 # Add the new Wire to the line's list of wires
                 #
@@ -1110,29 +1160,16 @@ class Reader(AbstractReader):
                 #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
                 #         --------------------------
 
-                # TODO: Check that the following is correct...
-                # If LengthUnits is set to English2 or not defined , then assume miles
-                if LengthUnits == "English2" or LengthUnits is None:
-                    coeff = 0.000621371
-                # Else, if LengthUnits is set to English1, assume kft
-                elif LengthUnits == "English1":
-                    coeff = 3.28084 * 10 ** -3
-                # Else, if LengthUnits is set to Metric, assume km
-                elif LengthUnits == "Metric":
-                    coeff = 10 ** -3
-                else:
-                    raise ValueError(
-                        "LengthUnits <{}> is not valid.".format(LengthUnits)
-                    )
-
-                # Multiply by 1/3
-                coeff *= 1.0 / 3.0
+                r0 = convert_length_unit(r0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                r1 = convert_length_unit(r1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                x0 = convert_length_unit(x0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                x1 = convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
 
                 # One phase case (One phase + neutral)
                 #
                 if NPhase == 2:
                     impedance_matrix = [
-                        [coeff * complex(float(r0) + float(r1), float(x0) + float(x1))]
+                        [complex(float(r0) + float(r1), float(x0) + float(x1))]
                     ]
 
                 # Two phase case (Two phases + neutral)
@@ -1151,9 +1188,9 @@ class Reader(AbstractReader):
                     if b2 == 0:
                         b2 = float(x1)
 
-                    b = coeff * complex(b1, b2)
+                    b = complex(b1, b2)
 
-                    a = coeff * complex(
+                    a = complex(
                         (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
                     )
 
@@ -1162,7 +1199,7 @@ class Reader(AbstractReader):
                 # Three phases case (Three phases + neutral)
                 #
                 if NPhase == 4:
-                    a = coeff * complex(
+                    a = complex(
                         (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
                     )
                     b1 = float(r0) - float(r1)
@@ -1177,7 +1214,7 @@ class Reader(AbstractReader):
                     if b2 == 0:
                         b2 = float(x1)
 
-                    b = coeff * complex(b1, b2)
+                    b = complex(b1, b2)
 
                     impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
 

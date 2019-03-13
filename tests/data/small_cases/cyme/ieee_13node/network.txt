@@ -7,22 +7,22 @@ CYMDIST_REVISION=06
 
 [NODE]
 FORMAT_NODE=NodeID,CoordX,CoordY,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,ZoneID,ConnectedEquipType,ExposedCircuitType,BusGap,WorkingDistance,UseUserDefinedFaultCurrent,UserDefinedFaultCurrent,OpeningTimeMode,UserDefinedOpeningTime,OverrideLFVoltageLimit,HighVoltageLimit,LowVoltageLimit,LoadSheddingActive,MaximumLoadShed,ShedLoadCost,UserDefinedBaseVoltage
-632,-102.564756,-82.359153,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,290851,69.572440,-48.128098,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-7,-102.140153,119.727044,$NodeId$#@@#VA=$VpuA$ / $PH-AngleA$ deg#@@#VB=$VpuB$ / $PH-AngleB$ deg#@@#VC=$VpuC$ / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24577,65.478938,3.351202,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-633,96.981706,-82.359153,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,-6.612383,65.053181,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-634,296.528167,-82.359153,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,6.248912,63.487717,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-671,-102.564756,-295.840278,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,64.280694,-44.107356,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-675,177.685724,-296.168228,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,13.661897,50.552428,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-680,-102.216065,-385.711768,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,-0.854973,-49.489308,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-645,-303.611567,-82.359153,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,4.276814,38.692530,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-646,-503.158028,-82.359153,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,3.158036,37.524306,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-684,-305.569538,-295.821338,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,3.725374,37.094315,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+632,-102.564756,-82.359153,,290851,69.572440,-48.128098,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+7,-102.140153,119.727044,,24577,65.478938,3.351202,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+633,96.981706,-82.359153,,24579,-6.612383,65.053181,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+634,296.528167,-82.359153,,24579,6.248912,63.487717,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+671,-102.564756,-295.840278,,24579,64.280694,-44.107356,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+675,177.685724,-296.168228,,24579,13.661897,50.552428,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+680,-102.216065,-385.711768,,24579,-0.854973,-49.489308,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+645,-303.611567,-82.359153,,24579,4.276814,38.692530,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+646,-503.158028,-82.359153,,24579,3.158036,37.524306,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+684,-305.569538,-295.821338,,24579,3.725374,37.094315,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
 LOAD652,-305.361990,-423.410687,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 LOAD611,-497.577422,-322.467031,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 LOAD692,95.481356,-329.791363,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
-611,-497.529638,-296.406716,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,290851,1.581533,31.847200,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-652,-305.425550,-388.033675,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,53.939929,7.962038,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
-692,95.477648,-295.827775,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,-8.669266,48.818164,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+611,-497.529638,-296.406716,,290851,1.581533,31.847200,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+652,-305.425550,-388.033675,,24579,53.939929,7.962038,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+692,95.477648,-295.827775,,24579,-8.669266,48.818164,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
 LOAD645,-303.611567,-102.823074,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 LOAD646,-503.140358,-104.938533,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 L611CAP,-591.552268,-296.394266,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
@@ -30,7 +30,7 @@ L675CAP,375.264250,-296.626671,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 LOAD671,-130.812161,-270.135734,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 LOAD675,177.693667,-331.639128,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
 LOAD634,296.529235,-104.537935,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000
-RG60,-102.134091,-103.005827,$NodeId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,-62.994611,-77.338722,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
+RG60,-102.134091,-103.005827,,24579,-62.994611,-77.338722,0.000000,2,1,1,0,0,0,0,Arial,1.000000,0.330000,,,,,,,,,,,,,,,,0.000000
 FORMAT_NODE=NodeID,CoordX1,CoordY1,CoordX2,CoordY2,Width,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,ZoneID,ConnectedEquipType,ExposedCircuitType,BusGap,WorkingDistance,UseUserDefinedFaultCurrent,UserDefinedFaultCurrent,OpeningTimeMode,UserDefinedOpeningTime,OverrideLFVoltageLimit,HighVoltageLimit,LowVoltageLimit,LoadSheddingActive,MaximumLoadShed,ShedLoadCost,UserDefinedBaseVoltage
 650,-139.371718,202.525349,-64.371718,202.525349,75.000000,650,28673,0.000000,0.000000,0.000000,1,1,1,0,0,0,0,Arial,1.500000,0.330000,,,,,,,,,,,,,,,,0.000000
 
@@ -69,7 +69,7 @@ L671_680,L671_680,556_500,556_500,556_500,4/0,500,304.800000,0,11,,,2,0.000000,,
 [SECTION]
 FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase,ZoneID,SubNetworkId,EnvironmentID
 FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,Group1,Group2,Group3,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version,EnvironmentID
-FEEDER=650,650,1,1140453526,,0,1.000000,,,,Utility#@@#,1,-0.567150,38.109466,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000,5020,0
+FEEDER=650,650,1,1140453526,,0,1.000000,,,,,1,-0.567150,38.109466,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000,5020,0
 L671_692_SW,671,692,ABC,,,0
 650REG,7,RG60,ABC,,,0
 L684_611,684,611,C,,,0
@@ -120,11 +120,11 @@ FORMAT_NODECONNECTOR=NodeID,CoordX,CoordY,SectionID
 [DEVICETAG]
 FORMAT_DEVICETAG=DeviceNumber,DeviceType,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset
 296,13,,3,54.941521,36.364310,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
-650REG,4,$EqNo$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,24579,-67.010934,15.211785,0.000000,1,1,1,0,0,16777215,0,Arial,1.000000,0.330000
+650REG,4,,24579,-67.010934,15.211785,0.000000,1,1,1,0,0,16777215,0,Arial,1.000000,0.330000
 L632_633,3,,0,16.327454,24.123244,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
 L632_645,3,,0,1.939450,-17.560724,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
 L632_671,3,,0,59.356659,-2.083026,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
-L633_634_XFM_1,5,$EqId$#@@#VA=$VpuA$ pu / $PH-AngleA$ deg#@@#VB=$VpuB$ pu / $PH-AngleB$ deg#@@#VC=$VpuC$ pu / $PH-AngleC$ deg#@@#IA=$IA$ A / $IAngleA$ deg#@@#IB=$IB$ A / $IAngleB$ deg#@@#IC=$IC$ A / $IAngleC$ deg,290851,4.197721,64.500000,0.000000,1,1,1,0,0,16777215,0,Arial,1.000000,0.330000
+L633_634_XFM_1,5,,290851,4.197721,64.500000,0.000000,1,1,1,0,0,16777215,0,Arial,1.000000,0.330000
 L645_646,3,,0,5.378253,-18.217862,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
 L650_632,3,,0,-54.588987,65.825064,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
 L671_680,3,,0,56.603564,1.164088,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000

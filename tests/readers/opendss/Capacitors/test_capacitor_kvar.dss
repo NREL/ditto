@@ -1,0 +1,11 @@
+Clear
+
+New circuit.test_capacitor_kvar basekv=4.16 pu=1.01 phases=3 bus1=sourcebus
+
+New Capacitor.Cap1 Bus1=bus1 phases=3 kVAR=600 kV=4.16
+New Capacitor.Cap2 Bus1=bus2.3 phases=1 kVAR=100 kV=2.4
+New Capacitor.Cap3 Bus1=bus3.1 phases=1 kVAR=200.37 kV=2.4
+
+Set Voltagebases=[4.16, 2.4]
+Calcvoltagebases
+Solve

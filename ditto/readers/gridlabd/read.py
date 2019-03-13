@@ -110,49 +110,141 @@ class Reader(AbstractReader):
             n_entries == 2
         ):  # If only two wires and no ground distances given assume they are vertically in line
             tmp_map = {}
-            for w in conductors:
-                index = rev_lookup[w.phase]
-                if index == max_from:
-                    tmp_map[w.phase] = (0, 0)
-                if index == max_to:
-                    tmp_map[w.phase] = (0, 0 - max_dist)
+            if max_dist == 0:
+                cnt = 0
+                logger.warning("Spacing distance is 0 - using default positions")
+                for w in conductors:
+                    w.X = 0
+                    w.Y = default_height + 2 * cnt
+                    cnt += 1
 
-            for w in conductors:
-                non_rotated = np.array(tmp_map[w.phase])
-                if has_earth:
-                    # Rotate then translate
-                    h = distances[max_from][-1] - distances[max_to][-1]
-                    theta = math.acos(h / float(max_dist))
-                    rotation = np.array(
-                        [
-                            [math.cos(theta), -1 * math.sin(theta)],
-                            [math.sin(theta), math.cos(theta)],
-                        ]
-                    )
-                    final = rotation.dot(non_rotated)
-                    final[1] = final[1] + distances[max_from][-1]
-                else:
-                    final = non_rotated
-                    final[1] = final[1] + default_height
-                w.X = final[0] / 3.28084
-                w.Y = final[1] / 3.28084
+            else:
+                for w in conductors:
+                    index = rev_lookup[w.phase]
+                    if index == max_from:
+                        tmp_map[w.phase] = (0, 0)
+                    if index == max_to:
+                        tmp_map[w.phase] = (0, 0 - max_dist)
+
+                for w in conductors:
+                    non_rotated = np.array(tmp_map[w.phase])
+                    if has_earth:
+                        # Rotate then translate
+                        h = distances[max_from][-1] - distances[max_to][-1]
+                        theta = math.acos(h / float(max_dist))
+                        rotation = np.array(
+                            [
+                                [math.cos(theta), -1 * math.sin(theta)],
+                                [math.sin(theta), math.cos(theta)],
+                            ]
+                        )
+                        final = rotation.dot(non_rotated)
+                        final[1] = final[1] + distances[max_from][-1]
+                    else:
+                        final = non_rotated
+                        final[1] = final[1] + default_height
+                    w.X = final[0] / 3.28084
+                    w.Y = final[1] / 3.28084
 
         if (
             n_entries == 3
         ):  # If there are three wires and no ground distances assume the furthest appart are on a horizontal axis.
             tmp_map = {}
-            for w in conductors:
-                index = rev_lookup[w.phase]
-                if index == max_from:
-                    tmp_map[w.phase] = [(0, 0)]
-                elif index == max_to:
-                    tmp_map[w.phase] = [(0, 0 - max_dist)]
+            try:
+                for w in conductors:
+                    index = rev_lookup[w.phase]
+                    if index == max_from:
+                        tmp_map[w.phase] = [(0, 0)]
+                    elif index == max_to:
+                        tmp_map[w.phase] = [(0, 0 - max_dist)]
 
-                else:
-                    dist_a = distances[index][max_from]
-                    dist_b = distances[index][max_to]
-                    heron_p = (dist_a + dist_b + max_dist) / 2.0
-                    try:
+                    else:
+                        dist_a = distances[index][max_from]
+                        dist_b = distances[index][max_to]
+                        heron_p = (dist_a + dist_b + max_dist) / 2.0
+                        try:
+                            x = (
+                                2
+                                * math.sqrt(
+                                    heron_p
+                                    * (heron_p - dist_a)
+                                    * (heron_p - dist_b)
+                                    * (heron_p - max_dist)
+                                )
+                                / max_dist
+                            )  # May be +-x as it could be on either side of the max_dist edge
+                            y = -1 * math.sqrt(dist_a ** 2 - x ** 2)
+                            tmp_map[w.phase] = [(x, y), (-1 * x, y)]
+                        except:
+                            raise ValueError(
+                                "Line Geometry infeasible with distances %f %f %f"
+                                % (dist_a, dist_b, max_dist)
+                            )
+
+                for w in conductors:
+                    final = []
+                    for non_rotated in tmp_map[w.phase]:
+                        non_rotated = np.array(non_rotated)
+                        if has_earth:
+                            index = rev_lookup[w.phase]
+                            # Rotate then translate
+                            h = distances[max_from][-1] - distances[max_to][-1]
+                            theta = math.acos(h / float(max_dist))
+                            rotation = np.array(
+                                [
+                                    [math.cos(theta), -1 * math.sin(theta)],
+                                    [math.sin(theta), math.cos(theta)],
+                                ]
+                            )
+                            final = rotation.dot(non_rotated)
+                            final[1] = final[1] + distances[max_from][-1]
+                            if final[1] == distances[index][-1]:
+                                break
+
+                        else:
+                            rotation = np.array(
+                                [
+                                    [math.cos(math.pi / 2), -1 * math.sin(math.pi / 2)],
+                                    [math.sin(math.pi / 2), math.cos(math.pi / 2)],
+                                ]
+                            )
+                            final = rotation.dot(non_rotated)
+                            final[1] = final[1] + default_height
+                            break
+                    w.X = final[0] / 3.28084
+                    w.Y = final[1] / 3.28084
+            except:
+                cnt = 0
+                logger.warning("Failed to read spacing - using default positions")
+                for w in conductors:
+                    if w.phase.lower() == "n":
+                        w.X = 0
+                        w.Y = default_height + 2
+                    else:
+                        w.X = cnt * 2
+                        w.Y = default_height
+                        cnt += 1
+
+        if (
+            n_entries == 4
+        ):  # If there are three wires and no ground distances assume the furthest appart are on a horizontal axis.
+            tmp_map = {}
+            seen_one = False
+            first_x = -10
+            first_y = -10
+            first_index = -10
+            try:
+                for w in conductors:
+                    index = rev_lookup[w.phase]
+                    if index == max_from:
+                        tmp_map[w.phase] = [(0, 0)]
+                    elif index == max_to:
+                        tmp_map[w.phase] = [(0, 0 - max_dist)]
+
+                    else:
+                        dist_a = distances[index][max_from]
+                        dist_b = distances[index][max_to]
+                        heron_p = (dist_a + dist_b + max_dist) / 2.0
                         x = (
                             2
                             * math.sqrt(
@@ -164,121 +256,62 @@ class Reader(AbstractReader):
                             / max_dist
                         )  # May be +-x as it could be on either side of the max_dist edge
                         y = -1 * math.sqrt(dist_a ** 2 - x ** 2)
-                        tmp_map[w.phase] = [(x, y), (-1 * x, y)]
-                    except:
-                        raise ValueError(
-                            "Line Geometry infeasible with distances %f %f %f"
-                            % (dist_a, dist_b, max_dist)
-                        )
+                        if seen_one:
+                            # Warning : possible bug in here - needs more testing
+                            if (x - first_x) ** 2 + (y - first_y) ** 2 != distances[
+                                index
+                            ][first_index] ** 2:
+                                x = x * -1
+                        else:
+                            seen_one = True
+                            first_x = x
+                            first_y = y
+                            first_index = index
+                        tmp_map[w.phase] = [(x, y)]
 
-            for w in conductors:
-                final = []
-                for non_rotated in tmp_map[w.phase]:
-                    non_rotated = np.array(non_rotated)
-                    if has_earth:
-                        index = rev_lookup[w.phase]
-                        # Rotate then translate
-                        h = distances[max_from][-1] - distances[max_to][-1]
-                        theta = math.acos(h / float(max_dist))
-                        rotation = np.array(
-                            [
-                                [math.cos(theta), -1 * math.sin(theta)],
-                                [math.sin(theta), math.cos(theta)],
-                            ]
-                        )
-                        final = rotation.dot(non_rotated)
-                        final[1] = final[1] + distances[max_from][-1]
-                        if final[1] == distances[index][-1]:
+                for w in conductors:
+                    final = []
+                    for non_rotated in tmp_map[w.phase]:
+                        non_rotated = np.array(non_rotated)
+                        if has_earth:
+                            index = rev_lookup[w.phase]
+                            # Rotate then translate
+                            h = distances[max_from][-1] - distances[max_to][-1]
+                            theta = math.acos(h / float(max_dist))
+                            rotation = np.array(
+                                [
+                                    [math.cos(theta), -1 * math.sin(theta)],
+                                    [math.sin(theta), math.cos(theta)],
+                                ]
+                            )
+                            final = rotation.dot(non_rotated)
+                            final[1] = final[1] + distances[max_from][-1]
+                            if final[1] == distances[index][-1]:
+                                break
+
+                        else:
+                            rotation = np.array(
+                                [
+                                    [math.cos(math.pi / 2), -1 * math.sin(math.pi / 2)],
+                                    [math.sin(math.pi / 2), math.cos(math.pi / 2)],
+                                ]
+                            )
+                            final = rotation.dot(non_rotated)
+                            final[1] = final[1] + default_height
                             break
-
+                    w.X = final[0] / 3.28084
+                    w.Y = final[1] / 3.28084
+            except:
+                cnt = 0
+                logger.warning("Failed to read spacing - using default positions")
+                for w in conductors:
+                    if w.phase.lower() == "n":
+                        w.X = 0
+                        w.Y = default_height + 2
                     else:
-                        rotation = np.array(
-                            [
-                                [math.cos(math.pi / 2), -1 * math.sin(math.pi / 2)],
-                                [math.sin(math.pi / 2), math.cos(math.pi / 2)],
-                            ]
-                        )
-                        final = rotation.dot(non_rotated)
-                        final[1] = final[1] + default_height
-                        break
-                w.X = final[0] / 3.28084
-                w.Y = final[1] / 3.28084
-
-        if (
-            n_entries == 4
-        ):  # If there are three wires and no ground distances assume the furthest appart are on a horizontal axis.
-            tmp_map = {}
-            seen_one = False
-            first_x = -10
-            first_y = -10
-            first_index = -10
-            for w in conductors:
-                index = rev_lookup[w.phase]
-                if index == max_from:
-                    tmp_map[w.phase] = [(0, 0)]
-                elif index == max_to:
-                    tmp_map[w.phase] = [(0, 0 - max_dist)]
-
-                else:
-                    dist_a = distances[index][max_from]
-                    dist_b = distances[index][max_to]
-                    heron_p = (dist_a + dist_b + max_dist) / 2.0
-                    x = (
-                        2
-                        * math.sqrt(
-                            heron_p
-                            * (heron_p - dist_a)
-                            * (heron_p - dist_b)
-                            * (heron_p - max_dist)
-                        )
-                        / max_dist
-                    )  # May be +-x as it could be on either side of the max_dist edge
-                    y = -1 * math.sqrt(dist_a ** 2 - x ** 2)
-                    if seen_one:
-                        # Warning : possible bug in here - needs more testing
-                        if (x - first_x) ** 2 + (y - first_y) ** 2 != distances[index][
-                            first_index
-                        ] ** 2:
-                            x = x * -1
-                    else:
-                        seen_one = True
-                        first_x = x
-                        first_y = y
-                        first_index = index
-                    tmp_map[w.phase] = [(x, y)]
-
-            for w in conductors:
-                final = []
-                for non_rotated in tmp_map[w.phase]:
-                    non_rotated = np.array(non_rotated)
-                    if has_earth:
-                        index = rev_lookup[w.phase]
-                        # Rotate then translate
-                        h = distances[max_from][-1] - distances[max_to][-1]
-                        theta = math.acos(h / float(max_dist))
-                        rotation = np.array(
-                            [
-                                [math.cos(theta), -1 * math.sin(theta)],
-                                [math.sin(theta), math.cos(theta)],
-                            ]
-                        )
-                        final = rotation.dot(non_rotated)
-                        final[1] = final[1] + distances[max_from][-1]
-                        if final[1] == distances[index][-1]:
-                            break
-
-                    else:
-                        rotation = np.array(
-                            [
-                                [math.cos(math.pi / 2), -1 * math.sin(math.pi / 2)],
-                                [math.sin(math.pi / 2), math.cos(math.pi / 2)],
-                            ]
-                        )
-                        final = rotation.dot(non_rotated)
-                        final[1] = final[1] + default_height
-                        break
-                w.X = final[0] / 3.28084
-                w.Y = final[1] / 3.28084
+                        w.X = cnt * 2
+                        w.Y = default_height
+                        cnt += 1
 
     def compute_secondary_matrix(
         self, wire_list, freq=60, resistivity=100, kron_reduce=True
@@ -1541,7 +1574,7 @@ class Reader(AbstractReader):
                         except AttributeError:
                             pass
                         try:
-                            api_wire.ampacity_emergency = float(
+                            api_wire.emergency_ampacity = float(
                                 conductor["rating.summer.emergency"]
                             )
                         except AttributeError:
@@ -1842,15 +1875,25 @@ class Reader(AbstractReader):
                                     j_index = j
                         n_entries = int(math.sqrt(n_entries))
                         if n_entries == 2:
-                            is_seen = False
-                            for w in conductors:
-                                if is_seen:
-                                    w.X = distances[i_index][j_index]
+                            if distances[i_index][j_index] != 0:
+                                is_seen = False
+                                for w in conductors:
+                                    if is_seen:
+                                        w.X = distances[i_index][j_index]
+                                        w.Y = -6
+                                    else:
+                                        w.X = 0
+                                        w.Y = -6
+                                        is_seen = True
+                            else:
+                                logger.warning(
+                                    "Spacing distance is 0 - using default positions"
+                                )
+                                cnt = 0
+                                for w in conductors:
+                                    w.X = 0.5 * cnt
                                     w.Y = -6
-                                else:
-                                    w.X = 0
-                                    w.Y = -6
-                                    is_seen = True
+                                    cnt += 1
 
                         if (
                             n_entries == 3
@@ -1860,45 +1903,56 @@ class Reader(AbstractReader):
                             last = -1
                             max = -1
                             total = 0
-                            for i in range(n_entries):
-                                for j in range(i + 1, n_entries):
-                                    if distances[i][j] != -1:
-                                        total = total + distances[i][j]
-                                        if distances[i][j] > max:
-                                            max = distances[i][j]
-                                            first = i
-                                            last = j
+                            try:
+                                for i in range(num_dists):
+                                    for j in range(i + 1, num_dists):
+                                        if distances[i][j] != -1:
+                                            total = total + distances[i][j]
+                                            if distances[i][j] > max:
+                                                max = distances[i][j]
+                                                first = i
+                                                last = j
 
-                            for i in range(n_entries):
-                                if (
-                                    i != first
-                                    and i != last
-                                    and distances[i][first] != -1
-                                ):
-                                    middle = i
-                            heron_s = total / 2.0
-                            heron_area = heron_s
-                            for i in range(n_entries):
-                                for j in range(i + 1, n_entries):
-                                    if distances[i][j] != -1:
-                                        heron_area = heron_area * (
-                                            heron_s - distances[i][j]
+                                for i in range(num_dists):
+                                    if (
+                                        i != first
+                                        and i != last
+                                        and distances[i][first] != -1
+                                    ):
+                                        middle = i
+                                heron_s = total / 2.0
+                                heron_area = heron_s
+                                for i in range(n_entries):
+                                    for j in range(i + 1, n_entries):
+                                        if distances[i][j] != -1:
+                                            heron_area = heron_area * (
+                                                heron_s - distances[i][j]
+                                            )
+                                logger.debug(heron_area)
+                                heron_area = math.sqrt(heron_area)
+                                height = heron_area * 2 / (max * 1.0)
+                                for w in conductors:
+                                    if w.phase == lookup[first]:
+                                        w.X = 0
+                                        w.Y = -6
+                                    elif w.phase == lookup[last]:
+                                        w.X = max
+                                        w.Y = -6
+                                    else:
+                                        w.Y = -6 + height
+                                        w.X = math.sqrt(
+                                            distances[middle][first] ** 2 - height ** 2
                                         )
-                            logger.debug(heron_area)
-                            heron_area = math.sqrt(heron_area)
-                            height = heron_area * 2 / (max * 1.0)
-                            for w in conductors:
-                                if w.phase == lookup[first]:
-                                    w.X = 0
+
+                            except:
+                                logger.warning(
+                                    "Failed to read spacing - using default positions"
+                                )
+                                cnt = 0
+                                for w in conductors:
+                                    w.X = 0.5 * cnt
                                     w.Y = -6
-                                elif w.phase == lookup[last]:
-                                    w.X = max
-                                    w.Y = -6
-                                else:
-                                    w.Y = -6 + height
-                                    w.X = math.sqrt(
-                                        distances[middle][first] ** 2 - height ** 2
-                                    )
+                                    cnt += 1
 
                             # TODO: underground lines with 4 conductors ABCN. Use Heron's formula for there too in a similar way (works since we have pairwise distances)
 
@@ -1908,59 +1962,72 @@ class Reader(AbstractReader):
                             max_dist = -100
                             max_from = -1
                             max_to = -1
-                            for i in range(n_entries):
-                                for j in range(n_entries):
-                                    if distances[i][j] > max_dist:
-                                        max_dist = distances[i][j]
-                                        max_from = i
-                                        max_to = j
+                            try:
+                                for i in range(n_entries):
+                                    for j in range(n_entries):
+                                        if distances[i][j] > max_dist:
+                                            max_dist = distances[i][j]
+                                            max_from = i
+                                            max_to = j
 
-                            seen_one = False
-                            first_x = -10
-                            first_y = -10
-                            first_i = -1
-                            for w in conductors:
-                                i = rev_lookup[w.phase]
-                                if i != max_to and i != max_from:
-                                    heron_s = (
-                                        max_dist
-                                        + distances[i][max_to]
-                                        + distances[i][max_from]
-                                    ) / 2.0
-                                    heron_area = (
-                                        heron_s
-                                        * (heron_s - max_dist)
-                                        * (heron_s - distances[i][max_to])
-                                        * (heron_s - distances[i][max_from])
-                                    )
-                                    heron_area = math.sqrt(heron_area)
-                                    height = heron_area * 2 / (max_dist * 1.0)
-                                    if not seen_one:
-                                        w.Y = -6 + height
-                                        w.X = math.sqrt(
-                                            distances[i][max_from] ** 2 - height ** 2
+                                seen_one = False
+                                first_x = -10
+                                first_y = -10
+                                first_i = -1
+                                for w in conductors:
+                                    i = rev_lookup[w.phase]
+                                    if i != max_to and i != max_from:
+                                        heron_s = (
+                                            max_dist
+                                            + distances[i][max_to]
+                                            + distances[i][max_from]
+                                        ) / 2.0
+                                        heron_area = (
+                                            heron_s
+                                            * (heron_s - max_dist)
+                                            * (heron_s - distances[i][max_to])
+                                            * (heron_s - distances[i][max_from])
                                         )
-                                        seen_one = True
-                                        first_x = w.X
-                                        first_y = w.Y
-                                        first_i = i
+                                        heron_area = math.sqrt(heron_area)
+                                        height = heron_area * 2 / (max_dist * 1.0)
+                                        if not seen_one:
+                                            w.Y = -6 + height
+                                            w.X = math.sqrt(
+                                                distances[i][max_from] ** 2
+                                                - height ** 2
+                                            )
+                                            seen_one = True
+                                            first_x = w.X
+                                            first_y = w.Y
+                                            first_i = i
 
-                                    else:
-                                        # Warning: possible bug here - needs extra testing.
-                                        w.Y = -6 + height
-                                        w.X = math.sqrt(
-                                            distances[i][max_from] ** 2 - height ** 2
-                                        )
-                                        if (w.X - first_x) ** 2 + (
-                                            w.Y - first_y
-                                        ) ** 2 != distances[i][first_i] ** 2:
-                                            w.Y = -6 - height
-                                elif i == max_from:
-                                    w.X = 0
+                                        else:
+                                            # Warning: possible bug here - needs extra testing.
+                                            w.Y = -6 + height
+                                            w.X = math.sqrt(
+                                                distances[i][max_from] ** 2
+                                                - height ** 2
+                                            )
+                                            if (w.X - first_x) ** 2 + (
+                                                w.Y - first_y
+                                            ) ** 2 != distances[i][first_i] ** 2:
+                                                w.Y = -6 - height
+                                    elif i == max_from:
+                                        w.X = 0
+                                        w.Y = -6
+                                    elif i == max_to:
+                                        w.X = max_dist
+                                        w.Y = -6
+
+                            except:
+                                logger.warning(
+                                    "Failed to read spacing - using default positions"
+                                )
+                                cnt = 0
+                                for w in conductors:
+                                    w.X = 0.5 * cnt
                                     w.Y = -6
-                                elif i == max_to:
-                                    w.X = max_dist
-                                    w.Y = -6
+                                    cnt += 1
 
                 except AttributeError:
                     pass

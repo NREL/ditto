@@ -47,7 +47,7 @@ class Writer(AbstractWriter):
         # Call super
         super(Writer, self).__init__(**kwargs)
 
-        self.logger.info("DiTTo--->CYME writer successfuly instanciated.")
+        logger.info("DiTTo--->CYME writer successfuly instanciated.")
 
     def connection_configuration_mapping(self, value):
         """
@@ -249,7 +249,7 @@ class Writer(AbstractWriter):
 
         # Writing the load file
         if self.verbose:
-            self.logger.info("Writing the load file...")
+            logger.info("Writing the load file...")
         self.write_load_file(model, **kwargs)
 
         # Writing the network file

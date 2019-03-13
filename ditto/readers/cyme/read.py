@@ -30,6 +30,7 @@ from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 
 from ditto.models.base import Unicode
+from ditto.modify.system_structure import system_structure_modifier
 
 logger = logging.getLogger(__name__)
 
@@ -581,7 +582,7 @@ class Reader(AbstractReader):
                 or value == "3"
                 or value.lower() == "open delta"
                 or value == "4"
-                or value == "closed delta"
+                or value.lower() == "closed delta"
             ):
                 return "D"
             if value == "5" or value.lower() == "zg":
@@ -902,6 +903,9 @@ class Reader(AbstractReader):
             logger.info("Parsing the Headnodes...")
             self.parse_head_nodes(model)
         model.set_names()
+        modifier = system_structure_modifier(model)
+        modifier.set_nominal_voltages_recur()
+        modifier.set_nominal_voltages_recur_line()
 
     def parse_header(self):
         """
@@ -1464,7 +1468,7 @@ class Reader(AbstractReader):
 
         # Set the emergency ampacity of the wire
         try:
-            api_wire.ampacity_emergency = float(conductor_data["withstandrating"])
+            api_wire.emergency_ampacity = float(conductor_data["withstandrating"])
         except:
             pass
 
@@ -1577,6 +1581,7 @@ class Reader(AbstractReader):
                     elif (
                         "format_feeder" in line.lower()
                         or "format_substation" in line.lower()
+                        or "format_generalnetwork" in line.lower()
                     ):
                         format_feeder = list(
                             map(
@@ -1589,8 +1594,13 @@ class Reader(AbstractReader):
                     elif len(line) >= 7 and (
                         line[:7].lower() == "feeder="
                         or line[:11].lower() == "substation="
+                        or line[:11].lower() == "substation="
+                        or line[:15].lower() == "generalnetwork="
                     ):
-                        if line[:7].lower() == "feeder=":
+                        if (
+                            line[:7].lower() == "feeder="
+                            or line[:15].lower() == "generalnetwork="
+                        ):
                             self.network_type = "feeder"
                         if line[:11].lower() == "substation=":
                             self.network_type = "substation"
@@ -5314,6 +5324,10 @@ class Reader(AbstractReader):
                 )
             )
 
+        duplicate_loads = set()
+        for sectionID in self.customer_loads.keys():
+            if sectionID.endswith("*"):
+                duplicate_loads.add(sectionID.lower().strip("*"))
         for sectionID, settings in self.customer_loads.items():
 
             sectionID = sectionID.strip("*").lower()
@@ -5391,15 +5405,24 @@ class Reader(AbstractReader):
                     else:
                         phases = []
 
-                    if sectionID in self._loads:
+                    if sectionID in duplicate_loads:
                         fusion = True
-                        api_load = self._loads[sectionID]
+                        if sectionID in self._loads:
+                            api_load = self._loads[sectionID]
+                        elif p != 0:
+                            api_load = Load(model)
                     else:
                         fusion = False
                         api_load = Load(model)
 
+                    if fusion and p == 0:
+                        # logger.warning(
+                        #    "WARNING:: Skipping duplicate load on section {} with p=0".format(sectionID)
+                        # )
+                        continue
+
                     try:
-                        if fusion:
+                        if fusion and sectionID in self._loads:
                             api_load.name += "_" + reduce(
                                 lambda x, y: x + "_" + y, phases
                             )
@@ -5414,7 +5437,7 @@ class Reader(AbstractReader):
                         pass
 
                     try:
-                        if not fusion:
+                        if not (fusion and sectionID in self._loads):
                             if connectedkva is not None:
                                 api_load.transformer_connected_kva = (
                                     connectedkva * 10 ** 3
@@ -5432,14 +5455,14 @@ class Reader(AbstractReader):
                         pass
 
                     try:
-                        if not fusion:
+                        if not (fusion and sectionID in self._loads):
                             api_load.connection_type = self.connection_configuration_mapping(
                                 load_data["connection"]
                             )
                     except:
                         pass
 
-                    if not fusion:
+                    if not (fusion and sectionID in self._loads):
                         if (
                             "loadtype" in settings
                             and settings["loadtype"] in self.customer_class
@@ -5449,7 +5472,7 @@ class Reader(AbstractReader):
                             load_type_data = {}
 
                     try:
-                        if not fusion:
+                        if not (fusion and sectionID in self._loads):
                             api_load.connecting_element = self.section_phase_mapping[
                                 sectionID
                             ]["fromnodeid"]
@@ -5558,7 +5581,27 @@ class Reader(AbstractReader):
             "location": 1,
             "devicenumber": 2,
             "equipmentid": 6,
-            "ambienttemparature": 11,
+            "eqphase": 7,
+            "ambienttemperature": 11,
+        }
+
+        mapp_bess = {
+            "id": 0,
+            "ratedstorageenergy": 1,
+            "maxchargingpower": 2,
+            "maxdischargingpower": 3,
+            "chargeefficiency": 4,
+            "dischargeefficiency": 5,
+        }
+
+        mapp_bess_settings = {
+            "sectionid": 0,
+            "devicenumber": 2,
+            "equipmentid": 6,
+            "phase": 7,
+            "maximumsoc": 10,
+            "minimumsoc": 11,
+            "initialsoc": 16,
         }
 
         mapp_bess = {
@@ -5668,7 +5711,7 @@ class Reader(AbstractReader):
                 self.parser_helper(
                     line,
                     ["photovoltaic_settings"],
-                    ["sectionid", "devicenumber", "ambienttemparature"],
+                    ["sectionid", "devicenumber", "eqphase", "ambienttemperature"],
                     mapp_photovoltaic_settings,
                     {"type": "photovoltaic_settings"},
                 )
@@ -5802,6 +5845,12 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            try:
+                api_photovoltaic.phases = [
+                    Unicode(k) for k in list(settings["eqphase"])
+                ]
+            except:
+                pass
             try:
                 api_photovoltaic.connecting_element = self.section_phase_mapping[
                     sectionID.lower()
