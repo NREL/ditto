@@ -124,7 +124,7 @@ class NetworkAnalyzer(object):
             if len(srcs) == 0:
                 raise ValueError("No PowerSource object found in the model.")
             elif len(srcs) > 1:
-                raise ValueError("Mupltiple sourcebus found: {srcs}".format(srcs=srcs))
+                raise ValueError("Multiple sourcebus found: {srcs}".format(srcs=srcs))
             else:
                 source = srcs[0]
 

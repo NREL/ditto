@@ -700,7 +700,6 @@ class Reader(AbstractReader):
         # Even if a fuse is disabled we identify it as a fuse.
         # If the line is disabled we ignore it unless it's a switch
         fuses = dss.utils.class_to_dataframe("Fuse")
-        # import pdb;pdb.set_trace()
         fuses_names = [
             d["MonitoredObj"].lower().split(".")[1] for name, d in fuses.items()
         ]

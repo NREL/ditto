@@ -744,9 +744,7 @@ class Reader(AbstractReader):
 
         return np.any([x in line for x in self.header_mapping[obj]])
 
-    def parser_helper(
-        self, line, obj_list, attribute_list, mapping, *args, **kwargs
-    ):  # now only will work with python 3 due to kwargs
+    def parser_helper(self, line, obj_list, attribute_list, mapping, *args, **kwargs):
         """
         .. warning:: This is a helper function for the parsers. Do not use directly.
 
@@ -4671,10 +4669,10 @@ class Reader(AbstractReader):
                 R0 = Z0 / math.sqrt(1 + XR0 * XR0)
                 X1 = Z1 / math.sqrt(1 + 1 / (XR * XR))
                 X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
-                complex1 = complex(R0, X0)
-                complex2 = complex(R1, X1)
+                complex0 = complex(R0, X0)
+                complex1 = complex(R1, X1)
                 matrix = np.matrix(
-                    [[complex1, 0, 0], [0, complex2, 0], [0, 0, complex2]]
+                    [[complex0, 0, 0], [0, complex1, 0], [0, 0, complex1]]
                 )
                 a = 1 * cmath.exp(2 * math.pi * 1j / 3)
                 T = np.matrix([[1., 1., 1.], [1., a * a, a], [1., a, a * a]])
