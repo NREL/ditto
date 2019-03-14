@@ -10,9 +10,9 @@ FORMAT_NODE=NodeID,CoordX,CoordY,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAn
 112,64.955333,64.697199,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
 107,-135.725930,64.631395,NULL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
 FORMAT_NODE=NodeID,CoordX1,CoordY1,CoordX2,CoordY2,Width,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,ZoneID,ExposedCircuitType,BusGap,WorkingDistance,UseUserDefinedFaultCurrent,UserDefinedFaultCurrent,OpeningTimeMode,UserDefinedOpeningTime,EnclosureWidth,EnclosureHeight,EnclosureDepth,CoefficientA,CoefficientK,UserDefinedTimeConstant,TimeConstant,OverrideLFVoltageLimit,HighVoltageLimit,LowVoltageLimit,LoadSheddingActive,MaximumLoadShed,ShedLoadCost,UserDefinedBaseVoltage,Installation,RatedVoltage,RatedCurrent,ANSISymCurrent,ANSIAsymCurrent,PeakCurrent,Standard,TestCircuitPowerFactor
-2,-64.664317,49.678298,-64.664317,77.757113,28.078815,$BusId$#@@#V1=$VLNA$KV/$PH-AngleA$deg#@@#V2=$VLNB$KV/$PH-AngleB$deg#@@#V3=$VLNC$KV/$PH-AngleC$deg,24579,0.095457,48.013409,0.000000,2,1,1,0,0,0,0,Arial,0.500000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
-3,-16.342634,50.657791,-16.342634,77.757113,27.099322,$BusId$#@@#V1=$VLLA$/$VAB_Angle$deg#@@#V2=$VLLB$/$VBC_Angle$deg#@@#V3=$VLLC$/$VCA_Angle$deg#@@#,28931,3.643516,46.249620,0.000000,2,1,1,0,0,0,0,Arial,0.500000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
-4,32.958543,51.637285,32.958543,77.104118,25.466833,$BusId$#@@#V1=$VLLA$/$VAB_Angle$deg#@@#V2=$VLLB$/$VBC_Angle$deg#@@#V3=$VLLC$/$VCA_Angle$deg#@@#,28931,0.872294,45.923151,0.000000,2,1,1,0,0,0,0,Arial,0.500000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+2,-64.664317,49.678298,-64.664317,77.757113,28.078815,,24579,0.095457,48.013409,0.000000,2,1,1,0,0,0,0,Arial,0.500000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+3,-16.342634,50.657791,-16.342634,77.757113,27.099322,,28931,3.643516,46.249620,0.000000,2,1,1,0,0,0,0,Arial,0.500000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
+4,32.958543,51.637285,32.958543,77.104118,25.466833,,28931,0.872294,45.923151,0.000000,2,1,1,0,0,0,0,Arial,0.500000,0.330000,,,,,,,,,,,,,,,,,,,,,,0.000000,0,,,,,,,
 
 [HEADNODES]
 FORMAT_HEADNODES=NodeID,NetworkID,ConnectorIndex,StructureID,HarmonicEnveloppe,EquivalentSourceConfiguration,EquivalentSourceSinglePhaseCT,EquivSourceCenterTapPhase,BackgroundHarmonicVoltage
@@ -66,9 +66,9 @@ FORMAT_NODECONNECTOR=NodeID,CoordX,CoordY,SectionID
 
 [DEVICETAG]
 FORMAT_DEVICETAG=DeviceNumber,DeviceType,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset
-109,3,Ia=$IA$A/$IAngleA$#@@#Ib=$IB$A/$IAngleB$#@@#Ic=$IC$A/$IAngleC$#@@##@@#,24579,0.389294,-15.655651,0.000000,1,1,1,0,0,16777215,0,Arial,0.500000,0.330000
+109,3,,24579,0.389294,-15.655651,0.000000,1,1,1,0,0,16777215,0,Arial,0.500000,0.330000
 110,5,,1,0.000000,-23.306811,0.000000,0,0,0,-1,-1,-1,0,Arial,1.000000,0.330000
-111,3,Ia=$IA$A/$IAngleA$#@@#Ib=$IB$A/$IAngleB$#@@#Ic=$IC$A/$IAngleC$#@@##@@#,24579,-1.488882,-17.776658,0.000000,1,1,1,0,0,16777215,0,Arial,0.500000,0.330000
+111,3,,24579,-1.488882,-17.776658,0.000000,1,1,1,0,0,16777215,0,Arial,0.500000,0.330000
 
 [SOURCETAG]
 FORMAT_SOURCETAG=DeviceNumber,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset

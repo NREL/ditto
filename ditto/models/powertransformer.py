@@ -35,6 +35,14 @@ class PowerTransformer(DiTToHasTraits):
         help="""'Name of the node which connects to the 'to' end of the transformer""",
         default_value=None,
     )
+    from_element_connection_index = Int(
+        help="""Index of the position in the node that the 'from' end of the line connects to (e.g. for a long bus)""",
+        default_value=None,
+    )
+    to_element_connection_index = Int(
+        help="""Index of the position in the node that the 'to' end of the line connects to (e.g. for a long bus)""",
+        default_value=None,
+    )
 
     reactances = List(
         Float(),

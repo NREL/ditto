@@ -1,5 +1,6 @@
 # coding: utf8
 
+import hashlib
 import math
 import cmath
 from datetime import datetime
@@ -23,6 +24,8 @@ from ditto.models.winding import Winding
 from ditto.models.power_source import PowerSource
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.storage import Storage
+from ditto.models.phase_storage import PhaseStorage
 
 from ditto.network.network import Network
 
@@ -70,6 +73,32 @@ class Writer(AbstractWriter):
             return "5"
         else:
             raise ValueError("Unknown configuration {}".format(value))
+
+    def smallest_perimeter(
+        self, n
+    ):  # Used for calculating panel dimensions with smallest perimiter
+        n_orig = n
+        factors = []
+        i = 2
+        while i * i <= n:
+            if n % i:
+                i += 1
+            else:
+                n = n / i
+                factors.append(i)
+        if n > 1:
+            factors.append(n)
+        cnt = 1
+        res = 1
+        bst = float("inf")
+        while cnt < len(factors):  # Go greedily until can't improve
+            tmp = res * factors[-1 * cnt]
+            if tmp + n_orig / tmp > bst:
+                break
+            res = tmp
+            bst = res + n_orig / res
+            cnt += 1
+        return (res, n_orig / res)
 
     def transformer_connection_configuration_mapping(
         self, value1, value2, transformer_table="transformer"
@@ -203,6 +232,9 @@ class Writer(AbstractWriter):
         """
         self.section_line_list = []
         self.node_string_list = []
+        self.node_connector_string_list = []
+        self.node_connector_string_mapping = {}  # A mapping of the node and index to the section
+        self.bus_string_list = []  # Only used for nodes - not nodes derived from PV, Loads or Capacitors
         self.nodeID_list = []
         self.sectionID_list = []
         self.section_feeder_mapping = {}
@@ -260,7 +292,7 @@ class Writer(AbstractWriter):
         converter_string_list = []
         converter_control_string_list = []
         pv_settings_string_list = []
-        long_term_dynamics_string_list = []
+        bess_settings_string_list = []
         dg_generation_string_list = []
 
         # The linecodes dictionary is used to group lines which have the same properties
@@ -279,11 +311,14 @@ class Writer(AbstractWriter):
         ID_trans_3w = 0
         self.three_windings_trans_codes = {}
         ID_cond = 0
+        self.bess_codes = {}
+        ID_bess = 0
         self.conductors = {}
         self.switchcodes = {}
         self.fusecodes = {}
         self.reclosercodes = {}
         self.breakercodes = {}
+        self.irradiance_profiles = {}
 
         intermediate_nodes = []
 
@@ -301,6 +336,63 @@ class Writer(AbstractWriter):
                 for i in model.models
                 if isinstance(i, Regulator)
             ]
+
+            # Build connector_string_mapping
+            # TODO integrate into rest of model so we don't have to loop twice over ditto elements
+            for i in model.models:
+                if (
+                    hasattr(i, "from_element")
+                    and i.from_element is not None
+                    and hasattr(i, "from_element_connection_index")
+                    and i.from_element_connection_index is not None
+                ):
+                    self.node_connector_string_mapping[
+                        (i.from_element, i.from_element_connection_index)
+                    ] = "{f}_{t}".format(f=i.from_element, t=i.to_element)
+                    if (
+                        len(
+                            self.node_connector_string_mapping[
+                                (i.from_element, i.from_element_connection_index)
+                            ]
+                        )
+                        > 64
+                    ):
+                        hasher = hashlib.sha1()
+                        hasher.update(
+                            self.node_connector_string_mapping[
+                                (i.from_element, i.from_element_connection_index)
+                            ].encode("utf-8")
+                        )
+                        self.node_connector_string_mapping[
+                            (i.from_element, i.from_element_connection_index)
+                        ] = hasher.hexdigest()
+
+                if (
+                    hasattr(i, "to_element")
+                    and i.to_element is not None
+                    and hasattr(i, "to_element_connection_index")
+                    and i.to_element_connection_index is not None
+                ):
+                    self.node_connector_string_mapping[
+                        (i.to_element, i.to_element_connection_index)
+                    ] = "{f}_{t}".format(f=i.from_element, t=i.to_element)
+                    if (
+                        len(
+                            self.node_connector_string_mapping[
+                                (i.to_element, i.to_element_connection_index)
+                            ]
+                        )
+                        > 64
+                    ):
+                        hasher = hashlib.sha1()
+                        hasher.update(
+                            self.node_connector_string_mapping[
+                                (i.to_element, i.to_element_connection_index)
+                            ].encode("utf-8")
+                        )
+                        self.node_connector_string_mapping[
+                            (i.to_element, i.to_element_connection_index)
+                        ] = hasher.hexdigest()
 
             # Loop over the DiTTo objects
             for i in model.models:
@@ -340,6 +432,17 @@ class Writer(AbstractWriter):
                             self.substations[-1]["KVLL"] = str(
                                 i.nominal_voltage * 10 ** -3
                             )
+                        elif (
+                            hasattr(i, "connecting_element")
+                            and i.connecting_element is not None
+                            and i.connecting_element in model.model_names
+                            and hasattr(model[i.connecting_element], "nominal_voltage")
+                            and model[i.connecting_element].nominal_voltage is not None
+                        ):
+                            voltage = model[i.connecting_element].nominal_voltage
+                            new_source_string += "," + str(voltage * 10 ** -3)
+                            self.sources[i.connecting_element] = str(voltage * 10 ** -3)
+                            self.substations[-1]["KVLL"] = str(voltage * 10 ** -3)
                         else:
                             new_source_string += ","
 
@@ -434,15 +537,22 @@ class Writer(AbstractWriter):
                     # Empty new node string
                     new_node_string = ""
 
+                    # Empty new bus string (for bus representations of nodes with two coords)
+                    new_bus_string = ""
+
                     # Name
                     if hasattr(i, "name") and i.name is not None:
-                        new_node_string += i.name
                         self.nodeID_list.append(i.name)
                     else:
                         continue
 
                     # CoordX and CoordY
-                    if hasattr(i, "positions") and i.positions is not None:
+                    if (
+                        hasattr(i, "positions")
+                        and i.positions is not None
+                        and len(i.positions) == 1
+                    ):
+                        new_node_string += i.name
                         try:
                             new_node_string += "," + str(i.positions[0].long)
                         except:
@@ -454,12 +564,62 @@ class Writer(AbstractWriter):
                         except:
                             new_node_string += ",0"
                             pass
+                    elif (
+                        hasattr(i, "positions")
+                        and i.positions is not None
+                        and len(i.positions) >= 2
+                    ):
+                        new_bus_string += i.name
+                        try:
+                            new_bus_string += "," + str(i.positions[0].long)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+
+                        try:
+                            new_bus_string += "," + str(i.positions[0].lat)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+
+                        try:
+                            new_bus_string += "," + str(i.positions[-1].long)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+
+                        try:
+                            new_bus_string += "," + str(i.positions[-1].lat)
+                        except:
+                            new_bus_string += ",0"
+                            pass
+                        new_bus_string += ",2"  # Set width of 2
+                        for j in range(1, len(i.positions) - 1):
+                            sectionid = ""
+                            if (i.name, j - 1) in self.node_connector_string_mapping:
+                                sectionid = self.node_connector_string_mapping[
+                                    (i.name, j - 1)
+                                ]
+                            new_node_connector_string = "{n},{x},{y},{s}".format(
+                                n=i.name,
+                                x=i.positions[j].long,
+                                y=i.positions[j].lat,
+                                s=sectionid,
+                            )
+                            self.node_connector_string_list.append(
+                                new_node_connector_string
+                            )
+
                     else:
+                        new_node_string += i.name
                         new_node_string += ",0,0"
 
                     # Add the node string to the list
                     if new_node_string != "":
                         self.node_string_list.append(new_node_string)
+
+                    if new_bus_string != "":
+                        self.bus_string_list.append(new_bus_string)
 
                 # If we get a Line object
                 #
@@ -509,6 +669,13 @@ class Writer(AbstractWriter):
                             if i.line_type.lower() == "underground":
                                 line_type = "underground"
 
+                            if (
+                                hasattr(i, "nominal_voltage")
+                                and i.nominal_voltage is not None
+                                and i.nominal_voltage < 600
+                            ):
+                                line_type = "underground"  # for triplex lines
+
                         if hasattr(i, "is_fuse") and i.is_fuse == 1:
                             line_type = "fuse"
 
@@ -529,30 +696,56 @@ class Writer(AbstractWriter):
                             and hasattr(i, "to_element")
                             and i.to_element is not None
                         ):
-                            new_sectionID = "{f}_{t}".format(
+                            new_section_ID = "{f}_{t}".format(
                                 f=i.from_element, t=i.to_element
                             )
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     while (
-                                        new_sectionID
+                                        new_section_ID
                                         in self.section_feeder_mapping[i.feeder_name]
                                     ):
-                                        new_sectionID = (
-                                            new_sectionID + "*"
+                                        new_section_ID = (
+                                            new_section_ID + "*"
                                         )  # This is used to deal with duplicate lines from same from and to nodes
-                            new_line_string += new_sectionID
-                            new_section_line = "{id},{f},{t}".format(
-                                id=new_sectionID, f=i.from_element, t=i.to_element
+                                        if len(new_section_ID) > 64:
+                                            hasher = hashlib.sha1()
+                                            hasher.update(
+                                                new_section_ID.encode("utf-8")
+                                            )
+                                            new_section_ID = hasher.hexdigest()
+                            if len(new_section_ID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_section_ID.encode("utf-8"))
+                                new_section_ID = hasher.hexdigest()
+                            new_line_string += new_section_ID
+                            from_index = 0
+                            to_index = 0
+                            if (
+                                hasattr(i, "from_element_connection_index")
+                                and i.from_element_connection_index is not None
+                            ):
+                                from_index = i.from_element_connection_index
+                            if (
+                                hasattr(i, "to_element_connection_index")
+                                and i.to_element_connection_index is not None
+                            ):
+                                to_index = i.to_element_connection_index
+                            new_section_line = "{id},{f},{fi},{t},{ti}".format(
+                                id=new_section_ID,
+                                f=i.from_element,
+                                fi=from_index,
+                                t=i.to_element,
+                                ti=to_index,
                             )
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(
-                                        new_sectionID
+                                        new_section_ID
                                     )
                                 else:
                                     self.section_feeder_mapping[i.feeder_name] = [
-                                        new_sectionID
+                                        new_section_ID
                                     ]
                                 if (
                                     hasattr(i, "substation_name")
@@ -576,7 +769,7 @@ class Writer(AbstractWriter):
                             for seg_number, position in enumerate(i.positions):
                                 intermediate_nodes.append(
                                     [
-                                        new_sectionID,
+                                        new_section_ID,
                                         seg_number,
                                         position.long,
                                         position.lat,
@@ -609,6 +802,58 @@ class Writer(AbstractWriter):
 
                                 if hasattr(wire, "gmr") and wire.gmr is not None:
                                     new_code += ",{}".format(wire.gmr)
+
+                                # These calculations require no neutral wire as output (since these equations assume no kron reduction)
+                                # They serve the purpose of getting the impedance matrix output in CYME to match the impedance matrix from DiTTo
+                                # NOTE: a 2x2 impedance matrix is probably derived from R1, R0, X1, X0 and isn't actually a 2-wire or even a kron reduced matrix.
+                                # To get the cross-terms to match would require a kron reduction, often of imaginary wire resistances to get the cross-terms to match
+                                # For that reason, we let CYME apply the cross terms with their default spacing. This may cause some differences in the powerflow
+                                # i.e. WARNING - 2x2 matrix cross terms won't match
+
+                                elif wire.gmr is None and (
+                                    len(i.impedance_matrix) == 1
+                                    or len(i.impedance_matrix) == 2
+                                ):
+
+                                    if isinstance(i.impedance_matrix, list):
+                                        x_in_miles = i.impedance_matrix[0][0].imag
+                                    else:
+                                        x_in_miles = i.impedance_matrix[0].imag
+                                    x_in_miles = (
+                                        x_in_miles * 1609.34
+                                    )  # internally impedance per meter
+                                    coeff1 = 0.12134
+                                    coeff2 = 7.93402
+                                    gmr_in_feet = 1 / (
+                                        math.exp((x_in_miles / coeff1) - coeff2)
+                                    )  # Solving Kerstin 4.41 for GMR
+                                    gmr_in_cm = 30.48 * gmr_in_feet
+                                    new_code += ",{}".format(gmr_in_cm)
+                                else:
+                                    new_code += ","
+
+                                if (
+                                    hasattr(wire, "resistance")
+                                    and wire.resistance is not None
+                                ):
+                                    new_code += ",{}".format(wire.resistance)
+                                elif wire.resistance is None and (
+                                    len(i.impedance_matrix) == 1
+                                    or len(i.impedance_matrix) == 2
+                                ):  # Calculate the resistance from the impedance matrix
+                                    if isinstance(i.impedance_matrix, list):
+                                        r_in_miles = i.impedance_matrix[0][0].real
+                                    else:
+                                        r_in_miles = i.impedance_matrix[0].real
+                                    r_in_miles = (
+                                        r_in_miles * 1609.34
+                                    )  # internally impedance per meter
+                                    resistance = r_in_miles - 0.09530  # From Kersting
+                                    resistance = (
+                                        resistance / 1.60934
+                                    )  # output in ohms per km
+                                    new_code += ",{}".format(resistance)
+
                                 else:
                                     new_code += ","
 
@@ -616,7 +861,7 @@ class Writer(AbstractWriter):
                                     hasattr(wire, "ampacity")
                                     and wire.ampacity is not None
                                 ):
-                                    new_code += "{},".format(wire.ampacity)
+                                    new_code += ",{}".format(wire.ampacity)
                                 else:
                                     new_code += ","
 
@@ -624,7 +869,9 @@ class Writer(AbstractWriter):
                                     hasattr(wire, "emergency_ampacity")
                                     and wire.emergency_ampacity is not None
                                 ):
-                                    new_code += "{}".format(wire.emergency_ampacity)
+                                    new_code += ",{}".format(wire.emergency_ampacity)
+                                else:
+                                    new_code += ",".format(wire.emergency_ampacity)
 
                                 # if line_type=='underground':
                                 # If we have a name for the wire, we use it as the equipment id
@@ -985,15 +1232,45 @@ class Writer(AbstractWriter):
 
                         elif line_type == "underground":
                             tt = {}
+                            frequency = 60  # Need to make this changable
+                            if (
+                                hasattr(i, "nominal_voltage")
+                                and i.nominal_voltage is not None
+                            ):
+                                if (
+                                    i.nominal_voltage is not None
+                                    and i.nominal_voltage < 600
+                                    and len(i.wires) <= 2
+                                ):  # LV lines are assigned as triplex unless they're three phase
+                                    tt["cabletype"] = 2
+                                else:
+                                    tt["cabletype"] = 0
+
+                            else:
+                                tt["cabletype"] = 0
+
                             if (
                                 hasattr(i, "impedance_matrix")
                                 and i.impedance_matrix is not None
                             ):
+                                z_diag = 0
+                                z_offdiag = 0
                                 try:
-                                    zero_seq_imp = i.impedance_matrix[0][0]
+                                    for kk in range(len(i.impedance_matrix)):
+                                        if i.impedance_matrix[kk][kk] != 0:
+                                            z_diag = i.impedance_matrix[kk][kk]
+                                            for jj in range(len(i.impedance_matrix)):
+                                                if jj == kk:
+                                                    continue
+                                                if i.impedance_matrix[kk][jj] != 0:
+                                                    z_offdiag = i.impedance_matrix[kk][
+                                                        jj
+                                                    ]
+
                                 except:
                                     try:
-                                        zero_seq_imp = i.impedance_matrix[0]
+                                        z_diag = i.impedance_matrix[0]
+                                        z_offdiag = i.impedance_matrix[0]
                                     except:
                                         raise ValueError(
                                             "Cannot get a value from impedance matrix for line {}".format(
@@ -1001,26 +1278,76 @@ class Writer(AbstractWriter):
                                             )
                                         )
                                 coeff = 10 ** 3
-                                tt["R0"] = zero_seq_imp.real * coeff
-                                tt["X0"] = zero_seq_imp.imag * coeff
+                                z0 = z_diag + 2 * z_offdiag
+                                z1 = z_diag - z_offdiag
+
+                                tt["R0"] = z0.real * coeff
+                                tt["X0"] = z0.imag * coeff
                                 try:
                                     pos_seq_imp = i.impedance_matrix[1][1]
-                                    tt["R1"] = pos_seq_imp.real * coeff
-                                    tt["X1"] = pos_seq_imp.imag * coeff
+                                    tt["R1"] = z1.real * coeff
+                                    tt["X1"] = z1.imag * coeff
                                 except:
                                     tt["R1"] = tt["R0"]
                                     tt["X1"] = tt["X0"]
                                     pass
                                 try:
                                     neg_seq_imp = i.impedance_matrix[2][2]
-                                    tt["R2"] = neg_seq_imp.real * coeff
-                                    tt["X2"] = neg_seq_imp.imag * coeff
+                                    tt["R2"] = z1.real * coeff
+                                    tt["X2"] = z1.imag * coeff
                                 except:
                                     tt["R2"] = tt["R1"]
                                     tt["X2"] = tt["X1"]
                                     pass
-                                tt["B1"] = 0
-                                tt["B0"] = 0
+
+                                if (
+                                    hasattr(i, "capacitance_matrix")
+                                    and i.capacitance_matrix is not None
+                                ):
+                                    c_diag = 0
+                                    c_offdiag = 0
+                                    try:
+                                        for kk in range(len(i.impedance_matrix)):
+                                            if i.capacitance_matrix[kk][kk] != 0:
+                                                c_diag = i.capacitance_matrix[kk][kk]
+                                                for jj in range(
+                                                    len(i.capacitance_matrix)
+                                                ):
+                                                    if jj == kk:
+                                                        continue
+                                                    if (
+                                                        i.capacitance_matrix[kk][jj]
+                                                        != 0
+                                                    ):
+                                                        c_offdiag = i.capacitance_matrix[
+                                                            kk
+                                                        ][
+                                                            jj
+                                                        ]
+
+                                    except:
+                                        try:
+                                            c_diag = i.capacitance_matrix[0]
+                                            c_offdiag = i.capacitance_matrix[0]
+                                        except:
+                                            import pdb;pdb.set_trace()
+                                            raise ValueError(
+                                                "Cannot get a value from impedance matrix for line {}".format(
+                                                    i.name
+                                                )
+                                            )
+                                    coeff = 10 ** 3
+                                    c0 = c_diag + 2 * c_offdiag
+                                    c1 = c_diag - c_offdiag
+
+                                    tt["B0"] = (
+                                        c0.real * 2 * math.pi * frequency
+                                    )  # Don't multiply by km conversion since cyme output in micro siemens
+                                    tt["B1"] = c1.real * 2 * math.pi * frequency  #
+
+                                else:
+                                    tt["B1"] = 0
+                                    tt["B0"] = 0
                                 try:
                                     tt["amps"] = i.wires[0].ampacity
                                 except:
@@ -1053,10 +1380,7 @@ class Writer(AbstractWriter):
                                             ] = tt
                                             new_line_string += ",cable_" + str(ID_cable)
 
-                        elif (
-                            hasattr(i, "impedance_matrix")
-                            and i.impedance_matrix is not None
-                        ):
+                        else: # We use impedance_matrix if it exists and we have 3 phases. otherwise we use by_phase. TODO: change to by_phase whenever we have the wire information for it.
                             # try:
                             tt = {}
                             if "A" in cond_id:
@@ -1103,16 +1427,10 @@ class Writer(AbstractWriter):
                                                 pass
 
                             # If we have 3 phases, use OVERHEADLINE SETTING
-                            if len(phases) == 3:
+                            if len(phases) == 3 and i.impedance_matrix is not None:
 
                                 tt.update(
-                                    {
-                                        "SpacingID": "DEFAULT",
-                                        "Ba": 0,
-                                        "Bb": 0,
-                                        "Bc": 0,
-                                        "UserDefinedImpedances": 1,
-                                    }
+                                    {"SpacingID": "DEFAULT", "UserDefinedImpedances": 1}
                                 )
 
                                 for k, p1 in enumerate(phases):
@@ -1124,6 +1442,20 @@ class Writer(AbstractWriter):
                                             tt["X{p}".format(p=p1)] = (
                                                 i.impedance_matrix[k][j].imag * 10 ** 3
                                             )
+                                            if i.capacitance_matrix is not None and len(i.capacitance_matrix) == len(
+                                                i.impedance_matrix
+                                            ):
+                                                tt["B{p}".format(p=p1)] = (
+                                                    i.capacitance_matrix[k][j].real
+                                                    * 2
+                                                    * math.pi
+                                                    * frequency
+                                                    * 10 ** 3
+                                                )
+                                            else:
+                                                tt["Ba"] = 0
+                                                tt["Bb"] = 0
+                                                tt["Bc"] = 0
                                         elif j > k:
                                             if p1 == "A" and p2 == "C":
                                                 tt["MutualResistanceCA"] = (
@@ -1134,6 +1466,18 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
+                                                if i.capacitance_matrix is not None and len(i.capacitance_matrix) == len(
+                                                    i.impedance_matrix
+                                                ):
+                                                    tt["MutualShuntSusceptanceCA"] = (
+                                                        i.capacitance_matrix[k][j].real
+                                                        * 2
+                                                        * math.pi
+                                                        * frequency
+                                                        * 10 ** 3
+                                                    )
+                                                else:
+                                                    tt["MutualShuntSusceptanceCA"] = 0
                                             else:
                                                 tt[
                                                     "MutualResistance{p1}{p2}".format(
@@ -1151,6 +1495,23 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
+                                                if i.capacitance_matrix is not None and len(i.capacitance_matrix) == len(
+                                                    i.impedance_matrix
+                                                ):
+                                                    tt[
+                                                        "MutualShuntSusceptance{p1}{p2}".format(
+                                                            p1=p1, p2=p2
+                                                        )
+                                                    ] = (
+                                                        i.capacitance_matrix[k][j].real
+                                                        * 2
+                                                        * math.pi
+                                                        * frequency
+                                                        * 10 ** 3
+                                                    )
+                                                else:
+                                                    tt["MutualShuntSusceptanceAB"] = 0
+                                                    tt["MutualShuntSusceptanceBC"] = 0
 
                                 if (
                                     hasattr(i, "nameclass")
@@ -1189,7 +1550,7 @@ class Writer(AbstractWriter):
 
                                 # Add device number and phase conductor IDs
                                 new_line_string += ",{device},{condIDA},{condIDB},{condIDC}".format(
-                                    device=new_sectionID,
+                                    device=new_section_ID,
                                     condIDA=tt["CondID_A"],
                                     condIDB=tt["CondID_B"],
                                     condIDC=tt["CondID_C"],
@@ -1292,7 +1653,7 @@ class Writer(AbstractWriter):
                             or line_type == "recloser"
                             or line_type == "breaker"
                         ):
-                            new_line_string += "," + new_sectionID
+                            new_line_string += "," + new_section_ID
 
                         if line_type == "underground":
                             new_line_string += (
@@ -1337,13 +1698,308 @@ class Writer(AbstractWriter):
                             except:
                                 pass
 
+                if isinstance(i, Storage):
+                    bess_string = ""
+                    new_bess_setting_string = ""
+                    new_converter_string = ""
+                    new_converter_control_setting_string = ""
+
+                    if (
+                        hasattr(i, "name")
+                        and i.name is not None
+                        and hasattr(i, "connecting_element")
+                        and i.connecting_element is not None
+                        and (
+                            i.connecting_element in model.model_names
+                            or "load_" + i.connecting_element in model.model_names
+                        )
+                    ):
+                        new_section_ID = "{f}_{t}".format(
+                            f=i.connecting_element, t=i.name
+                        )
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+
+                        new_section = (
+                            new_section_ID
+                            + ",{f},0,{t},0,".format(  # Assume only one index for the load connection point
+                                f=i.connecting_element, t=i.name
+                            )
+                        )
+
+                        new_node_string = "{n}".format(n=i.name)
+                        if hasattr(i, "positions") and i.positions is not None:
+                            try:
+                                new_node_string += "," + str(i.positions[0].long)
+                            except:
+                                new_node_string += ",0"
+                                pass
+
+                            try:
+                                new_node_string += "," + str(i.positions[0].lat)
+                            except:
+                                new_node_string += ",0"
+                                pass
+                        else:
+                            new_node_string += ",0,0"
+                        self.node_string_list.append(new_node_string)
+
+                        phases = ""
+                        if i.phase_storages is not None:
+                            for ps in i.phase_storages:
+                                if ps.phase in ["A", "B", "C"]:
+                                    new_section += ps.phase
+                                    phases += ps.phase
+
+                        # If the object is inside of a substation...
+                        if hasattr(i, "is_substation") and i.is_substation == 1:
+                            # ...it should have the name of the substation specified in the 'substation_name' attribute
+                            if (
+                                hasattr(i, "substation_name")
+                                and i.substation_name is not None
+                                and i.substation_name != ""
+                            ):
+                                # Add 'substation_' prefix to easily distinguish substation from feeders or transmission lines
+                                ff_name = "substation_{}".format(i.substation_name)
+                                self.network_have_substations = True
+
+                        # If the object is not inside of a substation, then use the feeder_name attribute if it exists
+                        elif (
+                            hasattr(i, "feeder_name")
+                            and i.feeder_name is not None
+                            and i.feeder_name != ""
+                        ):
+                            ff_name = i.feeder_name
+
+                        self.section_line_list.append(new_section)
+                        if ff_name in self.section_line_feeder_mapping:
+                            self.section_line_feeder_mapping[ff_name].append(
+                                new_section
+                            )
+                        else:
+                            self.section_line_feeder_mapping[ff_name] = [new_section]
+
+                        new_converter_string += (
+                            new_section_ID + ",80,"
+                        )  # 45 is the CYME code for PV devices
+                        new_converter_control_setting_string += (
+                            new_section_ID + ",80,0,0,"
+                        )  # The controlindex and timetrigger indices are both zero
+
+                        if hasattr(i, "rated_kWh") and i.rated_kWh is not None:
+                            bess_string += str(i.rated_kWh * 10 ** -3)
+                        bess_string += ","
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            bess_string += str(i.rated_power * 10 ** -3)
+                        bess_string += ","
+
+                        # Use for both charging and discharging power
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            bess_string += str(i.rated_power * 10 ** -3)
+                        bess_string += ","
+
+                        if (
+                            hasattr(i, "charging_efficiency")
+                            and i.charging_efficiency is not None
+                        ):
+                            bess_string += str(i.charging_efficiency)
+                        bess_string += ","
+
+                        if (
+                            hasattr(i, "discharging_efficiency")
+                            and i.discharging_efficiency is not None
+                        ):
+                            bess_string += str(i.discharging_efficiency)
+
+                        bess_type = ""
+                        if bess_string in self.bess_codes:
+                            bess_type = self.bess_codes[bess_string]
+                        else:
+                            ID_bess += 1
+                            bess_type = "BESS_" + str(ID_bess)
+                            self.bess_codes[bess_string] = bess_type
+
+                        bess_string = bess_type + "," + bess_string
+
+                        new_bess_setting_string += (
+                            new_section_ID
+                            + ",M,"
+                            + new_section_ID
+                            + ","
+                            + bess_type
+                            + ","
+                            + phases
+                            + ","
+                        )
+
+                        if (
+                            hasattr(i, "stored_kWh")
+                            and i.stored_kWh is not None
+                            and hasattr(i, "rated_kWh")
+                            and i.rated_kWh is not None
+                            and i.rated_kWh != 0
+                        ):
+                            new_bess_setting_string += str(
+                                int(i.stored_kWh / i.rated_kWh * 100)
+                            )
+
+                        if hasattr(i, "active_rating") and i.active_rating is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + i.active_rating ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.active_rating / 1000.0) + ","
+                                )
+                            new_converter_string += str(i.active_rating / 1000.0) + ","
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + (i.rated_power * 1.1) ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.rated_power * 1.1 / 1000.0) + ","
+                                )
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10%
+                        else:
+                            new_converter_string += ",,"
+
+                        if (
+                            hasattr(i, "reactive_rating")
+                            and i.reactive_rating is not None
+                        ):
+                            new_converter_string += (
+                                str(i.reactive_rating / 1000.0) + ","
+                            )
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10% and active=reactive
+                        else:
+                            new_converter_string += ","
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        new_dg_generation_string += ","
+                        if (
+                            hasattr(i, "min_powerfactor")
+                            and i.min_powerfactor is not None
+                        ):
+                            new_converter_string += str(i.powerfactor * 100)
+                            new_dg_generation_string += str(i.powerfactor * 100)
+                        new_dg_generation_string += ","
+                        new_converter_string += ","
+                        if hasattr(i, "fall_limit") and i.fall_limit is not None:
+                            new_converter_string += str(i.fall_limit)
+                        new_converter_string += ","
+                        if hasattr(i, "rise_limit") and i.rise_limit is not None:
+                            new_converter_string += str(i.rise_limit)
+                        new_converter_string += ","
+                        if (hasattr(i, "fall_limit") and i.fall_limit is not None) or (
+                            hasattr(i, "rise_limit") and i.rise_limit is not None
+                        ):
+                            new_converter_string += "0"  # Using units of % per minute
+
+                        if hasattr(i, "control_type") and i.control_type is not None:
+                            if (
+                                i.control_type.lower() == "voltvar_vars_over_watts"
+                                or i.control_type.lower() == "voltvar"
+                            ):  # use default voltvar curve in cyme
+                                new_converter_control_setting_string += "1"
+                            if i.control_type.lower() == "voltvar_watts_over_vars":
+                                new_converter_control_setting_string += "0"
+                            if i.control_type.lower() == "voltvar_fixed_vars":
+                                new_converter_control_setting_string += "2"
+                            if i.control_type.lower() == "voltvar_novars":
+                                new_converter_control_setting_string += "3"
+                            if i.control_type.lower() == "voltwatt":
+                                new_converter_control_setting_string += "5"
+                            if i.control_type.lower() == "watt_powerfactor":
+                                new_converter_control_setting_string += "6"
+                            if i.control_type.lower() == "powerfactor":
+                                new_converter_control_setting_string += "10"
+
+                            new_converter_control_setting_string += ","
+                            if (
+                                i.control_type.lower() == "voltvar_fixed_vars"
+                                and i.var_injection is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    str(i.var_injection) + ",2,"
+                                )  # 2 is the code for the pecentage reactive power available
+                            else:
+                                new_converter_control_setting_string += ",,"
+                            if (
+                                i.control_type.lower() == "voltvar_watts_over_vars"
+                                or i.control_type.lower() == "voltvar_vars_over_watts"
+                            ) and i.voltvar_curve is not None:
+                                new_converter_control_setting_string += (
+                                    i.voltvar_curve + ",,"
+                                )
+                            elif (
+                                i.control_type.lower() == "voltwatt"
+                                and i.voltwatt_curve is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    i.voltwatt_curve + ",0,"
+                                )  # 0 is the code for using the active power rating
+                            elif (
+                                i.control_type.lower() == "watt_powerfactor"
+                                and i.watt_powerfactor_curve is not None
+                            ):
+                                new_converter_control_setting_string += (
+                                    i.watt_powerfactor_curve + ",0,"
+                                )  # 0 is the code for using the active power rating
+                            else:
+                                new_converter_control_setting_string += ",,"
+                        else:
+                            new_converter_control_setting_string += "10" + "," * 5
+
+                    if new_converter_string != "":
+                        converter_string_list.append(new_converter_string)
+                    if new_converter_control_setting_string != "":
+                        converter_control_string_list.append(
+                            new_converter_control_setting_string
+                        )
+
+                    if new_bess_setting_string != "":
+                        bess_settings_string_list.append(new_bess_setting_string)
+
                 # If we get a Photovoltaic object
 
                 if isinstance(i, Photovoltaic):
                     new_converter_string = ""
                     new_converter_control_setting_string = ""
                     new_pv_setting_string = ""
-                    new_long_term_dynamics = ""
                     new_dg_generation_string = ""
                     if (
                         hasattr(i, "name")
@@ -1358,8 +2014,16 @@ class Writer(AbstractWriter):
                         new_section_ID = "{f}_{t}".format(
                             f=i.connecting_element, t=i.name
                         )
-                        new_section = "{f}_{t},{f},{t},".format(
-                            f=i.connecting_element, t=i.name
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+
+                        new_section = (
+                            new_section_ID
+                            + ",{f},0,{t},0,".format(  # Assume only one index for the load connection point
+                                f=i.connecting_element, t=i.name
+                            )
                         )
 
                         new_node_string = "{n}".format(n=i.name)
@@ -1411,6 +2075,7 @@ class Writer(AbstractWriter):
                                 self.section_headnode_mapping[
                                     i.feeder_name
                                 ] = i.substation_name
+
                         new_converter_string += (
                             new_section_ID + ",45,"
                         )  # 45 is the CYME code for PV devices
@@ -1423,27 +2088,102 @@ class Writer(AbstractWriter):
                         new_dg_generation_string += new_section_ID + "45,DEFAULT,"
                         # DGGENERATIONMODEL is not included as this just sets the LoadModelName which is DEFAULT
 
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            panel_area = math.ceil(
+                                i.rated_power / 1000 / 0.08
+                            )  # Each panel produces 0.08 kw
+                            num_x, num_y = self.smallest_perimeter(panel_area)
+                            if min(num_x, num_y) == 1:
+                                num_x, num_y = self.smallest_perimeter(
+                                    panel_area + 1
+                                )  # if area is prime
+                            new_pv_setting_string += str(num_x) + "," + str(num_y) + ","
+                        elif (
+                            hasattr(i, "active_rating") and i.active_rating is not None
+                        ):
+                            panel_area = math.ceil(
+                                i.active_rating / 1.1 / 1000 / 0.08
+                            )  # Each panel produces 0.08 kw. Assume 10% inverter oversize
+                            num_x, num_y = self.smallest_perimeter(panel_area)
+                            if min(num_x, num_y) == 1:
+                                num_x, num_y = self.smallest_perimeter(
+                                    panel_area + 1
+                                )  # if area is prime
+                            new_pv_setting_string += str(num_x) + "," + str(num_y) + ","
+                        else:
+                            new_pv_setting_string += (
+                                ",,"
+                            )  # This will produce garbage output power
+
                         if hasattr(i, "temperature") and i.temperature is not None:
                             new_pv_setting_string += str(i.temperature)
 
                         new_pv_setting_string += "," + phases
 
-                        if hasattr(i, "rated_power") and i.rated_power is not None:
-                            new_converter_string += str(i.rated_power / 1000.0) + ","
-                            new_converter_string += str(i.rated_power / 1000.0) + ","
+                        if hasattr(i, "active_rating") and i.active_rating is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + i.active_rating ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.active_rating / 1000.0) + ","
+                                )
+                            new_converter_string += str(i.active_rating / 1000.0) + ","
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            if (
+                                hasattr(i, "reactive_rating")
+                                and i.reactive_rating is not None
+                            ):
+                                new_converter_string += (
+                                    str(
+                                        math.sqrt(
+                                            i.reactive_rating ** 2
+                                            + (i.rated_power * 1.1) ** 2
+                                        )
+                                        / 1000.0
+                                    )
+                                    + ","
+                                )
+                            else:
+                                new_converter_string += (
+                                    str(i.rated_power * 1.1 / 1000.0) + ","
+                                )
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10%
                         else:
                             new_converter_string += ",,"
-                        if hasattr(i, "active_rating") and i.active_rating is not None:
-                            new_dg_generation_string += str(i.active_rating / 1000.0)
-                        elif hasattr(i, "rated_power") and i.rated_power is not None:
-                            new_dg_generation_string += str(i.rated_power / 1000.0)
-                        new_dg_generation_string += ","
+
                         if (
                             hasattr(i, "reactive_rating")
                             and i.reactive_rating is not None
                         ):
-                            new_converter_string += str(i.reactive_rating / 1000.0)
-                        new_converter_string += ","
+                            new_converter_string += (
+                                str(i.reactive_rating / 1000.0) + ","
+                            )
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_converter_string += (
+                                str(i.rated_power * 1.1 / 1000.0) + ","
+                            )  # Default value sets inverter to be oversized by 10% and active=reactive
+                        else:
+                            new_converter_string += ","
+
+                        if hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        elif hasattr(i, "rated_power") and i.rated_power is not None:
+                            new_dg_generation_string += str(i.rated_power / 1000.0)
+                        new_dg_generation_string += ","
                         if (
                             hasattr(i, "min_powerfactor")
                             and i.min_powerfactor is not None
@@ -1464,7 +2204,10 @@ class Writer(AbstractWriter):
                             new_converter_string += "0"  # Using units of % per minute
 
                         if hasattr(i, "control_type") and i.control_type is not None:
-                            if i.control_type.lower() == "voltvar_vars_over_watts":
+                            if (
+                                i.control_type.lower() == "voltvar_vars_over_watts"
+                                or i.control_type.lower() == "voltvar"
+                            ):  # use default voltvar curve in cyme
                                 new_converter_control_setting_string += "1"
                             if i.control_type.lower() == "voltvar_watts_over_vars":
                                 new_converter_control_setting_string += "0"
@@ -1525,11 +2268,21 @@ class Writer(AbstractWriter):
                                 "10,,,,,100"
                             )  # Use Powerfactor as default
 
-                        if hasattr(i, "timeseries") and i.timeseries is not None:
-                            new_long_term_dynamics += (
-                                new_section_ID + ",45,3,4"
-                            )  # 45 is for PV, 3 is for insolation curve and 4 is for insolation
-                            # TODO: connect the timeseries data correctly here.
+                        if (
+                            hasattr(i, "timeseries")
+                            and i.timeseries is not None
+                            and len(i.timeseries) > 0
+                            and i.timeseries[0].data_label is not None
+                            and i.timeseries[0].data_location is not None
+                        ):
+                            new_pv_setting_string += ",0,{loc}".format(
+                                loc=i.timeseries[0].data_label
+                            )
+                            self.irradiance_profiles[
+                                i.timeseries[0].data_label
+                            ] = i.timeseries[0].data_location
+                        else:
+                            new_pv_setting_string += ",1,"
 
                     else:
                         if hasattr(i, "name"):
@@ -1549,8 +2302,6 @@ class Writer(AbstractWriter):
                         )
                     if new_pv_setting_string != "":
                         pv_settings_string_list.append(new_pv_setting_string)
-                    if new_long_term_dynamics != "":
-                        long_term_dynamics_string_list.append(new_long_term_dynamics)
                     if new_dg_generation_string != "":
                         dg_generation_string_list.append(new_dg_generation_string)
 
@@ -1576,8 +2327,15 @@ class Writer(AbstractWriter):
                             new_section_ID = "{f}_{t}".format(
                                 f=i.connecting_element, t=i.name
                             )
-                            new_section = "{f}_{t},{f},{t},".format(
-                                f=i.connecting_element, t=i.name
+                            if len(new_section_ID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_section_ID.encode("utf-8"))
+                                new_section_ID = hasher.hexdigest()
+                            new_section = (
+                                new_section_ID
+                                + ",{f},0,{t},0,".format(  # assume only one connection point for capacitors
+                                    f=i.connecting_element, t=i.name
+                                )
                             )
                             new_capacitor_line += new_section_ID
                             if i.connecting_element not in self.nodeID_list:
@@ -1604,11 +2362,11 @@ class Writer(AbstractWriter):
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(
-                                        new_sectionID
+                                        new_section_ID
                                     )
                                 else:
                                     self.section_feeder_mapping[i.feeder_name] = [
-                                        new_sectionID
+                                        new_section_ID
                                     ]
                                 if (
                                     hasattr(i, "substation_name")
@@ -1627,6 +2385,8 @@ class Writer(AbstractWriter):
                         except:
                             new_capacitor_line += ","
                             pass
+                    else:
+                        new_capacitor_line += ","
 
                     # KVAR and Phase
                     phases = []
@@ -1634,6 +2394,9 @@ class Writer(AbstractWriter):
                         hasattr(i, "phase_capacitors")
                         and i.phase_capacitors is not None
                     ):
+                        total_var = 0
+                        one_var = 0
+                        switched_vars = {}
                         # new_capacitor_line+=','
                         for phase_capacitor in i.phase_capacitors:
                             if (
@@ -1644,17 +2407,44 @@ class Writer(AbstractWriter):
                                 if new_section is not None:
                                     new_section += str(phase_capacitor.phase)
 
-                        if (
-                            hasattr(phase_capacitor, "var")
-                            and phase_capacitor.var is not None
-                        ):
-                            try:
-                                new_capacitor_object_line += (
-                                    str(phase_capacitor.var * 10 ** -3) + ","
-                                )
-                            except:
-                                new_capacitor_object_line += ","
-                                pass
+                            if (
+                                hasattr(phase_capacitor, "var")
+                                and phase_capacitor.var is not None
+                            ):
+                                total_var += phase_capacitor.var
+                            if (
+                                phase_capacitor.var is not None
+                                and phase_capacitor.phase is not None
+                            ):
+                                switched_vars[
+                                    phase_capacitor.phase.upper()
+                                ] = phase_capacitor.var
+                        if "A" in switched_vars:
+                            new_capacitor_line += "," + str(
+                                switched_vars["A"] * 10 ** -3
+                            )
+                            one_var = switched_vars["A"]
+                        else:
+                            new_capacitor_line += ","
+                        if "B" in switched_vars:
+                            new_capacitor_line += "," + str(
+                                switched_vars["B"] * 10 ** -3
+                            )
+                            one_var = switched_vars["B"]
+                        else:
+                            new_capacitor_line += ","
+                        if "C" in switched_vars:
+                            new_capacitor_line += "," + str(
+                                switched_vars["C"] * 10 ** -3
+                            )
+                            one_var = switched_vars["C"]
+                        else:
+                            new_capacitor_line += ","
+                        if total_var > 0:
+                            new_capacitor_object_line += str(one_var * 10 ** -3) + ","
+                        else:
+                            new_capacitor_object_line += ","
+                            pass
 
                     # KV
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
@@ -1678,6 +2468,36 @@ class Writer(AbstractWriter):
                             new_capacitor_line += ","
                             new_capacitor_object_line += ","
                             pass
+
+                    if hasattr(i, "mode") and i.mode is not None:
+                        if i.mode.lower() == "currentFlow":
+                            new_capacitor_line += ",2"
+                        elif i.mode.lower() == "voltage":
+                            new_capacitor_line += ",1"
+                        elif i.mode.lower() == "activepower":
+                            new_capacitor_line += ",4"
+                        elif i.mode.lower() == "reactivepower":
+                            new_capacitor_line += ",7"
+                        elif i.mode.lower() == "timescheduled":
+                            new_capacitor_line += ",6"
+                        else:
+                            new_capacitor_line += ",0"
+                    else:
+                        new_capacitor_line+=","
+
+                    if hasattr(i, "low") and i.low is not None:
+                        new_capacitor_line += (
+                            "," + str(i.low) + "," + str(i.low) + "," + str(i.low)
+                        )
+                    else:
+                        new_capacitor_line += ",,,"
+
+                    if hasattr(i, "high") and i.high is not None:
+                        new_capacitor_line += (
+                            "," + str(i.high) + "," + str(i.high) + "," + str(i.high)
+                        )
+                    else:
+                        new_capacitor_line += ",,,"
 
                     found = False
                     for k, d in self.capcodes.items():
@@ -1745,20 +2565,36 @@ class Writer(AbstractWriter):
                         and i.to_element is not None
                     ):
                         # try:
-                        new_section = "{f}_{t},{f},{t},".format(
-                            f=i.from_element, t=i.to_element
-                        )
+                        from_index = 0
+                        to_index = 0
+                        if (
+                            hasattr(i, "from_element_connection_index")
+                            and i.from_element_connection_index is not None
+                        ):
+                            from_index = i.from_element_connection_index
+                        if (
+                            hasattr(i, "to_element_connection_index")
+                            and i.to_element_connection_index is not None
+                        ):
+                            to_index = i.to_element_connection_index
                         new_section_ID = "{f}_{t}".format(
                             f=i.from_element, t=i.to_element
+                        )
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+                        new_section = new_section_ID + ",{f},{fi},{t},{ti},".format(
+                            f=i.from_element, fi=from_index, t=i.to_element, ti=to_index
                         )
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
                             if i.feeder_name in self.section_feeder_mapping:
                                 self.section_feeder_mapping[i.feeder_name].append(
-                                    new_sectionID
+                                    new_section_ID
                                 )
                             else:
                                 self.section_feeder_mapping[i.feeder_name] = [
-                                    new_sectionID
+                                    new_section_ID
                                 ]
                             if (
                                 hasattr(i, "substation_name")
@@ -1777,6 +2613,8 @@ class Writer(AbstractWriter):
                     winding2 = None
                     from_element = None
                     to_element = None
+                    from_index = 0
+                    to_index = 0
                     windings_local = []
                     # import pdb;pdb.set_trace()
                     if hasattr(i, "windings") and i.windings is not None:
@@ -1797,29 +2635,57 @@ class Writer(AbstractWriter):
                             ):
                                 from_element = i.from_element
                                 to_element = i.to_element
+
+                                if (
+                                    hasattr(i, "from_element_connection_index")
+                                    and i.from_element_connection_index is not None
+                                ):
+                                    from_index = i.from_element_connection_index
+                                if (
+                                    hasattr(i, "to_element_connection_index")
+                                    and i.to_element_connection_index is not None
+                                ):
+                                    to_index = i.to_element_connection_index
                     if winding1 is not None and winding2 is not None:
                         windings_local = [winding1, winding2]
                         if winding1.nominal_voltage != winding2.nominal_voltage:
                             new_trans_sectionID = "{f}_{t}".format(
                                 f=from_element, t=to_element + "_reg"
                             )
-                            new_trans_section = "{f}_{t},{f},{t},".format(
-                                f=from_element, t=to_element + "_reg"
-                            )
-                            new_section = "{f}_{t},{f},{t},".format(
-                                f=to_element + "_reg", t=to_element
+                            if len(new_trans_sectionID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_trans_sectionID.encode("utf-8"))
+                                new_trans_sectionID = hasher.hexdigest()
+                            new_trans_section = (
+                                new_trans_sectionID
+                                + ",{f},{fi},{t},{ti},".format(
+                                    f=from_element,
+                                    fi=from_index,
+                                    t=to_element + "_reg",
+                                    ti=to_index,
+                                )
                             )
                             new_section_ID = "{f}_{t}".format(
                                 f=to_element + "_reg", t=to_element
                             )
+                            if len(new_section_ID) > 64:
+                                hasher = hashlib.sha1()
+                                hasher.update(new_section_ID.encode("utf-8"))
+                                new_section_ID = hasher.hexdigest()
+                            new_section = new_section_ID + ",{f},{fi},{t},{ti},".format(
+                                f=to_element + "_reg",
+                                fi=from_index,
+                                t=to_element,
+                                ti=to_index,
+                            )
                             if hasattr(i, "feeder_name") and i.feeder_name is not None:
                                 if i.feeder_name in self.section_feeder_mapping:
                                     self.section_feeder_mapping[i.feeder_name].append(
-                                        new_sectionID
+                                        new_section_ID
                                     )
                                 else:
                                     self.section_feeder_mapping[i.feeder_name] = [
-                                        new_sectionID
+                                        new_section_ID
                                     ]
                                 if (
                                     hasattr(i, "substation_name")
@@ -2141,25 +3007,28 @@ class Writer(AbstractWriter):
                     else:
                         new_regulator_string += ",,"
 
-                    if hasattr(i, "pt_phase") and i.pt_phase is not None:
-                        try:
-                            new_regulator_string += "," + str(i.pt_phase)
-                        except:
-                            new_regulator_string += ","
-                            pass
-                    else:
-                        new_regulator_string += ","
+                    # if hasattr(i, "pt_phase") and i.pt_phase is not None:
+                    #     try:
+                    #         new_regulator_string += "," + str(i.pt_phase)
+                    #     except:
+                    #         new_regulator_string += ","
+                    #         pass
+                    # else:
+                    #     new_regulator_string += ","
 
                     _KVA = 0
                     _KVLN = 0
                     _Rset = {"A": 0, "B": 0, "C": 0}
                     _Xset = {"A": 0, "B": 0, "C": 0}
+                    _regphases = []
                     if len(windings_local) >= 2:
                         try:
                             _KVA = windings_local[0].rated_power * 10 ** -3
                         except:
                             pass
-                        _KVLN = windings_local[-1].nominal_voltage * 10 ** -3
+                        _KVLN = (
+                            windings_local[-1].nominal_voltage / math.sqrt(3) * 10 ** -3
+                        )
 
                         if (
                             hasattr(winding1, "phase_windings")
@@ -2167,6 +3036,7 @@ class Writer(AbstractWriter):
                         ):
                             for phase_winding in winding1.phase_windings:
                                 try:
+                                    _regphases.append(phase_winding.phase)
                                     _Rset[
                                         phase_winding.phase
                                     ] = phase_winding.compensator_r
@@ -2175,6 +3045,10 @@ class Writer(AbstractWriter):
                                     ] = phase_winding.compensator_x
                                 except:
                                     pass
+
+                    new_regulator_string += ","
+                    for phase in _regphases:
+                        new_regulator_string += phase
 
                     _band = None
                     if hasattr(i, "bandwidth") and i.bandwidth is not None:
@@ -2207,14 +3081,17 @@ class Writer(AbstractWriter):
                     else:
                         new_regulator_string += ","
 
-                    if hasattr(i, "bandcenter") and i.bandcenter is not None:
+                    if hasattr(i, "setpoint") and i.setpoint is not None:
+                        scaled_setpoint = i.setpoint * 120 / 100.0
                         try:
-                            if str(i.pt_phase) == "A":
-                                new_regulator_string += "," + str(i.bandcenter) + ",0,0"
-                            elif str(i.pt_phase) == "B":
-                                new_regulator_string += ",0," + str(i.bandcenter) + ",0"
-                            elif str(i.pt_phase) == "C":
-                                new_regulator_string += ",0,0," + str(i.bandcenter)
+                            new_regulator_string += (
+                                ","
+                                + str(scaled_setpoint)
+                                + ","
+                                + str(scaled_setpoint)
+                                + ","
+                                + str(scaled_setpoint)
+                            )  # Assume same setpoint on all phases
                         except:
                             new_regulator_string += ",,,"
                     else:
@@ -2301,23 +3178,47 @@ class Writer(AbstractWriter):
                         and hasattr(transformer_object, "to_element")
                         and transformer_object.to_element is not None
                     ):
-                        new_section = "{f}_{t},{f},{t},".format(
-                            f=transformer_object.from_element,
-                            t=transformer_object.to_element,
-                        )
+                        from_index = 0
+                        to_index = 0
+                        if (
+                            hasattr(transformer_object, "from_element_connection_index")
+                            and transformer_object.from_element_connection_index
+                            is not None
+                        ):
+                            from_index = (
+                                transformer_object.from_element_connection_index
+                            )
+                        if (
+                            hasattr(transformer_object, "to_element_connection_index")
+                            and transformer_object.to_element_connection_index
+                            is not None
+                        ):
+                            to_index = transformer_object.to_element_connection_index
+
                         new_section_ID = "{f}_{t}".format(
                             f=transformer_object.from_element,
                             t=transformer_object.to_element,
+                        )
+
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+                        new_section = new_section_ID + ",{f},{fi},{t},{ti},".format(
+                            f=transformer_object.from_element,
+                            fi=from_index,
+                            t=transformer_object.to_element,
+                            ti=to_index,
                         )
                         # If it's a regulator, use the regulator object to find the feeder and substation if they're set
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
                             if i.feeder_name in self.section_feeder_mapping:
                                 self.section_feeder_mapping[i.feeder_name].append(
-                                    new_sectionID
+                                    new_section_ID
                                 )
                             else:
                                 self.section_feeder_mapping[i.feeder_name] = [
-                                    new_sectionID
+                                    new_section_ID
                                 ]
                             if (
                                 hasattr(i, "substation_name")
@@ -2333,8 +3234,8 @@ class Writer(AbstractWriter):
                         bandcenter = 0
                         if hasattr(i, "bandcenter") and i.bandcenter is not None:
                             bandcenter = i.bandcenter
-                        LowerBandwidth = str(abs(bandcenter - i.bandwidth / 2.0))
-                        UpperBandwidth = str(abs(bandcenter + i.bandwidth / 2.0))
+                        LowerBandwidth = str(abs(bandcenter - i.bandwidth))
+                        UpperBandwidth = str(abs(bandcenter + i.bandwidth))
 
                     if hasattr(i, "highstep") and i.highstep is not None:
                         MaxBoost = str(i.highstep)
@@ -2659,7 +3560,7 @@ class Writer(AbstractWriter):
                                 #    pass
 
                                 if hasattr(winding, "nominal_voltage"):
-                                    # If we have a one phase transformer, we specify voltage in KV, not in KVLL
+                                    # If we have a one phase transformer or a delta transformer, we specify voltage in KV, not in KVLL
                                     # This is done by setting the voltageUnit keyword to 1
                                     if (
                                         len(
@@ -2667,16 +3568,22 @@ class Writer(AbstractWriter):
                                                 0
                                             ].phase_windings
                                         )
-                                        == 1
+                                        <= 1
+                                        or len(
+                                            transformer_object.windings[
+                                                0
+                                            ].phase_windings
+                                        )
+                                        == 2
                                     ):
                                         if w == 0:
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )
-                                            if transformer_object.is_center_tap == 1:
-                                                KVLLprim = round(
-                                                    KVLLprim / (3 ** 0.5), 2
-                                                )  # produces output in L-N format if center-tap rather than L-L
+                                            # if transformer_object.is_center_tap == 1:
+                                            #     KVLLprim = round(
+                                            #         KVLLprim / (3 ** 0.5), 2
+                                            #     )  # produces output in L-N format if center-tap rather than L-L
                                             voltageUnit = (
                                                 1
                                             )  # Voltage declared in KV, not in KVLL
@@ -2779,9 +3686,9 @@ class Writer(AbstractWriter):
                                     + new_section_ID
                                 )
 
-                            new_transformer_line += (
-                                ",M,100,100,None,0"
-                            )  # .format(PhaseShiftType=phase_shift)#Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
+                            new_transformer_line += ",{PhaseShiftType},M,100,100,None,0".format(
+                                PhaseShiftType=phase_shift
+                            )  # Phase shift, Location, PrimTap,SecondaryTap, ODPrimPh, and ConnectionStatus
 
                             try:
                                 TAP = 1.0 / float(
@@ -3134,6 +4041,11 @@ class Writer(AbstractWriter):
             for node_string in self.node_string_list:
                 f.write(node_string + "\n")
 
+            if len(self.bus_string_list) > 0:
+                f.write("FORMAT_NODE=NodeID,CoordX1,CoordY1,CoordX2,CoordY2,Width\n")
+                for bus_string in self.bus_string_list:
+                    f.write(bus_string + "\n")
+
             # Intermediate nodes
             #
             f.write("\n[INTERMEDIATE NODES]\n")
@@ -3237,7 +4149,9 @@ class Writer(AbstractWriter):
             f.write("\n[SECTION]\n")
 
             # Always write the SECTION format
-            f.write("FORMAT_SECTION=SectionID,FromNodeID,ToNodeID,Phase,SubNetworkId\n")
+            f.write(
+                "FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,SubNetworkId\n"
+            )
 
             # Always write the FEEDER format
             f.write("FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet\n")
@@ -3412,7 +4326,7 @@ class Writer(AbstractWriter):
                             X = 0
                             Y = 0
                         f.write(
-                            "{NetID},0,{X},{Y},{Height},{Length},-1,Schematic,-1,0.755872,0.251957,1\n".format(
+                            "{NetID},0,{X},{Y},{Height},{Length},-1,Geographically Referenced,-1,5,0.251957,1\n".format(
                                 NetID=f_name.split("ation_")[1],
                                 X=X,
                                 Y=Y,
@@ -3535,7 +4449,7 @@ class Writer(AbstractWriter):
             if len(capacitor_string_list) > 0:
                 f.write("\n[SHUNT CAPACITOR SETTING]\n")
                 f.write(
-                    "FORMAT_SHUNTCAPACITORSETTING=SectionID,Connection,KV,DeviceNumber,ShuntCapacitorID,Location,ConnectionStatus\n"
+                    "FORMAT_SHUNTCAPACITORSETTING=SectionID,Connection,SwitchedKVARA,SwitchedKVARB,SwitchedKVARC,KV,Control,OnValueA,OnValueB,OnValueC,OffValueA,OffValueB,OffValueC,DeviceNumber,ShuntCapacitorID,Location,ConnectionStatus\n"
                 )
                 for capacitor_string in capacitor_string_list:
                     f.write(capacitor_string + "\n")
@@ -3547,7 +4461,7 @@ class Writer(AbstractWriter):
             if len(two_windings_transformer_string_list) > 0:
                 f.write("\n[TRANSFORMER SETTING]\n")
                 f.write(
-                    "FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n"
+                    "FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,PhaseShiftType,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n"
                 )
                 for transformer_string in two_windings_transformer_string_list:
                     f.write(transformer_string + "\n")
@@ -3596,18 +4510,9 @@ class Writer(AbstractWriter):
             if len(pv_settings_string_list) > 0:
                 f.write("\n[PHOTOVOLTAIC SETTINGS]\n")
                 f.write(
-                    "FORMAT_PHOTOVOLTAICSETTING=SectionID,Location,DeviceNumber,EquipmentID,AmbientTemperature,Phase\n"
+                    "FORMAT_PHOTOVOLTAICSETTING=SectionID,Location,DeviceNumber,EquipmentID,NS,NP,AmbientTemperature,Phase,ConstantInsolation,InsolationModelID\n"
                 )
                 for i in pv_settings_string_list:
-                    f.write(i)
-                    f.write("\n")
-
-            if len(long_term_dynamics_string_list) > 0:
-                f.write("\n[LONG TERM DYNAMICS CURVE EXT]\n")
-                f.write(
-                    "FORMAT_LONGTERMDYNAMICSCURVEEXT=DeviceNumber,DeviceType,AdjustmentSettings,PowerCurveModel\n"
-                )
-                for i in long_term_dynamics_string_list:
                     f.write(i)
                     f.write("\n")
 
@@ -3617,6 +4522,22 @@ class Writer(AbstractWriter):
                     "FORMAT_DGGENERATIONMODEL=DeviceNumber,DeviceType,LoadModelName,ActiveGeneration,PowerFactor\n"
                 )
                 for i in dg_generation_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(self.node_connector_string_list) > 0:
+                f.write("\n[NODE CONNECTOR]\n")
+                f.write("FORMAT_NODECONNECTOR=NodeID,CoordX,CoordY,SectionID\n")
+                for i in self.node_connector_string_list:
+                    f.write(i)
+                    f.write("\n")
+
+            if len(bess_settings_string_list) > 0:
+                f.write("\n[BESS SETTINGS]\n")
+                f.write(
+                    "FORMAT_BESSSETTING=SectionID,Location,DeviceNumber,EquipmentID,Phase,InitialSOC\n"
+                )
+                for i in bess_settings_string_list:
                     f.write(i)
                     f.write("\n")
 
@@ -3770,14 +4691,14 @@ class Writer(AbstractWriter):
             #
             f.write("\n[CABLE]\n")
             f.write(
-                "FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,UserDefinedImpedances,Frequency,Temperature\n"
+                "FORMAT_CABLE=ID,R1,R0,X1,X0,B1,B0,Amps,CableType,UserDefinedImpedances,Frequency,Temperature\n"
             )
             f.write(
-                "DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,1,60.000000,25.000000\n"
+                "DEFAULT,0.040399,0.055400,0.035900,0.018200,0.000000,0.000000,447.000000,0,1,60.000000,25.000000\n"
             )
             for ID, data in self.cablecodes.items():
                 f.write(str(ID))
-                for key in ["R1", "R0", "X1", "X0", "B1", "B0", "amps"]:
+                for key in ["R1", "R0", "X1", "X0", "B1", "B0", "amps", "cabletype"]:
                     if key in data:
                         f.write("," + str(data[key]))
                     else:
@@ -3789,7 +4710,7 @@ class Writer(AbstractWriter):
             if len(self.linecodes_overhead) > 0:
                 f.write("\n[LINE UNBALANCED]\n")
                 f.write(
-                    "FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,Ba,Bb,Bc,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n"
+                    "FORMAT_LINEUNBALANCED=ID,Ra,Rb,Rc,Xa,Xb,Xc,Ba,Bb,Bc,MutualResistanceAB,MutualResistanceBC,MutualResistanceCA,MutualReactanceAB,MutualReactanceBC,MutualReactanceCA,MutualShuntSusceptanceAB,MutualShuntSusceptanceBC,MutualShuntSusceptanceCA,CondID_A,CondID_B,CondID_C,CondID_N1,CondID_N2,SpacingID,AmpsA,AmpsB,AmpsC,UserDefinedImpedances,Transposed\n"
                 )
 
                 for ID, data in self.linecodes_overhead.items():
@@ -3801,21 +4722,24 @@ class Writer(AbstractWriter):
                         "XA",
                         "XB",
                         "XC",
+                        "Ba",
+                        "Bb",
+                        "Bc",
                         "MutualResistanceAB",
                         "MutualResistanceBC",
                         "MutualResistanceCA",
                         "MutualReactanceAB",
                         "MutualReactanceBC",
                         "MutualReactanceCA",
+                        "MutualShuntSusceptanceAB",
+                        "MutualShuntSusceptanceBC",
+                        "MutualShuntSusceptanceCA",
                         "CondID_A",
                         "CondID_B",
                         "CondID_C",
                         "CondID_N1",
                         "CondID_N2",
                         "SpacingID",
-                        "Ba",
-                        "Bb",
-                        "Bc",
                         "AmpsA",
                         "AmpsB",
                         "AmpsC",
@@ -3840,13 +4764,13 @@ class Writer(AbstractWriter):
             # Conductors
             #
             f.write("\n[CONDUCTOR]\n")
-            f.write("FORMAT_CONDUCTOR=ID,Diameter,GMR,Amps,WithstandRating\n")
-            f.write("DEFAULT,1.000001,1.000001,2000.000000,2000.000000\n")
+            f.write("FORMAT_CONDUCTOR=ID,Diameter,GMR,R25,Amps,WithstandRating\n")
+            f.write("DEFAULT,1.000001,1.000001,0.7,2000.000000,2000.000000\n")
             if len(self.conductors) > 0:
                 for ID, data in self.conductors.items():
                     if ID == "DEFAULT":
                         continue
-                    f.write(ID + ",")
+                    f.write(ID)
                     f.write(data)
                     f.write("\n")
 
@@ -3925,6 +4849,26 @@ class Writer(AbstractWriter):
                     f.write(data.strip(","))
                     f.write("\n")
 
+            if len(self.irradiance_profiles) > 0:
+                f.write("\n[INSOLATION MODEL] \n")
+                f.write("FORMAT_INSOLATIONMODEL=ID,FromFile,FileName\n")
+                for i in self.irradiance_profiles:
+                    f.write(
+                        "{label},1,{loc}".format(
+                            label=i, loc=self.irradiance_profiles[i]
+                        )
+                    )
+                    f.write("\n")
+
+            if len(self.bess_codes) > 0:
+                f.write("\n[BESS] \n")
+                f.write(
+                    "FORMAT_BESS=ID,RatedStorageEnergy,MaxChargingPower,MaxDischargingPower,ChargeEfficiency,DischargeEfficiency\n"
+                )
+                for value in self.bess_codes:
+                    f.write(self.bess_codes[value] + "," + value + "\n")
+                f.write("\n")
+
     def write_load_file(self, model, **kwargs):
         """Loop over the DiTTo objects and write the CYME load file."""
         # Output load file
@@ -3953,8 +4897,15 @@ class Writer(AbstractWriter):
                         new_section_ID = "{f}_{t}".format(
                             f=i.connecting_element, t=i.name
                         )
-                        new_section = "{f}_{t},{f},{t},".format(
-                            f=i.connecting_element, t=i.name
+                        if len(new_section_ID) > 64:
+                            hasher = hashlib.sha1()
+                            hasher.update(new_section_ID.encode("utf-8"))
+                            new_section_ID = hasher.hexdigest()
+                        new_section = (
+                            new_section_ID
+                            + ",{f},0,{t},0,".format(  # Assume loads only have one connection point
+                                f=i.connecting_element, t=i.name
+                            )
                         )
                         if hasattr(i, "feeder_name") and i.feeder_name is not None:
                             if i.feeder_name in self.section_feeder_mapping:
@@ -4014,6 +4965,8 @@ class Writer(AbstractWriter):
                                 new_load_string += ","
                                 pass
 
+                    else:
+                        new_load_string+=","
                     phases = ""
                     if hasattr(i, "phase_loads") and i.phase_loads is not None:
                         P = 0
@@ -4097,9 +5050,25 @@ class Writer(AbstractWriter):
 
                     # Location
                     new_load_string += ",0"
+                    new_customer_load_string += ",0,"
 
                     # CustomerNumber, CustomerType
-                    new_customer_load_string += ",0,PQ"
+                    found_timeseries = False
+                    if (
+                        hasattr(i, "timeseries")
+                        and i.timeseries is not None
+                        and len(i.timeseries) > 0
+                    ):
+                        ts = i.timeseries[0]
+                        if (
+                            hasattr(ts, "data_label")
+                            and ts.data_label is not None
+                            and len(ts.data_label) > 0
+                        ):
+                            new_customer_load_string += ts.data_label
+                            found_timeseries = True
+                    if not found_timeseries:
+                        new_customer_load_string += "PQ"
 
                     # CenterTapPercent and values
                     # Only fill these fields if the load is a center tap load and

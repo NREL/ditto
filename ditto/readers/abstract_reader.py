@@ -420,15 +420,69 @@ class AbstractReader(object):
             return []
         return np.dot(A_inv, np.dot(phase_impedance_matrix, A))
 
-    def kron_reduction(self, primitive_impedance_matrix):
-        """Performs Kron reduction on primitive impedance matrix."""
+    def kron_reduction(self, primitive_impedance_matrix, neutrals=None):
+        """Performs Kron reduction on primitive impedance matrix.
+           Neutrals is a list of elements that defines the indices of the neutrals
+        """
 
-        dim = len(primitive_impedance_matrix)
-        zij = primitive_impedance_matrix[: dim - 1, : dim - 1]
-        zin = primitive_impedance_matrix[: dim - 1, -1][:, np.newaxis]
-        znn = primitive_impedance_matrix[dim - 1, dim - 1]
-        znj = primitive_impedance_matrix[-1, : dim - 1]
-        return zij - np.dot(zin, np.dot(1.0 / znn, znj)[np.newaxis])
+        if neutrals is None:  # assume last row is neutral if nothing provided
+            self.logger.warning(
+                "Warning - last row assumed to be used for Kron reduction"
+            )
+            neutrals = [len(primitive_impedance_matrix) - 1]
+
+        dim_neutrals = len(neutrals)
+        dim_phase = len(primitive_impedance_matrix) - len(neutrals)
+        zij = [[None for i in range(dim_phase)] for j in range(dim_phase)]
+        znn = [[None for i in range(dim_neutrals)] for j in range(dim_neutrals)]
+        zin = [[None for i in range(dim_neutrals)] for j in range(dim_phase)]  # z[i][n]
+        znj = [[None for i in range(dim_phase)] for j in range(dim_neutrals)]  # z[n][j]
+
+        cnts = {"zij": [0, 0], "zin": [0, 0], "znj": [0, 0], "znn": [0, 0]}
+        i_phase = 0
+        i_n = 0
+        j_phase = 0
+        j_n = 0
+        for i in range(len(primitive_impedance_matrix)):
+            changed_set = set()
+            for j in range(len(primitive_impedance_matrix)):
+                if i in neutrals and j in neutrals:
+                    i_loc = cnts["znn"][0]
+                    j_loc = cnts["znn"][1]
+                    znn[i_loc][j_loc] = primitive_impedance_matrix[i][j]
+                    cnts["znn"][0] += 1
+                    changed_set.add("znn")
+                elif (not i in neutrals) and (not j in neutrals):
+                    i_loc = cnts["zij"][0]
+                    j_loc = cnts["zij"][1]
+                    zij[i_loc][j_loc] = primitive_impedance_matrix[i][j]
+                    cnts["zij"][0] += 1
+                    changed_set.add("zij")
+                elif (not i in neutrals) and j in neutrals:
+                    i_loc = cnts["zin"][0]
+                    j_loc = cnts["zin"][1]
+                    zin[i_loc][j_loc] = primitive_impedance_matrix[i][j]
+                    cnts["zin"][0] += 1
+                    changed_set.add("zin")
+                elif i in neutrals and (not j in neutrals):
+                    i_loc = cnts["znj"][0]
+                    j_loc = cnts["znj"][1]
+                    znj[i_loc][j_loc] = primitive_impedance_matrix[i][j]
+                    cnts["znj"][0] += 1
+                    changed_set.add("znj")
+
+                else:
+                    raise ValueError("Kron reduction failed")
+            for zone in changed_set:
+                cnts[zone][0] = 0
+                cnts[zone][1] += 1
+
+        # dim = len(primitive_impedance_matrix)
+        # zij = primitive_impedance_matrix[: dim - 1, : dim - 1]
+        # zin = primitive_impedance_matrix[: dim - 1, -1][:, np.newaxis]
+        # znn = primitive_impedance_matrix[dim - 1, dim - 1]
+        # znj = primitive_impedance_matrix[-1, : dim - 1]
+        return zij - np.dot(zin, np.dot(np.linalg.inv(znn), znj))
 
     def carson_equation_self(self, ri, GMRi):
         """Carson's equation for self impedance."""
@@ -475,6 +529,236 @@ class AbstractReader(object):
             self.get_positive_sequence_impedance(seq),
             self.get_negative_sequence_impedance(seq),
         )
+
+    def get_phase_impedances(
+        self, wire_list, distance_matrix=None, overhead=True, kron_reduce=None
+    ):
+        """ Compute phase impedances for wire list. Default parameters assume there is no neutral.
+            A kron reduction will be automatically be done if the matrix size is 4x4.
+            Otherwise no kron reduction is performed
+            All input units are assumed to be DiTTo default units (meters for distance)
+        """
+        nphases = len(wire_list)
+        if nphases == 4:
+            kron_reduce = True
+        elif kron_reduce is None:
+            kron_reduce = False
+
+        impedance_matrix = [[None for i in range(nphases)] for j in range(nphases)]
+
+        if distance_matrix is None:
+            distance_matrix = [[None for i in range(nphases)] for j in range(nphases)]
+            for i in range(nphases):
+                for j in range(nphases):
+                    if overhead:
+                        distance_matrix[i][j] = (
+                            abs(i - j) * 0.6
+                        )  # Assume 60 cm apart one above another or side by side.
+                    else:
+                        distance_matrix[i][j] = (
+                            abs(i - j) * 0.3
+                        )  # Assume 30 cm apart next to each other.
+
+        distance_matrix_feet = [[None for i in range(nphases)] for j in range(nphases)]
+        if nphases != len(distance_matrix):
+            raise ValueError("Distance matrix must be same size as number of wires")
+
+        for i in range(nphases):
+            for j in range(nphases):
+                distance_matrix_feet[i][j] = self.convert_from_meters(
+                    distance_matrix[i][j], "ft"
+                )
+
+        if overhead:
+            rs = []
+            gmrs = []
+            for i in range(nphases):
+                if wire_list[i].gmr is None:
+                    gmr_meters = 0.0088  # ACSR Hawk (477kcmil)
+                    self.logger.warning("Warning - using default gmr of " + str(gmr))
+                else:
+                    gmr_meters = wire_list[i].gmr
+                if wire_list[i].resistance is None:
+                    resistance_meters = 0.1194 / 1000  # ACSR Hawk (477kcmil)
+                    self.logger.warning(
+                        "Warning - using default resistance of " + str(resistance)
+                    )
+                else:
+                    resistance_meters = wire_list[i].resistance
+                gmrs.append(self.convert_from_meters(gmr_meters, "ft"))
+                rs.append(
+                    self.convert_from_meters(resistance_meters, "ft", inverse=True)
+                )
+            impedance_matrix_imperial = self.get_primitive_impedance_matrix(
+                np.array(distance_matrix_feet), gmrs, rs
+            )
+            if kron_reduce:
+                impedance_matrix_imperial = self.kron_reduce(
+                    impedance_matrix_imperial
+                )  # automatically assumes last element ei
+            for i in range(len(impedance_matrix)):
+                for j in range(len(impedance_matrix)):
+                    impedance_matrix[i][j] = self.convert_to_meters(
+                        impedance_matrix_imperial[i][j], "mi", inverse=True
+                    )  # works for complex
+        else:
+            # For underground cables create an n*2 x n*2 matrix which includes the neutrals. Then kron reduce the neutrals out to get an nxn matrix
+            rs = []
+            gmrs = []
+            rs_neutral = []
+            gmrs_neutral = []
+            radius_neutral = []
+            # Defaults from 600kcmil concentric neutral wires
+            for i in range(nphases):
+                if (
+                    wire_list[i].concentric_neutral_gmr is None
+                ):  # WARNING: this is the GMR of the neutral strand, not the computed GMR of all neutrals
+                    concentric_neutral_gmr_meters = (
+                        0.5 / 1000.0 * 0.7788
+                    )  # half a mm gmr is the radius of the strand.
+                    self.logger.warning(
+                        "Warning - using default concentric_neutral_gmr of "
+                        + str(concentric_neutral_gmr_meters)
+                    )
+                else:
+                    concentric_neutral_gmr_meters = wire_list[i].concentric_neutral_gmr
+
+                if wire_list[i].concentric_neutral_nstrand is None:
+                    concentric_neutral_nstrand = 32  # Default value
+                    self.logger.warning(
+                        "Warning - using default concentric_neutral_nstrand of "
+                        + str(concentric_neutral_nstrand)
+                    )
+                else:
+                    concentric_neutral_nstrand = wire_list[i].concentric_neutral_nstrand
+
+                if wire_list[i].concentric_neutral_diameter is None:
+                    concentric_neutral_diameter_meters = (
+                        1 / 1000.0
+                    )  # 1 mm strand diameter
+                    self.logger.warning(
+                        "Warning - using default concentric_neutral_diameter of "
+                        + str(concentric_neutral_diameter_meters)
+                    )
+                else:
+                    concentric_neutral_diameter_meters = wire_list[
+                        i
+                    ].concentric_neutral_diameter
+
+                if wire_list[i].concentric_neutral_outside_diameter is None:
+                    concentric_neutral_outside_diameter_meters = 25.93 / 1000.0
+                    self.logger.warning(
+                        "Warning - using default concentric_neutral_outside_diameter of "
+                        + str(concentric_neutral_outside_diameter_meters)
+                    )
+                else:
+                    concentric_neutral_outside_diameter_meters = wire_list[
+                        i
+                    ].concentric_neutral_outside_diameter
+
+                if wire_list[i].concentric_neutral_resistance is None:
+                    concentric_neutral_resistance_meters = (
+                        0.000269
+                    )  # Aluminium wire resistivity per meter for 4/0 wire (Nexans)
+                    self.logger.warning(
+                        "Warning - using default concentric_neutral_resistance of "
+                        + str(concentric_neutral_resistance_meters)
+                    )
+                else:
+                    concentric_neutral_resistance_meters = wire_list[
+                        i
+                    ].concentric_neutral_resistance
+
+                if wire_list[i].resistance is None:
+                    resistance_meters = (
+                        0.000269
+                    )  # Aluminium wire resistivity per meter for 4/0 wire (Nexans)
+                    self.logger.warning(
+                        "Warning - using default resistance of "
+                        + str(resistance_meters)
+                    )
+                else:
+                    resistance_meters = wire_list[i].resistance
+
+                if wire_list[i].gmr is None:
+                    gmr_meters = (
+                        13.26 / 2.0 / 1000.0 * 0.7788
+                    )  # using 4/0 wire diameter of 13.26
+                    self.logger.warning(
+                        "Warning - using default gmr of " + str(gmr_meters)
+                    )
+                else:
+                    gmr_meters = wire_list[i].gmr
+
+                radius_meters = (
+                    concentric_neutral_outside_diameter_meters
+                    - concentric_neutral_diameter_meters
+                ) / 2.0
+                radius = self.convert_from_meters(radius_meters, "ft")
+                concentric_neutral_gmr = self.convert_from_meters(
+                    concentric_neutral_gmr_meters, "ft"
+                )
+                gmr_neutral = (
+                    concentric_neutral_gmr
+                    * concentric_neutral_nstrand
+                    * (radius ** (concentric_neutral_nstrand - 1))
+                ) ** (1 / concentric_neutral_nstrand)
+                r_neutral = self.convert_from_meters(
+                    concentric_neutral_resistance_meters, "mi", inverse=True
+                ) / float(concentric_neutral_nstrand)
+                gmrs.append(self.convert_from_meters(gmr_meters, "ft"))
+                rs.append(
+                    self.convert_from_meters(resistance_meters, "ft", inverse=True)
+                )
+                gmrs_neutral.append(gmr_neutral)
+                rs_neutral.append(r_neutral)
+                radius_neutral.append(radius)
+
+            distance_matrix_cn = [
+                [None for i in range(2 * nphases)] for j in range(2 * nphases)
+            ]
+            for i in range(nphases):
+                for j in range(nphases):
+                    distance_matrix_cn[i][j] = distance_matrix_feet[i][j]
+                    distance_matrix_cn[i + nphases][j + nphases] = distance_matrix_feet[
+                        i
+                    ][j]
+
+                    # As per Example 4.2 of Kersting. phase-neutral equals the concentric-neutral radius for same cable
+                    if i == j:
+                        distance_matrix_cn[i + nphases][j] = radius_neutral[i]
+                        distance_matrix_cn[i][j + nphases] = radius_neutral[i]
+                    # As per Example 4.2 of Kersting. phase-neutral = phase-phase distance for different cables
+                    else:
+                        distance_matrix_cn[i + nphases][j] = distance_matrix_feet[i][j]
+                        distance_matrix_cn[i][j + nphases] = distance_matrix_feet[i][j]
+            gmrs_cn = []
+            rs_cn = []
+            for i in range(nphases):
+                gmrs_cn.append(gmrs[i])
+                rs_cn.append(rs[i])
+            for i in range(nphases):
+                gmrs_cn.append(gmrs_neutral[i])
+                rs_cn.append(rs_neutral[i])
+
+            impedance_matrix_imperial = self.get_primitive_impedance_matrix(
+                np.array(distance_matrix_cn), gmrs_cn, rs_cn
+            )
+            # Now Kron reduce out the nphases neutrals
+            neutrals = []
+            for i in range(nphases):
+                neutrals.append(i + nphases)
+            impedance_matrix_imperial = self.kron_reduction(
+                impedance_matrix_imperial, neutrals=neutrals
+            )
+
+            for i in range(len(impedance_matrix)):
+                for j in range(len(impedance_matrix)):
+                    impedance_matrix[i][j] = self.convert_to_meters(
+                        impedance_matrix_imperial[i][j], "mi", inverse=True
+                    )  # works for complex
+
+        return impedance_matrix
 
     def update_dict(self, d1, d2):
         for k2, v2 in d2.items():
