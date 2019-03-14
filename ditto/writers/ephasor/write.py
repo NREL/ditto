@@ -4,6 +4,7 @@ import os
 import math
 import logging
 
+
 import numpy as np
 import pandas as pd
 
@@ -234,7 +235,8 @@ class Writer(AbstractWriter):
             "bus1a": [],
             "bus1b": [],
             "bus1c": [],
-            "name": [],
+            "ID": [],
+            "Mode": [],
             "Length (Mile)": [],
             "r0 (ohm/Mile)": [],
             "x0 (ohm/Mile)": [],
@@ -278,11 +280,11 @@ class Writer(AbstractWriter):
 
             if hasattr(line, "name") and line.name is not None:
                 logger.debug("New Line." + line.name)
-                obj_dict["name"][index] = line.name
+                obj_dict["ID"][index] = line.name
             else:
-                obj_dict["name"][index] = "None"
+                obj_dict["ID"][index] = "None"
 
-            units = u"mi"
+            units = "mi"
             result = "temp "
             logger.debug("Type " + str(line.line_type))
 
@@ -305,6 +307,9 @@ class Writer(AbstractWriter):
                 obj_dict["Length (Mile)"][index] = self.convert_from_meters(
                     np.real(line.length), units
                 )
+                
+            # Multiphase line Mode
+            obj_dict["Mode"][index] = "full"
 
             tmp_phase=['a','b','c']
             if hasattr(line, "from_element") and line.from_element is not None:
@@ -553,6 +558,7 @@ class Writer(AbstractWriter):
         """
         obj_dict = {
             "ID": [],
+            "Num Phases": [],
             "W1Bus A": [],
             "W1Bus B": [],
             "W1Bus C": [],
@@ -567,7 +573,7 @@ class Writer(AbstractWriter):
             "W2S_base (kVA)": [],
             "W2R (pu)": [],
             "W2Conn. type": [],
-            "X (pu)": [],
+            "Mutual Impedance": [],
             "Tap A": [],
             "Tap B": [],
             "Tap C": [],
@@ -575,18 +581,24 @@ class Writer(AbstractWriter):
             "Highest Tap": [],
             "Min Range (%)": [],
             "Max Range (%)": [],
+            "X (pu)": [],
+            "Z0 leakage(pu)": [],
+            "Z1 leakage(pu)": [],
+            "X0/R0": [],
+            "X1/R1": [],
+            "No Load Loss(kW)": [],
         }
 
         ### Check for a sperated 3 phase transformer. Line to netural or whatever
         index = -1
         for i in self._transformers:
-            # index += 1
+            index += 1
             if len(i.windings[0].phase_windings) == 1:
                 pp = str(i.windings[0].phase_windings[0].phase)
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
                 if i.from_element in self._transformer_dict:
                     self._transformer_dict[i.from_element]["combined"] = True
-                    index = self._transformer_dict[i.from_element]["i"]
+                    #index = self._transformer_dict[i.from_element]["i"]
                     # import pdb;pdb.set_trace()
                     self._transformer_dict[i.from_element]["kv1"] += i.windings[
                         0
@@ -600,7 +612,7 @@ class Writer(AbstractWriter):
                 else:
                     for key, value in obj_dict.items():
                         value.append(None)
-                    index += 1
+                    #index += 1
                     logger.debug(i.windings[0].phase_windings[0].tap_position)
                     self._transformer_dict[i.from_element] = {
                         "combined": False,
@@ -626,7 +638,7 @@ class Writer(AbstractWriter):
                 pp = i.windings[0].phase_windings[0].phase
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
                 if i.from_element in self._transformer_dict:
-                    index = self._transformer_dict[i.from_element]["i"]
+                    #index = self._transformer_dict[i.from_element]["i"]
                     kv1 = self._transformer_dict[i.from_element]["kv1"]
                     kva = self._transformer_dict[i.from_element]["kva"]
                 # else:
@@ -710,15 +722,17 @@ class Writer(AbstractWriter):
                             hasattr(winding, "phase_windings")
                             and winding.phase_windings is not None
                         ):
+                            phase_cnt = 0
+                            phases = ['A','B','C']
                             N_phases.append(len(winding.phase_windings))
                             for pw in winding.phase_windings:
-                                obj_dict["W1Bus " + pw.phase][index] = (
-                                    i.from_element + "_" + pw.phase
+                                obj_dict["W1Bus " + phases[phase_cnt]][index] = (
+                                    i.from_element + "_" + pw.phase.lower()
                                 )
-                                obj_dict["W2Bus " + pw.phase][index] = (
-                                    i.to_element + "_" + pw.phase
+                                obj_dict["W2Bus " + phases[phase_cnt]][index] = (
+                                    i.to_element + "_" + pw.phase.lower()
                                 )
-                                tap_name = "Tap " + pw.phase
+                                tap_name = "Tap " + phases[phase_cnt]
                                 if pw.tap_position is None:
                                     obj_dict[tap_name][index] = 0
                                 else:
@@ -729,6 +743,7 @@ class Writer(AbstractWriter):
                                     #     obj_dict[tap_name][index] = self._transformer_dict[i.from_element][tap_name]
                                     # else:
                                     #     obj_dict[tap_name][index] = pw.tap_position
+                                phase_cnt+=1
 
                     if len(np.unique(N_phases)) != 1:
                         self.logger.error(
@@ -766,6 +781,13 @@ class Writer(AbstractWriter):
             obj_dict["Highest Tap"][index] = 16
             obj_dict["Min Range (%)"][index] = 10
             obj_dict["Max Range (%)"][index] = 10
+            obj_dict["Mutual Impedance"][index] = int(0)
+            obj_dict["Num Phases"][index] = int(N_phases[0])
+            obj_dict["Z0 leakage(pu)"][index] = int(0)
+            obj_dict["Z1 leakage(pu)"][index] = int(0)
+            obj_dict["X0/R0"][index] = int(0)
+            obj_dict["X1/R1"][index] = int(0)
+            obj_dict["No Load Loss(kW)"][index] = int(0)
 
         df4 = pd.DataFrame(obj_dict)
         logger.debug("df4")
@@ -774,6 +796,7 @@ class Writer(AbstractWriter):
         df4 = df4[
             [
                 "ID",
+                "Num Phases",
                 "W1Bus A",
                 "W1Bus B",
                 "W1Bus C",
@@ -785,10 +808,10 @@ class Writer(AbstractWriter):
                 "W2Bus B",
                 "W2Bus C",
                 "W2V (kV)",
-                "W2S_base (kVA)",
+                "W2S_base (kVA)",               
                 "W2R (pu)",
                 "W2Conn. type",
-                "X (pu)",
+                "Mutual Impedance",
                 "Tap A",
                 "Tap B",
                 "Tap C",
@@ -796,6 +819,12 @@ class Writer(AbstractWriter):
                 "Highest Tap",
                 "Min Range (%)",
                 "Max Range (%)",
+                "X (pu)",
+                "Z0 leakage(pu)",
+                "Z1 leakage(pu)",
+                "X0/R0",
+                "X1/R1",
+                "No Load Loss(kW)",
             ]
         ]
 
@@ -916,21 +945,36 @@ class Writer(AbstractWriter):
                     ):
                         letter_phases.add(phase)
                         obj_dict["Bus"].append(node.name + "_" + phase)
-                        obj_dict["BaseVoltage"].append(node.nominal_voltage)
                         if isinstance(node.nominal_voltage, float):
-                            obj_dict["Voltage (V)"].append(node.nominal_voltage/math.sqrt(3))
+                            obj_dict["BaseVoltage"].append(node.nominal_voltage/math.sqrt(3))
                         else:
-                            obj_dict["Voltage (V)"].append(node.nominal_voltage)
-                        obj_dict["Type"].append("PV") #No generators so all nodes are PV buses
-                if len(letter_phases) == 1:
+                            obj_dict["BaseVoltage"].append(node.nominal_voltage)
+                        
+                        if isinstance(node.nominal_voltage, float):
+                            obj_dict["Voltage (V)"].append(node.nominal_voltage/math.sqrt(3)) # L-N voltage
+                        else:
+                            obj_dict["Voltage (V)"].append(node.nominal_voltage) # PAG why is this needed
+                        if isinstance(node, PowerSource): # PAG this is where we would match on source name
+                            obj_dict["Type"].append("SLACK") #PAG No generators so all nodes are PQ buses
+                        else:
+                            obj_dict["Type"].append("PQ")
+
+                if 'a' in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
-                if len(letter_phases) == 2:
-                    obj_dict["Angle (deg)"].append(0)
-                    obj_dict["Angle (deg)"].append(180)
-                if len(letter_phases) == 3:
-                    obj_dict["Angle (deg)"].append(0)
+                if 'b' in letter_phases:
                     obj_dict["Angle (deg)"].append(120)
+                if 'c' in letter_phases:
                     obj_dict["Angle (deg)"].append(-120)
+
+#                if len(letter_phases) == 1:
+#                    obj_dict["Angle (deg)"].append(0)
+#                if len(letter_phases) == 2:
+#                    obj_dict["Angle (deg)"].append(0)
+#                    obj_dict["Angle (deg)"].append(180)
+#                if len(letter_phases) == 3:
+#                    obj_dict["Angle (deg)"].append(0)
+#                    obj_dict["Angle (deg)"].append(120)
+#                    obj_dict["Angle (deg)"].append(-120)
                 index = index + 1
         """
         line_dict = {}
@@ -1043,7 +1087,7 @@ class Writer(AbstractWriter):
 
             if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                 # logger.debug('    nominal_voltage {nv};'.format(nv=i.nominal_voltage))
-                obj_dict["V (kV)"][index] = i.nominal_voltage / 1000.0
+                obj_dict["V (kV)"][index] = i.nominal_voltage / 1000.0  #template 1_6 says L-L kV
 
 
             phase_cnt = 1
@@ -1176,7 +1220,12 @@ class Writer(AbstractWriter):
                                     obj_dict["K_z"][index] = 0
                                     obj_dict["Type"][index] = "ZIP"
                         phase_cnt+=1
-
+            
+            obj_dict["Bandwidth (pu)"][index] = 0.02 # this doesn't work right
+            obj_dict["Conn. type"][index] = "wye" # this doesn't work right            
+            obj_dict["Status"][index] = int(1) # this doesn't work right
+            obj_dict["Use initial voltage?"][index] = int(0) # this doesn't work right
+            
         df3 = pd.DataFrame(obj_dict)
         df3 = df3[
             [
@@ -1232,48 +1281,47 @@ class Writer(AbstractWriter):
         df2 = self.switch()
         df3 = self.load()
         df4 = self.transformer()
-
         df9 = self.bus()
+
         writer = pd.ExcelWriter(
             os.path.join(self.output_path, self.output_name + ".xlsx"),
             engine="xlsxwriter",
         )
+
+        df7.to_excel(writer, "Vsource 3-phase", index=False)
+        # workbook = writer.book
+        worksheet = writer.sheets["Vsource 3-phase"]
+        worksheet.set_column(0, 25, 16)
+        
+        df9.to_excel(writer, "Bus", index=False)
+        workbook = writer.book
+        worksheet = writer.sheets["Bus"]
+
+        worksheet.set_column(0, 3, 16)
 
         df1.to_excel(writer, "Multiphase Line", index=False)
         # workbook = writer.book
         worksheet = writer.sheets["Multiphase Line"]
 
         worksheet.set_column(0, 25, 16)
-
         df2.to_excel(writer, "Switch", index=False)
         # workbook = writer.book
         worksheet = writer.sheets["Switch"]
 
         worksheet.set_column(0, 25, 16)
 
+        df4.to_excel(writer, "Multiphase Transformer", index=False)
+        # workbook  = writer.book
+        worksheet = writer.sheets["Multiphase Transformer"]
+
+        worksheet.set_column(0, 19, 16)
+           
         df3.to_excel(writer, "Multiphase Load", index=False)
         # workbook = writer.book
         worksheet = writer.sheets["Multiphase Load"]
 
         worksheet.set_column(0, 19, 16)
-
-        df4.to_excel(writer, "Transformer 3-phase", index=False)
-        # workbook  = writer.book
-        worksheet = writer.sheets["Transformer 3-phase"]
-
-        worksheet.set_column(0, 19, 16)
-
-        df7.to_excel(writer, "Vsource 3-phase", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Vsource 3-phase"]
-
-        worksheet.set_column(0, 25, 16)
-
-        df9.to_excel(writer, "Bus", index=False)
-        workbook = writer.book
-        worksheet = writer.sheets["Bus"]
-
-        worksheet.set_column(0, 3, 16)
+        
         writer.save()
 
 
