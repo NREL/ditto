@@ -40,5 +40,14 @@ class Timeseries(DiTToHasTraits):
         default_value=1,
     )
 
+    substation_name = Unicode(
+        help="""The name of the substation to which the object is connected.""",
+        default=None,
+    )
+    feeder_name = Unicode(
+        help="""The name of the feeder the object is on.""", default=None
+    )
+
+
     def build(self, model):
         self._model = model
