@@ -103,7 +103,7 @@ class Reader(AbstractReader):
         else:
             self.coordinates_delimiter = ","
 
-        if kwargs.get("default_values_json", None) is not None:
+        if kwargs.get("default_values_file", None) is not None:
             self.DSS_file_names["default_values_file"] = kwargs["default_values_file"]
         else:
             self.DSS_file_names["default_values_file"] = None
