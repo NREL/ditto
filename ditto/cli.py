@@ -161,7 +161,7 @@ def convert(ctx, **kwargs):
     else:
         default_values_json = None
 
-    if kwargs["remove_default_values"] is not None:
+    if kwargs["remove_default_values"] is True:
         remove_default_values_flag = True
     else:
         remove_default_values_flag = False

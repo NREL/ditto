@@ -557,17 +557,13 @@ class AbstractReader(object):
         if self.verbose:
             self.logger.info("Parsing done.")
 
-        if self.DSS_file_names["default_values_file"]:
+        if (
+            self.DSS_file_names["default_values_file"]
+            or self.DSS_file_names["remove_default_values_flag"] is True
+        ):
             if self.verbose:
                 self.logger.info("Parsing the default values...")
             s = self.parse_default_values(model)
-            if self.verbose and s != -1:
-                self.logger.info("Succesful!")
-
-        if self.DSS_file_names["remove_default_values_flag"]:
-            if self.verbose:
-                self.logger.info("Removing the default values...")
-            s = self.remove_default_values(model)
             if self.verbose and s != -1:
                 self.logger.info("Succesful!")
 
@@ -618,11 +614,5 @@ class AbstractReader(object):
     def parse_default_values(self, model):
         """
         Parse the default values.
-        """
-        pass
-
-    def remove_default_values(self, model):
-        """
-        Remove the default values.
         """
         pass

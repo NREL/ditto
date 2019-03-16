@@ -87,8 +87,8 @@ class Converter(object):
         else:
             self.default_values_json = None
 
-        if kwargs.get("remove_default_values_flag", None) is not None:
-            self.remove_default_values_flag = kwargs["remove_default_values_flag"]
+        if kwargs.get("remove_default_values_flag", None) is True:
+            self.remove_default_values_flag = True
         else:
             self.remove_default_values_flag = False
 
@@ -160,7 +160,7 @@ class Converter(object):
         else:
             inputs["default_values_file"] = None
 
-        if self.remove_default_values_flag:
+        if self.remove_default_values_flag is True:
             inputs["remove_default_values_flag"] = True
         else:
             inputs["remove_default_values_flag"] = False
@@ -229,7 +229,6 @@ class Converter(object):
         self.current_time_string = datetime.datetime.now().strftime(self.time_format)
 
         inputs = self.get_inputs(self.feeder)
-
         self.configure_reader(inputs)
 
         output = self.get_output(self.output_path)

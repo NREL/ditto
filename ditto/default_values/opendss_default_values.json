@@ -1,15 +1,53 @@
 {
-  "Line": {
-      "faultrate": 0.2,
-      "R1" : 0.0580,
-      "X1" : 0.1206,
-      "R0" : 0.1784,
-      "X0" : 0.4047,
-      "C1" : 3.4e-9,
-      "C0" : 1.6e-9
+   "Line":{
+      "faultrate":0.1,
+      "R1":0.0580,
+      "X1":0.1206,
+      "R0":0.1784,
+      "X0":0.4047,
+      "C1":3.4e-9,
+      "C0":1.6e-9,
+      "length":1,
+      "rmatrix":[
+         "0.09813333 | 0.04013333 0.09813333 |0.04013333 0.04013333 0.09813333 "
+      ],
+      "xmatrix":[
+         "0.2153 |0.0947 0.2153 |0.0947 0.0947 0.2153 "
+      ],
+      "cmatrix":[
+         "2.8 |-0.6 2.8 |-0.6 -0.6 2.8 "
+      ],
+      "is_switch":"False"
    },
-  "Wire": {
-   "ampacity" : 400.0,
-   "emergency_ampacity" : 600.0,
- }
+   "Wire":{
+      "ampacity":400.0,
+      "emergency_ampacity":600.0
+     },
+   "Capacitor":{
+      "connection_type":"Y",
+      "low":115,
+      "high":126,
+      "delay":15,
+      "pt_ratio":60,
+      "ct_ratio":60,
+      "pt_phase":"A"
+   },
+   "Transformer":{
+      "reactances":[7],
+      "connection_type":"Y"
+   },
+
+"Regulator":{
+   "ct_prim" : 3001,
+   "delay":151,
+   "highstep":161,
+   "pt_ratio":601,
+   "bandwdth":31,
+   "bandcenter":1201
+},
+"Load":{
+  "connection_type" : "Y",
+   "vmin":0.951,
+   "vmax":1.051
+}
 }
