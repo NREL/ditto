@@ -557,15 +557,16 @@ class AbstractReader(object):
         if self.verbose:
             self.logger.info("Parsing done.")
 
-        if (
-            self.DSS_file_names["default_values_file"]
-            or self.DSS_file_names["remove_default_values_flag"] is True
-        ):
-            if self.verbose:
-                self.logger.info("Parsing the default values...")
-            s = self.parse_default_values(model)
-            if self.verbose and s != -1:
-                self.logger.info("Succesful!")
+        if hasattr(self, "DSS_file_names"):
+            if (
+                self.DSS_file_names["default_values_file"]
+                or self.DSS_file_names["remove_default_values_flag"] is True
+            ):
+                if self.verbose:
+                    self.logger.info("Parsing the default values...")
+                s = self.parse_default_values(model)
+                if self.verbose and s != -1:
+                    self.logger.info("Succesful!")
 
         return 1
 

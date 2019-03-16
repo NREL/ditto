@@ -103,13 +103,13 @@ class Reader(AbstractReader):
         else:
             self.coordinates_delimiter = ","
 
-        if kwargs["default_values_file"] is not None:
+        if kwargs.get("default_values_json", None) is not None:
             self.DSS_file_names["default_values_file"] = kwargs["default_values_file"]
         else:
             self.DSS_file_names["default_values_file"] = None
         #        ] = "/C/Users/bkavuri/Downloads/ditto/ditto/default_values/opendss_default_values.json"
 
-        if kwargs["remove_default_values_flag"] is True:
+        if kwargs.get("remove_default_values_flag", None) is True:
             self.DSS_file_names["remove_default_values_flag"] = True
         else:
             self.DSS_file_names["remove_default_values_flag"] = False
