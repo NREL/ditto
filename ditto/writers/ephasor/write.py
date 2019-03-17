@@ -592,13 +592,13 @@ class Writer(AbstractWriter):
         ### Check for a sperated 3 phase transformer. Line to netural or whatever
         index = -1
         for i in self._transformers:
-            index += 1
+            #index += 1
             if len(i.windings[0].phase_windings) == 1:
                 pp = str(i.windings[0].phase_windings[0].phase)
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
                 if i.from_element in self._transformer_dict:
                     self._transformer_dict[i.from_element]["combined"] = True
-                    #index = self._transformer_dict[i.from_element]["i"]
+                    index = self._transformer_dict[i.from_element]["i"]
                     # import pdb;pdb.set_trace()
                     self._transformer_dict[i.from_element]["kv1"] += i.windings[
                         0
@@ -612,7 +612,7 @@ class Writer(AbstractWriter):
                 else:
                     for key, value in obj_dict.items():
                         value.append(None)
-                    #index += 1
+                    index += 1
                     logger.debug(i.windings[0].phase_windings[0].tap_position)
                     self._transformer_dict[i.from_element] = {
                         "combined": False,
@@ -638,7 +638,7 @@ class Writer(AbstractWriter):
                 pp = i.windings[0].phase_windings[0].phase
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
                 if i.from_element in self._transformer_dict:
-                    #index = self._transformer_dict[i.from_element]["i"]
+                    index = self._transformer_dict[i.from_element]["i"]
                     kv1 = self._transformer_dict[i.from_element]["kv1"]
                     kva = self._transformer_dict[i.from_element]["kva"]
                 # else:
