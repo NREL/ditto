@@ -703,6 +703,14 @@ class Reader(AbstractReader):
                 b1_name = None
                 b1_phases = None
 
+            for each in b1_phases:
+                if not each in [1, 2, 3]:
+                    raise ValueError(
+                        "Phase {name} is not supported for bus {b1}.".format(
+                            name=each, b1=data["bus1"]
+                        )
+                    )
+
             # Parse bus2 data
             if "." in data["bus2"]:
                 temp = data["bus2"].split(".")
@@ -714,6 +722,14 @@ class Reader(AbstractReader):
             else:
                 b2_name = None
                 b2_phases = None
+
+            for each in b2_phases:
+                if not each in [1, 2, 3]:
+                    raise ValueError(
+                        "Phase {name} is not supported for bus {b2}.".format(
+                            name=each, b2=data["bus2"]
+                        )
+                    )
 
             # Update the buses dictionary
             if b1_name is not None and not b1_name in buses:
@@ -864,13 +880,13 @@ class Reader(AbstractReader):
         # If the line is disabled we ignore it unless it's a switch
         fuses = dss.utils.class_to_dataframe("Fuse")
         fuses_names = [
-            d["MonitoredObj"][0].lower().split(".")[1] for name, d in fuses.items()
+            d["MonitoredObj"].lower().split(".")[1] for name, d in fuses.items()
         ]
 
         # In the same way, reclosers are also attached to line objects
         reclosers = dss.utils.class_to_dataframe("recloser")
         reclosers_names = [
-            d["MonitoredObj"][0].lower().split(".")[1] for name, d in reclosers.items()
+            d["MonitoredObj"].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
         start = time.time()
@@ -996,7 +1012,8 @@ class Reader(AbstractReader):
             #    pass
 
             # is_fuse
-            if line_name.replace("(", "").replace(")", "") in fuses_names:
+            # if line_name.replace("(", "").replace(")", "") in fuses_names:
+            if line_name in fuses_names:
                 api_line.is_fuse = 1
                 api_line.nameclass = line_name.split("(")[0]
             # is_recloser
@@ -1742,7 +1759,9 @@ class Reader(AbstractReader):
                     pass
 
                 phase_windings = []
-                for p in range(N_phases):
+                for p in range(
+                    len(b1_phases)
+                ):  # need to use info from the bus since N_phases may not match number of connections
 
                     phase_windings.append(PhaseWinding(model))
 
