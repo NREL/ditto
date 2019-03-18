@@ -46,7 +46,6 @@ logger = logging.getLogger(__name__)
 
 
 def timeit(method):
-
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -538,8 +537,9 @@ class Reader(AbstractReader):
                 b1_name = data["bus1"].strip()
                 b1_phases = [1, 2, 3]
             else:
-                b1_name = None
-                b1_phases = None
+                raise ValueError(
+                    "Phases not specified for {b1}.".format(b1=data["bus1"])
+                )
 
             # Parse bus2 data
             if "." in data["bus2"]:
@@ -550,8 +550,9 @@ class Reader(AbstractReader):
                 b2_name = data["bus2"].strip()
                 b2_phases = [1, 2, 3]
             else:
-                b2_name = None
-                b2_phases = None
+                raise ValueError(
+                    "Phases not specified for {b2}.".format(b2=data["bus2"])
+                )
 
             # Update the buses dictionary
             if b1_name is not None and not b1_name in buses:
