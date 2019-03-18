@@ -700,8 +700,9 @@ class Reader(AbstractReader):
                 b1_name = data["bus1"].strip()
                 b1_phases = [1, 2, 3]
             else:
-                b1_name = None
-                b1_phases = None
+                raise ValueError(
+                    "Phases not specified for {b1}.".format(b1=data["bus1"])
+                )
 
             for each in b1_phases:
                 if not each in [1, 2, 3]:
@@ -720,8 +721,9 @@ class Reader(AbstractReader):
                 b2_name = data["bus2"].strip()
                 b2_phases = [1, 2, 3]
             else:
-                b2_name = None
-                b2_phases = None
+                raise ValueError(
+                    "Phases not specified for {b2}.".format(b2=data["bus2"])
+                )
 
             for each in b2_phases:
                 if not each in [1, 2, 3]:
