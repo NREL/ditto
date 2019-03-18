@@ -60,6 +60,7 @@ class Reader(AbstractReader):
     |                                       NODE PARSER                                      |
     +-------------------------------------------+--------------------------------------------+
     |                      'node'               |                     '[NODE]'               |
+    |                'node_connector'           |                '[NODE CONNECTOR]'          |
     +-------------------------------------------+--------------------------------------------+
     |                                       LINE PARSER                                      |
     +-------------------------------------------+--------------------------------------------+
@@ -202,6 +203,7 @@ class Reader(AbstractReader):
         #
         self.header_mapping = {  # NODES
             "node": ["[NODE]"],
+            "node_connector": ["[NODE CONNECTOR]"],
             # LINES
             "overhead_unbalanced_line_settings": ["[OVERHEADLINEUNBALANCED SETTING]"],
             "overhead_line_settings": ["[OVERHEADLINE SETTING]"],
@@ -742,7 +744,7 @@ class Reader(AbstractReader):
 
         return np.any([x in line for x in self.header_mapping[obj]])
 
-    def parser_helper(self, line, obj_list, attribute_list, mapping, *args):
+    def parser_helper(self, line, obj_list, attribute_list, mapping, *args, **kwargs):
         """
         .. warning:: This is a helper function for the parsers. Do not use directly.
 
@@ -760,6 +762,14 @@ class Reader(AbstractReader):
             additional_information = args[0]
         else:
             additional_information = {}
+
+        # This is in the case of multiple Format= lines
+        if (
+            kwargs and "additional_attributes_list" in kwargs
+        ):  # Currently assume only one set of additional attributes, but can be modified to allow for multiple attribute lists
+            additional_attributes = kwargs["additional_attributes_list"]
+        else:
+            additional_attributes = []
 
         result = {}
 
@@ -815,6 +825,37 @@ class Reader(AbstractReader):
                                 pass
 
                         result[ID].update(additional_information)
+                elif additional_attributes is not None and additional_attributes != []:
+                    try:
+                        mapping = {}
+                        arg_list = next_line.split("=")[1]
+                        arg_list = arg_list.split(",")
+                        # Put everything in lower case
+                        arg_list = map(lambda x: x.lower().strip("\r\n"), arg_list)
+                        arg_list = map(lambda x: x.strip("\n"), arg_list)
+                        arg_list = map(lambda x: x.strip("\r"), arg_list)
+
+                        if isinstance(additional_attributes, list):
+                            additional_attributes = np.array(additional_attributes)
+
+                        if not isinstance(additional_attributes, np.ndarray):
+                            raise ValueError(
+                                "Could not cast attribute list to Numpy array."
+                            )
+
+                        # We want the attributes in the attribute list
+                        for idx, arg in enumerate(arg_list):
+                            temp = np.argwhere(arg == additional_attributes).flatten()
+                            if len(temp) == 1:
+                                idx2 = temp[0]
+                                mapping[additional_attributes[idx2]] = idx
+                        attribute_list = additional_attributes
+                        additional_attributes = []
+                    except:
+                        logger.warning(
+                            "Attempted to apply additional attributes but failed"
+                        )
+                        pass
 
                 try:
                     next_line = next(self.content)
@@ -1247,14 +1288,45 @@ class Reader(AbstractReader):
         self.get_file_content("network")
 
         # Default mapp (positions if all fields are present in the format)
-        mapp = {"nodeid": 0, "ratedvoltage": 48, "coordx": 2, "coordy": 3}
+        mapp = {
+            "nodeid": 0,
+            "ratedvoltage": 48,
+            "coordx": 2,
+            "coordy": 3,
+            "coordx1": 2,
+            "coordy1": 3,
+            "coordx2": 4,
+            "coordy2": 5,
+        }
 
         nodes = {}
+        node_connectors = {}
 
+        kwargs = {
+            "additional_attributes_list": [
+                "nodeid",
+                "coordx1",
+                "coordy1",
+                "coordx2",
+                "coordy2",
+                "ratedvoltage",
+            ]
+        }  # In case there are buses included in the node list with x1, y1, x2, y2 positions
         for line in self.content:
             nodes.update(
                 self.parser_helper(
-                    line, ["node"], ["nodeid", "coordx", "coordy", "ratedvoltage"], mapp
+                    line,
+                    ["node"],
+                    ["nodeid", "coordx", "coordy", "ratedvoltage"],
+                    mapp,
+                    **kwargs
+                )
+            )
+        self.get_file_content("network")
+        for line in self.content:
+            node_connectors.update(
+                self.parser_helper(
+                    line, ["node_connector"], ["nodeid", "coordx", "coordy"], mapp
                 )
             )
 
@@ -1273,11 +1345,34 @@ class Reader(AbstractReader):
 
             # Set the coordinates
             try:
-                position = Position(model)
-                position.long = float(node["coordx"])
-                position.lat = float(node["coordy"])
-                position.elevation = 0
-                api_node.positions.append(position)
+                if "coordx" in node:
+                    position = Position(model)
+                    position.long = float(node["coordx"])
+                    position.lat = float(node["coordy"])
+                    position.elevation = 0
+                    api_node.positions.append(position)
+                elif "coordx1" in node:
+                    api_node.positions = []
+                    position1 = Position(model)
+                    position1.long = float(node["coordx1"])
+                    position1.lat = float(node["coordy1"])
+                    position1.elevation = 0
+                    api_node.positions.append(position1)
+                    if ID in node_connectors:
+                        ID_inc = ID
+                        while ID_inc in node_connectors:
+                            values = node_connectors[ID_inc]
+                            position_i = Position(model)
+                            position_i.long = float(values["coordx"])
+                            position_i.lat = float(values["coordy"])
+                            position_i.elevation = 0
+                            api_node.positions.append(position_i)
+                            ID_inc += "*"
+                    position2 = Position(model)
+                    position2.long = float(node["coordx2"])
+                    position2.lat = float(node["coordy2"])
+                    position2.elevation = 0
+                    api_node.positions.append(position2)
             except:
                 pass
 
@@ -2279,6 +2374,22 @@ class Reader(AbstractReader):
                 new_line["to_element"] = self.section_phase_mapping[sectionID][
                     "tonodeid"
                 ]
+            except:
+                pass
+
+            # Set the connection index for the from_element (info is in the section)
+            try:
+                new_line["from_element_connection_index"] = int(
+                    self.section_phase_mapping[sectionID]["fromnodeindex"]
+                )
+            except:
+                pass
+
+            # Set the connection index for the from_element (info is in the section)
+            try:
+                new_line["to_element_connection_index"] = int(
+                    self.section_phase_mapping[sectionID]["tonodeindex"]
+                )
             except:
                 pass
 
@@ -3397,7 +3508,7 @@ class Reader(AbstractReader):
                         gmr_list = []
                         resistance_list = []
 
-                        perform_kron_reduction = True
+                        perform_kron_reduction = False
 
                         # Get GMR and resistance of valid conductor
                         for idx, p in enumerate(phases):
@@ -4423,6 +4534,22 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            # Set the connection index for the from_element (info is in the section)
+            try:
+                api_transformer["from_element_connection_index"] = int(
+                    self.section_phase_mapping[sectionID]["fromnodeindex"]
+                )
+            except:
+                pass
+
+            # Set the connection index for the from_element (info is in the section)
+            try:
+                api_transformer["to_element_connection_index"] = int(
+                    self.section_phase_mapping[sectionID]["tonodeindex"]
+                )
+            except:
+                pass
+
             # Set the position
             try:
                 position = Position(model)
@@ -4539,13 +4666,13 @@ class Reader(AbstractReader):
                 XR = float(transformer_data["xr"])
                 XR0 = float(transformer_data["xr0"])
                 R1 = Z1 / math.sqrt(1 + XR * XR)
-                R0 = Z0 / math.sqrt(1 + XR * XR)
-                X1 = Z1 / math.sqrt(1 + XR0 * XR0)
-                X0 = Z0 / math.sqrt(1 + XR0 * XR0)
-                complex1 = complex(R0, X0)
-                complex2 = complex(R1, X1)
+                R0 = Z0 / math.sqrt(1 + XR0 * XR0)
+                X1 = Z1 / math.sqrt(1 + 1 / (XR * XR))
+                X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
+                complex0 = complex(R0, X0)
+                complex1 = complex(R1, X1)
                 matrix = np.matrix(
-                    [[complex1, 0, 0], [0, complex2, 0], [0, 0, complex2]]
+                    [[complex0, 0, 0], [0, complex1, 0], [0, 0, complex1]]
                 )
                 a = 1 * cmath.exp(2 * math.pi * 1j / 3)
                 T = np.matrix([[1., 1., 1.], [1., a * a, a], [1., a, a * a]])
@@ -5454,6 +5581,25 @@ class Reader(AbstractReader):
             "equipmentid": 6,
             "eqphase": 7,
             "ambienttemperature": 11,
+        }
+
+        mapp_bess = {
+            "id": 0,
+            "ratedstorageenergy": 1,
+            "maxchargingpower": 2,
+            "maxdischargingpower": 3,
+            "chargeefficiency": 4,
+            "dischargeefficiency": 5,
+        }
+
+        mapp_bess_settings = {
+            "sectionid": 0,
+            "devicenumber": 2,
+            "equipmentid": 6,
+            "phase": 7,
+            "maximumsoc": 10,
+            "minimumsoc": 11,
+            "initialsoc": 16,
         }
 
         mapp_bess = {
