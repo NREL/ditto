@@ -10,6 +10,10 @@ class Storage(DiTToHasTraits):
     connecting_element = Unicode(
         help="""Name of the bus the storage is connected to.""", default_value=None
     )
+    positions = List(
+        Instance(Position),
+        help="""This parameter is a list of positional points describing the power source - it should only contain one. The positions are objects containing elements of long, lat and elevation.""",
+    )
     nominal_voltage = Float(
         help="""Nominal voltage for the storage element.""", default_value=None
     )
@@ -17,8 +21,13 @@ class Storage(DiTToHasTraits):
         help="""Rated power of the device. In watts.""", default_value=None
     )
     reactive_rating = Float(
-        help="""Rated reactive power of the device. In watts.""", default_value=None
+        help="""Rated reactive power of the inverter. In watts.""", default_value=None
     )
+    active_rating = Float(
+        help="""Rated reactive power of the inverter. In watts.""", default_value=None
+    )
+    power_factor = Float(help="""Default power factor. In watts.""", default_value=None)
+
     min_powerfactor = Float(
         help="""Minimum power factor of the device""", default_value=None
     )
@@ -40,12 +49,16 @@ class Storage(DiTToHasTraits):
     discharge_rate = Float(
         help="""Discharge rate in percent of rated power.""", default_value=None
     )
-    charge_rate = Float(help="""Charging rate in percent of rated power.""", default_value=None)
+    charge_rate = Float(
+        help="""Charging rate in percent of rated power.""", default_value=None
+    )
     charging_efficiency = Float(
-        help="""Percent efficiency for charging the storage element.""", default_value=None
+        help="""Percent efficiency for charging the storage element.""",
+        default_value=None,
     )
     discharging_efficiency = Float(
-        help="""Percent efficiency for discharging the storage element.""", default_value=None
+        help="""Percent efficiency for discharging the storage element.""",
+        default_value=None,
     )
     resistance = Float(
         help="""Equivalent percent internal resistance. In ohms.""", default_value=None
@@ -64,10 +77,12 @@ class Storage(DiTToHasTraits):
         help="""Dispatch shape to use for daily simulations.""", default_value=None
     )
     duty = Unicode(
-        help="""Load shape to use for duty cycle dispatch simulations.""", default_value=None
+        help="""Load shape to use for duty cycle dispatch simulations.""",
+        default_value=None,
     )
     discharge_trigger = Float(
-        help="""Dispatch trigger value for discharging the storage.""", default_value=None
+        help="""Dispatch trigger value for discharging the storage.""",
+        default_value=None,
     )
     charge_trigger = Float(
         help="""Dispatch trigger value for charging the storage.""", default_value=None
