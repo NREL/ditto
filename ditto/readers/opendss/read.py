@@ -38,6 +38,7 @@ from ditto.models.position import Position
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 
+
 from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.models.base import Unicode
@@ -101,6 +102,17 @@ class Reader(AbstractReader):
             self.coordinates_delimiter = kwargs["coordinates_delimiter"]
         else:
             self.coordinates_delimiter = ","
+
+        if kwargs.get("default_values_file", None) is not None:
+            self.DSS_file_names["default_values_file"] = kwargs["default_values_file"]
+        else:
+            self.DSS_file_names["default_values_file"] = None
+        #        ] = "/C/Users/bkavuri/Downloads/ditto/ditto/default_values/opendss_default_values.json"
+
+        if kwargs.get("remove_opendss_default_values_flag", None) is True:
+            self.DSS_file_names["remove_opendss_default_values_flag"] = True
+        else:
+            self.DSS_file_names["remove_opendss_default_values_flag"] = False
 
         # self.DSS_file_names={'Nodes': 'buscoords.dss',
         #                     'master': 'master.dss'}
@@ -950,7 +962,6 @@ class Reader(AbstractReader):
                                 Xmatrix,
                             )
                         )
-
                     new_Rmatrix = np.array(new_Rmatrix)
                     new_Xmatrix = np.array(new_Xmatrix)
                     Z = new_Rmatrix + 1j * new_Xmatrix
@@ -1643,7 +1654,6 @@ class Reader(AbstractReader):
             for ww in windings:
                 api_transformer.windings.append(ww)
             self._transformers.append(api_transformer)
-
         return 1
 
     @timeit
