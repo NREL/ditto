@@ -87,10 +87,10 @@ class Converter(object):
         else:
             self.default_values_json = None
 
-        if kwargs.get("remove_default_values_flag", None) is True:
-            self.remove_default_values_flag = True
+        if kwargs.get("remove_opendss_default_values_flag", None) is True:
+            self.remove_opendss_default_values_flag = True
         else:
-            self.remove_default_values_flag = False
+            self.remove_opendss_default_values_flag = False
 
         self.verbose = verbose
 
@@ -160,10 +160,10 @@ class Converter(object):
         else:
             inputs["default_values_file"] = None
 
-        if self.remove_default_values_flag is True:
-            inputs["remove_default_values_flag"] = True
+        if self.remove_opendss_default_values_flag is True:
+            inputs["remove_opendss_default_values_flag"] = True
         else:
-            inputs["remove_default_values_flag"] = False
+            inputs["remove_opendss_default_values_flag"] = False
 
         # Add log information
         # log_path='./logs/reader/{format}/{feeder}/'.format(format=self._from,feeder=feeder)

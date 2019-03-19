@@ -128,7 +128,9 @@ def metric(ctx, **kwargs):
     help="Serialize the DiTTo representation to the specified path",
 )
 @click.option("--default_values", help="Provide default values")
-@click.option("--remove_default_values", is_flag=True, help="Remove default values")
+@click.option(
+    "--remove_opendss_default_values", is_flag=True, help="Remove default values"
+)
 @click.pass_context
 def convert(ctx, **kwargs):
     """ Convert from one type to another"""
@@ -161,10 +163,10 @@ def convert(ctx, **kwargs):
     else:
         default_values_json = None
 
-    if kwargs["remove_default_values"] is True:
-        remove_default_values_flag = True
+    if kwargs["remove_opendss_default_values"] is True:
+        remove_opendss_default_values_flag = True
     else:
-        remove_default_values_flag = False
+        remove_opendss_default_values_flag = False
 
     Converter(
         registered_reader_class=_load(registered_readers, from_reader_name),
@@ -174,7 +176,7 @@ def convert(ctx, **kwargs):
         json_path=json_path,
         registered_json_writer_class=registered_json_writer_class,
         default_values_json=default_values_json,
-        remove_default_values_flag=remove_default_values_flag,
+        remove_opendss_default_values_flag=remove_opendss_default_values_flag,
     ).convert()
 
     sys.exit(0)

@@ -37,7 +37,7 @@ from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
-from ditto.default_values.default_values_json import Default_Values
+
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
@@ -109,10 +109,10 @@ class Reader(AbstractReader):
             self.DSS_file_names["default_values_file"] = None
         #        ] = "/C/Users/bkavuri/Downloads/ditto/ditto/default_values/opendss_default_values.json"
 
-        if kwargs.get("remove_default_values_flag", None) is True:
-            self.DSS_file_names["remove_default_values_flag"] = True
+        if kwargs.get("remove_opendss_default_values_flag", None) is True:
+            self.DSS_file_names["remove_opendss_default_values_flag"] = True
         else:
-            self.DSS_file_names["remove_default_values_flag"] = False
+            self.DSS_file_names["remove_opendss_default_values_flag"] = False
 
         # self.DSS_file_names={'Nodes': 'buscoords.dss',
         #                     'master': 'master.dss'}
@@ -217,157 +217,6 @@ class Reader(AbstractReader):
         logger.info("build_opendssdirect succesful")
 
         return 1
-
-    def matrix_conversion(self, value):
-        rowsR = value[0].split("|")
-        rowsR = list(map(lambda x: x.strip(), rowsR))
-        new_matrix = []
-        for rowR in rowsR:
-            new_matrix.append([])
-            new_matrix[-1] += map(lambda x: float(x.strip()), rowR.split(" "))
-            new_matrix = self.symmetrize(new_matrix)
-        new_matrix = np.array(new_matrix)
-        return new_matrix
-
-    def set_default_values(self, obj, attr, value, *args):
-        if not self.DSS_file_names["remove_default_values_flag"]:
-            if hasattr(obj, attr):
-                if attr == "capacitance_matrix":
-                    new_cmatrix = self.matrix_conversion(value)
-                    if new_cmatrix.ndim == 1:
-                        new_cmatrix = [new_cmatrix.tolist()]
-                    else:
-                        new_cmatrix = new_cmatrix.tolist()
-                    value = new_cmatrix
-                elif attr == "impedance_matrix":
-                    new_rmatrix = self.matrix_conversion(value)
-                    new_xmatrix = self.matrix_conversion(args[0])
-                    Z = new_rmatrix + 1j * new_xmatrix
-                    if Z.ndim == 1:
-                        Z = [Z.tolist()]
-                    else:
-                        Z = Z.tolist()
-                    value = Z
-        else:
-            value = None
-        setattr(obj, attr, value)
-
-    def parse_default_values(self, model):
-        model.set_names()
-        parsed_values = {}
-        parsed_values.setdefault("Line", {})
-        if self.DSS_file_names["default_values_file"]:
-            d_v = Default_Values(self.DSS_file_names["default_values_file"])
-            parsed_values = d_v.parse()
-
-        for obj in model.models:
-            self.set_default_values(
-                obj, "faultrate", parsed_values.get("Line", None).get("faultrate", None)
-            )
-            self.set_default_values(
-                obj,
-                "impedance_matrix",
-                parsed_values.get("Line", None).get("rmatrix", None),
-                parsed_values.get("Line", None).get("xmatrix", None),
-            )
-            self.set_default_values(
-                obj,
-                "capacitance_matrix",
-                parsed_values.get("Line", None).get("cmatrix", None),
-            )
-            self.set_default_values(
-                obj, "ampacity", parsed_values.get("Wire", {}).get("ampacity", None)
-            )
-            self.set_default_values(
-                obj,
-                "emergency_ampacity",
-                parsed_values.get("Wire", {}).get("emergency_ampacity", None),
-            )
-            if type(obj).__name__ == "Capacitor":
-                self.set_default_values(
-                    obj,
-                    "connection_type",
-                    parsed_values.get("Capacitor", {}).get("connection_type", None),
-                )
-                self.set_default_values(
-                    obj, "delay", parsed_values.get("Capacitor", {}).get("delay", None)
-                )
-                self.set_default_values(
-                    obj,
-                    "pt_ratio",
-                    parsed_values.get("Capacitor", {}).get("pt_ratio", None),
-                )
-            self.set_default_values(
-                obj, "low", parsed_values.get("Capacitor", {}).get("low", None)
-            )
-            self.set_default_values(
-                obj, "high", parsed_values.get("Capacitor", {}).get("high", None)
-            )
-            self.set_default_values(
-                obj,
-                "ct_ratio",
-                parsed_values.get("Capacitor", {}).get("ct_ratio", None),
-            )
-            self.set_default_values(
-                obj,
-                "pt_phase",
-                parsed_values.get("Capacitor", {}).get("pt_phase", None),
-            )
-            if type(obj).__name__ == "Regulator":
-                self.set_default_values(
-                    obj,
-                    "connection_type",
-                    parsed_values.get("Regulator", {}).get("connection_type", None),
-                )
-                self.set_default_values(
-                    obj, "delay", parsed_values.get("Regulator", {}).get("delay", None)
-                )
-                self.set_default_values(
-                    obj,
-                    "pt_ratio",
-                    parsed_values.get("Regulator", {}).get("pt_ratio", None),
-                )
-            self.set_default_values(
-                obj, "ct_prim", parsed_values.get("Regulator", {}).get("ct_prim", None)
-            )
-            self.set_default_values(
-                obj,
-                "highstep",
-                parsed_values.get("Regulator", {}).get("highstep", None),
-            )
-            self.set_default_values(
-                obj,
-                "bandwidth",
-                parsed_values.get("Regulator", {}).get("bandwidth", None),
-            )
-            self.set_default_values(
-                obj,
-                "bandcenter",
-                parsed_values.get("Regulator", {}).get("bandcenter", None),
-            )
-            if type(obj).__name__ == "Transformer":
-                self.set_default_values(
-                    obj,
-                    "connection_type",
-                    parsed_values.get("Transformer", {}).get("connection_type", None),
-                )
-            self.set_default_values(
-                obj,
-                "reactances",
-                parsed_values.get("Transformer", {}).get("reactances", None),
-            )
-            if type(obj).__name__ == "Load":
-                self.set_default_values(
-                    obj,
-                    "connection_type",
-                    parsed_values.get("Load", {}).get("connection_type", None),
-                )
-            self.set_default_values(
-                obj, "vmin", parsed_values.get("Load", {}).get("vmin", None)
-            )
-            self.set_default_values(
-                obj, "vmax", parsed_values.get("Load", {}).get("vmax", None)
-            )
 
     def parse(self, model, **kwargs):
         """General parse function.
@@ -1040,7 +889,7 @@ class Reader(AbstractReader):
                     api_line.faultrate = float(linecode_data["faultrate"])
                 except:
                     pass
-            #    import pdb;pdb.set_trace()
+
             # impedance_matrix
             # We have the Rmatrix and Xmatrix
             if "rmatrix" in data and "xmatrix" in data:
@@ -1113,7 +962,6 @@ class Reader(AbstractReader):
                                 Xmatrix,
                             )
                         )
-
                     new_Rmatrix = np.array(new_Rmatrix)
                     new_Xmatrix = np.array(new_Xmatrix)
                     Z = new_Rmatrix + 1j * new_Xmatrix
