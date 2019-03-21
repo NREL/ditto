@@ -925,6 +925,7 @@ class Writer(AbstractWriter):
                         else:
                             obj_dict["Voltage (V)"].append(node.nominal_voltage)
                         obj_dict["Type"].append("PV") #No generators so all nodes are PV buses
+
                 if 'a' in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
                 if 'b' in letter_phases:

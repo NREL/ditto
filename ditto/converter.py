@@ -82,6 +82,16 @@ class Converter(object):
             self.json_path = False
             self.json_writer_class = None
 
+        if kwargs.get("default_values_json", None) is not None:
+            self.default_values_json = kwargs["default_values_json"]
+        else:
+            self.default_values_json = None
+
+        if kwargs.get("remove_opendss_default_values_flag", None) is True:
+            self.remove_opendss_default_values_flag = True
+        else:
+            self.remove_opendss_default_values_flag = False
+
         self.verbose = verbose
 
         self.m = Store()
@@ -144,6 +154,16 @@ class Converter(object):
 
         else:
             raise NotImplementedError("Format {} not imlemented.".format(self._from))
+
+        if self.default_values_json:
+            inputs["default_values_file"] = self.default_values_json
+        else:
+            inputs["default_values_file"] = None
+
+        if self.remove_opendss_default_values_flag is True:
+            inputs["remove_opendss_default_values_flag"] = True
+        else:
+            inputs["remove_opendss_default_values_flag"] = False
 
         # Add log information
         # log_path='./logs/reader/{format}/{feeder}/'.format(format=self._from,feeder=feeder)
@@ -209,7 +229,6 @@ class Converter(object):
         self.current_time_string = datetime.datetime.now().strftime(self.time_format)
 
         inputs = self.get_inputs(self.feeder)
-
         self.configure_reader(inputs)
 
         output = self.get_output(self.output_path)

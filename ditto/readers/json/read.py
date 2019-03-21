@@ -24,9 +24,12 @@ from ditto.models.phase_winding import PhaseWinding
 from ditto.models.load import Load
 from ditto.models.phase_load import PhaseLoad
 from ditto.models.capacitor import Capacitor
+from ditto.models.storage import Storage
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.base import Unicode
 from ditto.models.feeder_metadata import Feeder_metadata
+from ditto.models.base import Int
+from ditto.models.base import Float
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 
@@ -63,19 +66,26 @@ class Reader(AbstractReader):
 
     The reader expects the following format:
 
-        - objects are stored in a list [object_1,object_2,...,object_N]
-        - Each object is a dictionary object_1={'class':'PowerTransformer',
-                                                'is_substationr':{'class':'int',
-                                                                  'value':'1'
-                                                                 },
-                                                (...)
-                                                }
-        - The special key 'class' indicates the type of the object considered.
-        - class can be:
-                - a DiTTo object type like 'PowerTransformer' or 'Winding'
-                - a "standard" type like 'int', 'float', or 'str'
-                - a list ('list')
-                - a complex number: 1+2j will be {'class':'complex', 'value':[1,2]}
+    {"model": [object_1,object_2,...,object_N],
+     "metadata": {"time": time,
+                  ...
+                  }
+    }
+
+    The actual DiTTo model is stored in "model" as a list of objects.
+    Each object is a dictionary object_1={'class':'PowerTransformer',
+                                          'is_substationr':{'class':'int',
+                                                            'value':'1'
+                                                            },
+                                          (...)
+                                         }
+
+    The special key 'class' indicates the type of the object considered.
+    class can be:
+        - a DiTTo object type like 'PowerTransformer' or 'Winding'
+        - a "standard" type like 'int', 'float', or 'str'
+        - a list ('list')
+        - a complex number: 1+2j will be {'class':'complex', 'value':[1,2]}
 
     .. note:: For nested objects, this format can become a bit complex. See example below
 
@@ -111,6 +121,7 @@ class Reader(AbstractReader):
 
     Author: Nicolas Gensollen. January 2018
     """
+
     register_names = ["json", "Json", "JSON"]
 
     def __init__(self, **kwargs):
@@ -120,7 +131,7 @@ class Reader(AbstractReader):
         else:
             raise ValueError("No input file provided to the reader.")
 
-    def parse(self):
+    def parse(self, model):
         """Parse a JSON file to a DiTTo model."""
         # Open the input file and get the data
         with open(self.input_file, "r") as f:
@@ -142,13 +153,20 @@ class Reader(AbstractReader):
             "PhaseCapacitor",
             "Feeder_metadata",
             "Regulator",
+            "Storage",
         ]
 
         # Create a new empty model
-        self.model = Store()
+        self.model = model
+
+        if "model" not in input_data:
+            raise ValueError("No model found in the JSON file provided")
+
+        if not isinstance(input_data["model"], list):
+            raise TypeError("Model in JSON file should be a list of objects.")
 
         # Loop over the objects...
-        for _object in input_data:
+        for _object in input_data["model"]:
 
             # Get the class of the element
             _class = _object["class"]
@@ -400,6 +418,14 @@ class Reader(AbstractReader):
                                     complex(element["value"][0], element["value"][1])
                                 )
 
+                            # Or it's a ditto base element
+                            elif "ditto." in element_type:
+
+                                base_type = element_type.split(".")[-1]
+                                list_first_level.append(
+                                    eval(base_type)(element["value"])
+                                )
+
                             # Otherwise, it is either None or a standard type
                             elif element_type != "NoneType":
 
@@ -431,3 +457,4 @@ class Reader(AbstractReader):
                             object_property,
                             class_mapping[property_type](property_value["value"]),
                         )
+        print("Finished reading from json")

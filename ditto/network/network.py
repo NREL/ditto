@@ -147,8 +147,97 @@ class Network:
 
         self.is_built = True
 
+    """
+        This is useful if the base graph has been modified (e.g. deleting edges)
+        bfs order must be recalculated to generate the digraph
+    """
+
+    def rebuild_digraph(self, model, source="sourcebus"):
+        self.digraph = nx.DiGraph()
+        self.digraph.add_edges_from(list(self.bfs_order(source=source)))
+
+        edge_equipment = nx.get_edge_attributes(self.graph, "equipment")
+        edge_equipment_name = nx.get_edge_attributes(self.graph, "equipment_name")
+        for edge in edge_equipment:
+            if self.digraph.has_edge(*edge):
+                self.digraph[edge[0]][edge[1]]["equipment"] = edge_equipment[edge]
+            elif self.digraph.has_edge(*edge[::-1]):
+                self.digraph[edge[1]][edge[0]]["equipment"] = edge_equipment[edge]
+
+        for edge in edge_equipment_name:
+            if self.digraph.has_edge(*edge):
+                self.digraph[edge[0]][edge[1]]["equipment_name"] = edge_equipment_name[
+                    edge
+                ]
+            elif self.digraph.has_edge(*edge[::-1]):
+                self.digraph[edge[1]][edge[0]]["equipment_name"] = edge_equipment_name[
+                    edge
+                ]
+        graph_nodes = set(
+            self.digraph.nodes()
+        )  # Some nodes might not be included now from the original graph
+        graph_edges = set(
+            self.digraph.edges()
+        )  # Use the ordering provided from the BFS order
+        for i in model.models:
+            if hasattr(i, "name") and i.name is not None:
+                object_type = type(i).__name__
+                self.class_map[i.name] = object_type
+
+                if i.name in graph_nodes:
+                    for attr in tuple(
+                        set(dir(i)) - set(dir(DiTToHasTraits))
+                    ):  # only set attributes from the subclass, not the base class
+                        if attr[0] != "_":
+                            self.digraph.node[i.name][attr] = getattr(i, attr)
+
+                if (
+                    hasattr(i, "from_element")
+                    and i.from_element is not None
+                    and hasattr(i, "to_element")
+                    and i.to_element is not None
+                ):
+                    if (i.from_element, i.to_element) in graph_edges:
+                        for attr in tuple(
+                            set(dir(i)) - set(dir(DiTToHasTraits))
+                        ):  # only set attributes from the subclass, not the base class
+                            if attr[0] != "_":
+                                self.digraph[i.from_element][i.to_element][
+                                    attr
+                                ] = getattr(i, attr)
+
+                    if (i.to_element, i.from_element) in graph_edges:
+                        for attr in tuple(
+                            set(dir(i)) - set(dir(DiTToHasTraits))
+                        ):  # only set attributes from the subclass, not the base class
+                            if attr[0] != "_":
+                                self.digraph[i.to_element][i.from_element][
+                                    attr
+                                ] = getattr(i, attr)
+
+                if (
+                    hasattr(i, "connecting_element")
+                    and i.connecting_element is not None
+                ):
+                    if (i.connecting_element, i.name) in graph_edges:
+                        for attr in tuple(
+                            set(dir(i)) - set(dir(DiTToHasTraits))
+                        ):  # only set attributes from the subclass, not the base class
+                            if attr[0] != "_":
+                                if self.digraph.has_edge(i.connecting_element, i.name):
+                                    self.digraph[i.connecting_element][i.name][
+                                        attr
+                                    ] = getattr(i, attr)
+                                else:
+                                    self.digraph.add_edge(
+                                        i.connecting_element, i.name, length=0
+                                    )
+                                    self.digraph[i.connecting_element][i.name][
+                                        attr
+                                    ] = getattr(i, attr)
+
     def set_attributes(self, model):
-        graph_nodes = set(self.graph.nodes())
+        graph_nodes = set(self.digraph.nodes())
         graph_edges = set(
             self.digraph.edges()
         )  # Use the ordering provided from the BFS order

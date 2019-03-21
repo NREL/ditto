@@ -197,7 +197,7 @@ def test_write_linegeometry():
     assert get_property_from_dss_string(lines[0], "reduce") == "y"
     assert get_property_from_dss_string(lines[0], "nconds") == "4"
     assert get_property_from_dss_string(lines[0], "nphases") == "3"
-    assert get_property_from_dss_string(lines[0], "units") == "km"
+    assert get_property_from_dss_string(lines[0], "units") == "m"
     assert get_property_from_dss_string(lines[0], "normamps") == [
         "500.0",
         "500.0",

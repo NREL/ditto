@@ -19,47 +19,60 @@ current_directory = os.path.realpath(os.path.dirname(__file__))
 
 logger = logging.getLogger(__name__)
 
+
 def test_metric_extraction():
-    '''
+    """
         This test reads all small OpenDSS test cases, set the nominal voltages using a
         system_structure_modifier object and compute all metrics using a network analyzer object.
         Finally, it exports the metrics to excel and Json formats.
-    '''
+    """
     from ditto.readers.opendss.read import Reader
     from ditto.store import Store
     from ditto.modify.system_structure import system_structure_modifier
     from ditto.metrics.network_analysis import NetworkAnalyzer as network_analyzer
 
-    opendss_models=[f for f in os.listdir(os.path.join(current_directory,'data/small_cases/opendss/')) if not f.startswith('.')]
-    opendss_models.remove('storage_test')
+    opendss_models = [
+        f
+        for f in os.listdir(
+            os.path.join(current_directory, "data/small_cases/opendss/")
+        )
+        if not f.startswith(".")
+    ]
+    opendss_models.remove("storage_test")
 
     for model in opendss_models:
         m = Store()
         r = Reader(
-            master_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/master.dss'.format(model=model)),
-            buscoordinates_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/buscoord.dss'.format(model=model))
+            master_file=os.path.join(
+                current_directory,
+                "data/small_cases/opendss/{model}/master.dss".format(model=model),
+            ),
+            buscoordinates_file=os.path.join(
+                current_directory,
+                "data/small_cases/opendss/{model}/buscoord.dss".format(model=model),
+            ),
         )
         r.parse(m)
         m.set_names()
 
-        #Create a modifier object
+        # Create a modifier object
         modifier = system_structure_modifier(m)
 
-        #And set the nominal voltages of the elements since we don't have it from OpenDSS
+        # And set the nominal voltages of the elements since we don't have it from OpenDSS
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
 
-        #Create a Network analyszer object with the modified model
-        net = network_analyzer(modifier.model)
+        # Create a Network analyszer object with the modified model
+        net = network_analyzer(modifier.model, True, "sourcebus")
         net.model.set_names()
 
-        #Compute all the available metrics
+        # Compute all the available metrics
         net.compute_all_metrics()
 
         output_path = tempfile.gettempdir()
 
-        #Export them to excel
-        net.export(os.path.join(output_path,'metrics.xlsx'))
+        # Export them to excel
+        net.export(os.path.join(output_path, "metrics.xlsx"))
 
-        #Export them to JSON
-        net.export_json(os.path.join(output_path,'metrics.json'))
+        # Export them to JSON
+        net.export_json(os.path.join(output_path, "metrics.json"))
