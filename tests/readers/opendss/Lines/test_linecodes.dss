@@ -1,0 +1,89 @@
+Clear
+
+New circuit.test_linecodes basekv=12.47 pu=1.01 phases=3 bus1=sourcebus
+
+! Linecode 1 is taken from IEEE 8500 test system Linecodes.dss
+New Linecode.3-1/0C_2/0CN_T nphases=3 r1=0.3489 x1=0.426198 r0=0.588811 x0=1.29612 c1=10.4308823411236 c0=4.48501282215346 units=km baseFreq=60 normamps=310 emergamps=310 faultrate=0.1 pctperm=20 repair=3
+
+! Linecode 2 is taken from IEEE 8500 test system Linecodes.dss
+New Linecode.1P_#8CU_#8N nphases=3 r1=2.15622 x1=0.539412 r0=2.5511 x0=1.78041 c1=8.05740467479414 c0=4.52209592389387 units=km baseFreq=60 normamps=1 emergamps=1 faultrate=0.1 pctperm=20 repair=3
+
+! Linecode 3 is taken from IEEE 8500 test system Linecodes.dss
+New Linecode.3P_3#500_AL_EPR_CD nphases=3 r1=0.072514 x1=0.001056 r0=0.140678 x0=-0.043807 c1=0 c0=0 units=km baseFreq=60 normamps=1110 emergamps=1110 faultrate=0.1 pctperm=20 repair=3
+
+! Linecode 4 is taken from IEEE 8500 test system Linecodes2.dss
+New Linecode.3ph_h-397_acsr397_acsr397_acsr2/0_acsr nphases=3  Units=km
+~ Rmatrix=[0.270019  |0.109951  0.264634  |0.113538  0.110747  0.271698  ]
+~ Xmatrix=[0.695974  |0.33351  0.708729  |0.308271  0.350259  0.692021  ]
+~ Cmatrix=[9.13606  |-2.66777  9.62226  |-2.17646  -3.15664  9.43197  ]
+
+! Linecode 5 is taken from IEEE 8500 test system Linecodes2.dss
+New Linecode.1ph-2_acsrxx4_acsr nphases=1  Units=km
+~ Rmatrix=[1.12339  ]
+~ Xmatrix=[0.937794  ]
+~ Cmatrix=[6.49582  ]
+
+! Linecode 6 is taken from IEEE 8500 test system Linecodes2.dss
+New Linecode.2ph_h-2_acsrx2_acsr2_acsr nphases=2  Units=km
+~ Rmatrix=[1.13148  |0.142066  1.13362  ]
+~ Xmatrix=[0.884886  |0.366115  0.882239  ]
+~ Cmatrix=[7.33718  |-2.39809  7.33718  ]
+
+! Linecode 7 is taken from IEEE 8500 test system Triplex_Linecodes.dss
+New Linecode.750_Triplex  nphases=2 units=kft    ! ohms per 1000 ft
+~ rmatrix=[  0.04974733   0.02342157 |  0.02342157   0.04974733 ]
+~ xmatrix=[  0.02782436   0.00669472 |  0.00669472   0.02782436 ]
+~ cmatrix=[  3.00000000  -2.40000000 | -2.40000000   3.00000000 ]
+~ NormAmps=580 {580 1.25 *}
+
+
+! Linecode 8 is taken from IEEE 8500 test system Triplex_Linecodes.dss
+New Linecode.4/0Triplex nphases=2 units=kft      !ohms per 1000 ft
+~ rmatrix=[  0.40995115   0.11809509 |  0.11809509   0.40995115 ]
+~ xmatrix=[  0.16681819   0.12759250 |  0.12759250   0.16681819 ]
+~ cmatrix=[  3.00000000  -2.40000000 | -2.40000000   3.00000000 ]
+~ Normamps=156  {156 1.25 *}
+
+
+! Linecode 9 is empty
+New Linecode.empty nphases=3 units=km 
+
+! Linecode 10 only has r1 set 
+New Linecode.r1_only nphases=3 r1=0.3489 units=km 
+
+
+! Linecode 11 only has r0 set 
+New Linecode.r0_only nphases=3 r0=0.588811 units=km 
+
+! Linecode 12 only has x1 set 
+New Linecode.x1_only nphases=3 x1=0.426198 units=km 
+
+! Linecode 13 only has x0 set 
+New Linecode.x0_only nphases=3 x0=1.29612 units=km 
+
+! Linecode 14 only has c1 set 
+New Linecode.c1_only nphases=3 c1=10.4308823411236 units=km 
+
+! Linecode 14 only has c0 set 
+New Linecode.x0_only nphases=3 c0=4.38501282215346 units=km 
+
+New Line.line1 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3 phases=3 Length=10 linecode=3-1/0C_2/0CN_T units=m
+New Line.line2 Bus1=bus2.3 Bus2=bus3.3 phases=1 Length=10 linecode=1P_#8CU_#8N units=m
+New Line.line3 Bus1=bus2.1.2.3 Bus2=bus4.1.2.3 phases=3 Length=10 linecode=3P_3#500_AL_EPR_CD units=m
+New Line.line4 Bus1=bus4.1.2.3 Bus2=bus5.1.2.3 phases=3 Length=10 linecode=3ph_h-397_acsr397_acsr397_acsr2/0_acsr units=m
+New Line.line5 Bus1=bus5.2 Bus2=bus6.2 phases=1 Length=10 linecode=1ph-2_acsrxx4_acsr units=m
+New Line.line6 Bus1=bus5.1.3 Bus2=bus7.1.3 phases=2 Length=10 linecode=2ph_h-2_acsrx2_acsr2_acsr  units=m
+New Line.line7 Bus1=bus5.1.2 Bus2=bus8.1.2 phases=2 Length=10 linecode=750_Triplex units=m
+New Line.line8 Bus1=bus5.2.3 Bus2=bus9.2.3 phases=2 Length=10 linecode=4/0Triplex  units=m
+New Line.line9 Bus1=bus4.1.2.3 Bus2=bus10.1.2.3 phases=3 Length=10 linecode=empty units=m
+New Line.line10 Bus1=bus10.1.2.3 Bus2=bus11.1.2.3 phases=3 Length=10 linecode=r1_only units=m
+New Line.line11 Bus1=bus11.1.2.3 Bus2=bus12.1.2.3 phases=3 Length=10 linecode=r0_only units=m
+New Line.line12 Bus1=bus12.1.2.3 Bus2=bus13.1.2.3 phases=3 Length=10 linecode=x1_only units=m
+New Line.line13 Bus1=bus13.1.2.3 Bus2=bus14.1.2.3 phases=3 Length=10 linecode=x0_only units=m
+New Line.line14 Bus1=bus14.1.2.3 Bus2=bus15.1.2.3 phases=3 Length=10 linecode=c1_only units=m
+New Line.line15 Bus1=bus15.1.2.3 Bus2=bus16.1.2.3 phases=3 Length=10 linecode=c0_only units=m
+
+
+Set Voltagebases=[12.47]
+Calcvoltagebases
+Solve

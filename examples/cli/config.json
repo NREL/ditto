@@ -1,5 +1,5 @@
-{"data_folder_path": "./tests/data/cyme/ieee_4node/",
+{"data_folder_path": "./tests/data/small_cases/cyme/ieee_13node/",
  "equipment_filename": "equipment.txt",
  "network_filename": "network.txt",
- "load_filename": "load.txt"
+ "load_filename": "loads.txt"
 }

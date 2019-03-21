@@ -29,7 +29,7 @@ class GridLABDBase(object):
 
     def __setitem__(self, k, v):
         if k not in [p["name"] for p in self._properties]:
-            raise AttributeError(
-                "Unable to set {} with {} on {}".format(k, v, self.__class__.__name__)
+            print(
+                    "Warning: Unable to set {} with {} on {}".format(k, v, self.__class__.__name__)
             )
         return setattr(self, "_{}".format(k), v)

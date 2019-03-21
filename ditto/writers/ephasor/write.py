@@ -710,15 +710,17 @@ class Writer(AbstractWriter):
                             hasattr(winding, "phase_windings")
                             and winding.phase_windings is not None
                         ):
+                            phase_cnt = 0
+                            phases = ['A','B','C']
                             N_phases.append(len(winding.phase_windings))
                             for pw in winding.phase_windings:
-                                obj_dict["W1Bus " + pw.phase][index] = (
+                                obj_dict["W1Bus " + phases[phase_cnt]][index] = (
                                     i.from_element + "_" + pw.phase
                                 )
-                                obj_dict["W2Bus " + pw.phase][index] = (
+                                obj_dict["W2Bus " + phases[phase_cnt]][index] = (
                                     i.to_element + "_" + pw.phase
                                 )
-                                tap_name = "Tap " + pw.phase
+                                tap_name = "Tap " + phases[phase_cnt]
                                 if pw.tap_position is None:
                                     obj_dict[tap_name][index] = 0
                                 else:
@@ -729,6 +731,7 @@ class Writer(AbstractWriter):
                                     #     obj_dict[tap_name][index] = self._transformer_dict[i.from_element][tap_name]
                                     # else:
                                     #     obj_dict[tap_name][index] = pw.tap_position
+                                phase_cnt+=1
 
                     if len(np.unique(N_phases)) != 1:
                         self.logger.error(
@@ -922,15 +925,23 @@ class Writer(AbstractWriter):
                         else:
                             obj_dict["Voltage (V)"].append(node.nominal_voltage)
                         obj_dict["Type"].append("PV") #No generators so all nodes are PV buses
-                if len(letter_phases) == 1:
+
+                if 'a' in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
-                if len(letter_phases) == 2:
-                    obj_dict["Angle (deg)"].append(0)
-                    obj_dict["Angle (deg)"].append(180)
-                if len(letter_phases) == 3:
-                    obj_dict["Angle (deg)"].append(0)
+                if 'b' in letter_phases:
                     obj_dict["Angle (deg)"].append(120)
+                if 'c' in letter_phases:
                     obj_dict["Angle (deg)"].append(-120)
+
+#                if len(letter_phases) == 1:
+#                    obj_dict["Angle (deg)"].append(0)
+#                if len(letter_phases) == 2:
+#                    obj_dict["Angle (deg)"].append(0)
+#                    obj_dict["Angle (deg)"].append(180)
+#                if len(letter_phases) == 3:
+#                    obj_dict["Angle (deg)"].append(0)
+#                    obj_dict["Angle (deg)"].append(120)
+#                    obj_dict["Angle (deg)"].append(-120)
                 index = index + 1
         """
         line_dict = {}

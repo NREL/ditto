@@ -35,8 +35,8 @@ def test_linegeometries():
 
     # Nameclass
     for p in ["A", "B", "C"]:
-        assert phased_wires[p].nameclass == "ACSR336"
-    assert phased_wires["N"].nameclass == "ACSR1/0"
+        assert phased_wires[p].nameclass == "wire1"
+    assert phased_wires["N"].nameclass == "wire2"
 
     # Positions of the wires
     assert (phased_wires["A"].X, phased_wires["A"].Y) == (-1.2909, 13.716)
@@ -68,3 +68,29 @@ def test_linegeometries():
     assert phased_wires["N"].resistance == pytest.approx(
         1.12 * 0.000621371 * 300 * 0.3048, 0.00001
     )
+
+    assert len(m["line2"].wires) == 3  # Line1 should have 3 wires
+    assert set([w.phase for w in m["line2"].wires]) == set(["A", "B", "C"])
+
+    phased_wires = {}
+    for wire in m["line2"].wires:
+        phased_wires[wire.phase] = wire
+
+    # Nameclass
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].nameclass == "cndata1"
+
+    #    for p in ["A", "B", "C"]:
+    #        assert phased_wires[p].concentric_neutral_resistance ==  pytest.approx(
+    #            0.076705 * 0.000621371 * 300 * 0.3048, 0.00001
+    #        )
+
+
+#    for p in ["A", "B", "C"]:
+# assert phased_wires[p].concentric_neutral_diameter == 0.064 * 0.0254
+
+# for p in ["A", "B", "C"]:
+#        assert phased_wires[p].concentric_neutral_outside_diameter == 1.16 * 0.0254
+
+#    for p in ["A", "B", "C"]:
+#        assert phased_wires[p].concentric_neutral_nstrand == 13

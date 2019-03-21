@@ -701,6 +701,12 @@
             ]
         },
 
+        "house":{
+           "parent":"node",
+           "properties":[
+           ]
+        },
+
         "load": {
             "parent": "node",
             "properties": [

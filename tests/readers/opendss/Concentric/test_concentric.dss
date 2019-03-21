@@ -1,0 +1,13 @@
+Clear
+
+New Circuit.Name1 bus1=cnbus pu=1.0416666666666667 basekV=13.200000000000001 R1=0.001 X1=0.001 R0=0.001 X0=0.001
+
+New CNDATA.cndata1 nsLayer=0.005283199999999999 DiaIns=0.039116 k=21 DiaStrand=0.0032639 Rstrand=2.103036027191271e-05 Diam=0.0285496 DiaCable=0.053085999999999994 Rac=3.541824598903899e-05 GmrStrand=0.00127096266 GMRac=0.0111252 Runits=m Radunits=m GMRunits=m
+
+New LineGeometry.Geometry_1 Nconds=4 Nphases=3 Units=m Cond=1 CNCable=cndata1 X=0.0 H=-0.9144000000000001 Normamps=725.0 Emergamps=905.0 Cond=2 CNCable=cndata1 X=0.42672 H=-0.9144000000000001 Normamps=725.0 Emergamps=905.0 Cond=3 CNCable=cndata1 X=0.70104 H=-0.7924800000000001 Normamps=725.0 Emergamps=905.0 Cond=4 CNCable=cndata1 X=0.0 H=-0.67056 Normamps=725.0 Emergamps=905.0 Reduce=y
+
+New Line.line1 Units=km Length=0.14602968000000002 bus1=bus1.1.2.3 bus2=bus2.1.2.3 switch=n enabled=y phases=3 geometry=Geometry_1
+
+Set Voltagebases=[13.200000000000001 ]
+Calcvoltagebases
+Solve
