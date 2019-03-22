@@ -78,7 +78,7 @@ def test_metric_computation_cli():
     output_path = tempfile.TemporaryDirectory()
     p = subprocess.Popen(
         shlex.split(
-            """ ditto-cli metric --from="opendss" --to="xlsx" --input="./tests/read_dss_13node.json" --feeder=False --output="{}" """.format(
+            """ ditto-cli metric --from="opendss" --to="xlsx" --input="./read_dss_13node.json" --feeder=False --output="{}" """.format(
                 output_path.name
             ).strip()
         )
