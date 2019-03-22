@@ -9,6 +9,7 @@ import logging
 import cmath
 
 from six import string_types
+from ditto.default_values.default_values_json import Default_Values
 
 import numpy as np
 
@@ -70,7 +71,7 @@ class AbstractReader(object):
         matrix2 += matrix2.T
 
         for i in range(N_cols):
-            matrix2[i, i] *= .5
+            matrix2[i, i] *= 0.5
 
         return matrix2.tolist()
 
@@ -393,7 +394,7 @@ class AbstractReader(object):
         phase_impedance_matrix = np.array(phase_impedance_matrix)
         # If we have a 3 by 3 phase impedance matrix
         if phase_impedance_matrix.shape == (3, 3):
-            a = cmath.exp(complex(0, 2. / 3 * cmath.pi))
+            a = cmath.exp(complex(0, 2.0 / 3 * cmath.pi))
             A = np.array(
                 [
                     [complex(1.0, 0), complex(1.0, 0), complex(1.0, 0)],
@@ -402,7 +403,7 @@ class AbstractReader(object):
                 ]
             )
             A_inv = (
-                1.
+                1.0
                 / 3.0
                 * np.array(
                     [
@@ -415,7 +416,7 @@ class AbstractReader(object):
         # if we have a 2 by 2 phase impedance matrix
         elif phase_impedance_matrix.shape == (2, 2):
             A = np.array([[1.0, 1.0], [1.0, -1.0]])
-            A_inv = np.array([[.5, .5], [.5, -.5]])
+            A_inv = np.array([[0.5, 0.5], [0.5, -0.5]])
         else:
             return []
         return np.dot(A_inv, np.dot(phase_impedance_matrix, A))
@@ -492,13 +493,13 @@ class AbstractReader(object):
             raise ValueError("GMR is None. Cannot compute Carson's equation.")
         if GMRi == 0:
             raise ValueError("GMR is zero. Cannot compute Carson's equation.")
-        return complex(ri + .0953, .12134 * (np.log(1.0 / GMRi) + 7.93402))
+        return complex(ri + 0.0953, 0.12134 * (np.log(1.0 / GMRi) + 7.93402))
 
     def carson_equation(self, Dij):
         """Carson's equation for mutual impedance."""
         if Dij == 0:
             raise ValueError("Distance Dij is zero. Cannot compute Carson's equation.")
-        return complex(.09530, .12134 * (np.log(1.0 / Dij) + 7.93402))
+        return complex(0.09530, 0.12134 * (np.log(1.0 / Dij) + 7.93402))
 
     def get_primitive_impedance_matrix(self, dist_matrix, GMR_list, r_list):
         """Get primitive impedance matrix from distance matrix between the wires, GMR list, and resistance list."""
@@ -841,6 +842,17 @@ class AbstractReader(object):
         if self.verbose:
             self.logger.info("Parsing done.")
 
+        if hasattr(self, "DSS_file_names"):
+            if (
+                self.DSS_file_names["default_values_file"]
+                or self.DSS_file_names["remove_opendss_default_values_flag"] is True
+            ):
+                if self.verbose:
+                    self.logger.info("Parsing the default values...")
+                s = self.parse_default_values(model)
+                if self.verbose and s != -1:
+                    self.logger.info("Succesful!")
+
         return 1
 
     def parse_nodes(self, model):
@@ -884,3 +896,143 @@ class AbstractReader(object):
         .. note:: Has to be implemented in subclasses.
         """
         pass
+
+    def set_default_values(self, obj, attr, value, *args):
+        if not self.DSS_file_names["remove_opendss_default_values_flag"]:
+            if hasattr(obj, attr):
+                if attr == "capacitance_matrix":
+                    new_cmatrix = np.array(value)
+                    if new_cmatrix.ndim == 1:
+                        new_cmatrix = [new_cmatrix.tolist()]
+                    else:
+                        new_cmatrix = new_cmatrix.tolist()
+                    value = new_cmatrix
+                elif attr == "impedance_matrix":
+                    new_rmatrix = np.array(value)
+                    new_xmatrix = np.array(args[0])
+                    Z = new_rmatrix + 1j * new_xmatrix
+                    if Z.ndim == 1:
+                        Z = [Z.tolist()]
+                    else:
+                        Z = Z.tolist()
+                    value = Z
+        else:
+            value = None
+        setattr(obj, attr, value)
+
+    def parse_default_values(self, model):
+        model.set_names()
+        parsed_values = {}
+        parsed_values.setdefault("Line", {})
+        if self.DSS_file_names["default_values_file"]:
+            d_v = Default_Values(self.DSS_file_names["default_values_file"])
+            parsed_values = d_v.parse()
+
+        for obj in model.models:
+            self.set_default_values(
+                obj, "faultrate", parsed_values.get("Line", None).get("faultrate", None)
+            )
+            self.set_default_values(
+                obj,
+                "impedance_matrix",
+                parsed_values.get("Line", None).get("rmatrix", None),
+                parsed_values.get("Line", None).get("xmatrix", None),
+            )
+            self.set_default_values(
+                obj,
+                "capacitance_matrix",
+                parsed_values.get("Line", None).get("cmatrix", None),
+            )
+            self.set_default_values(
+                obj, "ampacity", parsed_values.get("Wire", {}).get("ampacity", None)
+            )
+            self.set_default_values(
+                obj,
+                "emergency_ampacity",
+                parsed_values.get("Wire", {}).get("emergency_ampacity", None),
+            )
+            if type(obj).__name__ == "Capacitor":
+                self.set_default_values(
+                    obj,
+                    "connection_type",
+                    parsed_values.get("Capacitor", {}).get("connection_type", None),
+                )
+                self.set_default_values(
+                    obj, "delay", parsed_values.get("Capacitor", {}).get("delay", None)
+                )
+                self.set_default_values(
+                    obj,
+                    "pt_ratio",
+                    parsed_values.get("Capacitor", {}).get("pt_ratio", None),
+                )
+            self.set_default_values(
+                obj, "low", parsed_values.get("Capacitor", {}).get("low", None)
+            )
+            self.set_default_values(
+                obj, "high", parsed_values.get("Capacitor", {}).get("high", None)
+            )
+            self.set_default_values(
+                obj,
+                "ct_ratio",
+                parsed_values.get("Capacitor", {}).get("ct_ratio", None),
+            )
+            self.set_default_values(
+                obj,
+                "pt_phase",
+                parsed_values.get("Capacitor", {}).get("pt_phase", None),
+            )
+            if type(obj).__name__ == "Regulator":
+                self.set_default_values(
+                    obj,
+                    "connection_type",
+                    parsed_values.get("Regulator", {}).get("connection_type", None),
+                )
+                self.set_default_values(
+                    obj, "delay", parsed_values.get("Regulator", {}).get("delay", None)
+                )
+                self.set_default_values(
+                    obj,
+                    "pt_ratio",
+                    parsed_values.get("Regulator", {}).get("pt_ratio", None),
+                )
+            self.set_default_values(
+                obj, "ct_prim", parsed_values.get("Regulator", {}).get("ct_prim", None)
+            )
+            self.set_default_values(
+                obj,
+                "highstep",
+                parsed_values.get("Regulator", {}).get("highstep", None),
+            )
+            self.set_default_values(
+                obj,
+                "bandwidth",
+                parsed_values.get("Regulator", {}).get("bandwidth", None),
+            )
+            self.set_default_values(
+                obj,
+                "bandcenter",
+                parsed_values.get("Regulator", {}).get("bandcenter", None),
+            )
+            if type(obj).__name__ == "Transformer":
+                self.set_default_values(
+                    obj,
+                    "connection_type",
+                    parsed_values.get("Transformer", {}).get("connection_type", None),
+                )
+            self.set_default_values(
+                obj,
+                "reactances",
+                parsed_values.get("Transformer", {}).get("reactances", None),
+            )
+            if type(obj).__name__ == "Load":
+                self.set_default_values(
+                    obj,
+                    "connection_type",
+                    parsed_values.get("Load", {}).get("connection_type", None),
+                )
+            self.set_default_values(
+                obj, "vmin", parsed_values.get("Load", {}).get("vmin", None)
+            )
+            self.set_default_values(
+                obj, "vmax", parsed_values.get("Load", {}).get("vmax", None)
+            )

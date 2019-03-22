@@ -38,6 +38,7 @@ from ditto.models.position import Position
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 
+
 from ditto.models.feeder_metadata import Feeder_metadata
 
 from ditto.models.base import Unicode
@@ -101,6 +102,17 @@ class Reader(AbstractReader):
             self.coordinates_delimiter = kwargs["coordinates_delimiter"]
         else:
             self.coordinates_delimiter = ","
+
+        if kwargs.get("default_values_file", None) is not None:
+            self.DSS_file_names["default_values_file"] = kwargs["default_values_file"]
+        else:
+            self.DSS_file_names["default_values_file"] = None
+        #        ] = "/C/Users/bkavuri/Downloads/ditto/ditto/default_values/opendss_default_values.json"
+
+        if kwargs.get("remove_opendss_default_values_flag", None) is True:
+            self.DSS_file_names["remove_opendss_default_values_flag"] = True
+        else:
+            self.DSS_file_names["remove_opendss_default_values_flag"] = False
 
         # self.DSS_file_names={'Nodes': 'buscoords.dss',
         #                     'master': 'master.dss'}
@@ -537,8 +549,17 @@ class Reader(AbstractReader):
                 b1_name = data["bus1"].strip()
                 b1_phases = [1, 2, 3]
             else:
-                b1_name = None
-                b1_phases = None
+                raise ValueError(
+                    "Phases not specified for {b1}.".format(b1=data["bus1"])
+                )
+
+            for each in b1_phases:
+                if not each in [1, 2, 3]:
+                    raise ValueError(
+                        "Phase {name} is not supported for bus {b1}.".format(
+                            name=each, b1=data["bus1"]
+                        )
+                    )
 
             # Parse bus2 data
             if "." in data["bus2"]:
@@ -549,8 +570,17 @@ class Reader(AbstractReader):
                 b2_name = data["bus2"].strip()
                 b2_phases = [1, 2, 3]
             else:
-                b2_name = None
-                b2_phases = None
+                raise ValueError(
+                    "Phases not specified for {b2}.".format(b2=data["bus2"])
+                )
+
+            for each in b2_phases:
+                if not each in [1, 2, 3]:
+                    raise ValueError(
+                        "Phase {name} is not supported for bus {b2}.".format(
+                            name=each, b2=data["bus2"]
+                        )
+                    )
 
             # Update the buses dictionary
             if b1_name is not None and not b1_name in buses:
@@ -932,7 +962,6 @@ class Reader(AbstractReader):
                                 Xmatrix,
                             )
                         )
-
                     new_Rmatrix = np.array(new_Rmatrix)
                     new_Xmatrix = np.array(new_Xmatrix)
                     Z = new_Rmatrix + 1j * new_Xmatrix
@@ -1625,7 +1654,6 @@ class Reader(AbstractReader):
             for ww in windings:
                 api_transformer.windings.append(ww)
             self._transformers.append(api_transformer)
-
         return 1
 
     @timeit

@@ -1,0 +1,15 @@
+Clear
+
+New circuit.test_line_connectivity basekv=4.16 pu=1.01 phases=3 bus1=sourcebus
+
+! Line1 connects sourcebus to bus1 and should have 4 wires: A, B, C, and N
+New Line.line1 Bus1=sourcebus Bus2=bus1 phases=3 Length=100 units=m
+
+! Capacitor Cap1 should be a three phase capacitor (3 PhaseCapacitor objects) connected to bus1
+New Capacitor.Cap1 Bus1=bus1 phases=3 kVAR=600 kV=4.16
+
+New Transformer.Reg1 phases=1 XHL=0.01 kVAs=[1666 1666]
+~ Buses=[650.1 RG60.1] kVs=[2.4  2.4] %LoadLoss=0.01
+new regcontrol.Reg1  transformer=Reg1 winding=2  vreg=122  band=2  ptratio=20 ctprim=700  R=3   X=9 vlimit=0
+
+New load.load1 bus1=load.1 kW=1 pf=0.88 phases=1 kV=1 model=8 vminpu=0.0 vmaxpu=1.2
