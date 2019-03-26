@@ -1239,12 +1239,21 @@ class Reader(AbstractReader):
                         this_line_wireData_code = None
 
                     # Try to get the Wire data for this lineGeometry
+                    is_cable = False
                     if this_line_wireData_code is not None:
                         try:
                             all_wire_data = dss.utils.class_to_dataframe("wiredata")
-                            this_line_wireData = all_wire_data[
-                                "wiredata.{}".format(this_line_wireData_code)
-                            ]
+                            CNData = dss.utils.class_to_dataframe("CNData")
+                            for cnname, cnvalues in CNData.items():
+                                if this_line_wireData_code == cnname.split(".")[1]:
+                                    is_cable = True
+                                    this_line_wireData = CNData[
+                                        "CNData.{}".format(cnname.split(".")[1])
+                                    ]
+                            if is_cable is False:
+                                this_line_wireData = all_wire_data[
+                                    "wiredata.{}".format(this_line_wireData_code)
+                                ]
                         except:
                             logger.warning(
                                 "Could not get the wireData {wiredata} of lineGeometry {line_geom}".format(
@@ -1375,14 +1384,12 @@ class Reader(AbstractReader):
                                     pass
                                 # If we have a valid unit for the resistance
                                 if Runits is not None:
-
                                     wires[p].resistance = (
                                         self.convert_to_meters(
                                             Rac, Runits, inverse=True
                                         )
                                         * api_line.length
                                     )
-
                     if wires[p].ampacity is None and "normamps" in data:
                         try:
                             wires[p].ampacity = float(data["normamps"])
@@ -1397,6 +1404,26 @@ class Reader(AbstractReader):
 
                     # is_switch
                     wires[p].is_switch = api_line.is_switch
+
+                    # Concentric Neutral
+                    if is_cable == True:
+                        cndata = dss.utils.class_to_dataframe("CNData")
+                        if cndata is not None:
+                            for name, data in cndata.items():
+                                wires[p].concentric_neutral_gmr = float(
+                                    data["GmrStrand"]
+                                )
+                                wires[p].concentric_neutral_resistance = float(
+                                    data["Rstrand"]
+                                )
+                                wires[p].concentric_neutral_diameter = float(
+                                    data["DiaStrand"]
+                                )
+                                wires[p].concentric_neutral_outside_diameter = float(
+                                    data["DiaCable"]
+                                )
+                                wires[p].concentric_neutral_nstrand = int(data["k"])
+
             api_line.wires = wires
             self._lines.append(api_line)
 
