@@ -13,6 +13,7 @@ import numpy as np
 
 from ditto.store import Store
 from ditto.readers.opendss.read import Reader
+from ditto.default_values.default_values_json import Default_Values
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
@@ -23,11 +24,94 @@ def test_linegeometries():
     r.parse(m)
     m.set_names()
 
+    # Reading OpenDSS default values
+    d_v = Default_Values(
+        os.path.join(
+            current_directory,
+            "../../../../ditto/default_values/opendss_default_values.json",
+        )
+    )
+    parsed_values = d_v.parse()
+
     # Number of wires
     assert len(m["line1"].wires) == 4  # Line1 should have 4 wires
-
     # Phases of the different wires
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C", "N"])
+    assert m["line1"].name == "line1"
+    assert m["line1"].nominal_voltage == float(4.8) * 10 ** 3
+    assert m["line1"].line_type == "underground"
+    assert m["line1"].length == 300 * 0.3048  # units = ft
+    assert m["line1"].from_element == "bus1"
+    assert m["line1"].to_element == "bus2"
+    assert m["line1"].is_fuse is None
+    assert m["line1"].is_switch is None
+    assert m["line1"].faultrate == parsed_values["Line"]["faultrate"]
+    assert m["line1"].impedance_matrix == [
+        [
+            (0.00024470915354330705 + 0.0008822673884514435j),
+            (5.835777559055117e-05 + 0.0003248651902887139j),
+            (5.765895669291338e-05 + 0.00046906856955380576j),
+            (5.760725065616798e-05 + 0.00048103083989501315j),
+        ],
+        [
+            (5.835777559055117e-05 + 0.0003248651902887139j),
+            (0.0002461201115485564 + 0.0008808241469816273j),
+            (5.835780839895013e-05 + 0.0003251467519685039j),
+            (5.8305019685039363e-05 + 0.00031984750656167976j),
+        ],
+        [
+            (5.765895669291338e-05 + 0.00046906856955380576j),
+            (5.835780839895013e-05 + 0.0003251467519685039j),
+            (0.00024470915354330705 + 0.0008822673884514435j),
+            (5.760728346456692e-05 + 0.0005092962598425196j),
+        ],
+        [
+            (5.760725065616798e-05 + 0.00048103083989501315j),
+            (5.8305019685039363e-05 + 0.00031984750656167976j),
+            (5.760728346456692e-05 + 0.0005092962598425196j),
+            (0.0007400377296587926 + 0.0010138346456692914j),
+        ],
+    ]
+    assert m["line1"].capacitance_matrix == [
+        [
+            (0.008384708005249344 + 0j),
+            (-0.0001470299868766404 + 0j),
+            (-0.0019942040682414696 + 0j),
+            (-0.0020357719816272964 + 0j),
+        ],
+        [
+            (-0.0001470299868766404 + 0j),
+            (0.00994426837270341 + 0j),
+            (-0.00014228366141732281 + 0j),
+            (-9.78384186351706e-05 + 0j),
+        ],
+        [
+            (-0.0019942040682414696 + 0j),
+            (-0.00014228366141732281 + 0j),
+            (0.008713290682414698 + 0j),
+            (-0.002607346128608924 + 0j),
+        ],
+        [
+            (-0.0020357719816272964 + 0j),
+            (-9.78384186351706e-05 + 0j),
+            (-0.002607346128608924 + 0j),
+            (0.008078645013123359 + 0j),
+        ],
+    ]
+    assert m["line1"].feeder_name == "sourcebus_src"
+    assert m["line1"].is_recloser is None
+    assert m["line1"].is_breaker is None
+    assert m["line1"].nameclass == ""
+
+    for w in m["line1"].wires:
+        assert w.emergency_ampacity == -1
+        assert w.insulation_thickness == 0.0
+        assert w.is_open is None
+        assert w.concentric_neutral_gmr == None
+        assert w.concentric_neutral_resistance == None
+        assert w.concentric_neutral_diameter == None
+        assert w.concentric_neutral_outside_diameter == None
+        assert w.concentric_neutral_nstrand == None
 
     phased_wires = {}
     for wire in m["line1"].wires:
@@ -35,8 +119,11 @@ def test_linegeometries():
 
     # Nameclass
     for p in ["A", "B", "C"]:
-        assert phased_wires[p].nameclass == "ACSR336"
-    assert phased_wires["N"].nameclass == "ACSR1/0"
+        assert phased_wires[p].ampacity == 530
+        assert phased_wires[p].nameclass == "wire1"
+
+    assert phased_wires["N"].ampacity == 230
+    assert phased_wires["N"].nameclass == "wire2"
 
     # Positions of the wires
     assert (phased_wires["A"].X, phased_wires["A"].Y) == (-1.2909, 13.716)
@@ -68,3 +155,80 @@ def test_linegeometries():
     assert phased_wires["N"].resistance == pytest.approx(
         1.12 * 0.000621371 * 300 * 0.3048, 0.00001
     )
+
+    # Number of wires
+    assert len(m["line2"].wires) == 3
+    # Phases of the different wires
+    assert set([w.phase for w in m["line2"].wires]) == set(["A", "B", "C"])
+    assert m["line2"].name == "line2"
+    assert m["line2"].nominal_voltage == float(4.8) * 10 ** 3
+    assert m["line2"].line_type == "underground"
+    assert m["line2"].length == 1 * 1609.34  # units = mi
+    assert m["line2"].from_element == "bus2"
+    assert m["line2"].to_element == "bus3"
+    assert m["line2"].is_fuse is None
+    assert m["line2"].is_switch is None
+    assert m["line2"].faultrate == parsed_values["Line"]["faultrate"]
+    assert m["line2"].impedance_matrix == [
+        [
+            (0.0004969816819317236 + 0.00026779083350938896j),
+            (0.0002020738936458424 + 1.0858935961325762e-05j),
+            (0.00017973933413697543 - 1.807117203325587e-05j),
+        ],
+        [
+            (0.0002020738936458424 + 1.0858935961325762e-05j),
+            (0.0004905287260616153 + 0.000241154572681969j),
+            (0.0002020738936458424 + 1.0858935961325762e-05j),
+        ],
+        [
+            (0.00017973933413697543 - 1.807117203325587e-05j),
+            (0.0002020738936458424 + 1.0858935961325762e-05j),
+            (0.0004969816819317236 + 0.00026779083350938896j),
+        ],
+    ]
+    assert m["line2"].capacitance_matrix == [
+        [(0.23857494376576735 + 0j), 0j, 0j],
+        [0j, (0.23857494376576735 + 0j), 0j],
+        [0j, 0j, (0.23857494376576735 + 0j)],
+    ]
+    assert m["line2"].feeder_name == "sourcebus_src"
+    assert m["line2"].is_recloser is None
+    assert m["line2"].is_breaker is None
+    assert m["line2"].nameclass == ""
+
+    for w in m["line2"].wires:
+        assert w.emergency_ampacity == -1
+        assert w.insulation_thickness == 0.0
+        assert w.is_open is None
+        assert w.concentric_neutral_gmr == 2
+        assert w.concentric_neutral_resistance == 2.816666667
+        assert w.concentric_neutral_diameter == 0.064
+        assert w.concentric_neutral_outside_diameter == 1.16
+        assert w.concentric_neutral_nstrand == 13
+
+    phased_wires = {}
+    for wire in m["line2"].wires:
+        phased_wires[wire.phase] = wire
+
+    # Nameclass
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].ampacity == -1
+        assert phased_wires[p].nameclass == "cndata1"
+
+    # Positions of the wires
+    assert (phased_wires["A"].X, phased_wires["A"].Y) == (-0.5 * 0.3048, -4 * 0.3048)
+    assert (phased_wires["B"].X, phased_wires["B"].Y) == (0, -4 * 0.3048)
+    assert (phased_wires["C"].X, phased_wires["C"].Y) == (0.5 * 0.3048, -4 * 0.3048)
+
+    # GMR
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].gmr == 0.20568 * 0.0254
+
+    # Diameter
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].diameter == 0.573 * 0.0254
+
+    for p in ["A", "B", "C"]:
+        assert phased_wires[p].resistance == pytest.approx(
+            0.076705 * 1609.34 * 0.00328084, 0.00001
+        )
