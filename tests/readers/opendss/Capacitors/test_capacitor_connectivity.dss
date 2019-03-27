@@ -1,6 +1,6 @@
 Clear
 
-New circuit.test_capacitor_connectivity basekv=4.16 pu=1.01 phases=3 bus1=sourcebus
+New circuit.test_capacitor_connectivity basekv=4.16 pu=1.01 phases=3 bus1=SourceBus
 
 ! Capacitor Cap1 should be a three phase capacitor (3 PhaseCapacitor objects) connected to bus1
 New Capacitor.Cap1 Bus1=bus1 phases=3 kVAR=600 kV=4.16
@@ -13,6 +13,40 @@ New Capacitor.Cap3 Bus1=bus3.1 phases=1 kVAR=200.37 kV=2.4
 
 ! Capacitor Cap4 should be a two phase capacitor (2 PhaseCapacitor objects) connected to bus4 on phase A and C
 New Capacitor.Cap4 Bus1=bus4.1.3 phases=2 kVAR=400 kV=2.4
+
+! Capacitors from epri_j1
+New Linecode.OH-3X_477AAC_4/0AAACN nphases=3 r1=0.12241009 x1=0.39494091 r0=0.33466485 x0=1.2742766 c1=11.1973 c0=4.8089 units=km baseFreq=60 normamps=732 emergamps=871
+New Linecode.OH-3X_4CU_4CUN nphases=3 r1=0.85376372 x1=0.49484991 r0=1.2302027 x0=1.5569817 c1=8.7903 c0=4.2476 units=km baseFreq=60 normamps=142 emergamps=142
+New Line.OH_B4904 bus1=B4909.1.2.3 bus2=B4904.1.2.3 length=161.84879 units=m linecode=OH-3X_477AAC_4/0AAACN phases=3 enabled=True
+New Line.OH_B18944 bus1=B18941.1.2.3 bus2=B18944.1.2.3 length=141.1224 units=m linecode=OH-3X_4CU_4CUN phases=3 enabled=True
+
+New Capacitor.B4909-1 bus=B4909 kV=12.47 kvar=900 conn=wye
+New Capcontrol.B4909-1 Capacitor=B4909-1 element=Line.OH_B4904 terminal=1 Delay=30
+~ type=volt ON=120.5 OFF=125 PTphase=2 PTratio=60
+
+New Capacitor.B4909-2 bus=B4909 kV=12.47 kvar=900 conn=wye
+New Capcontrol.B4909-2 Capacitor=B4909-2 element=Line.OH_B4904 terminal=1 Delay=30
+~ type=volt Vmin=120.5 Vmax=125 PTphase=2 PTratio=60
+
+New Capacitor.B18944-1 bus=B18941 kV=12.47 kvar=1200 conn=wye
+New Capcontrol.B18944-1 Capacitor=B18944-1 element=Line.OH_B18944 terminal=1 Delay=31
+~ type=volt ON=118 OFF=124 PTphase=1 PTratio=60
+
+New Capacitor.B18944-2 bus=B18941 kV=12.47 kvar=1200 conn=wye
+New Capcontrol.B18944-2 Capacitor=B18944-2 element=Line.OH_B18944 terminal=1 Delay=31
+~ type=volt Vmin=118 Vmax=124 PTphase=1 PTratio=60
+
+! Capacitors from ieee 8500-node test feeder
+New Capacitor.CAPBank0A  Bus1=R42246.1  kv=7.2  kvar=400  phases=1 conn=wye
+New Capacitor.CAPBank0B  Bus1=R42246.2  kv=7.2  kvar=400  phases=1 conn=wye
+New Capacitor.CAPBank0C  Bus1=R42246.3  kv=7.2  kvar=400  phases=1 conn=wye
+
+! This is a 3-phase capacitor bank
+New Capacitor.CAPBank3  Bus1=R18242  kv=12.47112  kvar=900  conn=wye
+
+! 3-phase capacitor with number of phases mentioned
+New Capacitor.CAPBank3-1  Bus1=R18242  kv=12.47112  kvar=900  conn=wye phases=3
+
 
 Set Voltagebases=[4.16, 2.4]
 Calcvoltagebases
