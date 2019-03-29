@@ -1561,6 +1561,34 @@ class Reader(AbstractReader):
                     )
                 )
 
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "wye"
+                and data["conns"][1].lower() == "wye"
+            ):
+                api_transformer.phase_shift = 0
+
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "delta"
+                and data["conns"][1].lower() == "delta"
+            ):
+                api_transformer.phase_shift = 0
+
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "wye"
+                and data["conns"][1].lower() == "delta"
+            ):
+                api_transformer.phase_shift = -30
+
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "delta"
+                and data["conns"][1].lower() == "wye"
+            ):
+                api_transformer.phase_shift = -30
+
             for w in range(N_windings):
 
                 windings.append(Winding(model))
@@ -1712,6 +1740,33 @@ class Reader(AbstractReader):
 
                 # Total number of windings
                 N_windings = int(trans["windings"])
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "wye"
+                    and trans["conns"][1].lower() == "wye"
+                ):
+                    api_regulator.phase_shift = 0
+
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "delta"
+                    and trans["conns"][1].lower() == "delta"
+                ):
+                    api_regulator.phase_shift = 0
+
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "wye"
+                    and trans["conns"][1].lower() == "delta"
+                ):
+                    api_regulator.phase_shift = -30
+
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "delta"
+                    and trans["conns"][1].lower() == "wye"
+                ):
+                    api_regulator.phase_shift = -30
 
                 # Initialize the list of Windings
                 api_regulator.windings = [Winding(model) for _ in range(N_windings)]
@@ -1725,6 +1780,14 @@ class Reader(AbstractReader):
                             ]
                         except:
                             pass
+
+                    try:
+                        if trans["conns"][w].lower() == "wye":
+                            api_regulator.windings[w].connection_type = "Y"
+                        elif trans["conns"][w].lower() == "delta":
+                            api_regulator.windings[w].connection_type = "D"
+                    except:
+                        pass
 
                 # nominal_voltage
                 for w in range(N_windings):
@@ -1800,6 +1863,11 @@ class Reader(AbstractReader):
                                 p
                             ].tap_position = float(trans["taps"][w])
 
+                        elif "TapNum" in data:
+                            api_regulator.windings[w].phase_windings[
+                                p
+                            ].tap_position = float(data["TapNum"])
+
                         # compensator_r
                         if "R" in data:
                             try:
@@ -1846,6 +1914,18 @@ class Reader(AbstractReader):
             # highstep
             try:
                 api_regulator.highstep = int(data["maxtapchange"])
+            except:
+                pass
+
+            # lowstep
+            try:
+                api_regulator.lowstep = api_regulator.highstep
+            except:
+                pass
+
+            # setpoint
+            try:
+                api_regulator.setpoint = int(data["vreg"])
             except:
                 pass
 
