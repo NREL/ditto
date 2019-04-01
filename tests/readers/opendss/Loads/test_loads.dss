@@ -1,0 +1,7 @@
+Clear
+
+new circuit.loadtest basekV=1 phases=1 pu=1.0 bus1=src
+
+new load.zipv   bus1=load.1 kW=1 pf=0.88 phases=1 kV=1 model=8 vminpu=0.0 vmaxpu=1.2
+~ zipv=(0.855,-0.9855,1.1305,2.559,-2.963,1.404,0.87)
+

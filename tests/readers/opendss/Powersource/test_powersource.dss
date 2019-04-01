@@ -1,0 +1,5 @@
+Clear
+
+New Circuit.P4U bus1=st_mat pu=0.99 basekV=230.0 R1=1.1208 X1=3.5169 R0=1.1208 X0=3.5169 phases=3
+
+
