@@ -101,36 +101,34 @@ def test_switches():
     assert m["switch1"].name == "switch1"
     assert m["switch1"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch1"].line_type == "underground"
-    assert (
-        m["switch1"].length == 0.001 * 1000
-    )  # 0.00030480000000000004 # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch1"].length == 0.001 * 1000
     assert m["switch1"].from_element == "node1"
     assert m["switch1"].to_element == "node2"
     assert m["switch1"].is_fuse is None
     assert m["switch1"].is_switch == 1
     assert m["switch1"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["switch1"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j), 0j, 0j],
-        [0j, (3.280839895013123 + 3.280839895013123j), 0j],
-        [0j, 0j, (3.280839895013123 + 3.280839895013123j)],
-    ]  # Units = ft
+        [(0.001 + 0.001j), 0j, 0j],
+        [0j, (0.001 + 0.001j), 0j],
+        [0j, 0j, (0.001 + 0.001j)],
+    ]
     assert m["switch1"].capacitance_matrix == [
         [
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
         ],
-    ]  # Units = ft
+    ]
     assert m["switch1"].feeder_name == "sourcebus_src"
     assert m["switch1"].is_recloser is None
     assert m["switch1"].is_breaker is None
@@ -159,34 +157,34 @@ def test_switches():
     assert m["switch2"].name == "switch2"
     assert m["switch2"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch2"].line_type == "underground"
-    # assert m["switch2"].length == 0.001 * 1000 # 0.00030480000000000004 # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch2"].length == 0.001 * 1000
     assert m["switch2"].from_element == "node1"
     assert m["switch2"].to_element == "node3"
     assert m["switch2"].is_fuse is None
     assert m["switch2"].is_switch == 1
     assert m["switch2"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["switch2"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j), 0j, 0j],
-        [0j, (3.280839895013123 + 3.280839895013123j), 0j],
-        [0j, 0j, (3.280839895013123 + 3.280839895013123j)],
-    ]  # Units = ft
+        [(0.001 + 0.001j), 0j, 0j],
+        [0j, (0.001 + 0.001j), 0j],
+        [0j, 0j, (0.001 + 0.001j)],
+    ]
     assert m["switch2"].capacitance_matrix == [
         [
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
         ],
-    ]  # Units = ft
+    ]
     assert m["switch2"].feeder_name == "sourcebus_src"
     assert m["switch2"].is_recloser is None
     assert m["switch2"].is_breaker is None
@@ -215,34 +213,34 @@ def test_switches():
     assert m["switch3"].name == "switch3"
     assert m["switch3"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch3"].line_type == "underground"
-    # assert m["switch3"].length == 0.01 * 1000 # 0.00030480000000000004 # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch3"].length == 0.001 * 1000
     assert m["switch3"].from_element == "node1"
     assert m["switch3"].to_element == "node4"
     assert m["switch3"].is_fuse is None
     assert m["switch3"].is_switch == 1
     assert m["switch3"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["switch3"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j), 0j, 0j],
-        [0j, (3.280839895013123 + 3.280839895013123j), 0j],
-        [0j, 0j, (3.280839895013123 + 3.280839895013123j)],
-    ]  # Units = ft
+        [(0.001 + 0.001j), 0j, 0j],
+        [0j, (0.001 + 0.001j), 0j],
+        [0j, 0j, (0.001 + 0.001j)],
+    ]
     assert m["switch3"].capacitance_matrix == [
         [
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
         ],
-    ]  # Units = ft
+    ]
     assert m["switch3"].feeder_name == "sourcebus_src"
     assert m["switch3"].is_recloser is None
     assert m["switch3"].is_breaker is None
@@ -271,34 +269,34 @@ def test_switches():
     assert m["switch4"].name == "switch4"
     assert m["switch4"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch4"].line_type == "underground"
-    # assert m["switch4"].length == 0.001 * 1000 #0.00030480000000000004 # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch4"].length == 0.001 * 1000
     assert m["switch4"].from_element == "node1"
     assert m["switch4"].to_element == "node5"
     assert m["switch4"].is_fuse is None
     assert m["switch4"].is_switch == 1
     assert m["switch4"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["switch4"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j), 0j, 0j],
-        [0j, (3.280839895013123 + 3.280839895013123j), 0j],
-        [0j, 0j, (3.280839895013123 + 3.280839895013123j)],
-    ]  # Units = ft
+        [(0.001 + 0.001j), 0j, 0j],
+        [0j, (0.001 + 0.001j), 0j],
+        [0j, 0j, (0.001 + 0.001j)],
+    ]
     assert m["switch4"].capacitance_matrix == [
         [
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
-            (-0.1093613188976378 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
+            (-3.3333330000000004e-05 + 0j),
         ],
         [
-            (-0.1093613188976378 + 0j),
-            (-0.1093613188976378 + 0j),
-            (3.499563648293963 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (-3.3333330000000004e-05 + 0j),
+            (0.001066667 + 0j),
         ],
-    ]  # Units = ft
+    ]
     assert m["switch4"].feeder_name == "sourcebus_src"
     assert m["switch4"].is_recloser is None
     assert m["switch4"].is_breaker is None
@@ -327,16 +325,14 @@ def test_switches():
     assert m["switch5"].name == "switch5"
     assert m["switch5"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch5"].line_type == "underground"
-    # assert m["switch5"].length == 0.001 * 1000 #0.00030480000000000004 # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch5"].length == 0.001 * 1000
     assert m["switch5"].from_element == "node1"
     assert m["switch5"].to_element == "node6"
     assert m["switch5"].is_fuse is None
     assert m["switch5"].is_switch == 1
     assert m["switch5"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch5"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j)]
-    ]  # Units = ft
-    assert m["switch5"].capacitance_matrix == [[(3.608923884514436 + 0j)]]  # Units = ft
+    assert m["switch5"].impedance_matrix == [[(0.001 + 0.001j)]]
+    assert m["switch5"].capacitance_matrix == [[(0.0011 + 0j)]]
     assert m["switch5"].feeder_name == "sourcebus_src"
     assert m["switch5"].is_recloser is None
     assert m["switch5"].is_breaker is None
@@ -365,16 +361,14 @@ def test_switches():
     assert m["switch6"].name == "switch6"
     assert m["switch6"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch6"].line_type == "underground"
-    # assert m["switch6"].length == 0.001 # Ft? # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch6"].length == 0.001 * 1000
     assert m["switch6"].from_element == "node1"
     assert m["switch6"].to_element == "node7"
     assert m["switch6"].is_fuse is None
     assert m["switch6"].is_switch == 1
     assert m["switch6"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch6"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j)]
-    ]  # Units = ft
-    assert m["switch6"].capacitance_matrix == [[(3.608923884514436 + 0j)]]  # Units = ft
+    assert m["switch6"].impedance_matrix == [[(0.001 + 0.001j)]]
+    assert m["switch6"].capacitance_matrix == [[(0.0011 + 0j)]]
     assert m["switch6"].feeder_name == "sourcebus_src"
     assert m["switch6"].is_recloser is None
     assert m["switch6"].is_breaker is None
@@ -402,20 +396,20 @@ def test_switches():
     assert m["switch7"].name == "switch7"
     assert m["switch7"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch7"].line_type == "underground"
-    # assert m["switch7"].length == 0.001 # FT # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch7"].length == 0.001 * 1000
     assert m["switch7"].from_element == "node1"
     assert m["switch7"].to_element == "node8"
     assert m["switch7"].is_fuse is None
     assert m["switch7"].is_switch == 1
-    assert m["switch8"].faultrate == parsed_values["Line"]["faultrate"]
+    assert m["switch7"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["switch7"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j), 0j],
-        [0j, (3.280839895013123 + 3.280839895013123j)],
-    ]  # Units = ft
+        [(0.001 + 0.001j), 0j],
+        [0j, (0.001 + 0.001j)],
+    ]
     assert m["switch7"].capacitance_matrix == [
-        [(3.499563648293963 + 0j), (-0.1093613188976378 + 0j)],
-        [(-0.1093613188976378 + 0j), (3.499563648293963 + 0j)],
-    ]  # Units = ft
+        [(0.001066667 + 0j), (-3.3333330000000004e-05 + 0j)],
+        [(-3.3333330000000004e-05 + 0j), (0.001066667 + 0j)],
+    ]
     assert m["switch7"].feeder_name == "sourcebus_src"
     assert m["switch7"].is_recloser is None
     assert m["switch7"].is_breaker is None
@@ -444,20 +438,20 @@ def test_switches():
     assert m["switch8"].name == "switch8"
     assert m["switch8"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch8"].line_type == "underground"
-    # assert m["switch8"].length == 0.01  # Ft # OpenDSS read the units as None; Hence ditto assigned the default Units = ft
+    assert m["switch8"].length == 0.001 * 1000
     assert m["switch8"].from_element == "node1"
     assert m["switch8"].to_element == "node9"
     assert m["switch8"].is_fuse is None
     assert m["switch8"].is_switch == 1
     assert m["switch8"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["switch8"].impedance_matrix == [
-        [(3.280839895013123 + 3.280839895013123j), 0j],
-        [0j, (3.280839895013123 + 3.280839895013123j)],
-    ]  # Units = ft
+        [(0.001 + 0.001j), 0j],
+        [0j, (0.001 + 0.001j)],
+    ]
     assert m["switch8"].capacitance_matrix == [
-        [(3.499563648293963 + 0j), (-0.1093613188976378 + 0j)],
-        [(-0.1093613188976378 + 0j), (3.499563648293963 + 0j)],
-    ]  # Units = ft
+        [(0.001066667 + 0j), (-3.3333330000000004e-05 + 0j)],
+        [(-3.3333330000000004e-05 + 0j), (0.001066667 + 0j)],
+    ]
     assert m["switch8"].feeder_name == "sourcebus_src"
     assert m["switch8"].is_recloser is None
     assert m["switch8"].is_breaker is None
