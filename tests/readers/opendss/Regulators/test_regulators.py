@@ -122,8 +122,8 @@ def test_regulators():
     assert m["regulator_vreg2_a"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["regulator_vreg2_a"].windings[1].rated_power == 10000 * 10 ** 3
 
-    #    assert m["regulator_vreg2_a"].windings[0].emergency_power == (1 * 10 ** 3) / 2
-    #    assert m["regulator_vreg2_a"].windings[1].emergency_power == (5 * 10 ** 3) / 2
+    assert m["regulator_vreg2_a"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["regulator_vreg2_a"].windings[1].emergency_power == 15000 * 10 ** 3
 
     assert m["regulator_vreg2_a"].windings[0].resistance == 0.005
     assert m["regulator_vreg2_a"].windings[1].resistance == 0.005
@@ -133,24 +133,15 @@ def test_regulators():
 
     assert m["regulator_vreg2_a"].windings[0].voltage_limit == None
     assert m["regulator_vreg2_a"].windings[1].voltage_limit == None
-
     assert m["regulator_vreg2_a"].windings[0].reverse_resistance == None
     assert m["regulator_vreg2_a"].windings[1].reverse_resistance == None
-
     assert m["regulator_vreg2_a"].windings[0].phase_windings[0].tap_position == 1.0
-
     assert m["regulator_vreg2_a"].windings[1].phase_windings[0].tap_position == 1.0
-
     assert m["regulator_vreg2_a"].windings[0].phase_windings[0].phase == "A"
-
     assert m["regulator_vreg2_a"].windings[1].phase_windings[0].phase == "A"
-
     assert m["regulator_vreg2_a"].windings[0].phase_windings[0].compensator_r == 0.0
-
     assert m["regulator_vreg2_a"].windings[1].phase_windings[0].compensator_r == 0.0
-
     assert m["regulator_vreg2_a"].windings[0].phase_windings[0].compensator_x == 0.0
-
     assert m["regulator_vreg2_a"].windings[1].phase_windings[0].compensator_x == 0.0
 
     assert m["vreg2_b"].name == "vreg2_b"
@@ -170,8 +161,8 @@ def test_regulators():
     assert m["vreg2_b"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["vreg2_b"].windings[1].rated_power == 10000 * 10 ** 3
 
-    assert m["vreg2_b"].windings[0].emergency_power == 15000000.0
-    assert m["vreg2_b"].windings[1].emergency_power == 15000000.0
+    assert m["vreg2_b"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["vreg2_b"].windings[1].emergency_power == 15000 * 10 ** 3
 
     assert m["vreg2_b"].windings[0].resistance == 0.005
     assert m["vreg2_b"].windings[1].resistance == 0.005
@@ -186,19 +177,12 @@ def test_regulators():
     assert m["vreg2_b"].windings[1].reverse_resistance == None
 
     assert m["vreg2_b"].windings[0].phase_windings[0].tap_position == 1.0
-
     assert m["vreg2_b"].windings[1].phase_windings[0].tap_position == 0.98125
-
     assert m["vreg2_b"].windings[0].phase_windings[0].phase == "B"
-
     assert m["vreg2_b"].windings[1].phase_windings[0].phase == "B"
-
     assert m["vreg2_b"].windings[0].phase_windings[0].compensator_r == 0.0
-
     assert m["vreg2_b"].windings[1].phase_windings[0].compensator_r == 0.0
-
     assert m["vreg2_b"].windings[0].phase_windings[0].compensator_x == 0.0
-
     assert m["vreg2_b"].windings[1].phase_windings[0].compensator_x == 0.0
 
     assert m["regulator_vreg2_b"].name == "regulator_vreg2_b"
@@ -228,8 +212,8 @@ def test_regulators():
     assert m["regulator_vreg2_b"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["regulator_vreg2_b"].windings[1].rated_power == 10000 * 10 ** 3
 
-    #    assert m["regulator_vreg2_b"].windings[0].emergency_power == 15000000.0
-    #    assert m["regulator_vreg2_b"].windings[1].emergency_power == 15000000.0
+    assert m["regulator_vreg2_b"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["regulator_vreg2_b"].windings[1].emergency_power == 15000 * 10 ** 3
 
     assert m["regulator_vreg2_b"].windings[0].resistance == 0.005
     assert m["regulator_vreg2_b"].windings[1].resistance == 0.005
@@ -247,15 +231,10 @@ def test_regulators():
     assert m["regulator_vreg2_b"].windings[1].phase_windings[0].tap_position == 0.98125
 
     assert m["regulator_vreg2_b"].windings[0].phase_windings[0].phase == "B"
-
     assert m["regulator_vreg2_b"].windings[1].phase_windings[0].phase == "B"
-
     assert m["regulator_vreg2_b"].windings[0].phase_windings[0].compensator_r == 0.0
-
     assert m["regulator_vreg2_b"].windings[1].phase_windings[0].compensator_r == 0.0
-
     assert m["regulator_vreg2_b"].windings[0].phase_windings[0].compensator_x == 0.0
-
     assert m["regulator_vreg2_b"].windings[1].phase_windings[0].compensator_x == 0.0
 
     assert m["vreg2_c"].name == "vreg2_c"
@@ -275,8 +254,8 @@ def test_regulators():
     assert m["vreg2_c"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["vreg2_c"].windings[1].rated_power == 10000 * 10 ** 3
 
-    assert m["vreg2_c"].windings[0].emergency_power == 15000000.0
-    assert m["vreg2_c"].windings[1].emergency_power == 15000000.0
+    assert m["vreg2_c"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["vreg2_c"].windings[1].emergency_power == 15000 * 10 ** 3
 
     assert m["vreg2_c"].windings[0].resistance == 0.005
     assert m["vreg2_c"].windings[1].resistance == 0.005
@@ -292,17 +271,11 @@ def test_regulators():
 
     assert m["vreg2_c"].windings[0].phase_windings[0].tap_position == 1.0
     assert m["vreg2_c"].windings[1].phase_windings[0].tap_position == 1.0125
-
     assert m["vreg2_c"].windings[0].phase_windings[0].phase == "C"
-
     assert m["vreg2_c"].windings[1].phase_windings[0].phase == "C"
-
     assert m["vreg2_c"].windings[0].phase_windings[0].compensator_r == 0.0
-
     assert m["vreg2_c"].windings[1].phase_windings[0].compensator_r == 0.0
-
     assert m["vreg2_c"].windings[0].phase_windings[0].compensator_x == 0.0
-
     assert m["vreg2_c"].windings[1].phase_windings[0].compensator_x == 0.0
 
     assert m["regulator_vreg2_c"].name == "regulator_vreg2_c"
@@ -332,8 +305,8 @@ def test_regulators():
     assert m["regulator_vreg2_c"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["regulator_vreg2_c"].windings[1].rated_power == 10000 * 10 ** 3
 
-    #   assert m["regulator_vreg2_c"].windings[0].emergency_power == 15000000.0
-    #   assert m["regulator_vreg2_c"].windings[1].emergency_power == 15000000.0
+    assert m["regulator_vreg2_c"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["regulator_vreg2_c"].windings[1].emergency_power == 15000 * 10 ** 3
 
     assert m["regulator_vreg2_c"].windings[0].resistance == 0.005
     assert m["regulator_vreg2_c"].windings[1].resistance == 0.005
@@ -351,15 +324,11 @@ def test_regulators():
     assert m["regulator_vreg2_c"].windings[1].phase_windings[0].tap_position == 1.0125
 
     assert m["regulator_vreg2_c"].windings[0].phase_windings[0].phase == "C"
-
     assert m["regulator_vreg2_c"].windings[1].phase_windings[0].phase == "C"
 
     assert m["regulator_vreg2_c"].windings[0].phase_windings[0].compensator_r == 0.0
-
     assert m["regulator_vreg2_c"].windings[1].phase_windings[0].compensator_r == 0.0
-
     assert m["regulator_vreg2_c"].windings[0].phase_windings[0].compensator_x == 0.0
-
     assert m["regulator_vreg2_c"].windings[1].phase_windings[0].compensator_x == 0.0
 
     # Regulator No. 2 from IEEE 8500 test case
@@ -386,8 +355,8 @@ def test_regulators():
     assert m["regxfmr_b18865"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["regxfmr_b18865"].windings[1].rated_power == 10000 * 10 ** 3
 
-    #    assert m["regxfmr_b18865"].windings[0].emergency_power == 15000000.0
-    #    assert m["regxfmr_b18865"].windings[1].emergency_power == 15000000.0
+    assert m["regxfmr_b18865"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["regxfmr_b18865"].windings[1].emergency_power == 15000 * 10 ** 3
 
     assert m["regxfmr_b18865"].windings[0].resistance == 0.2
     assert m["regxfmr_b18865"].windings[1].resistance == 0.2
@@ -405,16 +374,11 @@ def test_regulators():
     assert m["regxfmr_b18865"].windings[1].phase_windings[0].tap_position == 1.01875
 
     assert m["regxfmr_b18865"].windings[0].phase_windings[0].phase == "C"
-
     assert m["regxfmr_b18865"].windings[1].phase_windings[0].phase == "C"
-
     assert m["regxfmr_b18865"].windings[0].phase_windings[0].compensator_r == 0.0
-
     assert m["regxfmr_b18865"].windings[1].phase_windings[0].compensator_r == 0.0
-
-    assert m["regxfmr_b18865"].windings[0].phase_windings[0].compensator_x == 0.0
-
     assert m["regxfmr_b18865"].windings[1].phase_windings[0].compensator_x == 0.0
+    assert m["regxfmr_b18865"].windings[0].phase_windings[0].compensator_x == 0.0
 
     assert m["regulator_regxfmr_b18865_ctrl"].name == "regulator_regxfmr_b18865_ctrl"
     assert m["regulator_regxfmr_b18865_ctrl"].winding == 2
@@ -452,8 +416,14 @@ def test_regulators():
     assert m["regulator_regxfmr_b18865_ctrl"].windings[0].rated_power == 10000 * 10 ** 3
     assert m["regulator_regxfmr_b18865_ctrl"].windings[1].rated_power == 10000 * 10 ** 3
 
-    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].emergency_power == 15000000.0
-    #    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].emergency_power == 15000000.0
+    assert (
+        m["regulator_regxfmr_b18865_ctrl"].windings[0].emergency_power
+        == 15000 * 10 ** 3
+    )
+    assert (
+        m["regulator_regxfmr_b18865_ctrl"].windings[1].emergency_power
+        == 15000 * 10 ** 3
+    )
 
     assert m["regulator_regxfmr_b18865_ctrl"].windings[0].resistance == 0.2
     assert m["regulator_regxfmr_b18865_ctrl"].windings[1].resistance == 0.2
@@ -510,7 +480,7 @@ def test_regulators():
 
     assert m["sb5_p4uhs0_4_trans_439"].feeder_name == "sourcebus_src"
     assert m["sb5_p4uhs0_4_trans_439"].noload_loss == 0.0
-    assert m["sb5_p4uhs0_4_trans_439"].loadloss == 0.9616652  # taken from XHL Value ??
+    assert m["sb5_p4uhs0_4_trans_439"].loadloss == 0.9616652
     assert m["sb5_p4uhs0_4_trans_439"].phase_shift == -30
     assert m["sb5_p4uhs0_4_trans_439"].normhkva == 8800.0
     assert m["sb5_p4uhs0_4_trans_439"].from_element == "sb5_p4uhs0_4_node_5_12"
@@ -524,8 +494,8 @@ def test_regulators():
     assert m["sb5_p4uhs0_4_trans_439"].windings[0].rated_power == 8000 * 10 ** 3
     assert m["sb5_p4uhs0_4_trans_439"].windings[1].rated_power == 8000 * 10 ** 3
 
-    assert m["sb5_p4uhs0_4_trans_439"].windings[0].emergency_power == 12000000.0
-    assert m["sb5_p4uhs0_4_trans_439"].windings[1].emergency_power == 12000000.0
+    assert m["sb5_p4uhs0_4_trans_439"].windings[0].emergency_power == 12000 * 10 ** 3
+    assert m["sb5_p4uhs0_4_trans_439"].windings[1].emergency_power == 12000 * 10 ** 3
 
     assert m["sb5_p4uhs0_4_trans_439"].windings[0].resistance == pytest.approx(
         0.4808326112068522

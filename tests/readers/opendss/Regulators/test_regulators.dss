@@ -22,9 +22,6 @@ New RegControl.regxfmr_B18865_ctrl transformer=regxfmr_B18865 winding=2 vreg=124
 New Transformer.regxfmr_B18865_2 phases=1 windings=2 buses=(B18865.3, B18865reg.3) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 tap=2 enabled=True
 New RegControl.regxfmr_B18865_ctrl transformer=regxfmr_B18865 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=45 CTPrim=0.12 TapNum=3
 
-
-
-
 ! Substation regulator from SMART-DS P4U region
 New Transformer.sb5_p4uhs0_4_trans_439 phases=3 windings=2 wdg=1 conn=delta Kv=69.0 kva=8000.0 %R=0.4808326112068522 bus=sb5_p4uhs0_4_node_5_12 wdg=2 conn=wye Kv=4.0 kva=8000.0 %R=0.4808326112068522 bus=sb5_p4uhs0_4_node_5_13 XHL=0.9616652224137047
 New RegControl.sb5_p4uhs0_4_reg_439 transformer=sb5_p4uhs0_4_trans_439 winding=2 maxtapchange=10 ptratio=19.0 band=1.9919999999999998 vreg = 123.60000000000001

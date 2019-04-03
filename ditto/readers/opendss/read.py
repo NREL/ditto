@@ -1824,9 +1824,7 @@ class Reader(AbstractReader):
                     if "emerghkVA" in trans:
                         try:
                             api_regulator.windings[w].emergency_power = (
-                                float(trans["emerghkVA"][w])
-                                * 10 ** 3
-                                / float(N_windings)
+                                float(trans["emerghkVA"]) * 10 ** 3
                             )  # DiTTo in volt ampere
                         except:
                             pass
