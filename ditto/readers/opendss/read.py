@@ -266,6 +266,7 @@ class Reader(AbstractReader):
         .. warning: This has to be called last in parse.
         """
         model.set_names()
+        # import pdb;pdb.set_trace()
         AllBusNames = dss.Circuit.AllBusNames()
         for bus_name in AllBusNames:
             # Set the active bus
@@ -809,12 +810,12 @@ class Reader(AbstractReader):
                             name=name
                         )
                     )
-                    line_unit = u"ft"
+                    line_unit = u"km"
                     pass
                 pass
 
             if line_unit.lower() not in ["ft", "mi", "m", "km", "kft", "cm", "in"]:
-                line_unit = u"ft"
+                line_unit = u"km"
 
             # length
             try:
