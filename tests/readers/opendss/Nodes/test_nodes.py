@@ -39,7 +39,6 @@ def test_nodes():
 
     assert (m["bus1"].name) == "bus1"
     assert (m["bus1"].nominal_voltage) == None
-    assert (each.default_value for each in m["bus1"].phases) == set(["A", "B", "C"])
     assert (m["bus1"].positions[0].long) == float(300)
     assert (m["bus1"].positions[0].lat) == float(400)
     assert (m["bus1"].positions[0].elevation) == 0
@@ -47,9 +46,6 @@ def test_nodes():
 
     assert (m["sourcebus"].name) == "sourcebus"
     assert (m["sourcebus"].nominal_voltage) == None
-    assert (m["sourcebus"].phases[0].default_value) == "A"
-    assert (m["sourcebus"].phases[1].default_value) == "B"
-    assert (m["sourcebus"].phases[2].default_value) == "C"
     assert (m["sourcebus"].positions[0].long) == float(1674346.56814483)
     assert (m["sourcebus"].positions[0].lat) == float(12272927.0644858)
     assert (m["sourcebus"].positions[0].elevation) == 0
@@ -57,9 +53,6 @@ def test_nodes():
 
     assert (m["b1"].name) == "b1"
     assert (m["b1"].nominal_voltage) == None
-    assert (m["b1"].phases[0].default_value) == "A"
-    assert (m["b1"].phases[1].default_value) == "B"
-    assert (m["b1"].phases[2].default_value) == "C"
     assert (m["b1"].positions[0].long) == float(1578139)
     assert (m["b1"].positions[0].lat) == float(14291312)
     assert (m["b1"].positions[0].elevation) == 0
