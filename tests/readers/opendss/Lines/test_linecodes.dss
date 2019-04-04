@@ -65,7 +65,7 @@ New Linecode.x0_only nphases=3 x0=1.29612 units=km
 New Linecode.c1_only nphases=3 c1=10.4308823411236 units=km
 
 ! Linecode 14 only has c0 set
-New Linecode.x0_only nphases=3 c0=4.38501282215346 units=km
+New Linecode.c0_only nphases=3 c0=4.38501282215346 units=km
 
 New Line.line1 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3 phases=3 Length=10 linecode=3-1/0C_2/0CN_T units=m
 New Line.line2 Bus1=bus2.3 Bus2=bus3.3 phases=1 Length=10 linecode=1P_#8CU_#8N units=m
