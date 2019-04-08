@@ -20,7 +20,7 @@ New LineGeometry.geometry_2 nconds=3 nphases=3 units=ft
 
 New Line.Line1 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3
 ~ Geometry= geometry_1
-~ Length=300 units=ft
+~ Length=300 units=ft EarthModel=FULLCARSON
 
 New Line.Line2 Bus1=bus2.1.2.3 Bus2=bus3.1.2.3
 ~ Geometry= geometry_2
