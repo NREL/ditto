@@ -1,4 +1,3 @@
-os: windows
 language: python
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
