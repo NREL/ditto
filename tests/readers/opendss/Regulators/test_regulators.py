@@ -470,6 +470,155 @@ def test_regulators():
         == 0.0
     )
 
+    # Regulator No. 3 from IEEE 8500 test case
+    assert m["regxfmr_b18865_2"].name == "regxfmr_b18865_2"
+    assert (
+        len(m["regxfmr_b18865_2"].windings) == 2
+    )  # Transformer regxfmr_b18865_2 should have 2 Windings
+    assert m["regxfmr_b18865_2"].windings[0].nominal_voltage == 7.2 * 10 ** 3
+    assert m["regxfmr_b18865_2"].windings[1].nominal_voltage == 7.2 * 10 ** 3
+
+    assert m["regxfmr_b18865_2"].feeder_name == "sourcebus_src"
+    assert m["regxfmr_b18865_2"].noload_loss == 0.0
+    assert m["regxfmr_b18865_2"].loadloss == 0.4
+    assert m["regxfmr_b18865_2"].phase_shift == 0
+    assert m["regxfmr_b18865_2"].normhkva == 11000.0
+    assert m["regxfmr_b18865_2"].from_element == "b18865"
+    assert m["regxfmr_b18865_2"].to_element == "b18865reg"
+    assert m["regxfmr_b18865_2"].reactances == [0.01]
+    assert m["regxfmr_b18865_2"].is_center_tap == 0
+
+    assert m["regxfmr_b18865_2"].windings[0].connection_type == "Y"
+    assert m["regxfmr_b18865_2"].windings[1].connection_type == "Y"
+
+    assert m["regxfmr_b18865_2"].windings[0].rated_power == 10000 * 10 ** 3
+    assert m["regxfmr_b18865_2"].windings[1].rated_power == 10000 * 10 ** 3
+
+    assert m["regxfmr_b18865_2"].windings[0].emergency_power == 15000 * 10 ** 3
+    assert m["regxfmr_b18865_2"].windings[1].emergency_power == 15000 * 10 ** 3
+
+    assert m["regxfmr_b18865_2"].windings[0].resistance == 0.2
+    assert m["regxfmr_b18865_2"].windings[1].resistance == 0.2
+
+    assert m["regxfmr_b18865_2"].windings[0].voltage_type == None
+    assert m["regxfmr_b18865_2"].windings[1].voltage_type == None
+
+    assert m["regxfmr_b18865_2"].windings[0].voltage_limit == None
+    assert m["regxfmr_b18865_2"].windings[1].voltage_limit == None
+
+    assert m["regxfmr_b18865_2"].windings[0].reverse_resistance == None
+    assert m["regxfmr_b18865_2"].windings[1].reverse_resistance == None
+
+    assert m["regxfmr_b18865_2"].windings[0].phase_windings[0].tap_position == 1.0
+    assert m["regxfmr_b18865_2"].windings[1].phase_windings[0].tap_position == 1.01875
+
+    assert m["regxfmr_b18865_2"].windings[0].phase_windings[0].phase == "C"
+    assert m["regxfmr_b18865_2"].windings[1].phase_windings[0].phase == "C"
+    assert m["regxfmr_b18865_2"].windings[0].phase_windings[0].compensator_r == 0.0
+    assert m["regxfmr_b18865_2"].windings[1].phase_windings[0].compensator_r == 0.0
+    assert m["regxfmr_b18865_2"].windings[1].phase_windings[0].compensator_x == 0.0
+    assert m["regxfmr_b18865_2"].windings[0].phase_windings[0].compensator_x == 0.0
+
+    assert m["regulator_regxfmr_b18865_ctrl"].name == "regulator_regxfmr_b18865_2_ctrl"
+    assert m["regulator_regxfmr_b18865_2_ctrl"].winding == 2
+    assert m["regulator_regxfmr_b18865_2_ctrl"].ct_prim == 0.12
+    assert m["regulator_regxfmr_b18865_2_ctrl"].noload_loss == None
+    assert m["regulator_regxfmr_b18865_2_ctrl"].delay == 45
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].highstep
+        == parsed_values["Regulator"]["highstep"]
+    )
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].lowstep
+        == parsed_values["Regulator"]["highstep"]
+    )
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].pt_ratio
+        == parsed_values["Regulator"]["pt_ratio"]
+    )
+    assert m["regulator_regxfmr_b18865_2_ctrl"].ct_ratio == None
+    assert m["regulator_regxfmr_b18865_2_ctrl"].bandwidth == 2
+    assert m["regulator_regxfmr_b18865_2_ctrl"].bandcenter == 124
+    assert m["regulator_regxfmr_b18865_2_ctrl"].voltage_limit == 0.0
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].connected_transformer == "regxfmr_b18865_2"
+    )
+    assert m["regulator_regxfmr_b18865_2_ctrl"].from_element == "b18865"
+    assert m["regulator_regxfmr_b18865_2_ctrl"].to_element == "b18865reg"
+    assert m["regulator_regxfmr_b18865_2_ctrl"].pt_phase == "C"
+    assert m["regulator_regxfmr_b18865_2_ctrl"].reactances == [0.01]
+    assert m["regulator_regxfmr_b18865_2_ctrl"].phase_shift == 0
+    assert m["regulator_regxfmr_b18865_2_ctrl"].feeder_name == "sourcebus_src"
+    assert m["regulator_regxfmr_b18865_2_ctrl"].setpoint == 124
+
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].connection_type == "Y"
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].connection_type == "Y"
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[0].rated_power == 10000 * 10 ** 3
+    )
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[1].rated_power == 10000 * 10 ** 3
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[0].emergency_power
+        == 15000 * 10 ** 3
+    )
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[1].emergency_power
+        == 15000 * 10 ** 3
+    )
+
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].resistance == 0.2
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].resistance == 0.2
+
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].voltage_type == None
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].voltage_type == None
+
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].voltage_limit == None
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].voltage_limit == None
+
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].reverse_resistance == None
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].reverse_resistance == None
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[0].phase_windings[0].tap_position
+        == 3
+    )
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[1].phase_windings[0].tap_position
+        == 3
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[0].phase_windings[0].phase == "C"
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[1].phase_windings[0].phase == "C"
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[0].phase_windings[0].compensator_r
+        == 0.0
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[1].phase_windings[0].compensator_r
+        == 0.0
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_2_ctrl"].windings[0].phase_windings[0].compensator_x
+        == 0.0
+    )
+
+    assert (
+        m["regulator_regxfmr_b18865_ctrl"].windings[1].phase_windings[0].compensator_x
+        == 0.0
+    )
+
     # Substation regulator from SMART-DS P4U region
     assert m["sb5_p4uhs0_4_trans_439"].name == "sb5_p4uhs0_4_trans_439"
     assert (
