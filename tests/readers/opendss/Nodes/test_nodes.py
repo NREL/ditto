@@ -25,7 +25,10 @@ def test_nodes():
 
     # test on the test_nodes.dss
     m = Store()
-    r = Reader(master_file=os.path.join(current_directory, "test_nodes.dss"))
+    r = Reader(
+        master_file=os.path.join(current_directory, "test_nodes.dss"),
+        buscoordinates_file=os.path.join(current_directory, "buscoord.dss"),
+    )
     r.parse(m)
     m.set_names()
 
