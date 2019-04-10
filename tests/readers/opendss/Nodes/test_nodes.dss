@@ -1,0 +1,18 @@
+Clear
+
+New Circuit.P4U bus1=sourcebus pu=0.99 basekV=230.0 R1=1.1208 X1=3.5169 R0=1.1208 X0=3.5169
+
+! Line1 connects sourcebus to bus1 and should have 4 wires: A, B, C, and N
+New Line.line1 Bus1=sourcebus.2.3 Bus2=bus1.2.3 phases=2 Length=100 units=m
+
+! Delta-Wye substation transformer from IEEE 8500 test system
+
+New Transformer.substation phases=3 windings=2 XHL=(8 1000 /)
+~ wdg=1 bus=sourcebus conn=delta kv=115 kva=5000 %r=(.5 1000 /) XHT=4
+~ wdg=2 bus=bus1 conn=wye kv=4.16 kva=5000 %r=(.5 1000 /)   XLT=4
+
+! Load
+New Load.load1 phases=3 bus1=b1 conn=wye kV=4.16 kW=5400 Kvar=4285 model=1
+
+Buscoords buscoords.dss
+Solve
