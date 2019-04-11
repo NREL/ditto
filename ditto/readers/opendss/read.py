@@ -266,7 +266,6 @@ class Reader(AbstractReader):
         .. warning: This has to be called last in parse.
         """
         model.set_names()
-        # import pdb;pdb.set_trace()
         AllBusNames = dss.Circuit.AllBusNames()
         for bus_name in AllBusNames:
             # Set the active bus
