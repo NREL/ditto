@@ -124,7 +124,9 @@ def test_transformer_kv():
     assert m["reg1"].normhkva == 1832.6
     assert m["reg1"].from_element == "bus1"
     assert m["reg1"].to_element == "bus2"
-    assert m["reg1"].reactances == parsed_values["Transformer"]["reactances"]
+    assert m["reg1"].reactances == pytest.approx(
+        parsed_values["Transformer"]["reactances"]
+    )
     assert m["reg1"].is_center_tap == 0
 
     assert (
