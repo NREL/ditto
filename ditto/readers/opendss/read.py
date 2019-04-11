@@ -2350,7 +2350,7 @@ class Reader(AbstractReader):
                 if _model == 8:
                     # Try to get the ZIPV coefficients
                     try:
-                        ZIPV = list(map(lambda x: float(data["ZIPV"])))
+                        ZIPV = list(map(lambda x: float(x), data["ZIPV"].split()))
                     except:
                         ZIPV = None
                         pass
@@ -2359,7 +2359,7 @@ class Reader(AbstractReader):
                     if ZIPV is not None:
                         _phase_loads[i].use_zip = True
 
-                        if not np.allclose(sum(ZIPV[:2]), 1.0) or not np.allclose(
+                        if not np.allclose(sum(ZIPV[:3]), 1.0) or not np.allclose(
                             sum(ZIPV[3:-1]), 1.0
                         ):
                             logger.warning(
