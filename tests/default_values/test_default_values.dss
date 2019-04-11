@@ -12,4 +12,4 @@ New Transformer.Reg1 phases=1 XHL=0.01 kVAs=[1666 1666]
 ~ Buses=[650.1 RG60.1] kVs=[2.4  2.4] %LoadLoss=0.01
 new regcontrol.Reg1  transformer=Reg1 winding=2  vreg=122  band=2  ptratio=20 ctprim=700  R=3   X=9 vlimit=0
 
-New load.load1 bus1=load.1 kW=1 pf=0.88 phases=1 kV=1 model=8 vminpu=0.0 vmaxpu=1.2
+New load.load1 bus1=load.1 kW=1 pf=0.88 phases=1 kV=1 vminpu=0.0 vmaxpu=1.2
