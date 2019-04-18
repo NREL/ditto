@@ -199,12 +199,12 @@ def test_linegeometries():
 
     for w in m["line2"].wires:
         assert w.emergency_ampacity == -1
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == 0.005588
         assert w.is_open is None
-        assert w.concentric_neutral_gmr == 2
-        assert w.concentric_neutral_resistance == 2.816666667
-        assert w.concentric_neutral_diameter == 0.064
-        assert w.concentric_neutral_outside_diameter == 1.16
+        assert w.concentric_neutral_gmr == 0.0508
+        assert w.concentric_neutral_resistance == 858.5200001016
+        assert w.concentric_neutral_diameter == 0.0016256
+        assert w.concentric_neutral_outside_diameter == 0.029463999999999997
         assert w.concentric_neutral_nstrand == 13
 
     phased_wires = {}

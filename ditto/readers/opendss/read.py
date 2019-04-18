@@ -1410,19 +1410,30 @@ class Reader(AbstractReader):
                         cndata = dss.utils.class_to_dataframe("CNData")
                         if cndata is not None:
                             for name, data in cndata.items():
-                                wires[p].concentric_neutral_gmr = float(
-                                    data["GmrStrand"]
+                                wires[
+                                    p
+                                ].concentric_neutral_gmr = self.convert_to_meters(
+                                    float(data["GmrStrand"]), data["GMRunits"]
                                 )
-                                wires[p].concentric_neutral_resistance = float(
-                                    data["Rstrand"]
+                                wires[
+                                    p
+                                ].concentric_neutral_resistance = self.convert_to_meters(
+                                    float(data["Rstrand"]), data["Runits"]
                                 )
-                                wires[p].concentric_neutral_diameter = float(
-                                    data["DiaStrand"]
+                                wires[
+                                    p
+                                ].concentric_neutral_diameter = self.convert_to_meters(
+                                    float(data["DiaStrand"]), data["radunits"]
                                 )
-                                wires[p].concentric_neutral_outside_diameter = float(
-                                    data["DiaCable"]
+                                wires[
+                                    p
+                                ].concentric_neutral_outside_diameter = self.convert_to_meters(
+                                    float(data["DiaCable"]), data["radunits"]
                                 )
                                 wires[p].concentric_neutral_nstrand = int(data["k"])
+                                wires[p].insulation_thickness = self.convert_to_meters(
+                                    float(data["InsLayer"]), data["radunits"]
+                                )
 
             api_line.wires = wires
             self._lines.append(api_line)
