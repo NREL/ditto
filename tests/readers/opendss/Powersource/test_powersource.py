@@ -20,7 +20,10 @@ current_directory = os.path.realpath(os.path.dirname(__file__))
 
 def test_powersource():
     m = Store()
-    r = Reader(master_file=os.path.join(current_directory, "test_powersource.dss"))
+    r = Reader(
+        master_file=os.path.join(current_directory, "test_powersource.dss"),
+        buscoordinates_file=os.path.join(current_directory, "buscoord.dss"),
+    )
     r.parse(m)
     m.set_names()
 
@@ -33,7 +36,8 @@ def test_powersource():
     assert m["Vsource.source"].zero_sequence_impedance == -43.376475 - 130.12942j
     assert m["Vsource.source"].positive_sequence_impedance == 25.660269 + 102.64108j
     assert m["Vsource.source"].connecting_element == "sourcebus"
-    # assert (m["Vsource.source"].phases) == set(["A", "B", "C"])
-    # assert (m["Vsource.source"].positions[0].long) == float(200)
-    # assert (m["Vsource.source"].positions[0].lat) == float(400)
-    # assert (m["Vsource.source"].positions[0].elevation) == 0
+    assert m["Vsource.source"].phases[0].default_value == "A"
+    assert m["Vsource.source"].phases[1].default_value == "B"
+    assert m["Vsource.source"].phases[2].default_value == "C"
+    assert (m["Vsource.source"].positions[0].long) == float(200)
+    assert (m["Vsource.source"].positions[0].lat) == float(400)

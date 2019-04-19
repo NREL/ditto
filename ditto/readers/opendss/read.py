@@ -452,6 +452,57 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            api_power_source.phases = list(
+                map(lambda x: Unicode(self.phase_mapping(x)), [1, 2, 3])
+            )
+
+            # Get the coordinate file
+            self.bus_coord_file = self.DSS_file_names["Nodes"]
+            skip_coordinate_parsing = False
+
+            try:
+                with open(self.bus_coord_file, "r") as g:
+                    coordinates = g.readlines()
+            except IOError:
+                skip_coordinate_parsing = True
+
+            X, Y = None, None
+            if not skip_coordinate_parsing:
+                for line in coordinates:
+                    if line.strip() == "":
+                        continue
+
+                    try:
+                        name, X, Y = list(
+                            map(
+                                lambda x: x.strip(),
+                                line.split(self.coordinates_delimiter),
+                            )
+                        )
+                        name = name.lower()
+                    except:
+                        logger.warning("Could not parse: " + str(line))
+                        name = None
+                        X = None
+                        Y = None
+                        pass
+
+                    try:
+                        X = float(X)
+                        Y = float(Y)
+                    except:
+                        logger.warning(
+                            "Could not cast coordinates {X}, {Y} for bus {name}".format(
+                                X=X, Y=Y, name=name
+                            )
+                        )
+                        pass
+
+            powersource_pos = Position(model)
+            powersource_pos.long = X
+            powersource_pos.lat = Y
+            api_power_source.positions.append(powersource_pos)
+
             try:
                 if "." in source_data["bus1"]:
                     api_power_source.connecting_element = source_data["bus1"].split(
