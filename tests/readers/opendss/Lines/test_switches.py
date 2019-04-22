@@ -44,7 +44,7 @@ def test_switches():
     assert set([w.phase for w in m["origin"].wires]) == set(["A", "B", "C"])
     assert m["origin"].name == "origin"
     assert m["origin"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["origin"].line_type == "underground"
+    assert m["origin"].line_type == None
     assert m["origin"].length == 0.001 * 1000  # units = km
     assert m["origin"].from_element == "sourcebus"
     assert m["origin"].to_element == "node1"
@@ -100,7 +100,7 @@ def test_switches():
     assert set([w.phase for w in m["switch1"].wires]) == set(["A", "B", "C"])
     assert m["switch1"].name == "switch1"
     assert m["switch1"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch1"].line_type == "underground"
+    assert m["switch1"].line_type == None
     assert m["switch1"].length == 0.001 * 1000
     assert m["switch1"].from_element == "node1"
     assert m["switch1"].to_element == "node2"
@@ -156,7 +156,7 @@ def test_switches():
     assert set([w.phase for w in m["switch2"].wires]) == set(["A", "B", "C"])
     assert m["switch2"].name == "switch2"
     assert m["switch2"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch2"].line_type == "underground"
+    assert m["switch2"].line_type == None
     assert m["switch2"].length == 0.001 * 1000
     assert m["switch2"].from_element == "node1"
     assert m["switch2"].to_element == "node3"
@@ -212,7 +212,7 @@ def test_switches():
     assert set([w.phase for w in m["switch3"].wires]) == set(["A", "B", "C"])
     assert m["switch3"].name == "switch3"
     assert m["switch3"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch3"].line_type == "underground"
+    assert m["switch3"].line_type == None
     assert m["switch3"].length == 0.001 * 1000
     assert m["switch3"].from_element == "node1"
     assert m["switch3"].to_element == "node4"
@@ -268,7 +268,7 @@ def test_switches():
     assert set([w.phase for w in m["switch4"].wires]) == set(["A", "B", "C"])
     assert m["switch4"].name == "switch4"
     assert m["switch4"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch4"].line_type == "underground"
+    assert m["switch4"].line_type == None
     assert m["switch4"].length == 0.001 * 1000
     assert m["switch4"].from_element == "node1"
     assert m["switch4"].to_element == "node5"
@@ -324,7 +324,7 @@ def test_switches():
     assert m["switch5"].wires[0].phase == "A"
     assert m["switch5"].name == "switch5"
     assert m["switch5"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch5"].line_type == "underground"
+    assert m["switch5"].line_type == None
     assert m["switch5"].length == 0.001 * 1000
     assert m["switch5"].from_element == "node1"
     assert m["switch5"].to_element == "node6"
@@ -360,7 +360,7 @@ def test_switches():
     assert m["switch6"].wires[0].phase == "C"
     assert m["switch6"].name == "switch6"
     assert m["switch6"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch6"].line_type == "underground"
+    assert m["switch6"].line_type == None
     assert m["switch6"].length == 0.001 * 1000
     assert m["switch6"].from_element == "node1"
     assert m["switch6"].to_element == "node7"
@@ -395,7 +395,7 @@ def test_switches():
     assert set([w.phase for w in m["switch7"].wires]) == set(["B", "C"])
     assert m["switch7"].name == "switch7"
     assert m["switch7"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch7"].line_type == "underground"
+    assert m["switch7"].line_type == None
     assert m["switch7"].length == 0.001 * 1000
     assert m["switch7"].from_element == "node1"
     assert m["switch7"].to_element == "node8"
@@ -437,7 +437,7 @@ def test_switches():
     assert set([w.phase for w in m["switch8"].wires]) == set(["A", "B"])
     assert m["switch8"].name == "switch8"
     assert m["switch8"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["switch8"].line_type == "underground"
+    assert m["switch8"].line_type == None
     assert m["switch8"].length == 0.001 * 1000
     assert m["switch8"].from_element == "node1"
     assert m["switch8"].to_element == "node9"

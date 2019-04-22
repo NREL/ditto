@@ -45,7 +45,7 @@ def test_fuses():
     assert set([w.phase for w in m["origin"].wires]) == set(["A", "B", "C"])
     assert m["origin"].name == "origin"
     assert m["origin"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["origin"].line_type == "underground"
+    assert m["origin"].line_type == None
     assert m["origin"].length == 0.001 * 1000  # units = km
     assert m["origin"].from_element == "sourcebus"
     assert m["origin"].to_element == "node1"
@@ -101,7 +101,7 @@ def test_fuses():
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C"])
     assert m["line1"].name == "line1"
     assert m["line1"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["line1"].line_type == "underground"
+    assert m["line1"].line_type == None
     assert m["line1"].length == 0.001 * 1000  # units = km
     assert m["line1"].from_element == "node1"
     assert m["line1"].to_element == "node2"
@@ -157,7 +157,7 @@ def test_fuses():
     assert m["line2"].wires[0].phase == "A"
     assert m["line2"].name == "line2"
     assert m["line2"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["line2"].line_type == "underground"
+    assert m["line2"].line_type == None
     assert m["line2"].length == 0.001 * 1000  # units = km
     assert m["line2"].from_element == "node1"
     assert m["line2"].to_element == "node3"
@@ -193,7 +193,7 @@ def test_fuses():
     assert m["line3"].wires[0].phase == "C"
     assert m["line3"].name == "line3"
     assert m["line3"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["line3"].line_type == "underground"
+    assert m["line3"].line_type == None
     assert m["line3"].length == 0.001 * 1000  # units = km
     assert m["line3"].from_element == "node1"
     assert m["line3"].to_element == "node4"
@@ -229,7 +229,7 @@ def test_fuses():
     assert set([w.phase for w in m["line4"].wires]) == set(["B", "C"])
     assert m["line4"].name == "line4"
     assert m["line4"].nominal_voltage == float(12.47) * 10 ** 3
-    assert m["line4"].line_type == "underground"
+    assert m["line4"].line_type == None
     assert m["line4"].length == 0.001 * 1000  # units = km
     assert m["line4"].from_element == "node1"
     assert m["line4"].to_element == "node4"

@@ -37,7 +37,7 @@ class Line(DiTToHasTraits):
         default_value=None,
     )
     line_type = Unicode(
-        help="""Whether the line is overhead or underground""", default_value="overhead"
+        help="""Whether the line is overhead or underground""", default_value=None
     )
     length = Float(
         help="""This parameter is the length of the Line.""", default_value=0

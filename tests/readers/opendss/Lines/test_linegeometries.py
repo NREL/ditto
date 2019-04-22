@@ -39,7 +39,7 @@ def test_linegeometries():
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C", "N"])
     assert m["line1"].name == "line1"
     assert m["line1"].nominal_voltage == float(4.8) * 10 ** 3
-    assert m["line1"].line_type == "underground"
+    assert m["line1"].line_type == "overhead"
     assert m["line1"].length == 300 * 0.3048  # units = ft
     assert m["line1"].from_element == "bus1"
     assert m["line1"].to_element == "bus2"

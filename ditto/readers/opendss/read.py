@@ -831,13 +831,6 @@ class Reader(AbstractReader):
 
             api_line.nameclass = linecode
 
-            # Based on naming convention.
-            # TODO: Find a cleaner way to get this information
-            if "OH" in linecode:
-                api_line.line_type = "overhead"
-            else:
-                api_line.line_type = "underground"
-
             # If we have a valid linecode, try to get the data
             if linecode is not None:
                 linecodes = dss.utils.class_to_dataframe("linecode")
@@ -1301,10 +1294,12 @@ class Reader(AbstractReader):
                                     this_line_wireData = CNData[
                                         "CNData.{}".format(cnname.split(".")[1])
                                     ]
+                                    api_line.line_type = "underground"
                             if is_cable is False:
                                 this_line_wireData = all_wire_data[
                                     "wiredata.{}".format(this_line_wireData_code)
                                 ]
+                                api_line.line_type = "overhead"
                         except:
                             logger.warning(
                                 "Could not get the wireData {wiredata} of lineGeometry {line_geom}".format(

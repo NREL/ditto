@@ -46,7 +46,7 @@ def test_line_length():
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C"])
     assert m["line1"].name == "line1"
     assert m["line1"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line1"].line_type == "underground"
+    assert m["line1"].line_type == None
     assert m["line1"].length == float(100)  # Units = meters
     assert m["line1"].from_element == "sourcebus"
     assert m["line1"].to_element == "bus1"
@@ -91,7 +91,7 @@ def test_line_length():
     assert set([w.phase for w in m["line2"].wires]) == set(["A", "B", "C"])
     assert m["line2"].name == "line2"
     assert m["line2"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line2"].line_type == "underground"
+    assert m["line2"].line_type == None
     assert m["line2"].length == float(83.47 * 304.8)  # units = kft
     assert m["line2"].from_element == "bus1"
     assert m["line2"].to_element == "bus2"
@@ -160,7 +160,7 @@ def test_line_length():
     assert set([w.phase for w in m["line3"].wires]) == set(["A", "C"])
     assert m["line3"].name == "line3"
     assert m["line3"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line3"].line_type == "underground"
+    assert m["line3"].line_type == None
     assert m["line3"].length == float(200 * 0.3048)  # units = ft
     assert m["line3"].from_element == "bus2"
     assert m["line3"].to_element == "bus3"
@@ -209,7 +209,7 @@ def test_line_length():
     assert m["line4"].wires[0].phase == "B"
     assert m["line4"].name == "line4"
     assert m["line4"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line4"].line_type == "underground"
+    assert m["line4"].line_type == None
     assert m["line4"].length == float(1.01 * 1609.34)  # units = mi
     assert m["line4"].from_element == "bus2"
     assert m["line4"].to_element == "bus4"
@@ -250,7 +250,7 @@ def test_line_length():
     assert set([w.phase for w in m["line5"].wires]) == set(["A", "B", "C"])
     assert m["line5"].name == "line5"
     assert m["line5"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line5"].line_type == "underground"
+    assert m["line5"].line_type == None
     assert m["line5"].length == float(2040.12 * 0.01)  # units = cm
     assert m["line5"].from_element == "bus2"
     assert m["line5"].to_element == "bus5"
@@ -295,7 +295,7 @@ def test_line_length():
     assert m["line6"].wires[0].phase == "A"
     assert m["line6"].name == "line6"
     assert m["line6"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line6"].line_type == "underground"
+    assert m["line6"].line_type == None
     assert m["line6"].length == float(1666.87 * 0.0254)  # units = in
     assert m["line6"].from_element == "bus2"
     assert m["line6"].to_element == "bus6"
@@ -333,7 +333,7 @@ def test_line_length():
     assert set([w.phase for w in m["line9"].wires]) == set(["A", "B", "C"])
     assert m["line9"].name == "line9"
     assert m["line9"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line9"].line_type == "underground"
+    assert m["line9"].line_type == None
     assert m["line9"].length == 1.01 * 1609.34  # units = mi
     assert m["line9"].from_element == "bus2"
     assert m["line9"].to_element == "bus9"
@@ -400,7 +400,7 @@ def test_line_length():
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C"])
     assert m["line10"].name == "line10"
     assert m["line10"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line10"].line_type == "underground"
+    assert m["line10"].line_type == None
     assert m["line10"].length == 1.01 * 1609.34  # units = mi
     assert m["line10"].from_element == "bus2"
     assert m["line10"].to_element == "bus10"
@@ -467,7 +467,7 @@ def test_line_length():
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C"])
     assert m["line11"].name == "line11"
     assert m["line11"].nominal_voltage == float(4.16) * 10 ** 3
-    assert m["line11"].line_type == "underground"
+    assert m["line11"].line_type == None
     assert m["line11"].length == 1.01 * 1609.34  # units = mi
     assert m["line11"].from_element == "bus2"
     assert m["line11"].to_element == "bus11"
