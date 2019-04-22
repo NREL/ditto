@@ -45,7 +45,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line1"].wires]) == set(["A", "B", "C"])
     assert m["line1"].nameclass == "3-1/0C_2/0CN_T"  # Linecode is 3-1/0C_2/0CN_T
-    assert m["line1"].line_type == "underground"  # OH not in linecode
+    assert m["line1"].line_type == None
     assert m["line1"].from_element == "bus1"
     assert m["line1"].to_element == "bus2"
     assert m["line1"].length == 10
@@ -100,7 +100,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line2"].wires]) == set(["C", "N"])
     assert m["line2"].nameclass == "1P_#8CU_#8N"  # Linecode is 1P_#8CU_#8N
-    assert m["line2"].line_type == "underground"  # OH not in linecode
+    assert m["line2"].line_type == None
     assert m["line2"].from_element == "bus2"
     assert m["line2"].to_element == "bus3"
     assert m["line2"].length == 10
@@ -158,7 +158,7 @@ def test_linecodes():
     assert (
         m["line3"].nameclass == "3P_3#500_AL_EPR_CD"
     )  # Linecode is 3P_3#500_AL_EPR_CD
-    assert m["line3"].line_type == "underground"  # OH not in linecode
+    assert m["line3"].line_type == None
     assert m["line3"].from_element == "bus2"
     assert m["line3"].to_element == "bus4"
     assert m["line3"].length == 10
@@ -212,7 +212,7 @@ def test_linecodes():
     assert (
         m["line4"].nameclass == "3ph_h-397_acsr397_acsr397_acsr2/0_acsr"
     )  # Linecode is 3ph_h-397_acsr397_acsr397_acsr2/0_acsr
-    assert m["line4"].line_type == "underground"  # OH not in linecode
+    assert m["line4"].line_type == None
     assert m["line4"].from_element == "bus4"
     assert m["line4"].to_element == "bus5"
     assert m["line4"].length == 10
@@ -271,7 +271,7 @@ def test_linecodes():
     assert (
         m["line5"].nameclass == "1ph-2_acsrxx4_acsr"
     )  # Linecode is 1ph-2_acsrxx4_acsr
-    assert m["line5"].line_type == "underground"  # OH not in linecode
+    assert m["line5"].line_type == None
     assert m["line5"].from_element == "bus5"
     assert m["line5"].to_element == "bus6"
     assert m["line5"].length == 10
@@ -310,7 +310,7 @@ def test_linecodes():
     assert (
         m["line6"].nameclass == "2ph_h-2_acsrx2_acsr2_acsr"
     )  # Linecode is 2ph_h-2_acsrx2_acsr2_acsr
-    assert m["line6"].line_type == "underground"  # OH not in linecode
+    assert m["line6"].line_type == None
     assert m["line6"].from_element == "bus5"
     assert m["line6"].to_element == "bus7"
     assert m["line6"].length == 10
@@ -354,7 +354,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line7"].wires]) == set(["A", "B"])
     assert m["line7"].nameclass == "750_Triplex"  # Linecode is 750_Triplex
-    assert m["line7"].line_type == "underground"  # OH not in linecode
+    assert m["line7"].line_type == None
     assert m["line7"].from_element == "bus5"
     assert m["line7"].to_element == "bus8"
     assert m["line7"].length == 10
@@ -398,7 +398,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line8"].wires]) == set(["B", "C"])
     assert m["line8"].nameclass == "4/0Triplex"  # Linecode is 4/0Triplex
-    assert m["line8"].line_type == "underground"  # OH not in linecode
+    assert m["line8"].line_type == None
     assert m["line8"].from_element == "bus5"
     assert m["line8"].to_element == "bus9"
     assert m["line8"].length == 10
@@ -441,7 +441,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line9"].wires]) == set(["A", "B", "C"])
     assert m["line9"].nameclass == "empty"  # Linecode is empty
-    assert m["line9"].line_type == "underground"  # OH not in linecode
+    assert m["line9"].line_type == None
     assert m["line9"].from_element == "bus4"
     assert m["line9"].to_element == "bus10"
     assert m["line9"].length == 10
@@ -497,7 +497,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line10"].wires]) == set(["A", "B", "C"])
     assert m["line10"].nameclass == "r1_only"  # Linecode is r1_only
-    assert m["line10"].line_type == "underground"  # OH not in linecode
+    assert m["line10"].line_type == None
     assert m["line10"].from_element == "bus10"
     assert m["line10"].to_element == "bus11"
     assert m["line10"].length == 10
@@ -553,7 +553,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line11"].wires]) == set(["A", "B", "C"])
     assert m["line11"].nameclass == "r0_only"  # Linecode is r0_only
-    assert m["line11"].line_type == "underground"  # OH not in linecode
+    assert m["line11"].line_type == None
     assert m["line11"].from_element == "bus11"
     assert m["line11"].to_element == "bus12"
     assert m["line11"].length == 10
@@ -609,7 +609,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line12"].wires]) == set(["A", "B", "C"])
     assert m["line12"].nameclass == "x1_only"  # Linecode is x1_only
-    assert m["line12"].line_type == "underground"  # OH not in linecode
+    assert m["line12"].line_type == None
     assert m["line12"].from_element == "bus12"
     assert m["line12"].to_element == "bus13"
     assert m["line12"].length == 10
@@ -665,7 +665,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line13"].wires]) == set(["A", "B", "C"])
     assert m["line13"].nameclass == "x0_only"  # Linecode is x0_only
-    assert m["line13"].line_type == "underground"  # OH not in linecode
+    assert m["line13"].line_type == None
     assert m["line13"].from_element == "bus13"
     assert m["line13"].to_element == "bus14"
     assert m["line13"].length == 10
@@ -721,7 +721,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line14"].wires]) == set(["A", "B", "C"])
     assert m["line14"].nameclass == "c1_only"  # Linecode is c1_only
-    assert m["line14"].line_type == "underground"  # OH not in linecode
+    assert m["line14"].line_type == None
     assert m["line14"].from_element == "bus14"
     assert m["line14"].to_element == "bus15"
     assert m["line14"].length == 10
@@ -777,7 +777,7 @@ def test_linecodes():
     #    Phases of the different wires
     assert set([w.phase for w in m["line15"].wires]) == set(["A", "B", "C"])
     assert m["line15"].nameclass == "c0_only"  # Linecode is c0_only
-    assert m["line15"].line_type == "underground"  # OH not in linecode
+    assert m["line15"].line_type == None
     assert m["line15"].from_element == "bus15"
     assert m["line15"].to_element == "bus16"
     assert m["line15"].length == 10

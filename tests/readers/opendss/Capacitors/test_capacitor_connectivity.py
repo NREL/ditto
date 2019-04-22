@@ -240,7 +240,7 @@ def test_capacitor_connectivity():
     assert (
         m["oh_b4904"].nameclass == "OH-3X_477AAC_4/0AAACN"
     )  # Linecode is OH-3X_477AAC_4/0AAACN
-    assert m["oh_b4904"].line_type == "overhead"  # OH in lincecode
+    assert m["oh_b4904"].line_type == None
     assert m["oh_b4904"].from_element == "b4909"
     assert m["oh_b4904"].to_element == "b4904"
     assert m["oh_b4904"].length == pytest.approx(161.84879)
@@ -377,7 +377,7 @@ def test_capacitor_connectivity():
     assert set([w.phase for w in m["oh_b18944"].wires]) == set(["A", "B", "C"])
     assert m["oh_b18944"].name == "oh_b18944"
     assert m["oh_b18944"].nameclass == "OH-3X_4CU_4CUN"  # Linecode is OH-3X_4CU_4CUN
-    assert m["oh_b18944"].line_type == "overhead"  # OH in lincecode
+    assert m["oh_b18944"].line_type == None
     assert m["oh_b18944"].from_element == "b18941"
     assert m["oh_b18944"].to_element == "b18944"
     assert m["oh_b18944"].length == pytest.approx(141.1224)
