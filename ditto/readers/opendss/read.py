@@ -856,7 +856,7 @@ class Reader(AbstractReader):
                     line_unit = linecode_data["units"]
                 except:
                     logger.warning(
-                        "Could not find the distance unit for line {name}. Using feet instead...".format(
+                        "Could not find the distance unit for line {name}. Using kilometers instead...".format(
                             name=name
                         )
                     )
@@ -1461,30 +1461,70 @@ class Reader(AbstractReader):
                         cndata = dss.utils.class_to_dataframe("CNData")
                         if cndata is not None:
                             for name, data in cndata.items():
-                                wires[
-                                    p
-                                ].concentric_neutral_gmr = self.convert_to_meters(
-                                    float(data["GmrStrand"]), data["GMRunits"]
-                                )
-                                wires[
-                                    p
-                                ].concentric_neutral_resistance = self.convert_to_meters(
-                                    float(data["Rstrand"]), data["Runits"]
-                                )
-                                wires[
-                                    p
-                                ].concentric_neutral_diameter = self.convert_to_meters(
-                                    float(data["DiaStrand"]), data["radunits"]
-                                )
-                                wires[
-                                    p
-                                ].concentric_neutral_outside_diameter = self.convert_to_meters(
-                                    float(data["DiaCable"]), data["radunits"]
-                                )
+                                try:
+                                    gmr_unit = data["GMRunits"]
+                                except:
+                                    logger(
+                                        "Could not find the GMRunits for {name}.".format(
+                                            name=name
+                                        )
+                                    )
+                                if gmr_unit is not None:
+                                    try:
+                                        wires[
+                                            p
+                                        ].concentric_neutral_gmr = self.convert_to_meters(
+                                            float(data["GmrStrand"]), gmr_unit
+                                        )
+                                    except:
+                                        logger("Could not convert to GMRunits")
+
+                                try:
+                                    r_unit = data["Runits"]
+                                except:
+                                    logger(
+                                        "Could not find the Runits for {name}.".format(
+                                            name=name
+                                        )
+                                    )
+                                if r_unit is not None:
+                                    try:
+                                        wires[
+                                            p
+                                        ].concentric_neutral_resistance = self.convert_to_meters(
+                                            float(data["Rstrand"]), r_unit
+                                        )
+                                    except:
+                                        logger("Could not convert to  Runits")
+
+                                try:
+                                    rad_unit = data["radunits"]
+                                except:
+                                    logger(
+                                        "Could not find the Radunits for {name}.".format(
+                                            name=name
+                                        )
+                                    )
+                                if rad_unit is not None:
+                                    try:
+                                        wires[
+                                            p
+                                        ].concentric_neutral_diameter = self.convert_to_meters(
+                                            float(data["DiaStrand"]), data["radunits"]
+                                        )
+                                        wires[
+                                            p
+                                        ].concentric_neutral_outside_diameter = self.convert_to_meters(
+                                            float(data["DiaCable"]), data["radunits"]
+                                        )
+                                        wires[
+                                            p
+                                        ].insulation_thickness = self.convert_to_meters(
+                                            float(data["InsLayer"]), data["radunits"]
+                                        )
+                                    except:
+                                        logger("Could not convert to radunits")
                                 wires[p].concentric_neutral_nstrand = int(data["k"])
-                                wires[p].insulation_thickness = self.convert_to_meters(
-                                    float(data["InsLayer"]), data["radunits"]
-                                )
 
             api_line.wires = wires
             self._lines.append(api_line)

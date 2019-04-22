@@ -143,7 +143,7 @@ def test_linecodes():
         assert w.ampacity == float(1)
         assert w.emergency_ampacity == float(1)
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -197,7 +197,7 @@ def test_linecodes():
         assert w.ampacity == float(1110)
         assert w.emergency_ampacity == float(1110)
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -256,7 +256,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -295,7 +295,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        # assert w.insulation_thickness is None # 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -340,7 +340,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        # assert w.insulation_thickness is None # 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.interrupting_rating is None
         assert w.concentric_neutral_gmr is None
@@ -384,7 +384,7 @@ def test_linecodes():
         assert w.ampacity == float(580)
         assert w.emergency_ampacity == float(580 * 1.25)
         assert w.resistance is None
-        # assert w.insulation_thickness is None # 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.interrupting_rating is None
         assert w.concentric_neutral_gmr is None
@@ -428,7 +428,7 @@ def test_linecodes():
         assert w.ampacity == float(156)
         assert w.emergency_ampacity == float(156 * 1.25)
         assert w.resistance is None
-        # assert w.insulation_thickness is None # 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -484,7 +484,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        # assert w.insulation_thickness is None # 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -540,7 +540,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -596,7 +596,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -652,7 +652,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -708,7 +708,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -764,7 +764,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None
@@ -820,7 +820,7 @@ def test_linecodes():
         assert w.ampacity == parsed_values["Wire"]["ampacity"]
         assert w.emergency_ampacity == parsed_values["Wire"]["emergency_ampacity"]
         assert w.resistance is None
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr is None
         assert w.concentric_neutral_resistance is None

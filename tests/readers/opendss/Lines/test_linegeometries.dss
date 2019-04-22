@@ -14,9 +14,9 @@ New Linegeometry.geometry_1 nconds=4 nphases=3
 ~ cond=4 Wire=wire2 x=0 h=14.648 ! units=m ! neutral
 
 New LineGeometry.geometry_2 nconds=3 nphases=3 units=ft
-~ cond=1 Wire=wire2 cncable=cndata1 x=-0.5 h= -4
-~ cond=2 Wire=wire2 cncable=cndata1 x=0   h= -4
-~ cond=3 Wire=wire2 cncable=cndata1 x=0.5  h= -4
+~ cond=1 cncable=cndata1 x=-0.5 h= -4
+~ cond=2 cncable=cndata1 x=0   h= -4
+~ cond=3 cncable=cndata1 x=0.5  h= -4
 
 New Line.Line1 Bus1=bus1.1.2.3 Bus2=bus2.1.2.3
 ~ Geometry= geometry_1
