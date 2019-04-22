@@ -63,7 +63,8 @@
    },
    "Wire":{
       "ampacity":400.0,
-      "emergency_ampacity":600.0
+      "emergency_ampacity":600.0,
+      "insulation_thickness":0
    },
    "Capacitor":{
       "connection_type":"Y",

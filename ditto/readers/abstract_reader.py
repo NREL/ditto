@@ -951,6 +951,11 @@ class AbstractReader(object):
                 "emergency_ampacity",
                 parsed_values.get("Wire", {}).get("emergency_ampacity", None),
             )
+            self.set_default_values(
+                obj,
+                "insulation_thickness",
+                parsed_values.get("Wire", {}).get("insulation_thickness", None),
+            )
             if type(obj).__name__ == "Capacitor":
                 self.set_default_values(
                     obj,

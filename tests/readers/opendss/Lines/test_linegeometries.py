@@ -106,7 +106,7 @@ def test_linegeometries():
 
     for w in m["line1"].wires:
         assert w.emergency_ampacity == -1
-        assert w.insulation_thickness == 0.0
+        assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr == None
         assert w.concentric_neutral_resistance == None
