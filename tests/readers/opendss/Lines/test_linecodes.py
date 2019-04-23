@@ -80,7 +80,7 @@ def test_linecodes():
     assert m["line1"].is_breaker is None
 
     for w in m["line1"].wires:
-        assert w.nameclass == "T"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -135,7 +135,7 @@ def test_linecodes():
     assert m["line2"].is_breaker is None
 
     for w in m["line2"].wires:
-        assert w.nameclass == "#8N"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -189,7 +189,7 @@ def test_linecodes():
     assert m["line3"].is_breaker is None
 
     for w in m["line3"].wires:
-        assert w.nameclass == "AL-EPR-CD"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -248,7 +248,7 @@ def test_linecodes():
     assert m["line4"].is_breaker is None
 
     for w in m["line4"].wires:
-        assert w.nameclass == "acsr397-acsr397-acsr2/0-acsr"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -287,7 +287,7 @@ def test_linecodes():
     assert m["line5"].is_breaker is None
 
     for w in m["line5"].wires:
-        assert w.nameclass == "acsr"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -332,7 +332,7 @@ def test_linecodes():
     assert m["line6"].is_breaker is None
 
     for w in m["line6"].wires:
-        assert w.nameclass == "acsrx2-acsr2-acsr"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -376,7 +376,7 @@ def test_linecodes():
     assert m["line7"].is_breaker is None
 
     for w in m["line7"].wires:
-        assert w.nameclass == "750_Triplex"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -420,7 +420,7 @@ def test_linecodes():
     assert m["line8"].is_breaker is None
 
     for w in m["line8"].wires:
-        assert w.nameclass == "4/0Triplex"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -476,7 +476,7 @@ def test_linecodes():
     assert m["line9"].is_breaker is None
 
     for w in m["line9"].wires:
-        assert w.nameclass == "empty"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -532,7 +532,7 @@ def test_linecodes():
     assert m["line10"].is_breaker is None
 
     for w in m["line10"].wires:
-        assert w.nameclass == "r1_only"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -588,7 +588,7 @@ def test_linecodes():
     assert m["line11"].is_breaker is None
 
     for w in m["line11"].wires:
-        assert w.nameclass == "r0_only"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -644,7 +644,7 @@ def test_linecodes():
     assert m["line12"].is_breaker is None
 
     for w in m["line12"].wires:
-        assert w.nameclass == "x1_only"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -700,7 +700,7 @@ def test_linecodes():
     assert m["line13"].is_breaker is None
 
     for w in m["line13"].wires:
-        assert w.nameclass == "x0_only"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -756,7 +756,7 @@ def test_linecodes():
     assert m["line14"].is_breaker is None
 
     for w in m["line14"].wires:
-        assert w.nameclass == "c1_only"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -812,7 +812,7 @@ def test_linecodes():
     assert m["line15"].is_breaker is None
 
     for w in m["line15"].wires:
-        assert w.nameclass == "c0_only"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None

@@ -135,7 +135,7 @@ def test_switches():
     assert m["switch1"].nameclass == "switch1"
 
     for w in m["switch1"].wires:
-        assert w.nameclass == "switch1"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -191,7 +191,7 @@ def test_switches():
     assert m["switch2"].nameclass == "switch2"
 
     for w in m["switch2"].wires:
-        assert w.nameclass == "switch2"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -247,7 +247,7 @@ def test_switches():
     assert m["switch3"].nameclass == "switch3"
 
     for w in m["switch3"].wires:
-        assert w.nameclass == "switch3"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -303,7 +303,7 @@ def test_switches():
     assert m["switch4"].nameclass == "switch4"
 
     for w in m["switch4"].wires:
-        assert w.nameclass == "switch4"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -339,7 +339,7 @@ def test_switches():
     assert m["switch5"].nameclass == "switch5"
 
     for w in m["switch5"].wires:
-        assert w.nameclass == "switch5"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -375,7 +375,7 @@ def test_switches():
     assert m["switch6"].nameclass == "switch6"
 
     for w in m["switch6"].wires:
-        assert w.nameclass == "switch6"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -416,7 +416,7 @@ def test_switches():
     assert m["switch7"].nameclass == "switch7"
 
     for w in m["switch7"].wires:
-        assert w.nameclass == "switch7"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -458,7 +458,7 @@ def test_switches():
     assert m["switch8"].nameclass == "switch8"
 
     for w in m["switch8"].wires:
-        assert w.nameclass == "switch8"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
