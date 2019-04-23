@@ -275,7 +275,7 @@ def test_capacitor_connectivity():
     assert m["oh_b4904"].is_breaker is None
 
     for w in m["oh_b4904"].wires:
-        assert w.nameclass == "4/0AAACN"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -412,7 +412,7 @@ def test_capacitor_connectivity():
     assert m["oh_b18944"].is_breaker is None
 
     for w in m["oh_b18944"].wires:
-        assert w.nameclass == "4CUN"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None

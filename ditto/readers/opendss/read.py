@@ -1067,15 +1067,7 @@ class Reader(AbstractReader):
                 # Initialize the wire nameclass with the linecode name
                 # This is just a best effort to get some information
                 # when no wiredata is provided...
-                try:
-                    wires[p].nameclass = reduce(
-                        lambda x, y: x + "-" + y, linecode.split("_")[2:]
-                    )  # RNM uses linecodes like "1P_OH_Pigeon_ACSR3/0"
-                except:
-                    try:
-                        wires[p].nameclass = api_line.nameclass
-                    except:
-                        pass
+                wires[p].nameclass = ""
 
                 if name in fuses_names:
                     wires[p].is_fuse = 1
