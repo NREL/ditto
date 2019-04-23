@@ -1612,6 +1612,28 @@ class Reader(AbstractReader):
                     )
                 )
 
+            # Voltage Type
+            if N_windings == 2:
+                if data["KVs"][0] > data["KVs"][1]:
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+            elif N_windings == 3:
+                if data["KVs"][0] == max(data["KVs"]):
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 2
+                elif data["KVs"][1] == max(data["KVs"]):
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+                    windings[2].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 0
+
             for w in range(N_windings):
 
                 windings.append(Winding(model))
