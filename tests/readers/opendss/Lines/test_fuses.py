@@ -136,7 +136,7 @@ def test_fuses():
     assert m["line1"].nameclass == "line1"
 
     for w in m["line1"].wires:
-        assert w.nameclass == "line1"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -172,7 +172,7 @@ def test_fuses():
     assert m["line2"].nameclass == "line2"
 
     for w in m["line2"].wires:
-        assert w.nameclass == "line2"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -208,7 +208,7 @@ def test_fuses():
     assert m["line3"].nameclass == "line3"
 
     for w in m["line3"].wires:
-        assert w.nameclass == "line3"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
@@ -250,7 +250,7 @@ def test_fuses():
     assert m["line4"].nameclass == "line4"
 
     for w in m["line4"].wires:
-        assert w.nameclass == "line4"
+        assert w.nameclass == ""
         assert w.X is None
         assert w.Y is None
         assert w.diameter is None
