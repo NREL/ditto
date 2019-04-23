@@ -915,6 +915,7 @@ class Writer(AbstractWriter):
                         #
                         # If we have a switch, we just use default because there is no way (to my knowledge)
                         # to provide the impedance matrix for a switch in CYME
+                        frequency = 60  # Need to make this changable
                         if line_type == "switch":
                             if (
                                 i.nameclass is not None
@@ -1237,7 +1238,6 @@ class Writer(AbstractWriter):
 
                         elif line_type == "underground":
                             tt = {}
-                            frequency = 60  # Need to make this changable
                             if (
                                 hasattr(i, "nominal_voltage")
                                 and i.nominal_voltage is not None
