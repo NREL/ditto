@@ -71,8 +71,8 @@ def test_transformer_kv():
     assert m["substation"].windings[0].resistance == 0.0005
     assert m["substation"].windings[1].resistance == 0.0005
 
-    assert m["substation"].windings[0].voltage_type == None
-    assert m["substation"].windings[1].voltage_type == None
+    assert m["substation"].windings[0].voltage_type == 0
+    assert m["substation"].windings[1].voltage_type == 2
 
     assert m["substation"].windings[0].voltage_limit == None
     assert m["substation"].windings[1].voltage_limit == None
@@ -147,8 +147,8 @@ def test_transformer_kv():
     assert m["reg1"].windings[0].resistance == 0.2
     assert m["reg1"].windings[1].resistance == 0.2
 
-    assert m["reg1"].windings[0].voltage_type == None
-    assert m["reg1"].windings[1].voltage_type == None
+    assert m["reg1"].windings[0].voltage_type == 0
+    assert m["reg1"].windings[1].voltage_type == 2
 
     assert m["reg1"].windings[0].voltage_limit == None
     assert m["reg1"].windings[1].voltage_limit == None
@@ -215,8 +215,8 @@ def test_transformer_kv():
     assert m["xfm1"].windings[0].resistance == 0.55
     assert m["xfm1"].windings[1].resistance == 0.55
 
-    assert m["xfm1"].windings[0].voltage_type == None
-    assert m["xfm1"].windings[1].voltage_type == None
+    assert m["xfm1"].windings[0].voltage_type == 0
+    assert m["xfm1"].windings[1].voltage_type == 2
 
     assert m["xfm1"].windings[0].voltage_limit == None
     assert m["xfm1"].windings[1].voltage_limit == None
@@ -278,8 +278,8 @@ def test_transformer_kv():
     assert m["t1"].windings[0].resistance == 0.5
     assert m["t1"].windings[1].resistance == 0.5
 
-    assert m["t1"].windings[0].voltage_type == None
-    assert m["t1"].windings[1].voltage_type == None
+    assert m["t1"].windings[0].voltage_type == 0
+    assert m["t1"].windings[1].voltage_type == 2
 
     assert m["t1"].windings[0].voltage_limit == None
     assert m["t1"].windings[1].voltage_limit == None
@@ -335,8 +335,8 @@ def test_transformer_kv():
         0.4808326112068522, 0.0000001
     )
 
-    assert m["sb5_p4uhs0_4_trans_439"].windings[0].voltage_type == None
-    assert m["sb5_p4uhs0_4_trans_439"].windings[1].voltage_type == None
+    assert m["sb5_p4uhs0_4_trans_439"].windings[0].voltage_type == 0
+    assert m["sb5_p4uhs0_4_trans_439"].windings[1].voltage_type == 2
 
     assert m["sb5_p4uhs0_4_trans_439"].windings[0].voltage_limit == None
     assert m["sb5_p4uhs0_4_trans_439"].windings[1].voltage_limit == None
@@ -430,8 +430,8 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)"].windings[0].resistance == 0.87204
     assert m["tr(r:p4udt27-p4udt27lv)"].windings[1].resistance == 0.87204
 
-    assert m["tr(r:p4udt27-p4udt27lv)"].windings[0].voltage_type == None
-    assert m["tr(r:p4udt27-p4udt27lv)"].windings[1].voltage_type == None
+    assert m["tr(r:p4udt27-p4udt27lv)"].windings[0].voltage_type == 0
+    assert m["tr(r:p4udt27-p4udt27lv)"].windings[1].voltage_type == 2
 
     assert m["tr(r:p4udt27-p4udt27lv)"].windings[0].voltage_limit == None
     assert m["tr(r:p4udt27-p4udt27lv)"].windings[1].voltage_limit == None
@@ -539,8 +539,8 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[0].resistance == 0.87204
     assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[1].resistance == 0.87204
 
-    assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[0].voltage_type == None
-    assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[1].voltage_type == None
+    assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[0].voltage_type == 0
+    assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[1].voltage_type == 2
 
     assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[0].voltage_limit == None
     assert m["tr(r:p4udt27-p4udt27lv)_1"].windings[1].voltage_limit == None
@@ -660,8 +660,8 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[0].resistance == 0.87204
     assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[1].resistance == 0.87204
 
-    assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[0].voltage_type == None
-    assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[1].voltage_type == None
+    assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[0].voltage_type == 0
+    assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[1].voltage_type == 2
 
     assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[0].voltage_limit == None
     assert m["tr(r:p4udt27-p4udt27lv)_2"].windings[1].voltage_limit == None
@@ -781,8 +781,8 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[0].resistance == 0.87204
     assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[1].resistance == 0.87204
 
-    assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[0].voltage_type == None
-    assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[1].voltage_type == None
+    assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[0].voltage_type == 0
+    assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[1].voltage_type == 2
 
     assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[0].voltage_limit == None
     assert m["tr(r:p4udt27-p4udt27lv)_3"].windings[1].voltage_limit == None
@@ -909,9 +909,9 @@ def test_transformer_kv():
     assert m["tr(r:p4udt25-p4udt25lv)"].windings[1].resistance == 0.532544
     assert m["tr(r:p4udt25-p4udt25lv)"].windings[2].resistance == 0.532544
 
-    assert m["tr(r:p4udt25-p4udt25lv)"].windings[0].voltage_type == None
-    assert m["tr(r:p4udt25-p4udt25lv)"].windings[1].voltage_type == None
-    assert m["tr(r:p4udt25-p4udt25lv)"].windings[2].voltage_type == None
+    assert m["tr(r:p4udt25-p4udt25lv)"].windings[0].voltage_type == 0
+    assert m["tr(r:p4udt25-p4udt25lv)"].windings[1].voltage_type == 2
+    assert m["tr(r:p4udt25-p4udt25lv)"].windings[2].voltage_type == 2
 
     assert m["tr(r:p4udt25-p4udt25lv)"].windings[0].voltage_limit == None
     assert m["tr(r:p4udt25-p4udt25lv)"].windings[1].voltage_limit == None
@@ -999,9 +999,9 @@ def test_transformer_kv():
     assert m["t21396254a"].windings[1].resistance == 1.2
     assert m["t21396254a"].windings[2].resistance == 1.2
 
-    assert m["t21396254a"].windings[0].voltage_type == None
-    assert m["t21396254a"].windings[1].voltage_type == None
-    assert m["t21396254a"].windings[2].voltage_type == None
+    assert m["t21396254a"].windings[0].voltage_type == 0
+    assert m["t21396254a"].windings[1].voltage_type == 2
+    assert m["t21396254a"].windings[2].voltage_type == 2
 
     assert m["t21396254a"].windings[0].voltage_limit == None
     assert m["t21396254a"].windings[1].voltage_limit == None
@@ -1057,8 +1057,8 @@ def test_transformer_kv():
     assert m["feeder_rega"].windings[0].resistance == 0.0005
     assert m["feeder_rega"].windings[1].resistance == 0.0005
 
-    assert m["feeder_rega"].windings[0].voltage_type == None
-    assert m["feeder_rega"].windings[1].voltage_type == None
+    assert m["feeder_rega"].windings[0].voltage_type == 0
+    assert m["feeder_rega"].windings[1].voltage_type == 2
 
     assert m["feeder_rega"].windings[0].voltage_limit == None
     assert m["feeder_rega"].windings[1].voltage_limit == None
@@ -1114,8 +1114,8 @@ def test_transformer_kv():
     assert m["b13659-1c"].windings[0].resistance == 0.52
     assert m["b13659-1c"].windings[1].resistance == 0.52
 
-    assert m["b13659-1c"].windings[0].voltage_type == None
-    assert m["b13659-1c"].windings[1].voltage_type == None
+    assert m["b13659-1c"].windings[0].voltage_type == 0
+    assert m["b13659-1c"].windings[1].voltage_type == 2
 
     assert m["b13659-1c"].windings[0].voltage_limit == None
     assert m["b13659-1c"].windings[1].voltage_limit == None
@@ -1171,8 +1171,8 @@ def test_transformer_kv():
     assert m["b4551-1a"].windings[0].resistance == 0.52
     assert m["b4551-1a"].windings[1].resistance == 0.52
 
-    assert m["b4551-1a"].windings[0].voltage_type == None
-    assert m["b4551-1a"].windings[1].voltage_type == None
+    assert m["b4551-1a"].windings[0].voltage_type == 0
+    assert m["b4551-1a"].windings[1].voltage_type == 2
 
     assert m["b4551-1a"].windings[0].voltage_limit == None
     assert m["b4551-1a"].windings[1].voltage_limit == None
@@ -1228,8 +1228,8 @@ def test_transformer_kv():
     assert m["5865228330a-1abc"].windings[0].resistance == 0.35
     assert m["5865228330a-1abc"].windings[1].resistance == 0.35
 
-    assert m["5865228330a-1abc"].windings[0].voltage_type == None
-    assert m["5865228330a-1abc"].windings[1].voltage_type == None
+    assert m["5865228330a-1abc"].windings[0].voltage_type == 0
+    assert m["5865228330a-1abc"].windings[1].voltage_type == 2
 
     assert m["5865228330a-1abc"].windings[0].voltage_limit == None
     assert m["5865228330a-1abc"].windings[1].voltage_limit == None
@@ -1297,8 +1297,8 @@ def test_transformer_kv():
     assert m["t1_1"].windings[0].resistance == 0.5
     assert m["t1_1"].windings[1].resistance == 0.5
 
-    assert m["t1_1"].windings[0].voltage_type == None
-    assert m["t1_1"].windings[1].voltage_type == None
+    assert m["t1_1"].windings[0].voltage_type == 0
+    assert m["t1_1"].windings[1].voltage_type == 2
 
     assert m["t1_1"].windings[0].voltage_limit == None
     assert m["t1_1"].windings[1].voltage_limit == None
@@ -1348,8 +1348,8 @@ def test_transformer_kv():
     assert m["t1_2"].windings[0].resistance == 0.5
     assert m["t1_2"].windings[1].resistance == 0.5
 
-    assert m["t1_2"].windings[0].voltage_type == None
-    assert m["t1_2"].windings[1].voltage_type == None
+    assert m["t1_2"].windings[0].voltage_type == 0
+    assert m["t1_2"].windings[1].voltage_type == 2
 
     assert m["t1_2"].windings[0].voltage_limit == None
     assert m["t1_2"].windings[1].voltage_limit == None

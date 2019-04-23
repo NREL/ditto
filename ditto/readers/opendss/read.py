@@ -1650,6 +1650,28 @@ class Reader(AbstractReader):
                 for pw in phase_windings:
                     windings[w].phase_windings.append(pw)
 
+            # Voltage Type
+            if N_windings == 2:
+                if float(data["kVs"][0]) >= float(data["kVs"][1]):
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+            elif N_windings == 3:
+                if float(data["kVs"][0]) == max(list(map(float, data["kVs"]))):
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 2
+                elif float(data["kVs"][1]) == max(list(map(float, data["kVs"]))):
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+                    windings[2].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 0
+
             # Store the winding objects in the transformer object
             for ww in windings:
                 api_transformer.windings.append(ww)
@@ -1922,7 +1944,6 @@ class Reader(AbstractReader):
         self._capacitors = []
 
         for name, data in capacitors.items():
-
             # Skip Capacitor object if disabled
             if not data["enabled"]:
                 continue
