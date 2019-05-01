@@ -1448,7 +1448,7 @@ class Reader(AbstractReader):
                     lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
                 )
                 # if there is no load information in the kvar and kw, try to get information out from the kva information
-                LoadPF=0.88
+                LoadPF=0.95
                 LoadQFactor=(1-LoadPF**2)**0.5
 
                 PLoadkva = map(
