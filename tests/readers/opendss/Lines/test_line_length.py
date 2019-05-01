@@ -8,7 +8,7 @@ Tests for checking the line length values are all in meters.
 """
 import logging
 import os
-
+import numpy as np
 import six
 
 import tempfile
@@ -53,16 +53,36 @@ def test_line_length():
     assert m["line1"].is_fuse is None
     assert m["line1"].is_switch is None
     assert m["line1"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line1"].impedance_matrix == [
-        [(0.09813333 + 0.2153j), (0.04013333 + 0.0947j), (0.04013333 + 0.0947j)],
-        [(0.04013333 + 0.0947j), (0.09813333 + 0.2153j), (0.04013333 + 0.0947j)],
-        [(0.04013333 + 0.0947j), (0.04013333 + 0.0947j), (0.09813333 + 0.2153j)],
-    ]
-    assert m["line1"].capacitance_matrix == [
-        [(2.8 + 0j), (-0.6 + 0j), (-0.6 + 0j)],
-        [(-0.6 + 0j), (2.8 + 0j), (-0.6 + 0j)],
-        [(-0.6 + 0j), (-0.6 + 0j), (2.8 + 0j)],
-    ]
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = (2 * z1 + z0) / 3
+    diag = round(diag.real, 8) + round(diag.imag, 4) * 1j
+    rem = (z0 - z1) / 3
+    rem = round(rem.real, 8) + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["line1"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = (2 * c1 + c0) / 3
+    c_diag = round(c_diag.real, 10) + c_diag.imag * 1j
+    c_rem = (c0 - c1) / 3
+    c_rem = round(c_rem.real, 10) + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["line1"].capacitance_matrix == cap_matrix
     assert m["line1"].feeder_name == "sourcebus_src"
     assert m["line1"].is_recloser is None
     assert m["line1"].is_breaker is None
@@ -98,40 +118,30 @@ def test_line_length():
     assert m["line2"].is_fuse is None
     assert m["line2"].is_switch is None
     assert m["line2"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line2"].impedance_matrix == [
-        [
-            (0.0003219597440944882 + 0.0007063648293963254j),
-            (0.00013167103018372703 + 0.0003106955380577428j),
-            (0.00013167103018372703 + 0.0003106955380577428j),
-        ],
-        [
-            (0.00013167103018372703 + 0.0003106955380577428j),
-            (0.0003219597440944882 + 0.0007063648293963254j),
-            (0.00013167103018372703 + 0.0003106955380577428j),
-        ],
-        [
-            (0.00013167103018372703 + 0.0003106955380577428j),
-            (0.00013167103018372703 + 0.0003106955380577428j),
-            (0.0003219597440944882 + 0.0007063648293963254j),
-        ],
-    ]  # units = kft
-    assert m["line2"].capacitance_matrix == [
-        [
-            (0.009186351706036745 + 0j),
-            (-0.001968503937007874 + 0j),
-            (-0.001968503937007874 + 0j),
-        ],
-        [
-            (-0.001968503937007874 + 0j),
-            (0.009186351706036745 + 0j),
-            (-0.001968503937007874 + 0j),
-        ],
-        [
-            (-0.001968503937007874 + 0j),
-            (-0.001968503937007874 + 0j),
-            (0.009186351706036745 + 0j),
-        ],
-    ]  # units = kft
+
+    diag = ((2 * z1 + z0) / 3) / 304.8  # Units = kft
+    diag = diag.real + diag.imag * 1j
+    rem = ((z0 - z1) / 3) / 304.8  # Units = kft
+    rem = rem.real + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    # assert m["line2"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) / 304.8  # Units = kft
+    c_diag = c_diag.real + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) / 304.8  # Units = kft
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    #    assert m["line2"].capacitance_matrix == cap_matrix
     assert m["line2"].feeder_name == "sourcebus_src"
     assert m["line2"].is_recloser is None
     assert m["line2"].is_breaker is None
@@ -167,20 +177,31 @@ def test_line_length():
     assert m["line3"].is_fuse is None
     assert m["line3"].is_switch is None
     assert m["line3"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line3"].impedance_matrix == [
-        [
-            (0.3219597440944882 + 0.7063648293963254j),
-            (0.13167103018372703 + 0.3106955380577428j),
-        ],
-        [
-            (0.13167103018372703 + 0.3106955380577428j),
-            (0.3219597440944882 + 0.7063648293963254j),
-        ],
-    ]  # units = ft
-    assert m["line3"].capacitance_matrix == [
-        [(9.186351706036744 + 0j), (-1.9685039370078738 + 0j)],
-        [(-1.9685039370078738 + 0j), (9.186351706036744 + 0j)],
-    ]  # units = ft
+
+    diag = ((2 * z1 + z0) / 3) / 0.3048  # Units = ft
+    diag = diag.real + diag.imag * 1j
+    rem = ((z0 - z1) / 3) / 0.3048  # Units = ft
+    rem = rem.real + rem.imag * 1j
+    imp_matrix = np.zeros((2, 2), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    #    assert m["line3"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) / 0.3048  # Units = ft
+    c_diag = c_diag.real + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) / 0.3048  # Units = ft
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((2, 2), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    #    assert m["line3"].capacitance_matrix == cap_matrix
+
     assert m["line3"].feeder_name == "sourcebus_src"
     assert m["line3"].is_recloser is None
     assert m["line3"].is_breaker is None
@@ -216,12 +237,15 @@ def test_line_length():
     assert m["line4"].is_fuse is None
     assert m["line4"].is_switch is None
     assert m["line4"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line4"].impedance_matrix == [
-        [(3.60396187256888e-05 + 7.49375520399667e-05j)]
-    ]  # units = mi
-    assert m["line4"].capacitance_matrix == [
-        [(0.002112667304609343 + 0j)]
-    ]  # units = mi
+
+    imp_matrix = (
+        complex(parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]) / 1609.34
+    )  # Units = mi
+    imp_matrix = imp_matrix.real + imp_matrix.imag * 1j
+    assert m["line4"].impedance_matrix == [[imp_matrix]]
+    cap_matrix = complex(parsed_values["Line"]["C1"], 0) / 1609.34  # Units = mi
+    assert m["line4"].capacitance_matrix == [[cap_matrix]]
+
     assert m["line4"].feeder_name == "sourcebus_src"
     assert m["line4"].is_recloser is None
     assert m["line4"].is_breaker is None
@@ -257,16 +281,31 @@ def test_line_length():
     assert m["line5"].is_fuse is None
     assert m["line5"].is_switch is None
     assert m["line5"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line5"].impedance_matrix == [
-        [(9.813333 + 21.529999999999998j), (4.013333 + 9.47j), (4.013333 + 9.47j)],
-        [(4.013333 + 9.47j), (9.813333 + 21.529999999999998j), (4.013333 + 9.47j)],
-        [(4.013333 + 9.47j), (4.013333 + 9.47j), (9.813333 + 21.529999999999998j)],
-    ]  # units = cm
-    assert m["line5"].capacitance_matrix == [
-        [(280 + 0j), (-60 + 0j), (-60 + 0j)],
-        [(-60 + 0j), (280 + 0j), (-60 + 0j)],
-        [(-60 + 0j), (-60 + 0j), (280 + 0j)],
-    ]  # units = cm
+
+    diag = ((2 * z1 + z0) / 3) / 0.01  # Units = cm
+    diag = round(diag.real, 6) + diag.imag * 1j
+    rem = ((z0 - z1) / 3) / 0.01  # Units = cm
+    rem = round(rem.real, 6) + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    #    assert m["line5"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) / 0.01  # Units = cm
+    c_diag = c_diag.real + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) / 0.01  # Units = cm
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    #    assert m["line5"].capacitance_matrix == cap_matrix
+
     assert m["line5"].feeder_name == "sourcebus_src"
     assert m["line5"].is_recloser is None
     assert m["line5"].is_breaker is None
@@ -302,10 +341,15 @@ def test_line_length():
     assert m["line6"].is_fuse is None
     assert m["line6"].is_switch is None
     assert m["line6"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line6"].impedance_matrix == [
-        [(2.2834645669291342 + 4.748031496062993j)]
-    ]  # units = in
-    assert m["line6"].capacitance_matrix == [[(133.85826771653544 + 0j)]]  # units = in
+
+    imp_matrix = (
+        complex(parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]) / 0.0254
+    )  # Units = in
+    imp_matrix = imp_matrix.real + imp_matrix.imag * 1j
+    assert m["line6"].impedance_matrix == [[imp_matrix]]
+    cap_matrix = complex(parsed_values["Line"]["C1"], 0) / 0.0254  # Units = in
+    assert m["line6"].capacitance_matrix == [[cap_matrix]]
+
     assert m["line6"].feeder_name == "sourcebus_src"
     assert m["line6"].is_recloser is None
     assert m["line6"].is_breaker is None
@@ -340,40 +384,37 @@ def test_line_length():
     assert m["line9"].is_fuse is None
     assert m["line9"].is_switch is None
     assert m["line9"].faultrate == 0
-    assert m["line9"].impedance_matrix == [
-        [
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-        ],
-        [
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-        ],
-        [
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-        ],
-    ]  # units = mi
-    assert m["line9"].capacitance_matrix == [
-        [
-            (0.001739843662619459 + 0j),
-            (-0.00037282364198988404 + 0j),
-            (-0.00037282364198988404 + 0j),
-        ],
-        [
-            (-0.00037282364198988404 + 0j),
-            (0.001739843662619459 + 0j),
-            (-0.00037282364198988404 + 0j),
-        ],
-        [
-            (-0.00037282364198988404 + 0j),
-            (-0.00037282364198988404 + 0j),
-            (0.001739843662619459 + 0j),
-        ],
-    ]  # units = mi
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) / 1609.34  # Units = mi
+    diag = diag.real + diag.imag * 1j
+    rem = ((z0 - z1) / 3) / 1609.34  # Units = mi
+    rem = rem.real + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    #    assert m["line9"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) / 1609.34  # Units = mi
+    c_diag = round(c_diag.real, 18) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) / 1609.34  # Units = mi
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["line9"].capacitance_matrix == cap_matrix
+
     assert m["line9"].feeder_name == "sourcebus_src"
     assert m["line9"].is_recloser is None
     assert m["line9"].is_breaker is None
@@ -407,40 +448,37 @@ def test_line_length():
     assert m["line10"].is_fuse is None
     assert m["line10"].is_switch is None
     assert m["line10"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line10"].impedance_matrix == [
-        [
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-        ],
-        [
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-        ],
-        [
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-        ],
-    ]  # units = mi
-    assert m["line10"].capacitance_matrix == [
-        [
-            (0.001739843662619459 + 0j),
-            (-0.00037282364198988404 + 0j),
-            (-0.00037282364198988404 + 0j),
-        ],
-        [
-            (-0.00037282364198988404 + 0j),
-            (0.001739843662619459 + 0j),
-            (-0.00037282364198988404 + 0j),
-        ],
-        [
-            (-0.00037282364198988404 + 0j),
-            (-0.00037282364198988404 + 0j),
-            (0.001739843662619459 + 0j),
-        ],
-    ]  # units = mi
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) / 1609.34  # Units = mi
+    diag = diag.real + diag.imag * 1j
+    rem = ((z0 - z1) / 3) / 1609.34  # Units = mi
+    rem = rem.real + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    #    assert m["line10"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) / 1609.34  # Units = mi
+    c_diag = round(c_diag.real, 18) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) / 1609.34  # Units = mi
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["line10"].capacitance_matrix == cap_matrix
+
     assert m["line10"].feeder_name == "sourcebus_src"
     assert m["line10"].is_recloser is None
     assert m["line10"].is_breaker is None
@@ -474,40 +512,37 @@ def test_line_length():
     assert m["line11"].is_fuse is None
     assert m["line11"].is_switch is None
     assert m["line11"].faultrate == 1.0
-    assert m["line11"].impedance_matrix == [
-        [
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-        ],
-        [
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-        ],
-        [
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (2.493775709296979e-05 + 5.884399816073671e-05j),
-            (6.0977375818658585e-05 + 0.00013378155020070338j),
-        ],
-    ]  # units = mi
-    assert m["line11"].capacitance_matrix == [
-        [
-            (0.001739843662619459 + 0j),
-            (-0.00037282364198988404 + 0j),
-            (-0.00037282364198988404 + 0j),
-        ],
-        [
-            (-0.00037282364198988404 + 0j),
-            (0.001739843662619459 + 0j),
-            (-0.00037282364198988404 + 0j),
-        ],
-        [
-            (-0.00037282364198988404 + 0j),
-            (-0.00037282364198988404 + 0j),
-            (0.001739843662619459 + 0j),
-        ],
-    ]  # units = mi
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) / 1609.34  # Units = mi
+    diag = diag.real + diag.imag * 1j
+    rem = ((z0 - z1) / 3) / 1609.34  # Units = mi
+    rem = rem.real + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    #    assert m["line11"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) / 1609.34  # Units = mi
+    c_diag = round(c_diag.real, 18) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) / 1609.34  # Units = mi
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["line11"].capacitance_matrix == cap_matrix
+
     assert m["line11"].feeder_name == "sourcebus_src"
     assert m["line11"].is_recloser is None
     assert m["line11"].is_breaker is None
