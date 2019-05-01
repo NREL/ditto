@@ -8,6 +8,7 @@ Tests for fuse attribute of Line
 """
 import logging
 import os
+import numpy as np
 
 import six
 
@@ -52,28 +53,36 @@ def test_fuses():
     assert m["origin"].is_fuse is None
     assert m["origin"].is_switch is None
     assert m["origin"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["origin"].impedance_matrix == [
-        [
-            (9.813333e-05 + 0.0002153j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-        ],
-        [
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (9.813333e-05 + 0.0002153j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-        ],
-        [
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (9.813333e-05 + 0.0002153j),
-        ],
-    ]  # units = km
-    assert m["origin"].capacitance_matrix == [
-        [(0.0028 + 0j), (-0.0006 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (0.0028 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (-0.0006 + 0j), (0.0028 + 0j)],
-    ]  # units = km
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units = km
+    rem = round(rem.real, 11) + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["origin"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 10) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = round(c_rem.real, 10) + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["origin"].capacitance_matrix == cap_matrix
     assert m["origin"].feeder_name == "sourcebus_src"
     assert m["origin"].is_recloser is None
     assert m["origin"].is_breaker is None
@@ -108,28 +117,8 @@ def test_fuses():
     assert m["line1"].is_fuse == 1
     assert m["line1"].is_switch is None
     assert m["line1"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line1"].impedance_matrix == [
-        [
-            (9.813333e-05 + 0.0002153j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-        ],
-        [
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (9.813333e-05 + 0.0002153j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-        ],
-        [
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (9.813333e-05 + 0.0002153j),
-        ],
-    ]  # units = km
-    assert m["line1"].capacitance_matrix == [
-        [(0.0028 + 0j), (-0.0006 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (0.0028 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (-0.0006 + 0j), (0.0028 + 0j)],
-    ]  # units = km
+    assert m["line1"].impedance_matrix == imp_matrix
+    assert m["line1"].capacitance_matrix == cap_matrix
     assert m["line1"].feeder_name == "sourcebus_src"
     assert m["line1"].is_recloser is None
     assert m["line1"].is_breaker is None
@@ -164,8 +153,13 @@ def test_fuses():
     assert m["line2"].is_fuse == 1
     assert m["line2"].is_switch is None
     assert m["line2"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line2"].impedance_matrix == [[(5.8e-05 + 0.0001206j)]]  # units = km
-    assert m["line2"].capacitance_matrix == [[(0.0034 + 0j)]]  # units = km
+    imp_matrix = (
+        complex(parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]) * 0.001
+    )  # Units = km
+    imp_matrix = round(imp_matrix.real, 9) + imp_matrix.imag * 1j
+    assert m["line2"].impedance_matrix == [[imp_matrix]]
+    cap_matrix = complex(parsed_values["Line"]["C1"], 0) * 0.001  # Units = km
+    assert m["line2"].capacitance_matrix == [[cap_matrix]]  # units = km
     assert m["line2"].feeder_name == "sourcebus_src"
     assert m["line2"].is_recloser is None
     assert m["line2"].is_breaker is None
@@ -200,8 +194,8 @@ def test_fuses():
     assert m["line3"].is_fuse == 1
     assert m["line3"].is_switch is None
     assert m["line3"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line3"].impedance_matrix == [[(5.8e-05 + 0.0001206j)]]  # units = km
-    assert m["line3"].capacitance_matrix == [[(0.0034 + 0j)]]  # units = km
+    assert m["line3"].impedance_matrix == [[imp_matrix]]  # units = km
+    assert m["line3"].capacitance_matrix == [[cap_matrix]]  # units = km
     assert m["line3"].feeder_name == "sourcebus_src"
     assert m["line3"].is_recloser is None
     assert m["line3"].is_breaker is None
@@ -236,14 +230,37 @@ def test_fuses():
     assert m["line4"].is_fuse == 1
     assert m["line4"].is_switch is None
     assert m["line4"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line4"].impedance_matrix == [
-        [(9.813333e-05 + 0.0002153j), (4.013333e-05 + 9.470000000000001e-05j)],
-        [(4.013333e-05 + 9.470000000000001e-05j), (9.813333e-05 + 0.0002153j)],
-    ]  # units = km
-    assert m["line4"].capacitance_matrix == [
-        [(0.0028 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (0.0028 + 0j)],
-    ]  # units = km
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units = km
+    rem = round(rem.real, 11) + rem.imag * 1j
+    imp_matrix = np.zeros((2, 2), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["line4"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 10) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = round(c_rem.real, 10) + c_rem.imag * 1j
+    cap_matrix = np.zeros((2, 2), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["line4"].capacitance_matrix == cap_matrix
+
     assert m["line4"].feeder_name == "sourcebus_src"
     assert m["line4"].is_recloser is None
     assert m["line4"].is_breaker is None

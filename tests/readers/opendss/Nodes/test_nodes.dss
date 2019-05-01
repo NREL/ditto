@@ -1,6 +1,6 @@
 Clear
 
-New Circuit.P4U bus1=sourcebus pu=0.99 basekV=230.0 R1=1.1208 X1=3.5169 R0=1.1208 X0=3.5169
+New Circuit.P4U bus1=sourcebus pu=0.99 basekV=12.47 R1=1.1208 X1=3.5169 R0=1.1208 X0=3.5169
 
 ! Line1 connects sourcebus to bus1 and should have 4 wires: A, B, C, and N
 New Line.line1 Bus1=sourcebus.2.3 Bus2=bus1.2.3 phases=2 Length=100 units=m
@@ -14,5 +14,7 @@ New Transformer.substation phases=3 windings=2 XHL=(8 1000 /)
 ! Load
 New Load.load1 phases=3 bus1=b1 conn=wye kV=4.16 kW=5400 Kvar=4285 model=1
 
-Buscoords buscoords.dss
+Set Voltagebases=[12.47]
+Calcvoltagebases
 Solve
+Buscoords buscoords.dss

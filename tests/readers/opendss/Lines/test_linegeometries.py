@@ -45,6 +45,22 @@ def test_linegeometries():
     assert m["line1"].to_element == "bus2"
     assert m["line1"].is_fuse is None
     assert m["line1"].is_switch is None
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units = km
+    rem = round(rem.real, 11) + rem.imag * 1j
+    imp_matrix = np.zeros((4, 4), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
     assert m["line1"].faultrate == parsed_values["Line"]["faultrate"]
     imp_matrix = [
         [
@@ -105,7 +121,7 @@ def test_linegeometries():
     assert m["line1"].nameclass == ""
 
     for w in m["line1"].wires:
-        assert w.emergency_ampacity == -1
+        assert w.emergency_ampacity == 795
         assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
         assert w.concentric_neutral_gmr == None
@@ -198,7 +214,7 @@ def test_linegeometries():
     assert m["line2"].nameclass == ""
 
     for w in m["line2"].wires:
-        assert w.emergency_ampacity == -1
+        assert w.emergency_ampacity == None
         assert w.insulation_thickness == 0.005588
         assert w.is_open is None
         assert w.concentric_neutral_gmr == 0.0508
@@ -213,7 +229,7 @@ def test_linegeometries():
 
     # Nameclass
     for p in ["A", "B", "C"]:
-        assert phased_wires[p].ampacity == -1
+        assert phased_wires[p].ampacity == None
         assert phased_wires[p].nameclass == "cndata1"
 
     # Positions of the wires

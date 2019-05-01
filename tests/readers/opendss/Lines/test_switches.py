@@ -8,7 +8,7 @@ Tests for switch attribute of Line
 """
 import logging
 import os
-
+import numpy as np
 import six
 
 import tempfile
@@ -51,28 +51,37 @@ def test_switches():
     assert m["origin"].is_fuse is None
     assert m["origin"].is_switch is None
     assert m["origin"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["origin"].impedance_matrix == [
-        [
-            (9.813333e-05 + 0.0002153j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-        ],
-        [
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (9.813333e-05 + 0.0002153j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-        ],
-        [
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (4.013333e-05 + 9.470000000000001e-05j),
-            (9.813333e-05 + 0.0002153j),
-        ],
-    ]  # units = km
-    assert m["origin"].capacitance_matrix == [
-        [(0.0028 + 0j), (-0.0006 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (0.0028 + 0j), (-0.0006 + 0j)],
-        [(-0.0006 + 0j), (-0.0006 + 0j), (0.0028 + 0j)],
-    ]  # units = km
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units = km
+    rem = round(rem.real, 11) + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["origin"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 10) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = round(c_rem.real, 10) + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["origin"].capacitance_matrix == cap_matrix
+
     assert m["origin"].feeder_name == "sourcebus_src"
     assert m["origin"].is_recloser is None
     assert m["origin"].is_breaker is None
@@ -112,23 +121,19 @@ def test_switches():
         [0j, (0.001 + 0.001j), 0j],
         [0j, 0j, (0.001 + 0.001j)],
     ]
-    assert m["switch1"].capacitance_matrix == [
-        [
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-        ],
-    ]
+
+    c1 = complex(1.1, 0)
+    c0 = complex(1, 0)
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 9) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert np.round(m["switch1"].capacitance_matrix, 5) == np.round(cap_matrix, 5)
     assert m["switch1"].feeder_name == "sourcebus_src"
     assert m["switch1"].is_recloser is None
     assert m["switch1"].is_breaker is None

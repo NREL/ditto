@@ -1325,6 +1325,9 @@ class Reader(AbstractReader):
                         except:
                             pass
 
+                        if wires[p].ampacity == -1 or wires[p].ampacity == 0:
+                            wires[p].ampacity = None
+
                         # ampacity emergency
                         try:
                             wires[p].emergency_ampacity = float(
@@ -1332,6 +1335,12 @@ class Reader(AbstractReader):
                             )
                         except:
                             pass
+
+                        if (
+                            wires[p].emergency_ampacity == -1
+                            or wires[p].emergency_ampacity == 0
+                        ):
+                            wires[p].emergency_ampacity = None
 
                         # resistance
                         # Should be Rac*length_of_line
@@ -1383,11 +1392,20 @@ class Reader(AbstractReader):
                         except:
                             pass
 
+                    if wires[p].ampacity == -1 or wires[p].ampacity == 0:
+                        wires[p].ampacity = None
+
                     if wires[p].emergency_ampacity is None and "emergamps" in data:
                         try:
                             wires[p].emergency_ampacity = float(data["emergamps"])
                         except:
                             pass
+
+                    if (
+                        wires[p].emergency_ampacity == -1
+                        or wires[p].emergency_ampacity == 0
+                    ):
+                        wires[p].emergency_ampacity = None
 
                     # is_switch
                     wires[p].is_switch = api_line.is_switch
