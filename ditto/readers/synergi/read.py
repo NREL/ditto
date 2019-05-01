@@ -183,6 +183,7 @@ class Reader(AbstractReader):
         )
 
         ## Transformer Setting ##
+        #import pdb;pdb.set_trace()
         TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
         HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
         LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
@@ -405,6 +406,11 @@ class Reader(AbstractReader):
         Phase2Kvar = self.get_data("Loads", "Phase2Kvar")
         Phase3Kvar = self.get_data("Loads", "Phase3Kvar")
 
+        Phase1Kva = self.get_data("Loads", "Phase1Kva")
+        Phase2Kva = self.get_data("Loads", "Phase2Kva")
+        Phase3Kva = self.get_data("Loads", "Phase3Kva")
+
+
         ## Capacitors ################
         CapacitorSectionID = self.get_data("InstCapacitors", "SectionId")
         CapacitorName = self.get_data("InstCapacitors", "UniqueDeviceId")
@@ -482,6 +488,9 @@ class Reader(AbstractReader):
         PVGenPhase1Kw = self.get_data("InstLargeCust", "GenPhase1Kw")
         PVGenPhase2Kw = self.get_data("InstLargeCust", "GenPhase2Kw")
         PVGenPhase3Kw = self.get_data("InstLargeCust", "GenPhase3Kw")
+        PVGenPhase1Kvar = self.get_data("InstLargeCust", "GenPhase1Kvar")
+        PVGenPhase2Kvar = self.get_data("InstLargeCust", "GenPhase2Kvar")
+        PVGenPhase3Kvar = self.get_data("InstLargeCust", "GenPhase3Kvar")
 
         ## Generators ###############################
         GeneratorSectionID = self.get_data("InstGenerators", "SectionId")
@@ -1241,8 +1250,8 @@ class Reader(AbstractReader):
             api_transformer.name = obj.replace(" ", "_").lower()
 
             # Set the feeder_name if it is in the mapping
-            if obj in self.section_feeder_mapping:
-                api_transformer.feeder_name = self.section_feeder_mapping[obj]
+            if TransformerSectionId[i] in self.section_feeder_mapping:
+                api_transformer.feeder_name = self.section_feeder_mapping[TransformerSectionId[i]]
             # If it is not, try to remove the "tran" prefix that might have been added
             else:
                 cleaned_id = obj.replace("Tran", "").strip()
@@ -1275,7 +1284,7 @@ class Reader(AbstractReader):
             # Find the transformer equipment from the Warehouse
             Count = None
             if TransformerTypesinStock is not None:
-                for k, trans_obj in TransformerTypesinStock:
+                for k, trans_obj in enumerate(TransformerTypesinStock):
                     if TransformerType[i] == trans_obj:
                         Count = k
                         break
@@ -1429,6 +1438,8 @@ class Reader(AbstractReader):
                 # Set P and Q
                 # Create a list for P and Q for each phase and convert to Watts and vars
                 #
+
+
                 PLoad = map(
                     lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
                 )
@@ -1436,9 +1447,24 @@ class Reader(AbstractReader):
                 QLoad = map(
                     lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
                 )
+                # if there is no load information in the kvar and kw, try to get information out from the kva information
+                LoadPF=0.88
+                LoadQFactor=(1-LoadPF**2)**0.5
+
+                PLoadkva = map(
+                    lambda x: x * 10 ** 3, [Phase1Kva[i]*LoadPF, Phase2Kva[i]*LoadPF, Phase3Kva[i]*LoadPF]
+                )
+
+                QLoadkva = map(
+                    lambda x: x * 10 ** 3, [Phase1Kvar[i]*LoadQFactor, Phase2Kvar[i]*LoadQFactor, Phase3Kvar[i]*LoadQFactor]
+                )
+
+
+
+
 
                 # Set the Phase Loads
-                for P, Q, phase in zip(PLoad, QLoad, ["A", "B", "C"]):
+                for P, Q,Pkva,Qkva, phase in zip(PLoad, QLoad,PLoadkva,QLoadkva, ["A", "B", "C"]):
 
                     # Only create a PhaseLoad is P OR Q is not zero
                     if P != 0 or Q != 0:
@@ -1458,6 +1484,47 @@ class Reader(AbstractReader):
                         # Add the PhaseLoad to the list
                         api_load.phase_loads.append(phase_load)
 
+                    elif Pkva!= 0 or Qkva!=0:
+
+                        # Create the PhaseLoad DiTTo object
+                        phase_load = PhaseLoad(model)
+
+                        # Set the Phase
+                        phase_load.phase = phase
+
+                        # Set P
+                        phase_load.p = Pkva
+
+                        # Set Q
+                        phase_load.q = Qkva
+
+                        # Add the PhaseLoad to the list
+                        api_load.phase_loads.append(phase_load)
+
+                    # else:
+                    #
+                    #     # if there is no load information, place a small load instead of writing zero to the load
+                    #     phase_load = PhaseLoad(model)
+                    #
+                    #     # Set the Phase
+                    #     phase_load.phase = phase
+                    #
+                    #     # Set P
+                    #     phase_load.p = 0.01
+                    #
+                    #     # Set Q
+                    #     phase_load.q = 0.01
+                    #
+                    #     # Add the PhaseLoad to the list
+                    #     api_load.phase_loads.append(phase_load)
+
+
+
+
+
+
+
+
         ####################################################################################
         #                                                                                  #
         #                              CAPACITORS                                          #
@@ -1474,8 +1541,8 @@ class Reader(AbstractReader):
             api_cap.name = obj.replace(" ", "_").lower()
 
             # Set the feeder_name if in the mapping
-            if obj in self.section_feeder_mapping:
-                api_cap.feeder_name = self.section_feeder_mapping[obj]
+            if CapacitorSectionID[i] in self.section_feeder_mapping:
+                api_cap.feeder_name = self.section_feeder_mapping[CapacitorSectionID[i]]
 
             # Maps control modes from Synergi format to DiTTo format
             # TODO: Complete the mapping with other control modes
@@ -1575,8 +1642,8 @@ class Reader(AbstractReader):
             api_regulator.name = obj.replace(" ", "_").lower()
 
             # Set the feeder_name if in mapping
-            if obj in self.section_feeder_mapping:
-                api_regulator.feeder_name = self.section_feeder_mapping[obj]
+            if RegulatorSectionId[i] in self.section_feeder_mapping:
+                api_regulator.feeder_name = self.section_feeder_mapping[RegulatorSectionId[i]]
             # Otherwise, try to clean the name by removing "Reg" prefix
             else:
                 cleaned_id = RegulatorId[i].replace("Reg", "").strip()
@@ -1716,7 +1783,7 @@ class Reader(AbstractReader):
             ## Set the from and to elements through the sections
             Count = None
             for idx, section in enumerate(LineID):
-                if RegulatrorSectionId[i] == obj:
+                if RegulatorSectionId[i] == obj:
                     Count = idx
 
             # If no section found, print a warning
@@ -1740,7 +1807,7 @@ class Reader(AbstractReader):
         print("--> Parsing PV systems...")
         for i, obj in enumerate(PVUniqueDeviceId):
 
-            if PVGenType[i] == "PhotoVoltaic":
+            if PVGenType[i] == "PhotoVoltaic" or PVGenType[i] == "PhotoVoltaic 3P" :
 
                 # Create a Photovoltaic object
                 api_PV = Photovoltaic(model)
@@ -1749,8 +1816,8 @@ class Reader(AbstractReader):
                 api_PV.name = obj.replace(" ", "_").lower()
 
                 # Set feeder name if in mapping
-                if obj in self.section_feeder_mapping:
-                    api_PV.feeder_name = self.section_feeder_mapping[obj]
+                if PVSectionId[i] in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[PVSectionId[i]]
 
                 # Set the phases and compute rated power
                 rated_power_pv = 0
@@ -1767,10 +1834,25 @@ class Reader(AbstractReader):
                 # Set the rated power
                 api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
 
+
+                # Set the reactive power
+                reactive_rating_pv = 0
+                if PVGenPhase1Kvar[i] != 0:
+                    api_PV.phases.append("A")
+                    reactive_rating_pv += PVGenPhase1Kvar[i]
+                if PVGenPhase2Kvar[i] != 0:
+                    api_PV.phases.append("B")
+                    reactive_rating_pv += PVGenPhase2Kvar[i]
+                if PVGenPhase3Kvar[i] != 0:
+                    api_PV.phases.append("C")
+                    reactive_rating_pv += PVGenPhase3Kvar[i]
+
+                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+
                 ## Set the from and to elements through the sections
                 Count = None
                 for k, section in enumerate(LineID):
-                    if obj == section:
+                    if PVSectionId[i] == section:
                         Count = k
                         break
 
@@ -1784,7 +1866,7 @@ class Reader(AbstractReader):
         for idx, obj in enumerate(GeneratorSectionID):
             Count = None
             for k, gen in enumerate(GeneratorName):
-                if GeneratorType[i] == gen:
+                if GeneratorType[idx] == gen:
                     Count = k
 
             if Count is not None and GeneratorTypeDev[Count] == "PV":
@@ -1793,15 +1875,20 @@ class Reader(AbstractReader):
                 api_PV = Photovoltaic(model)
 
                 # Set the PV name
-                api_PV.name = GeneratorSectionID[i].lower().replace(" ", "_")
+                api_PV.name = GeneratorSectionID[idx].lower().replace(" ", "_")
 
                 # Set the Rated Power
                 api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
 
+
+                # Set feeder name if in mapping
+                if obj in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[obj]
+
                 # Set the Connecting element
                 Count2 = None
                 for k2, section in enumerate(LineID):
-                    if GeneratorSectionID[i] == section:
+                    if GeneratorSectionID[idx] == section:
                         Count2 = k
 
                 if Count2 is None:
@@ -1815,11 +1902,11 @@ class Reader(AbstractReader):
                     )
 
                 # Set the Nominal voltage
-                api_PV.nominal_voltage = GeneratorVoltageSetting[i] * 10 ** 3
+                api_PV.nominal_voltage = GeneratorVoltageSetting[idx] * 10 ** 3
 
                 # Set the Phases
-                for phase in GeneratorConnectedPhases[i].strip():
+                for phase in GeneratorConnectedPhases[idx].strip():
                     api_PV.phases.append(phase)
 
                 # Set the Power Factor
-                api_PV.power_factor = GeneratorPF[i]
+                api_PV.power_factor = GeneratorPF[idx]
