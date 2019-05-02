@@ -32,9 +32,11 @@ def test_powersource():
     assert m["Vsource.source"].per_unit == 0.99
     assert m["Vsource.source"].is_sourcebus == 1
     assert m["Vsource.source"].rated_power == 150000000.0
-    assert m["Vsource.source"].emergency_power == 500000000.0
-    assert m["Vsource.source"].zero_sequence_impedance == -43.376475 - 130.12942j
-    assert m["Vsource.source"].positive_sequence_impedance == 25.660269 + 102.64108j
+    #  MVASc3 = baseKVA^2 / Z1 ; Z1 = sqrt( r1^2 + x1^2)
+    emerg_power = int((230.0) ** 2 / math.sqrt(1.1208 ** 2 + 3.5169 ** 2)) * 10 ** 6
+    assert m["Vsource.source"].emergency_power == emerg_power
+    assert m["Vsource.source"].zero_sequence_impedance == 1.1208 + 3.5169j
+    assert m["Vsource.source"].positive_sequence_impedance == 1.1208 + 3.5169j
     assert m["Vsource.source"].connecting_element == "sourcebus"
     assert m["Vsource.source"].phases[0].default_value == "A"
     assert m["Vsource.source"].phases[1].default_value == "B"
