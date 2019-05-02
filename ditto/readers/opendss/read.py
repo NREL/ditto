@@ -1612,28 +1612,6 @@ class Reader(AbstractReader):
                     )
                 )
 
-            # Voltage Type
-            if N_windings == 2:
-                if data["KVs"][0] > data["KVs"][1]:
-                    windings[0].voltage_type = 0
-                    windings[1].voltage_type = 2
-                else:
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 0
-            elif N_windings == 3:
-                if data["KVs"][0] == max(data["KVs"]):
-                    windings[0].voltage_type = 0
-                    windings[1].voltage_type = 2
-                    windings[2].voltage_type = 2
-                elif data["KVs"][1] == max(data["KVs"]):
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 0
-                    windings[2].voltage_type = 2
-                else:
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 2
-                    windings[2].voltage_type = 0
-
             for w in range(N_windings):
 
                 windings.append(Winding(model))
@@ -1722,6 +1700,27 @@ class Reader(AbstractReader):
                 # Store the phase winding objects in the winding objects
                 for pw in phase_windings:
                     windings[w].phase_windings.append(pw)
+            # Voltage Type
+            if N_windings == 2:
+                if data["kVs"][0] > data["kVs"][1]:
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+            elif N_windings == 3:
+                if data["kVs"][0] == max(data["kVs"]):
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 2
+                elif data["kVs"][1] == max(data["kVs"]):
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+                    windings[2].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 0
 
             # Store the winding objects in the transformer object
             for ww in windings:
