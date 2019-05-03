@@ -1644,7 +1644,7 @@ class Reader(AbstractReader):
                         b3_phases = temp[1:]
                     else:
                         b3_name = b3
-                        b2_phases = [1, 2, 3]
+                        b3_phases = [1, 2, 3]
                 api_transformer.from_element = b1_name
                 api_transformer.to_element = b2_name
             except:
