@@ -70,8 +70,8 @@ def test_regulators():
     assert m["vreg2_a"].windings[0].resistance == 0.005
     assert m["vreg2_a"].windings[1].resistance == 0.005
 
-    assert m["vreg2_a"].windings[0].voltage_type == None
-    assert m["vreg2_a"].windings[1].voltage_type == None
+    assert m["vreg2_a"].windings[0].voltage_type == 2
+    assert m["vreg2_a"].windings[1].voltage_type == 0
 
     assert m["vreg2_a"].windings[0].voltage_limit == None
     assert m["vreg2_a"].windings[1].voltage_limit == None
@@ -128,8 +128,8 @@ def test_regulators():
     assert m["regulator_vreg2_a"].windings[0].resistance == 0.005
     assert m["regulator_vreg2_a"].windings[1].resistance == 0.005
 
-    assert m["regulator_vreg2_a"].windings[0].voltage_type == None
-    assert m["regulator_vreg2_a"].windings[1].voltage_type == None
+    assert m["regulator_vreg2_a"].windings[0].voltage_type == 2
+    assert m["regulator_vreg2_a"].windings[1].voltage_type == 0
 
     assert m["regulator_vreg2_a"].windings[0].voltage_limit == None
     assert m["regulator_vreg2_a"].windings[1].voltage_limit == None
@@ -167,8 +167,8 @@ def test_regulators():
     assert m["vreg2_b"].windings[0].resistance == 0.005
     assert m["vreg2_b"].windings[1].resistance == 0.005
 
-    assert m["vreg2_b"].windings[0].voltage_type == None
-    assert m["vreg2_b"].windings[1].voltage_type == None
+    assert m["vreg2_b"].windings[0].voltage_type == 2
+    assert m["vreg2_b"].windings[1].voltage_type == 0
 
     assert m["vreg2_b"].windings[0].voltage_limit == None
     assert m["vreg2_b"].windings[1].voltage_limit == None
@@ -218,8 +218,8 @@ def test_regulators():
     assert m["regulator_vreg2_b"].windings[0].resistance == 0.005
     assert m["regulator_vreg2_b"].windings[1].resistance == 0.005
 
-    assert m["regulator_vreg2_b"].windings[0].voltage_type == None
-    assert m["regulator_vreg2_b"].windings[1].voltage_type == None
+    assert m["regulator_vreg2_b"].windings[0].voltage_type == 2
+    assert m["regulator_vreg2_b"].windings[1].voltage_type == 0
 
     assert m["regulator_vreg2_b"].windings[0].voltage_limit == None
     assert m["regulator_vreg2_b"].windings[1].voltage_limit == None
@@ -260,8 +260,8 @@ def test_regulators():
     assert m["vreg2_c"].windings[0].resistance == 0.005
     assert m["vreg2_c"].windings[1].resistance == 0.005
 
-    assert m["vreg2_c"].windings[0].voltage_type == None
-    assert m["vreg2_c"].windings[1].voltage_type == None
+    assert m["vreg2_c"].windings[0].voltage_type == 2
+    assert m["vreg2_c"].windings[1].voltage_type == 0
 
     assert m["vreg2_c"].windings[0].voltage_limit == None
     assert m["vreg2_c"].windings[1].voltage_limit == None
@@ -311,8 +311,8 @@ def test_regulators():
     assert m["regulator_vreg2_c"].windings[0].resistance == 0.005
     assert m["regulator_vreg2_c"].windings[1].resistance == 0.005
 
-    assert m["regulator_vreg2_c"].windings[0].voltage_type == None
-    assert m["regulator_vreg2_c"].windings[1].voltage_type == None
+    assert m["regulator_vreg2_c"].windings[0].voltage_type == 2
+    assert m["regulator_vreg2_c"].windings[1].voltage_type == 0
 
     assert m["regulator_vreg2_c"].windings[0].voltage_limit == None
     assert m["regulator_vreg2_c"].windings[1].voltage_limit == None
@@ -361,8 +361,8 @@ def test_regulators():
     assert m["regxfmr_b18865"].windings[0].resistance == 0.2
     assert m["regxfmr_b18865"].windings[1].resistance == 0.2
 
-    assert m["regxfmr_b18865"].windings[0].voltage_type == None
-    assert m["regxfmr_b18865"].windings[1].voltage_type == None
+    assert m["regxfmr_b18865"].windings[0].voltage_type == 2
+    assert m["regxfmr_b18865"].windings[1].voltage_type == 0
 
     assert m["regxfmr_b18865"].windings[0].voltage_limit == None
     assert m["regxfmr_b18865"].windings[1].voltage_limit == None
@@ -428,8 +428,8 @@ def test_regulators():
     assert m["regulator_regxfmr_b18865_ctrl"].windings[0].resistance == 0.2
     assert m["regulator_regxfmr_b18865_ctrl"].windings[1].resistance == 0.2
 
-    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].voltage_type == None
-    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].voltage_type == None
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[0].voltage_type == 2
+    assert m["regulator_regxfmr_b18865_ctrl"].windings[1].voltage_type == 0
 
     assert m["regulator_regxfmr_b18865_ctrl"].windings[0].voltage_limit == None
     assert m["regulator_regxfmr_b18865_ctrl"].windings[1].voltage_limit == None
@@ -500,8 +500,8 @@ def test_regulators():
     assert m["regxfmr_b18865_2"].windings[0].resistance == 0.2
     assert m["regxfmr_b18865_2"].windings[1].resistance == 0.2
 
-    assert m["regxfmr_b18865_2"].windings[0].voltage_type == None
-    assert m["regxfmr_b18865_2"].windings[1].voltage_type == None
+    assert m["regxfmr_b18865_2"].windings[0].voltage_type == 2
+    assert m["regxfmr_b18865_2"].windings[1].voltage_type == 0
 
     assert m["regxfmr_b18865_2"].windings[0].voltage_limit == None
     assert m["regxfmr_b18865_2"].windings[1].voltage_limit == None
@@ -575,8 +575,8 @@ def test_regulators():
     assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].resistance == 0.2
     assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].resistance == 0.2
 
-    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].voltage_type == None
-    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].voltage_type == None
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].voltage_type == 2
+    assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].voltage_type == 0
 
     assert m["regulator_regxfmr_b18865_2_ctrl"].windings[0].voltage_limit == None
     assert m["regulator_regxfmr_b18865_2_ctrl"].windings[1].voltage_limit == None
@@ -655,8 +655,8 @@ def test_regulators():
         0.4808326112068522
     )
 
-    assert m["sb5_p4uhs0_4_trans_439"].windings[0].voltage_type == None
-    assert m["sb5_p4uhs0_4_trans_439"].windings[1].voltage_type == None
+    assert m["sb5_p4uhs0_4_trans_439"].windings[0].voltage_type == 0
+    assert m["sb5_p4uhs0_4_trans_439"].windings[1].voltage_type == 2
 
     assert m["sb5_p4uhs0_4_trans_439"].windings[0].voltage_limit == None
     assert m["sb5_p4uhs0_4_trans_439"].windings[1].voltage_limit == None
@@ -767,8 +767,8 @@ def test_regulators():
         0.4808326112068522
     )
 
-    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].voltage_type == None
-    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].voltage_type == None
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].voltage_type == 0
+    assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].voltage_type == 2
 
     assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[0].voltage_limit == None
     assert m["regulator_sb5_p4uhs0_4_reg_439"].windings[1].voltage_limit == None
@@ -911,8 +911,8 @@ def test_regulators():
     assert m["trans_reg_creduladortension"].windings[0].resistance == 0.2
     assert m["trans_reg_creduladortension"].windings[1].resistance == 0.2
 
-    assert m["trans_reg_creduladortension"].windings[0].voltage_type == None
-    assert m["trans_reg_creduladortension"].windings[1].voltage_type == None
+    assert m["trans_reg_creduladortension"].windings[0].voltage_type == 2
+    assert m["trans_reg_creduladortension"].windings[1].voltage_type == 0
 
     assert m["trans_reg_creduladortension"].windings[0].voltage_limit == None
     assert m["trans_reg_creduladortension"].windings[1].voltage_limit == None
@@ -1066,8 +1066,8 @@ def test_regulators():
     assert m["regulator_reg_creguladortension"].windings[0].resistance == 0.2
     assert m["regulator_reg_creguladortension"].windings[1].resistance == 0.2
 
-    assert m["regulator_reg_creguladortension"].windings[0].voltage_type == None
-    assert m["regulator_reg_creguladortension"].windings[1].voltage_type == None
+    assert m["regulator_reg_creguladortension"].windings[0].voltage_type == 2
+    assert m["regulator_reg_creguladortension"].windings[1].voltage_type == 0
 
     assert m["regulator_reg_creguladortension"].windings[0].voltage_limit == None
     assert m["regulator_reg_creguladortension"].windings[1].voltage_limit == None
@@ -1201,8 +1201,8 @@ def test_regulators():
     assert m["reg1"].windings[0].resistance == 0.005
     assert m["reg1"].windings[1].resistance == 0.005
 
-    assert m["reg1"].windings[0].voltage_type == None
-    assert m["reg1"].windings[1].voltage_type == None
+    assert m["reg1"].windings[0].voltage_type == 2
+    assert m["reg1"].windings[1].voltage_type == 0
 
     assert m["reg1"].windings[0].voltage_limit == None
     assert m["reg1"].windings[1].voltage_limit == None
@@ -1254,8 +1254,8 @@ def test_regulators():
     assert m["regulator_reg1"].windings[0].resistance == 0.005
     assert m["regulator_reg1"].windings[1].resistance == 0.005
 
-    assert m["regulator_reg1"].windings[0].voltage_type == None
-    assert m["regulator_reg1"].windings[1].voltage_type == None
+    assert m["regulator_reg1"].windings[0].voltage_type == 2
+    assert m["regulator_reg1"].windings[1].voltage_type == 0
 
     assert m["regulator_reg1"].windings[0].voltage_limit == None
     assert m["regulator_reg1"].windings[1].voltage_limit == None
@@ -1301,8 +1301,8 @@ def test_regulators():
     assert m["reg2"].windings[0].resistance == 0.005
     assert m["reg2"].windings[1].resistance == 0.005
 
-    assert m["reg2"].windings[0].voltage_type == None
-    assert m["reg2"].windings[1].voltage_type == None
+    assert m["reg2"].windings[0].voltage_type == 2
+    assert m["reg2"].windings[1].voltage_type == 0
 
     assert m["reg2"].windings[0].voltage_limit == None
     assert m["reg2"].windings[1].voltage_limit == None
@@ -1354,8 +1354,8 @@ def test_regulators():
     assert m["regulator_reg2"].windings[0].resistance == 0.005
     assert m["regulator_reg2"].windings[1].resistance == 0.005
 
-    assert m["regulator_reg2"].windings[0].voltage_type == None
-    assert m["regulator_reg2"].windings[1].voltage_type == None
+    assert m["regulator_reg2"].windings[0].voltage_type == 2
+    assert m["regulator_reg2"].windings[1].voltage_type == 0
 
     assert m["regulator_reg2"].windings[0].voltage_limit == None
     assert m["regulator_reg2"].windings[1].voltage_limit == None
@@ -1401,8 +1401,8 @@ def test_regulators():
     assert m["reg3"].windings[0].resistance == 0.005
     assert m["reg3"].windings[1].resistance == 0.005
 
-    assert m["reg3"].windings[0].voltage_type == None
-    assert m["reg3"].windings[1].voltage_type == None
+    assert m["reg3"].windings[0].voltage_type == 2
+    assert m["reg3"].windings[1].voltage_type == 0
 
     assert m["reg3"].windings[0].voltage_limit == None
     assert m["reg3"].windings[1].voltage_limit == None
@@ -1454,8 +1454,8 @@ def test_regulators():
     assert m["regulator_reg3"].windings[0].resistance == 0.005
     assert m["regulator_reg3"].windings[1].resistance == 0.005
 
-    assert m["regulator_reg3"].windings[0].voltage_type == None
-    assert m["regulator_reg3"].windings[1].voltage_type == None
+    assert m["regulator_reg3"].windings[0].voltage_type == 2
+    assert m["regulator_reg3"].windings[1].voltage_type == 0
 
     assert m["regulator_reg3"].windings[0].voltage_limit == None
     assert m["regulator_reg3"].windings[1].voltage_limit == None

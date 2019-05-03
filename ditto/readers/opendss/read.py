@@ -1963,6 +1963,28 @@ class Reader(AbstractReader):
                     )
                 )
 
+            # Voltage Type
+            if N_windings == 2:
+                if trans["kVs"][0] > trans["kVs"][1]:
+                    api_regulator.windings[0].voltage_type = 0
+                    api_regulator.windings[1].voltage_type = 2
+                else:
+                    api_regulator.windings[0].voltage_type = 2
+                    api_regulator.windings[1].voltage_type = 0
+            elif N_windings == 3:
+                if trans["kVs"][0] == max(trans["kVs"]):
+                    api_regulator.windings[0].voltage_type = 0
+                    api_regulator.windings[1].voltage_type = 2
+                    api_regulator.windings[2].voltage_type = 2
+                elif trans["kVs"][1] == max(trans["kVs"]):
+                    api_regulator.windings[0].voltage_type = 2
+                    api_regulator.windings[1].voltage_type = 0
+                    api_regulator.windings[2].voltage_type = 2
+                else:
+                    api_regulator.windings[0].voltage_type = 2
+                    api_regulator.windings[1].voltage_type = 2
+                    api_regulator.windings[2].voltage_type = 0
+
             # CTprim
             try:
                 api_regulator.ct_prim = float(data["CTprim"])
