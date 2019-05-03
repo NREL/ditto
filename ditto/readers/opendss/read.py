@@ -452,6 +452,57 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            api_power_source.phases = list(
+                map(lambda x: Unicode(self.phase_mapping(x)), [1, 2, 3])
+            )
+
+            # Get the coordinate file
+            self.bus_coord_file = self.DSS_file_names["Nodes"]
+            skip_coordinate_parsing = False
+
+            try:
+                with open(self.bus_coord_file, "r") as g:
+                    coordinates = g.readlines()
+            except IOError:
+                skip_coordinate_parsing = True
+
+            X, Y = None, None
+            if not skip_coordinate_parsing:
+                for line in coordinates:
+                    if line.strip() == "":
+                        continue
+
+                    try:
+                        name, X, Y = list(
+                            map(
+                                lambda x: x.strip(),
+                                line.split(self.coordinates_delimiter),
+                            )
+                        )
+                        name = name.lower()
+                    except:
+                        logger.warning("Could not parse: " + str(line))
+                        name = None
+                        X = None
+                        Y = None
+                        pass
+
+                    try:
+                        X = float(X)
+                        Y = float(Y)
+                    except:
+                        logger.warning(
+                            "Could not cast coordinates {X}, {Y} for bus {name}".format(
+                                X=X, Y=Y, name=name
+                            )
+                        )
+                        pass
+
+            powersource_pos = Position(model)
+            powersource_pos.long = X
+            powersource_pos.lat = Y
+            api_power_source.positions.append(powersource_pos)
+
             try:
                 if "." in source_data["bus1"]:
                     api_power_source.connecting_element = source_data["bus1"].split(
@@ -1732,6 +1783,27 @@ class Reader(AbstractReader):
                 # Store the phase winding objects in the winding objects
                 for pw in phase_windings:
                     windings[w].phase_windings.append(pw)
+            # Voltage Type
+            if N_windings == 2:
+                if data["kVs"][0] > data["kVs"][1]:
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+            elif N_windings == 3:
+                if data["kVs"][0] == max(data["kVs"]):
+                    windings[0].voltage_type = 0
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 2
+                elif data["kVs"][1] == max(data["kVs"]):
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 0
+                    windings[2].voltage_type = 2
+                else:
+                    windings[0].voltage_type = 2
+                    windings[1].voltage_type = 2
+                    windings[2].voltage_type = 0
 
             # Store the winding objects in the transformer object
             for ww in windings:

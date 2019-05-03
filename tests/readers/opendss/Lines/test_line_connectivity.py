@@ -272,7 +272,6 @@ def test_line_connectivity():
     z0 = complex(
         parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
     )  # r0,x0 taken from default values
-    #    import pdb;pdb.set_trace()
     diag = ((2 * z1 + z0) / 3) / 0.3048  # Units = ft
     diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
     rem = ((z0 - z1) / 3) / 0.3048  # Units = ft
@@ -280,9 +279,12 @@ def test_line_connectivity():
     imp_matrix = np.zeros((2, 2), dtype=np.complex_)
     imp_matrix.fill(rem)
     np.fill_diagonal(imp_matrix, diag)
-    imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line5"].impedance_matrix == imp_matrix
+    imp_matrix = np.round(imp_matrix, 5)
+
+    dss_imp_matrix = np.round(np.matrix(m["line5"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -293,9 +295,11 @@ def test_line_connectivity():
     cap_matrix = np.zeros((2, 2), dtype=np.complex_)
     cap_matrix.fill(c_rem)
     np.fill_diagonal(cap_matrix, c_diag)
-    cap_matrix = cap_matrix.tolist()
+    cap_matrix = np.round(cap_matrix, 5)
 
-    assert m["line5"].capacitance_matrix == cap_matrix
+    dss_cap_matrix = np.round(np.matrix(m["line5"].capacitance_matrix), 5)
+
+    assert (dss_cap_matrix == cap_matrix).all()
     assert m["line5"].feeder_name == "sourcebus_src"
     assert m["line5"].is_recloser is None
     assert m["line5"].is_breaker is None
@@ -331,14 +335,36 @@ def test_line_connectivity():
     assert m["line6"].is_fuse is None
     assert m["line6"].is_switch is None
     assert m["line6"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line6"].impedance_matrix == [
-        [(0.09813333 + 0.2153j), (0.04013333 + 0.0947j)],
-        [(0.04013333 + 0.0947j), (0.09813333 + 0.2153j)],
-    ]
-    assert m["line6"].capacitance_matrix == [
-        [(2.8 + 0j), (-0.6 + 0j)],
-        [(-0.6 + 0j), (2.8 + 0j)],
-    ]
+
+    z1 = complex(
+        parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]
+    )  # r1,x1 taken from default values
+    z0 = complex(
+        parsed_values["Line"]["R0"], parsed_values["Line"]["X0"]
+    )  # r0,x0 taken from default values
+    diag = (2 * z1 + z0) / 3
+    diag = round(diag.real, 8) + round(diag.imag, 4) * 1j
+    rem = (z0 - z1) / 3
+    rem = round(rem.real, 8) + rem.imag * 1j
+    imp_matrix = np.zeros((2, 2), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["line6"].impedance_matrix == imp_matrix
+
+    c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
+    c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
+    c_diag = (2 * c1 + c0) / 3
+    c_diag = round(c_diag.real, 4) + c_diag.imag * 1j
+    c_rem = (c0 - c1) / 3
+    c_rem = round(c_rem.real, 4) + c_rem.imag * 1j
+    cap_matrix = np.zeros((2, 2), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["line6"].capacitance_matrix == cap_matrix
     assert m["line6"].feeder_name == "sourcebus_src"
     assert m["line6"].is_recloser is None
     assert m["line6"].is_breaker is None
@@ -374,14 +400,9 @@ def test_line_connectivity():
     assert m["line7"].is_fuse is None
     assert m["line7"].is_switch is None
     assert m["line7"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line7"].impedance_matrix == [
-        [(0.09813333 + 0.2153j), (0.04013333 + 0.0947j)],
-        [(0.04013333 + 0.0947j), (0.09813333 + 0.2153j)],
-    ]
-    assert m["line7"].capacitance_matrix == [
-        [(2.8 + 0j), (-0.6 + 0j)],
-        [(-0.6 + 0j), (2.8 + 0j)],
-    ]
+    # Using the same impedance and capacitance matrices from line6 as they are the same.
+    assert m["line7"].impedance_matrix == imp_matrix
+    assert m["line7"].capacitance_matrix == cap_matrix
     assert m["line7"].feeder_name == "sourcebus_src"
     assert m["line7"].is_recloser is None
     assert m["line7"].is_breaker is None

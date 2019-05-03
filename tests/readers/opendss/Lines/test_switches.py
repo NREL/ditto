@@ -116,14 +116,24 @@ def test_switches():
     assert m["switch1"].is_fuse is None
     assert m["switch1"].is_switch == 1
     assert m["switch1"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch1"].impedance_matrix == [
-        [(0.001 + 0.001j), 0j, 0j],
-        [0j, (0.001 + 0.001j), 0j],
-        [0j, 0j, (0.001 + 0.001j)],
-    ]
 
-    c1 = complex(1.1, 0)
-    c0 = complex(1, 0)
+    # Using the same impedance matrix for switches 1-4 since it is the same.
+    z1 = complex(1, 1)  # OpenDSS default
+    z0 = complex(1, 1)  # OpenDSS default
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units = km
+    rem = round(rem.real, 11) + rem.imag * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["switch1"].impedance_matrix == imp_matrix
+
+    # Using the same capacitance matrix for switches 1-4 since it is the same.
+    c1 = complex(1.1, 0)  # OpenDSS default
+    c0 = complex(1, 0)  # OpenDSS default
     c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
     c_diag = round(c_diag.real, 9) + c_diag.imag * 1j
     c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
@@ -131,9 +141,10 @@ def test_switches():
     cap_matrix = np.zeros((3, 3), dtype=np.complex_)
     cap_matrix.fill(c_rem)
     np.fill_diagonal(cap_matrix, c_diag)
-    cap_matrix = cap_matrix.tolist()
+    cap_matrix = np.round(cap_matrix, 5)
 
-    assert np.round(m["switch1"].capacitance_matrix, 5) == np.round(cap_matrix, 5)
+    dss_cap_matrix = np.round(np.matrix(m["switch1"].capacitance_matrix), 5)
+    assert (dss_cap_matrix == cap_matrix).all()
     assert m["switch1"].feeder_name == "sourcebus_src"
     assert m["switch1"].is_recloser is None
     assert m["switch1"].is_breaker is None
@@ -168,28 +179,12 @@ def test_switches():
     assert m["switch2"].is_fuse is None
     assert m["switch2"].is_switch == 1
     assert m["switch2"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch2"].impedance_matrix == [
-        [(0.001 + 0.001j), 0j, 0j],
-        [0j, (0.001 + 0.001j), 0j],
-        [0j, 0j, (0.001 + 0.001j)],
-    ]
-    assert m["switch2"].capacitance_matrix == [
-        [
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-        ],
-    ]
+
+    assert m["switch2"].impedance_matrix == imp_matrix
+
+    dss_cap_matrix = np.round(np.matrix(m["switch2"].capacitance_matrix), 5)
+    assert (dss_cap_matrix == cap_matrix).all()
+
     assert m["switch2"].feeder_name == "sourcebus_src"
     assert m["switch2"].is_recloser is None
     assert m["switch2"].is_breaker is None
@@ -224,28 +219,11 @@ def test_switches():
     assert m["switch3"].is_fuse is None
     assert m["switch3"].is_switch == 1
     assert m["switch3"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch3"].impedance_matrix == [
-        [(0.001 + 0.001j), 0j, 0j],
-        [0j, (0.001 + 0.001j), 0j],
-        [0j, 0j, (0.001 + 0.001j)],
-    ]
-    assert m["switch3"].capacitance_matrix == [
-        [
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-        ],
-    ]
+    assert m["switch3"].impedance_matrix == imp_matrix
+
+    dss_cap_matrix = np.round(np.matrix(m["switch3"].capacitance_matrix), 5)
+    assert (dss_cap_matrix == cap_matrix).all()
+
     assert m["switch3"].feeder_name == "sourcebus_src"
     assert m["switch3"].is_recloser is None
     assert m["switch3"].is_breaker is None
@@ -280,28 +258,12 @@ def test_switches():
     assert m["switch4"].is_fuse is None
     assert m["switch4"].is_switch == 1
     assert m["switch4"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch4"].impedance_matrix == [
-        [(0.001 + 0.001j), 0j, 0j],
-        [0j, (0.001 + 0.001j), 0j],
-        [0j, 0j, (0.001 + 0.001j)],
-    ]
-    assert m["switch4"].capacitance_matrix == [
-        [
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-        ],
-        [
-            (-3.3333330000000004e-05 + 0j),
-            (-3.3333330000000004e-05 + 0j),
-            (0.001066667 + 0j),
-        ],
-    ]
+
+    assert m["switch4"].impedance_matrix == imp_matrix
+
+    dss_cap_matrix = np.round(np.matrix(m["switch4"].capacitance_matrix), 5)
+    assert (dss_cap_matrix == cap_matrix).all()
+
     assert m["switch4"].feeder_name == "sourcebus_src"
     assert m["switch4"].is_recloser is None
     assert m["switch4"].is_breaker is None
@@ -407,14 +369,41 @@ def test_switches():
     assert m["switch7"].is_fuse is None
     assert m["switch7"].is_switch == 1
     assert m["switch7"].faultrate == parsed_values["Line"]["faultrate"]
+
+    # Using the same impedance matrix for switches 7 and 8 since it is the same.
+    z1 = complex(1, 1)  # OpenDSS default
+    z0 = complex(1, 1)  # OpenDSS default
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 11) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units = km
+    rem = round(rem.real, 11) + rem.imag * 1j
+    imp_matrix = np.zeros((2, 2), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["switch7"].impedance_matrix == imp_matrix
+
     assert m["switch7"].impedance_matrix == [
         [(0.001 + 0.001j), 0j],
         [0j, (0.001 + 0.001j)],
     ]
-    assert m["switch7"].capacitance_matrix == [
-        [(0.001066667 + 0j), (-3.3333330000000004e-05 + 0j)],
-        [(-3.3333330000000004e-05 + 0j), (0.001066667 + 0j)],
-    ]
+
+    # Using the same capacitance matrix for switch 7 and 8
+    c1 = complex(1.1, 0)  # OpenDSS default
+    c0 = complex(1, 0)  # OpenDSS default
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 9) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = c_rem.real + c_rem.imag * 1j
+    cap_matrix = np.zeros((2, 2), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = np.round(cap_matrix, 5)
+
+    dss_cap_matrix = np.round(np.matrix(m["switch7"].capacitance_matrix), 5)
+    assert (dss_cap_matrix == cap_matrix).all()
+
     assert m["switch7"].feeder_name == "sourcebus_src"
     assert m["switch7"].is_recloser is None
     assert m["switch7"].is_breaker is None
@@ -453,10 +442,10 @@ def test_switches():
         [(0.001 + 0.001j), 0j],
         [0j, (0.001 + 0.001j)],
     ]
-    assert m["switch8"].capacitance_matrix == [
-        [(0.001066667 + 0j), (-3.3333330000000004e-05 + 0j)],
-        [(-3.3333330000000004e-05 + 0j), (0.001066667 + 0j)],
-    ]
+
+    dss_cap_matrix = np.round(np.matrix(m["switch8"].capacitance_matrix), 5)
+    assert (dss_cap_matrix == cap_matrix).all()
+
     assert m["switch8"].feeder_name == "sourcebus_src"
     assert m["switch8"].is_recloser is None
     assert m["switch8"].is_breaker is None

@@ -126,9 +126,11 @@ def test_line_length():
     imp_matrix = np.zeros((3, 3), dtype=np.complex_)
     imp_matrix.fill(rem)
     np.fill_diagonal(imp_matrix, diag)
-    imp_matrix = imp_matrix.tolist()
+    imp_matrix = np.round(imp_matrix, 5)
 
-    # assert m["line2"].impedance_matrix == imp_matrix
+    dss_imp_matrix = np.round(np.matrix(m["line2"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -141,7 +143,7 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    #    assert m["line2"].capacitance_matrix == cap_matrix
+    assert m["line2"].capacitance_matrix == cap_matrix
     assert m["line2"].feeder_name == "sourcebus_src"
     assert m["line2"].is_recloser is None
     assert m["line2"].is_breaker is None
@@ -185,9 +187,11 @@ def test_line_length():
     imp_matrix = np.zeros((2, 2), dtype=np.complex_)
     imp_matrix.fill(rem)
     np.fill_diagonal(imp_matrix, diag)
-    imp_matrix = imp_matrix.tolist()
+    imp_matrix = np.round(imp_matrix, 5)
 
-    #    assert m["line3"].impedance_matrix == imp_matrix
+    dss_imp_matrix = np.round(np.matrix(m["line3"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -198,9 +202,11 @@ def test_line_length():
     cap_matrix = np.zeros((2, 2), dtype=np.complex_)
     cap_matrix.fill(c_rem)
     np.fill_diagonal(cap_matrix, c_diag)
-    cap_matrix = cap_matrix.tolist()
+    cap_matrix = np.round(cap_matrix, 5)
 
-    #    assert m["line3"].capacitance_matrix == cap_matrix
+    dss_cap_matrix = np.round(np.matrix(m["line3"].capacitance_matrix), 5)
+
+    assert (dss_cap_matrix == cap_matrix).all()
 
     assert m["line3"].feeder_name == "sourcebus_src"
     assert m["line3"].is_recloser is None
@@ -289,9 +295,12 @@ def test_line_length():
     imp_matrix = np.zeros((3, 3), dtype=np.complex_)
     imp_matrix.fill(rem)
     np.fill_diagonal(imp_matrix, diag)
-    imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line5"].impedance_matrix == imp_matrix
+    imp_matrix = np.round(imp_matrix, 5)
+
+    dss_imp_matrix = np.round(np.matrix(m["line5"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -304,7 +313,7 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    #    assert m["line5"].capacitance_matrix == cap_matrix
+    assert m["line5"].capacitance_matrix == cap_matrix
 
     assert m["line5"].feeder_name == "sourcebus_src"
     assert m["line5"].is_recloser is None
@@ -398,9 +407,11 @@ def test_line_length():
     imp_matrix = np.zeros((3, 3), dtype=np.complex_)
     imp_matrix.fill(rem)
     np.fill_diagonal(imp_matrix, diag)
-    imp_matrix = imp_matrix.tolist()
+    imp_matrix = np.round(imp_matrix, 5)
 
-    #    assert m["line9"].impedance_matrix == imp_matrix
+    dss_imp_matrix = np.round(np.matrix(m["line9"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -464,7 +475,11 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line10"].impedance_matrix == imp_matrix
+    imp_matrix = np.round(imp_matrix, 5)
+
+    dss_imp_matrix = np.round(np.matrix(m["line10"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -528,7 +543,11 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line11"].impedance_matrix == imp_matrix
+    imp_matrix = np.round(imp_matrix, 5)
+
+    dss_imp_matrix = np.round(np.matrix(m["line11"].impedance_matrix), 5)
+
+    assert (dss_imp_matrix == imp_matrix).all()
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
