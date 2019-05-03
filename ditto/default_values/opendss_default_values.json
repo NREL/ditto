@@ -75,6 +75,7 @@
       "pt_phase":"A"
    },
    "Transformer":{
+     "connection_type":"Y",
       "reactances":[
          7
       ]
