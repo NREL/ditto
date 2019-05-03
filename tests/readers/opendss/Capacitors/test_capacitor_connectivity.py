@@ -204,28 +204,33 @@ def test_capacitor_connectivity():
     assert m["oh_b4904"].is_fuse is None
     assert m["oh_b4904"].is_switch is None
     assert m["oh_b4904"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["oh_b4904"].impedance_matrix == [
-        [
-            (0.0001931617 + 0.0006880528j),
-            (7.075159e-05 + 0.0002931119j),
-            (7.075159e-05 + 0.0002931119j),
-        ],
-        [
-            (7.075159e-05 + 0.0002931119j),
-            (0.0001931617 + 0.0006880528j),
-            (7.075159e-05 + 0.0002931119j),
-        ],
-        [
-            (7.075159e-05 + 0.0002931119j),
-            (7.075159e-05 + 0.0002931119j),
-            (0.0001931617 + 0.0006880528j),
-        ],
-    ]
-    assert m["oh_b4904"].capacitance_matrix == [
-        [(0.009067833 + 0j), (-0.002129467 + 0j), (-0.002129467 + 0j)],
-        [(-0.002129467 + 0j), (0.009067833 + 0j), (-0.002129467 + 0j)],
-        [(-0.002129467 + 0j), (-0.002129467 + 0j), (0.009067833 + 0j)],
-    ]
+
+    z1 = complex(0.12241009, 0.39494091)  # Specified in the dss input
+    z0 = complex(0.33466485, 1.2742766)  # Specified in the dss input
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 10) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units =km
+    rem = round(rem.real, 11) + round(rem.imag, 10) * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["oh_b4904"].impedance_matrix == imp_matrix
+
+    c1 = complex(11.1973, 0)  # Specified in the dss input
+    c0 = complex(4.8089, 0)  # Specified in the dss input
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 9) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = round(c_rem.real, 9) + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["oh_b4904"].capacitance_matrix == cap_matrix
+
     assert m["oh_b4904"].feeder_name == "sourcebus_src"
     assert m["oh_b4904"].is_recloser is None
     assert m["oh_b4904"].is_breaker is None
@@ -321,28 +326,33 @@ def test_capacitor_connectivity():
     assert m["oh_b18944"].is_fuse is None
     assert m["oh_b18944"].is_switch is None
     assert m["oh_b18944"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["oh_b18944"].impedance_matrix == [
-        [
-            (0.0009792434 + 0.0008488938j),
-            (0.0001254797 + 0.0003540439j),
-            (0.0001254797 + 0.0003540439j),
-        ],
-        [
-            (0.0001254797 + 0.0003540439j),
-            (0.0009792434 + 0.0008488938j),
-            (0.0001254797 + 0.0003540439j),
-        ],
-        [
-            (0.0001254797 + 0.0003540439j),
-            (0.0001254797 + 0.0003540439j),
-            (0.0009792434 + 0.0008488938j),
-        ],
-    ]
-    assert m["oh_b18944"].capacitance_matrix == [
-        [(0.007276067 + 0j), (-0.001514233 + 0j), (-0.001514233 + 0j)],
-        [(-0.001514233 + 0j), (0.007276067 + 0j), (-0.001514233 + 0j)],
-        [(-0.001514233 + 0j), (-0.001514233 + 0j), (0.007276067 + 0j)],
-    ]
+
+    z1 = complex(0.85376372, 0.49484991)  # Specified in the dss input
+    z0 = complex(1.2302027, 1.5569817)  # Specified in the dss input
+    diag = ((2 * z1 + z0) / 3) * 0.001  # Units = km
+    diag = round(diag.real, 10) + round(diag.imag, 10) * 1j
+    rem = ((z0 - z1) / 3) * 0.001  # Units =km
+    rem = round(rem.real, 10) + round(rem.imag, 10) * 1j
+    imp_matrix = np.zeros((3, 3), dtype=np.complex_)
+    imp_matrix.fill(rem)
+    np.fill_diagonal(imp_matrix, diag)
+    imp_matrix = imp_matrix.tolist()
+
+    assert m["oh_b18944"].impedance_matrix == imp_matrix
+
+    c1 = complex(8.7903, 0)  # Specified in the dss input
+    c0 = complex(4.2476, 0)  # Specified in the dss input
+    c_diag = ((2 * c1 + c0) / 3) * 0.001  # Units = km
+    c_diag = round(c_diag.real, 9) + c_diag.imag * 1j
+    c_rem = ((c0 - c1) / 3) * 0.001  # Units = km
+    c_rem = round(c_rem.real, 9) + c_rem.imag * 1j
+    cap_matrix = np.zeros((3, 3), dtype=np.complex_)
+    cap_matrix.fill(c_rem)
+    np.fill_diagonal(cap_matrix, c_diag)
+    cap_matrix = cap_matrix.tolist()
+
+    assert m["oh_b18944"].capacitance_matrix == cap_matrix
+
     assert m["oh_b18944"].feeder_name == "sourcebus_src"
     assert m["oh_b18944"].is_recloser is None
     assert m["oh_b18944"].is_breaker is None
