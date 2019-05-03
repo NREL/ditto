@@ -52,7 +52,7 @@ def test_transformer_kv():
     assert m["substation"].feeder_name == "sourcebus_src"
     assert m["substation"].noload_loss == 0.0
     assert m["substation"].loadloss == 0.001
-    assert m["substation"].phase_shift == None
+    assert m["substation"].phase_shift == -30
     assert m["substation"].normhkva == 5500.0
     assert m["substation"].from_element == "sourcebus"
     assert m["substation"].to_element == "bus1"
@@ -120,7 +120,7 @@ def test_transformer_kv():
     assert m["reg1"].feeder_name == "sourcebus_src"
     assert m["reg1"].noload_loss == 0.0
     assert m["reg1"].loadloss == 0.4
-    assert m["reg1"].phase_shift == None
+    assert m["reg1"].phase_shift == 0
     assert m["reg1"].normhkva == 1832.6
     assert m["reg1"].from_element == "bus1"
     assert m["reg1"].to_element == "bus2"
@@ -196,7 +196,7 @@ def test_transformer_kv():
     assert m["xfm1"].feeder_name == "sourcebus_src"
     assert m["xfm1"].noload_loss == 0.0
     assert m["xfm1"].loadloss == 1.1
-    assert m["xfm1"].phase_shift == None
+    assert m["xfm1"].phase_shift == -30
     assert m["xfm1"].normhkva == 550.0
     assert m["xfm1"].from_element == "bus2"
     assert m["xfm1"].to_element == "bus3"
@@ -259,7 +259,7 @@ def test_transformer_kv():
     assert m["t1"].feeder_name == "sourcebus_src"
     assert m["t1"].noload_loss == 0.0
     assert m["t1"].loadloss == 1.0
-    assert m["t1"].phase_shift == None
+    assert m["t1"].phase_shift == 0
     assert m["t1"].normhkva == 6600.0
     assert m["t1"].from_element == "n2"
     assert m["t1"].to_element == "n3"
@@ -312,7 +312,7 @@ def test_transformer_kv():
     assert m["sb5_p4uhs0_4_trans_439"].feeder_name == "sourcebus_src"
     assert m["sb5_p4uhs0_4_trans_439"].noload_loss == 0.0
     assert m["sb5_p4uhs0_4_trans_439"].loadloss == 0.9616652
-    assert m["sb5_p4uhs0_4_trans_439"].phase_shift == None
+    assert m["sb5_p4uhs0_4_trans_439"].phase_shift == -30
     assert m["sb5_p4uhs0_4_trans_439"].normhkva == 8800.0
     assert m["sb5_p4uhs0_4_trans_439"].from_element == "sb5_p4uhs0_4_node_5_12"
     assert m["sb5_p4uhs0_4_trans_439"].to_element == "sb5_p4uhs0_4_node_5_13"
@@ -411,7 +411,7 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)"].feeder_name == "sourcebus_src"
     assert m["tr(r:p4udt27-p4udt27lv)"].noload_loss == 0.6
     assert m["tr(r:p4udt27-p4udt27lv)"].loadloss == 1.74408
-    assert m["tr(r:p4udt27-p4udt27lv)"].phase_shift == None
+    assert m["tr(r:p4udt27-p4udt27lv)"].phase_shift == 0
     assert m["tr(r:p4udt27-p4udt27lv)"].normhkva == 82.5
     assert m["tr(r:p4udt27-p4udt27lv)"].from_element == "p4udt27"
     assert m["tr(r:p4udt27-p4udt27lv)"].to_element == "p4udt27lv"
@@ -518,7 +518,7 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)_1"].feeder_name == "sourcebus_src"
     assert m["tr(r:p4udt27-p4udt27lv)_1"].noload_loss == 0.6
     assert m["tr(r:p4udt27-p4udt27lv)_1"].loadloss == 1.74408
-    assert m["tr(r:p4udt27-p4udt27lv)_1"].phase_shift == None
+    assert m["tr(r:p4udt27-p4udt27lv)_1"].phase_shift == -30
     assert m["tr(r:p4udt27-p4udt27lv)_1"].normhkva == 82.5
     assert m["tr(r:p4udt27-p4udt27lv)_1"].from_element == "p4udt27"
     assert m["tr(r:p4udt27-p4udt27lv)_1"].to_element == "p4udt27lv"
@@ -639,7 +639,7 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)_2"].feeder_name == "sourcebus_src"
     assert m["tr(r:p4udt27-p4udt27lv)_2"].noload_loss == 0.6
     assert m["tr(r:p4udt27-p4udt27lv)_2"].loadloss == 1.74408
-    assert m["tr(r:p4udt27-p4udt27lv)_2"].phase_shift == None
+    assert m["tr(r:p4udt27-p4udt27lv)_2"].phase_shift == 0
     assert m["tr(r:p4udt27-p4udt27lv)_2"].normhkva == 82.5
     assert m["tr(r:p4udt27-p4udt27lv)_2"].from_element == "p4udt27"
     assert m["tr(r:p4udt27-p4udt27lv)_2"].to_element == "p4udt27lv"
@@ -760,7 +760,7 @@ def test_transformer_kv():
     assert m["tr(r:p4udt27-p4udt27lv)_3"].feeder_name == "sourcebus_src"
     assert m["tr(r:p4udt27-p4udt27lv)_3"].noload_loss == 0.6
     assert m["tr(r:p4udt27-p4udt27lv)_3"].loadloss == 1.74408
-    assert m["tr(r:p4udt27-p4udt27lv)_3"].phase_shift == None
+    assert m["tr(r:p4udt27-p4udt27lv)_3"].phase_shift == -30
     assert m["tr(r:p4udt27-p4udt27lv)_3"].normhkva == 82.5
     assert m["tr(r:p4udt27-p4udt27lv)_3"].from_element == "p4udt27"
     assert m["tr(r:p4udt27-p4udt27lv)_3"].to_element == "p4udt27lv"
@@ -886,7 +886,7 @@ def test_transformer_kv():
     assert m["tr(r:p4udt25-p4udt25lv)"].feeder_name == "sourcebus_src"
     assert m["tr(r:p4udt25-p4udt25lv)"].noload_loss == 0.472
     assert m["tr(r:p4udt25-p4udt25lv)"].loadloss == 0.798816
-    assert m["tr(r:p4udt25-p4udt25lv)"].phase_shift == None
+    assert m["tr(r:p4udt25-p4udt25lv)"].phase_shift == 0
     assert m["tr(r:p4udt25-p4udt25lv)"].normhkva == 27.5
     assert m["tr(r:p4udt25-p4udt25lv)"].from_element == "p4udt25"
     assert m["tr(r:p4udt25-p4udt25lv)"].to_element == "p4udt25lv"
@@ -967,7 +967,7 @@ def test_transformer_kv():
     assert m["t21396254a"].feeder_name == "sourcebus_src"
     assert m["t21396254a"].noload_loss == 0.2
     assert m["t21396254a"].loadloss == 1.8
-    assert m["t21396254a"].phase_shift == None
+    assert m["t21396254a"].phase_shift == 0
     assert m["t21396254a"].normhkva == 16.5
     assert m["t21396254a"].from_element == "l2804253"
     assert m["t21396254a"].to_element == "x2804253a"
@@ -1038,7 +1038,7 @@ def test_transformer_kv():
     assert m["feeder_rega"].feeder_name == "sourcebus_src"
     assert m["feeder_rega"].noload_loss == 0.0
     assert m["feeder_rega"].loadloss == 0.001
-    assert m["feeder_rega"].phase_shift == None
+    assert m["feeder_rega"].phase_shift == 0
     assert m["feeder_rega"].normhkva == 30250.0
     assert m["feeder_rega"].from_element == "regxfmr_hvmv_sub_lsb"
     assert m["feeder_rega"].to_element == "_hvmv_sub_lsb"
@@ -1089,7 +1089,7 @@ def test_transformer_kv():
     assert m["b13659-1c"].feeder_name == "sourcebus_src"
     assert m["b13659-1c"].noload_loss == 0.34
     assert m["b13659-1c"].loadloss == 1.04
-    assert m["b13659-1c"].phase_shift == None
+    assert m["b13659-1c"].phase_shift == 0
     assert m["b13659-1c"].normhkva == 15
     assert m["b13659-1c"].from_element == "b13659"
     assert m["b13659-1c"].to_element == "x_b13659-c"
@@ -1146,7 +1146,7 @@ def test_transformer_kv():
     assert m["b4551-1a"].feeder_name == "sourcebus_src"
     assert m["b4551-1a"].noload_loss == 0.34
     assert m["b4551-1a"].loadloss == 1.04
-    assert m["b4551-1a"].phase_shift == None
+    assert m["b4551-1a"].phase_shift == 0
     assert m["b4551-1a"].normhkva == 15
     assert m["b4551-1a"].from_element == "b4551"
     assert m["b4551-1a"].to_element == "x_b4551-a"
@@ -1203,7 +1203,7 @@ def test_transformer_kv():
     assert m["5865228330a-1abc"].feeder_name == "sourcebus_src"
     assert m["5865228330a-1abc"].noload_loss == 0.05
     assert m["5865228330a-1abc"].loadloss == 0.7
-    assert m["5865228330a-1abc"].phase_shift == None
+    assert m["5865228330a-1abc"].phase_shift == 0
     assert m["5865228330a-1abc"].normhkva == 2000.01
     assert m["5865228330a-1abc"].from_element == "5865228330a"
     assert m["5865228330a-1abc"].to_element == "x_5865228330a"
@@ -1278,7 +1278,7 @@ def test_transformer_kv():
     assert m["t1_1"].feeder_name == "sourcebus_src"
     assert m["t1_1"].noload_loss == 0.0
     assert m["t1_1"].loadloss == 1.0
-    assert m["t1_1"].phase_shift == None
+    assert m["t1_1"].phase_shift == -30
     assert m["t1_1"].normhkva == 6600.0
     assert m["t1_1"].from_element == "n2"
     assert m["t1_1"].to_element == "n3"
@@ -1329,7 +1329,7 @@ def test_transformer_kv():
     assert m["t1_2"].feeder_name == "sourcebus_src"
     assert m["t1_2"].noload_loss == 0.0
     assert m["t1_2"].loadloss == 1.0
-    assert m["t1_2"].phase_shift == None
+    assert m["t1_2"].phase_shift == -30
     assert m["t1_2"].normhkva == 6600.0
     assert m["t1_2"].from_element == "n2"
     assert m["t1_2"].to_element == "n3"

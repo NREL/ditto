@@ -1728,27 +1728,6 @@ class Reader(AbstractReader):
                 # Store the phase winding objects in the winding objects
                 for pw in phase_windings:
                     windings[w].phase_windings.append(pw)
-            # Voltage Type
-            if N_windings == 2:
-                if data["kVs"][0] > data["kVs"][1]:
-                    windings[0].voltage_type = 0
-                    windings[1].voltage_type = 2
-                else:
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 0
-            elif N_windings == 3:
-                if data["kVs"][0] == max(data["kVs"]):
-                    windings[0].voltage_type = 0
-                    windings[1].voltage_type = 2
-                    windings[2].voltage_type = 2
-                elif data["kVs"][1] == max(data["kVs"]):
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 0
-                    windings[2].voltage_type = 2
-                else:
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 2
-                    windings[2].voltage_type = 0
 
             # Voltage Type
             if N_windings == 2:
@@ -1987,18 +1966,18 @@ class Reader(AbstractReader):
 
             # Voltage Type
             if N_windings == 2:
-                if trans["kVs"][0] > trans["kVs"][1]:
+                if float(trans["kVs"][0]) >= float(trans["kVs"][1]):
                     api_regulator.windings[0].voltage_type = 0
                     api_regulator.windings[1].voltage_type = 2
                 else:
                     api_regulator.windings[0].voltage_type = 2
                     api_regulator.windings[1].voltage_type = 0
             elif N_windings == 3:
-                if trans["kVs"][0] == max(trans["kVs"]):
+                if float(trans["kVs"][0]) == max(list(map(float, trans["kVs"]))):
                     api_regulator.windings[0].voltage_type = 0
                     api_regulator.windings[1].voltage_type = 2
                     api_regulator.windings[2].voltage_type = 2
-                elif trans["kVs"][1] == max(trans["kVs"]):
+                elif float(trans["kVs"][1]) == max(list(map(float, trans["kVs"]))):
                     api_regulator.windings[0].voltage_type = 2
                     api_regulator.windings[1].voltage_type = 0
                     api_regulator.windings[2].voltage_type = 2
