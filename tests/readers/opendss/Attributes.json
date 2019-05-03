@@ -2,19 +2,19 @@
   "OpenDSS": {
       "Line": ["name","nominal_voltage","line_type","length","from_element","to_element","is_fuse","is_switch","faultrate","wires","impedance_matrix",
                "capacitance_matrix","feeder_name","is_recloser","is_breaker","nameclass"],
-      "Wire": ["name","phase","nameclass","X","Y","diameter","gmr","ampacity","emergency_ampacity","resistance","is_open"],
-      "Capacitor": ["nominal_voltage","connection_type","delay","mode","low","high","resistance","reactance","susceptance","conductance","pt_ratio",
-        "ct_ratio","pt_phase","connecting_element","positions","measuring_element","feeder_name"],
+      "Wire": ["phase","nameclass","X","Y","diameter","gmr","ampacity","emergency_ampacity","resistance","insulation_thickness","is_open","concentric_neutral_gmr","concentric_neutral_resistance","concentric_neutral_diameter","concentric_outside_diameter","concentric_neutral_nstrand"],
+      "Capacitor": ["name","nominal_voltage","connection_type","delay","mode","low","high","resistance","reactance","pt_ratio",
+        "ct_ratio","pt_phase","connecting_element","measuring_element","feeder_name"],
       "PhaseCapacitor" : ["phase","var"],
-      "Transformer" : ["name", "noload_loss","from_element","to_element","reactances","windings","loadloss","normhkva","is_center_tap","feeder_name"],
-      "Winding" : ["connection_type","nominal_voltage","resistance","phase_windings","rated_power","emergency_power"],
-      "PhaseWinding" : ["phase","compensator_r","compensator_x"],
-      "Regulator" : ["name","delay","highstep","pt_ratio","bandwidth","bandcenter","voltage_limit","from_element","to_element",
-                    "connected_transformer","pt_phase","reactances","feeder_name"],
+      "Transformer" : ["name", "noload_loss","phase_shift","from_element","to_element","reactances","windings","loadloss","normhkva","is_center_tap","feeder_name"],
+      "Winding" : ["connection_type","voltage_type","nominal_voltage","voltage_limit","resistance","phase_windings","rated_power","emergency_power"],
+      "PhaseWinding" : ["tap_position","phase","compensator_r","compensator_x"],
+      "Regulator" : ["name","delay","highstep","lowstep","pt_ratio","phase_shift","bandwidth","bandcenter","voltage_limit","from_element","to_element",
+                    "connected_transformer","pt_phase","winding","ct_prim","reactances","feeder_name","setpoint"],
       "Load" : ["name","connection_type","nominal_voltage","vmin","vmax","phase_loads","connecting_element","feeder_name"],
       "PhaseLoad" : ["phase","p","q","model","use_zip","ppercentcurrent","qpercentcurrent","ppercentpower","qpercentpower","ppercentimpedance","qpercentimpedance"],
       "PowerSource" : ["name","nominal_voltage","per_unit","phases","positions","is_sourcebus","rated_power",
         "emergency_power","connecting_element","positive_sequence_impedance","zero_sequence_impedance"],
-      "Nodes" : ["name","nominal_voltage","phases","positions","feeder_name"],
+      "Nodes" : ["name","nominal_voltage","phases","positions","feeder_name"]
    }
 }

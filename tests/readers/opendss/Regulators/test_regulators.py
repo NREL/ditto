@@ -103,7 +103,6 @@ def test_regulators():
     assert m["regulator_vreg2_a"].highstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_vreg2_a"].lowstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_vreg2_a"].pt_ratio == parsed_values["Regulator"]["pt_ratio"]
-    assert m["regulator_vreg2_a"].ct_ratio == None
     assert m["regulator_vreg2_a"].bandwidth == 2
     assert m["regulator_vreg2_a"].bandcenter == 125
     assert m["regulator_vreg2_a"].voltage_limit == 8.0
@@ -193,7 +192,6 @@ def test_regulators():
     assert m["regulator_vreg2_b"].highstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_vreg2_b"].lowstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_vreg2_b"].pt_ratio == parsed_values["Regulator"]["pt_ratio"]
-    assert m["regulator_vreg2_b"].ct_ratio == None
     assert m["regulator_vreg2_b"].bandwidth == 2
     assert m["regulator_vreg2_b"].bandcenter == 125
     assert m["regulator_vreg2_b"].voltage_limit == 0.0
@@ -286,7 +284,6 @@ def test_regulators():
     assert m["regulator_vreg2_c"].highstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_vreg2_c"].lowstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_vreg2_c"].pt_ratio == parsed_values["Regulator"]["pt_ratio"]
-    assert m["regulator_vreg2_c"].ct_ratio == None
     assert m["regulator_vreg2_c"].bandwidth == 2
     assert m["regulator_vreg2_c"].bandcenter == 125
     assert m["regulator_vreg2_c"].voltage_limit == 0.0
@@ -397,7 +394,6 @@ def test_regulators():
         m["regulator_regxfmr_b18865_ctrl"].pt_ratio
         == parsed_values["Regulator"]["pt_ratio"]
     )
-    assert m["regulator_regxfmr_b18865_ctrl"].ct_ratio == None
     assert m["regulator_regxfmr_b18865_ctrl"].bandwidth == 2
     assert m["regulator_regxfmr_b18865_ctrl"].bandcenter == 124
     assert m["regulator_regxfmr_b18865_ctrl"].voltage_limit == 0.0
@@ -538,7 +534,6 @@ def test_regulators():
         m["regulator_regxfmr_b18865_2_ctrl"].pt_ratio
         == parsed_values["Regulator"]["pt_ratio"]
     )
-    assert m["regulator_regxfmr_b18865_2_ctrl"].ct_ratio == None
     assert m["regulator_regxfmr_b18865_2_ctrl"].bandwidth == 2
     assert m["regulator_regxfmr_b18865_2_ctrl"].bandcenter == 124
     assert m["regulator_regxfmr_b18865_2_ctrl"].voltage_limit == 0.0
@@ -733,7 +728,6 @@ def test_regulators():
     assert m["regulator_sb5_p4uhs0_4_reg_439"].highstep == 10
     assert m["regulator_sb5_p4uhs0_4_reg_439"].lowstep == 10
     assert m["regulator_sb5_p4uhs0_4_reg_439"].pt_ratio == 19
-    assert m["regulator_sb5_p4uhs0_4_reg_439"].ct_ratio == None
     assert m["regulator_sb5_p4uhs0_4_reg_439"].bandwidth == 1.9919999999999998
     assert m["regulator_sb5_p4uhs0_4_reg_439"].bandcenter == 123.60000000000001
     assert m["regulator_sb5_p4uhs0_4_reg_439"].voltage_limit == 0.0
@@ -1028,7 +1022,6 @@ def test_regulators():
         m["regulator_reg_creguladortension"].pt_ratio
         == parsed_values["Regulator"]["pt_ratio"]
     )
-    assert m["regulator_reg_creguladortension"].ct_ratio == None
     assert m["regulator_reg_creguladortension"].bandwidth == 2.4
     assert m["regulator_reg_creguladortension"].bandcenter == 123.6
     assert m["regulator_reg_creguladortension"].voltage_limit == 12.6
@@ -1229,7 +1222,6 @@ def test_regulators():
     assert m["regulator_reg1"].highstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_reg1"].lowstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_reg1"].pt_ratio == 20
-    assert m["regulator_reg1"].ct_ratio == None
     assert m["regulator_reg1"].bandwidth == 2
     assert m["regulator_reg1"].bandcenter == 122
     assert m["regulator_reg1"].voltage_limit == 0.0
@@ -1329,7 +1321,6 @@ def test_regulators():
     assert m["regulator_reg2"].highstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_reg2"].lowstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_reg2"].pt_ratio == 20
-    assert m["regulator_reg2"].ct_ratio == None
     assert m["regulator_reg2"].bandwidth == 2
     assert m["regulator_reg2"].bandcenter == 122
     assert m["regulator_reg2"].voltage_limit == 2.8
@@ -1429,7 +1420,6 @@ def test_regulators():
     assert m["regulator_reg3"].highstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_reg3"].lowstep == parsed_values["Regulator"]["highstep"]
     assert m["regulator_reg3"].pt_ratio == 20
-    assert m["regulator_reg3"].ct_ratio == None
     assert m["regulator_reg3"].bandwidth == 2
     assert m["regulator_reg3"].bandcenter == 122
     assert m["regulator_reg3"].voltage_limit == 0.0

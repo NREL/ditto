@@ -39,20 +39,20 @@
 | ampacity            | yes     |
 | emergency_ampacity  | yes     |
 | resistance          | yes     |
-| insulation_thickness| no      | # Needs to be implemented
+| insulation_thickness| yes     |
 | is_fuse             | no      | # needs to be deprecated
 | is_switch           | no      | # needs to be deprecated
 | is_open             | yes     |
 | interrupting_rating | no      | # Not for now
-| concentric_neutral_gmr | no      |  # Needs to be implemented
-| concentric_neutral_resistance | no      | # Needs to be implemented
-| concentric_neutral_diameter   | no      | # Needs to be implemented
-| concentric_outside_diameter   | no      | # Needs to be implemented
-| concentric_neutral_nstrand    | no      | # Needs to be implemented
-| drop                | no      | # doesn't need testing, possible deprecation
+| concentric_neutral_gmr | yes     |
+| concentric_neutral_resistance | yes     |
+| concentric_neutral_diameter   | yes     |
+| concentric_outside_diameter   | yes     |
+| concentric_neutral_nstrand    | yes     |
+| drop                | no      | # does not need testing, possible deprecation
 | is_recloser         | no      | # needs to be deprecated
 | is_breaker          | no      | # needs to be deprecated
-| is_network_protector| no      | # doesn't need testing, needs to be deprecated
+| is_network_protector| no      | # does not need testing, needs to be deprecated
 | is_sectionalizer    | no      | # needs to be deprecated
 
 ## Capacitor
@@ -63,22 +63,22 @@
 | connection_type     | yes     |
 | delay               | yes     |
 | mode                | yes     |
-| low                 | no      | # Create issue
-| high                | no      | # Create issue
-| resistance          | no      | # Create issue
+| low                 | yes     |
+| high                | yes     |
+| resistance          | yes     |
 | resistance0         | no      | # Not implemented
-| reactance           | no      | # Create issue
+| reactance           | yes     |
 | reactance0          | no      | # Not implemented
-| susceptance         | no      | # Include in the same issues as conductance
+| susceptance         | no      | # Not implemented for now
 | susceptance0        | no      | # Not implemented
-| conductance         | no      | # cmatrix is used to represent, create issue if opendss gives defaults or we set the values
+| conductance         | no      | # Not implemented for now; cmatrix is used to represent, create issue if opendss gives defaults or we set the values
 | conductance0        | no      | # Not implemented
 | pt_ratio            | yes     |
-| ct_ratio            | no      | # Create issue
+| ct_ratio            | yes     | # Checked with default values
 | pt_phase            | yes     |
-| connecting_element  | yes     | # Bhavya to Check if it is bus ; Confirmed
+| connecting_element  | yes     |
 | positions           | no      | # implement from BusCoords.dss ; implement later
-| measuring_element   | yes     | # Double check if it is in controller ; Confirmed
+| measuring_element   | yes     |
 | substation_name     | no      | # Not implemented
 | feeder_name         | yes     |
 | is_substation       | no      | # Not implemented
@@ -87,18 +87,18 @@
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | phase               | yes     |
-| var                 | no      | # kvar, sum of each var = kvar ; bhavya to check ; Confirmed
-| switch              | no      | # Create issue to see if it is included in opendss
-| sections            | no      | # Create issue to see if it is included in opendss
-| normalsections      | no      | # Create issue to see if it is included in opendss
+| var                 | yes     |
+| switch              | no      | # Not used in OpenDSS
+| sections            | no      | # Not used in OpenDSS
+| normalsections      | no      | # Not used in OpenDSS
 
 ## Transformer
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | name                | yes     |
-| install_type        | no      | #not needed
+| install_type        | no      | # Not needed
 | noload_loss         | yes     |
-| phase_shift         | no      | # Tarek to check if this exists in opendss and set it
+| phase_shift         | yes     |
 | from_element        | yes     |
 | to_element          | yes     |
 | reactances          | yes     |
@@ -115,11 +115,11 @@
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | connection_type     | yes     |
-| voltage_type        | no      | # Needs to be implemented , raise issue
+| voltage_type        | yes     |
 | nominal_voltage     | yes     |
-| voltage_limit       | no      | # Tarek to create a test case with a voltage regulator included, raise issue
+| voltage_limit       | yes     |
 | resistance          | yes     |
-| reverse_resistance  | no      | # Needs to be implemented , raise issue
+| reverse_resistance  | no      | # Not implemented for now
 | phase_windings      | yes     |
 | rated_power         | yes     |
 | emergency_power     | yes     |
@@ -128,7 +128,7 @@
 ## Phase Winding
 | Attribute           | Tested  |
 | :------------------:|:-------:|
-| tap_position        | no      | # Tarek looks into this
+| tap_position        | yes     |
 | phase               | yes     |
 | compensator_r       | yes     |
 | compensator_x       | yes     |
@@ -136,17 +136,17 @@
 ## Regulator
 | Attribute           | Tested  |
 | :------------------:|:-------:|
-| name                | yes      |
+| name                | yes     |
 | delay               | yes     |
 | highstep            | yes     |
-| lowstep             | no      |  # needs to be implemented ( equal to highstep), raise an issue
+| lowstep             | yes     |
 | pt_ratio            | yes     |
-| ct_ratio            | no      | # Tarek to look at this
-| phase_shift         | no      | # Tarek to check if this exists in opendss and set it
+| ct_ratio            | no      | # Not in OpenDSS
+| phase_shift         | yes     |
 | ltc                 | no      | # not implemented
 | bandwidth           | yes     |
 | bandcenter          | yes     |
-| voltage_limit       | no      | # Tarek to create a test case with a voltage regulator included, raise issue
+| voltage_limit       | yes     |
 | from_element        | yes     |
 | to_element          | yes     |
 |connected_transformer| yes     |
@@ -155,11 +155,11 @@
 | windings            | no      | # Deprecate but a big api change
 | positions           | no      | # Not now
 | winding             | yes     | # Change name to pt_winding, check all the readers and writers
-| ct_prim             | no      | # Tarek to set for an example
+| ct_prim             | yes     |
 | noload_loss         | no      |# Deprecate along with windings but a big api change
 | substation_name     | no      |# Not needed
 | feeder_name         | yes     |
-| setpoint            | no      | #Needs to be implemented, Raise an issue, read it from vreg
+| setpoint            | yes     |
 | is_substation       | no      |# Not needed
 
 ## Load
@@ -214,11 +214,11 @@
 | name                | yes     |
 | nominal_voltage     | yes     |
 | per_unit            | yes     |
-| phases              | no      |  # CHeck
-| positions           | no      | # Create buscoords.dss and test;
+| phases              | yes     |
+| positions           | yes     |
 | is_sourcebus        | yes     |
-| rated_power         | no      |  # Create issue
-| emergency_power     | no      | # Create issue
+| rated_power         | yes     |
+| emergency_power     | yes     |
 | connection_type     | no      | #  Needs to be deprecated
 | cutout_percent      | no      | # Needs to be deprecated
 | cutin_percent       | no      | # Needs to be deprecated
@@ -236,9 +236,9 @@
 | Attribute           | Tested  |
 | :------------------:|:-------:|
 | name                | yes     |
-| nominal_voltage     | no      | # Double check , create issue
+| nominal_voltage     | yes     |
 | phases              | yes     |
-| positions           | yes     | # Create buscoords.dss and test; loads and capacitors - later
+| positions           | yes     |
 | substation_name     | no      | #not implemented
 | feeder_name         | yes     |
 | is_substation       | no      | # not implemented
