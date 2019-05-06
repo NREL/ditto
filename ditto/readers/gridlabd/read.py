@@ -2200,9 +2200,16 @@ class Reader(AbstractReader):
                 winding2.voltage_type = 2
 
                 try:
-                    nominal_voltage = obj["nominal_voltage"]
-                    winding1.nominal_voltage = float(nominal_voltage)
-                    winding2.nominal_voltage = float(nominal_voltage)
+                    if hasattr(obj,"nominal_voltage"):
+                        nominal_voltage = obj["nominal_voltage"]
+                        winding1.nominal_voltage = float(nominal_voltage)
+                        winding2.nominal_voltage = float(nominal_voltage)
+                    else:
+                        from_element = obj["from"]
+                        from_nominal_voltage = self.all_gld_objects[from_element]["nominal_voltage"]
+                        winding1.nominal_voltage = float(from_nominal_voltage)
+                        winding2.nominal_voltage = float(from_nominal_voltage)
+                        
                 except AttributeError:
                     pass
 
