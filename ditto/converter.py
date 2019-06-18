@@ -92,6 +92,11 @@ class Converter(object):
         else:
             self.remove_opendss_default_values_flag = False
 
+        if kwargs.get("synergi_warehouse_path", None) is not None:
+            self.synergi_warehouse_path = kwargs["synergi_warehouse_path"]
+        else:
+            self.synergi_warehouse_path = None
+
         self.verbose = verbose
 
         self.m = Store()
@@ -140,7 +145,13 @@ class Converter(object):
         # SYNERGI
         #
         elif self._from == "synergi":
-            inputs = {"input_file": os.path.abspath(feeder)}
+            if self.synergi_warehouse_path is not None:
+                inputs = {
+                    "input_file": os.path.abspath(feeder),
+                    "warehouse": os.path.abspath(self.synergi_warehouse_path),
+                }
+            else:
+                inputs = {"input_file": os.path.abspath(feeder)}
 
         # DEW
         # TODO....
