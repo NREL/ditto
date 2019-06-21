@@ -145,13 +145,10 @@ class Converter(object):
         # SYNERGI
         #
         elif self._from == "synergi":
-            if self.synergi_warehouse_path is not None:
-                inputs = {
-                    "input_file": os.path.abspath(feeder),
-                    "warehouse": os.path.abspath(self.synergi_warehouse_path),
-                }
-            else:
-                inputs = {"input_file": os.path.abspath(feeder)}
+            inputs = {
+                "input_file": os.path.abspath(feeder),
+                "warehouse": "warehouse.mdb",
+            }
 
         # DEW
         # TODO....
