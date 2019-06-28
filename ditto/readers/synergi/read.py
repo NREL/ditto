@@ -90,7 +90,7 @@ class Reader(AbstractReader):
         if "warehouse" in kwargs:
             self.ware_house_input_file = kwargs["warehouse"]
         else:
-            self.ware_house_input_file = None
+            self.ware_house_input_file = "warehouse.mdb"
 
         self.SynergiData = None
 
@@ -119,6 +119,9 @@ class Reader(AbstractReader):
         Synergi --> DiTTo parse method.
         """
         if self.ware_house_input_file is not None:
+            self.ware_house_input_file = os.path.join(
+                os.path.dirname(self.input_file), self.ware_house_input_file
+            )
             self.SynergiData = DbParser(
                 self.input_file, warehouse=self.ware_house_input_file
             )
@@ -1286,6 +1289,7 @@ class Reader(AbstractReader):
             api_transformer.name = obj.replace(" ", "_").lower()
 
             # Set the feeder_name if it is in the mapping
+
             if TransformerSectionId[i] in self.section_feeder_mapping:
                 api_transformer.feeder_name = self.section_feeder_mapping[
                     TransformerSectionId[i]
