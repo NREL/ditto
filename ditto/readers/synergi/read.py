@@ -33,10 +33,7 @@ from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.position import Position
 from ditto.models.base import Unicode
 
-from ditto.readers.synergi.length_units import (
-    convert_length_unit,
-    SynergiValueType,
-)
+from ditto.readers.synergi.length_units import convert_length_unit, SynergiValueType
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +180,7 @@ class Reader(AbstractReader):
         )
 
         ## Transformer Setting ##
-        #import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
         HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
         LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
@@ -362,7 +359,7 @@ class Reader(AbstractReader):
         )
         ZeroSequenceReactance_PerLUL = self.get_data(
             "DevConductors", "ZeroSequenceReactance_PerLUL"
-            )
+        )
         ContinuousCurrentRating = self.get_data(
             "DevConductors", "ContinuousCurrentRating"
         )
@@ -371,9 +368,15 @@ class Reader(AbstractReader):
         )
 
         ### Concentric Neutral Data ###
-        CableConNeutStrandDiameter_SUL = self.get_data("DevConductors", "CableConNeutStrandDiameter_SUL")
-        CableConNeutResistance_PerLUL = self.get_data("DevConductors", "CableConNeutResistance_PerLUL")
-        CableConNeutStrandCount = self.get_data("DevConductors", "CableConNeutStrandCount")
+        CableConNeutStrandDiameter_SUL = self.get_data(
+            "DevConductors", "CableConNeutStrandDiameter_SUL"
+        )
+        CableConNeutResistance_PerLUL = self.get_data(
+            "DevConductors", "CableConNeutResistance_PerLUL"
+        )
+        CableConNeutStrandCount = self.get_data(
+            "DevConductors", "CableConNeutStrandCount"
+        )
         CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
         CableDiamOverInsul = self.get_data("DevConductors", "CableDiamOverInsul_SUL")
 
@@ -394,7 +397,6 @@ class Reader(AbstractReader):
                 "CableConNeutStrandCount": CableConNeutStrandCount[idx],
                 "CableDiamOutside": CableDiamOutside[idx],
                 "CableDiamOverInsul": CableDiamOverInsul[idx],
-
             }
 
         ## Loads #############
@@ -409,7 +411,6 @@ class Reader(AbstractReader):
         Phase1Kva = self.get_data("Loads", "Phase1Kva")
         Phase2Kva = self.get_data("Loads", "Phase2Kva")
         Phase3Kva = self.get_data("Loads", "Phase3Kva")
-
 
         ## Capacitors ################
         CapacitorSectionID = self.get_data("InstCapacitors", "SectionId")
@@ -556,7 +557,7 @@ class Reader(AbstractReader):
             api_source.is_sourcebus = 1
 
             # Set the connection type
-            api_source.connection_type = ConnectionType_src[i]
+            api_source.connection_type = ConnectionType_src[i][:1]
 
             # Set the angle of the first phase
             api_source.phase_angle = ByPhVoltDegPh1[i]
@@ -658,11 +659,9 @@ class Reader(AbstractReader):
             # Converts to meters then
             #
             api_line.length = convert_length_unit(
-                LineLength[i],
-                SynergiValueType.MUL,
-                LengthUnits
+                LineLength[i], SynergiValueType.MUL, LengthUnits
             )
-            if LineHeight[i] <0:
+            if LineHeight[i] < 0:
                 api_line.line_type = "underground"
             else:
                 api_line.line_type = "overhead"
@@ -699,7 +698,7 @@ class Reader(AbstractReader):
 
             # Switch
             if switch_sectionID is not None and obj in switch_sectionID.values:
-                idd_db= np.argwhere(switch_sectionID.values == obj).flatten()
+                idd_db = np.argwhere(switch_sectionID.values == obj).flatten()
 
                 # Set the is_switch flag to True
                 api_line.is_switch = 1
@@ -708,7 +707,9 @@ class Reader(AbstractReader):
                 if len(idd_db) == 1:
                     idd_warehouse = Switch_index_map[SwitchType[idd_db[0]]]
                     eqt_rating = ContinuousCurrentRating_switch[idd_warehouse]
-                    eqt_interrupting_rating = EmergencyCurrentRating_switch[idd_warehouse]
+                    eqt_interrupting_rating = EmergencyCurrentRating_switch[
+                        idd_warehouse
+                    ]
                     eqt_open = SwitchIsOpen[idd_db[0]]
 
             # Fuse
@@ -901,9 +902,7 @@ class Reader(AbstractReader):
                     ):
                         # Set X
                         api_wire.X = convert_length_unit(
-                            config["Position1_X_MUL"],
-                            SynergiValueType.MUL,
-                            LengthUnits
+                            config["Position1_X_MUL"], SynergiValueType.MUL, LengthUnits
                         )
 
                         # Set Y
@@ -911,7 +910,7 @@ class Reader(AbstractReader):
                         api_wire.Y = convert_length_unit(
                             AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"],
                             SynergiValueType.MUL,
-                            LengthUnits
+                            LengthUnits,
                         )
 
                     # Set the position of the second wire
@@ -923,9 +922,7 @@ class Reader(AbstractReader):
                     ):
                         # Set X
                         api_wire.X = convert_length_unit(
-                            config["Position2_X_MUL"],
-                            SynergiValueType.MUL,
-                            LengthUnits
+                            config["Position2_X_MUL"], SynergiValueType.MUL, LengthUnits
                         )
 
                         # Set Y
@@ -933,7 +930,7 @@ class Reader(AbstractReader):
                         api_wire.Y = convert_length_unit(
                             AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"],
                             SynergiValueType.MUL,
-                            LengthUnits
+                            LengthUnits,
                         )
 
                     # Set the position of the third wire
@@ -945,9 +942,7 @@ class Reader(AbstractReader):
                     ):
                         # Set X
                         api_wire.X = convert_length_unit(
-                            config["Position3_X_MUL"],
-                            SynergiValueType.MUL,
-                            LengthUnits
+                            config["Position3_X_MUL"], SynergiValueType.MUL, LengthUnits
                         )
 
                         # Set Y
@@ -955,7 +950,7 @@ class Reader(AbstractReader):
                         api_wire.Y = convert_length_unit(
                             AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"],
                             SynergiValueType.MUL,
-                            LengthUnits
+                            LengthUnits,
                         )
 
                     # Set the characteristics of the first wire. Use PhaseConductorID
@@ -1048,9 +1043,7 @@ class Reader(AbstractReader):
 
                         # Set X
                         api_wire.X = convert_length_unit(
-                            config["Neutral_X_MUL"],
-                            SynergiValueType.MUL,
-                            LengthUnits
+                            config["Neutral_X_MUL"], SynergiValueType.MUL, LengthUnits
                         )  # DiTTo is in meters
 
                         # Set Y
@@ -1058,7 +1051,7 @@ class Reader(AbstractReader):
                         api_wire.Y = convert_length_unit(
                             AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"],
                             SynergiValueType.MUL,
-                            LengthUnits
+                            LengthUnits,
                         )
 
                 # Set the characteristics of the wire:
@@ -1078,7 +1071,7 @@ class Reader(AbstractReader):
                     api_wire.gmr = convert_length_unit(
                         conductor_mapping[conductor_name_raw]["CableGMR"],
                         SynergiValueType.MUL,
-                        LengthUnits
+                        LengthUnits,
                     )
 
                     # Set the Diameter of the conductor
@@ -1087,7 +1080,7 @@ class Reader(AbstractReader):
                     api_wire.diameter = convert_length_unit(
                         conductor_mapping[conductor_name_raw]["CableDiamConductor"],
                         SynergiValueType.SUL,
-                        LengthUnits
+                        LengthUnits,
                     )
 
                     # Set the Ampacity of the conductor
@@ -1113,20 +1106,55 @@ class Reader(AbstractReader):
                         api_wire.resistance = convert_length_unit(
                             conductor_mapping[conductor_name_raw]["CableResistance"],
                             SynergiValueType.Per_LUL,
-                            LengthUnits
+                            LengthUnits,
                         )
 
                     # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
-                    if conductor_mapping[conductor_name_raw]["CableDiamOutside"] > conductor_mapping[conductor_name_raw]["CableDiamConductor"]:
-                        api_wire.concentric_neutral_resistance = conductor_mapping[conductor_name_raw]["CableConNeutResistance_PerLUL"] /160934
-                        api_wire.concentric_neutral_diameter = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]*0.0254 # multiplied by short unit length scale
-                        api_wire.concentric_neutral_gmr = conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"]/2.0*0.7788*0.0254 # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
-                        api_wire.concentric_neutral_outside_diameter = conductor_mapping[conductor_name_raw]["CableDiamOutside"]* 0.0254 # multiplied by short unit length scale
-                        api_wire.concentric_neutral_nstrand = int(conductor_mapping[conductor_name_raw]["CableConNeutStrandCount"])
-                        api_wire.insulation_thickness = (conductor_mapping[conductor_name_raw]["CableDiamOverInsul"]- conductor_mapping[conductor_name_raw]["CableDiamConductor"])/2.0*0.0254
-
-
-                        
+                    if (
+                        conductor_mapping[conductor_name_raw]["CableDiamOutside"]
+                        > conductor_mapping[conductor_name_raw]["CableDiamConductor"]
+                    ):
+                        api_wire.concentric_neutral_resistance = (
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutResistance_PerLUL"
+                            ]
+                            / 160934
+                        )
+                        api_wire.concentric_neutral_diameter = (
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutStrandDiameter_SUL"
+                            ]
+                            * 0.0254
+                        )  # multiplied by short unit length scale
+                        api_wire.concentric_neutral_gmr = (
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutStrandDiameter_SUL"
+                            ]
+                            / 2.0
+                            * 0.7788
+                            * 0.0254
+                        )  # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
+                        api_wire.concentric_neutral_outside_diameter = (
+                            conductor_mapping[conductor_name_raw]["CableDiamOutside"]
+                            * 0.0254
+                        )  # multiplied by short unit length scale
+                        api_wire.concentric_neutral_nstrand = int(
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutStrandCount"
+                            ]
+                        )
+                        api_wire.insulation_thickness = (
+                            (
+                                conductor_mapping[conductor_name_raw][
+                                    "CableDiamOverInsul"
+                                ]
+                                - conductor_mapping[conductor_name_raw][
+                                    "CableDiamConductor"
+                                ]
+                            )
+                            / 2.0
+                            * 0.0254
+                        )
 
                 # Add the new Wire to the line's list of wires
                 #
@@ -1169,10 +1197,18 @@ class Reader(AbstractReader):
                 #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
                 #         --------------------------
 
-                r0 = convert_length_unit(r0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
-                r1 = convert_length_unit(r1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
-                x0 = convert_length_unit(x0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
-                x1 = convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                r0 = (
+                    convert_length_unit(r0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                )
+                r1 = (
+                    convert_length_unit(r1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                )
+                x0 = (
+                    convert_length_unit(x0, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                )
+                x1 = (
+                    convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
+                )
 
                 # One phase case (One phase + neutral)
                 #
@@ -1251,7 +1287,9 @@ class Reader(AbstractReader):
 
             # Set the feeder_name if it is in the mapping
             if TransformerSectionId[i] in self.section_feeder_mapping:
-                api_transformer.feeder_name = self.section_feeder_mapping[TransformerSectionId[i]]
+                api_transformer.feeder_name = self.section_feeder_mapping[
+                    TransformerSectionId[i]
+                ]
             # If it is not, try to remove the "tran" prefix that might have been added
             else:
                 cleaned_id = obj.replace("Tran", "").strip()
@@ -1330,9 +1368,9 @@ class Reader(AbstractReader):
                             HighVoltageConnectionCode_N is not None
                             and len(HighVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = HighVoltageConnectionCode_N[i]
+                            w.connection_type = HighVoltageConnectionCode_N[i][:1]
                         elif HighVoltageConnectionCode_W is not None:
-                            w.connection_type = HighVoltageConnectionCode_W[Count]
+                            w.connection_type = HighVoltageConnectionCode_W[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1347,9 +1385,9 @@ class Reader(AbstractReader):
                             LowVoltageConnectionCode_N is not None
                             and len(LowVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = LowVoltageConnectionCode_N[i]
+                            w.connection_type = LowVoltageConnectionCode_N[i][:1]
                         elif LowVoltageConnectionCode_W is not None:
-                            w.connection_type = LowVoltageConnectionCode_W[Count]
+                            w.connection_type = LowVoltageConnectionCode_W[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1361,9 +1399,9 @@ class Reader(AbstractReader):
 
                         # Set the Connection_type of the Winding
                         if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
-                            w.connection_type = TertConnectCode[i]
+                            w.connection_type = TertConnectCode[i][:1]
                         elif TertiaryConnectionCode is not None:
-                            w.connection_type = TertiaryConnectionCode[Count]
+                            w.connection_type = TertiaryConnectionCode[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1439,7 +1477,6 @@ class Reader(AbstractReader):
                 # Create a list for P and Q for each phase and convert to Watts and vars
                 #
 
-
                 PLoad = map(
                     lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
                 )
@@ -1448,23 +1485,31 @@ class Reader(AbstractReader):
                     lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
                 )
                 # if there is no load information in the kvar and kw, try to get information out from the kva information
-                LoadPF=0.95
-                LoadQFactor=(1-LoadPF**2)**0.5
+                LoadPF = 0.95
+                LoadQFactor = (1 - LoadPF ** 2) ** 0.5
 
                 PLoadkva = map(
-                    lambda x: x * 10 ** 3, [Phase1Kva[i]*LoadPF, Phase2Kva[i]*LoadPF, Phase3Kva[i]*LoadPF]
+                    lambda x: x * 10 ** 3,
+                    [
+                        Phase1Kva[i] * LoadPF,
+                        Phase2Kva[i] * LoadPF,
+                        Phase3Kva[i] * LoadPF,
+                    ],
                 )
 
                 QLoadkva = map(
-                    lambda x: x * 10 ** 3, [Phase1Kvar[i]*LoadQFactor, Phase2Kvar[i]*LoadQFactor, Phase3Kvar[i]*LoadQFactor]
+                    lambda x: x * 10 ** 3,
+                    [
+                        Phase1Kvar[i] * LoadQFactor,
+                        Phase2Kvar[i] * LoadQFactor,
+                        Phase3Kvar[i] * LoadQFactor,
+                    ],
                 )
 
-
-
-
-
                 # Set the Phase Loads
-                for P, Q,Pkva,Qkva, phase in zip(PLoad, QLoad,PLoadkva,QLoadkva, ["A", "B", "C"]):
+                for P, Q, Pkva, Qkva, phase in zip(
+                    PLoad, QLoad, PLoadkva, QLoadkva, ["A", "B", "C"]
+                ):
 
                     # Only create a PhaseLoad is P OR Q is not zero
                     if P != 0 or Q != 0:
@@ -1484,7 +1529,7 @@ class Reader(AbstractReader):
                         # Add the PhaseLoad to the list
                         api_load.phase_loads.append(phase_load)
 
-                    elif Pkva!= 0 or Qkva!=0:
+                    elif Pkva != 0 or Qkva != 0:
 
                         # Create the PhaseLoad DiTTo object
                         phase_load = PhaseLoad(model)
@@ -1518,13 +1563,6 @@ class Reader(AbstractReader):
                     #     # Add the PhaseLoad to the list
                     #     api_load.phase_loads.append(phase_load)
 
-
-
-
-
-
-
-
         ####################################################################################
         #                                                                                  #
         #                              CAPACITORS                                          #
@@ -1554,7 +1592,7 @@ class Reader(AbstractReader):
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
 
             # Set the connection of the capacitor
-            api_cap.connection_type = CapacitorConnectionType[i]
+            api_cap.connection_type = CapacitorConnectionType[i][:1]
 
             # Set the Delay of the capacitor
             api_cap.delay = CapacitorTimeDelaySec[i]
@@ -1643,7 +1681,9 @@ class Reader(AbstractReader):
 
             # Set the feeder_name if in mapping
             if RegulatorSectionId[i] in self.section_feeder_mapping:
-                api_regulator.feeder_name = self.section_feeder_mapping[RegulatorSectionId[i]]
+                api_regulator.feeder_name = self.section_feeder_mapping[
+                    RegulatorSectionId[i]
+                ]
             # Otherwise, try to clean the name by removing "Reg" prefix
             else:
                 cleaned_id = RegulatorId[i].replace("Reg", "").strip()
@@ -1750,7 +1790,7 @@ class Reader(AbstractReader):
 
                 if Count is not None:
                     # Set the Connection of this Winding
-                    w.connection_type = RegulatorConnectionCode[Count]
+                    w.connection_type = RegulatorConnectionCode[Count][:1]
 
                     # Set the Nominal voltage
                     w.nominal_voltage = RegulatorRatedVoltage[Count]
@@ -1807,7 +1847,7 @@ class Reader(AbstractReader):
         print("--> Parsing PV systems...")
         for i, obj in enumerate(PVUniqueDeviceId):
 
-            if PVGenType[i] == "PhotoVoltaic" or PVGenType[i] == "PhotoVoltaic 3P" :
+            if PVGenType[i] == "PhotoVoltaic" or PVGenType[i] == "PhotoVoltaic 3P":
 
                 # Create a Photovoltaic object
                 api_PV = Photovoltaic(model)
@@ -1833,7 +1873,6 @@ class Reader(AbstractReader):
 
                 # Set the rated power
                 api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
-
 
                 # Set the reactive power
                 reactive_rating_pv = 0
@@ -1879,7 +1918,6 @@ class Reader(AbstractReader):
 
                 # Set the Rated Power
                 api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
-
 
                 # Set feeder name if in mapping
                 if obj in self.section_feeder_mapping:
