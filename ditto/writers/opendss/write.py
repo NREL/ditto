@@ -1282,7 +1282,6 @@ class Writer(AbstractWriter):
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New PVSystem.{name}".format(name=i.name)
 
-
                 # connecting element
                 if (
                     hasattr(i, "connecting_element")
@@ -1293,7 +1292,7 @@ class Writer(AbstractWriter):
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
-                            txt += "." + str(self.phase_mapping(phase.default_value))
+                            txt += "." + str(self.phase_mapping(phase))
 
                 # Phases
                 if hasattr(i, "phases") and i.phases is not None:
@@ -1429,8 +1428,8 @@ class Writer(AbstractWriter):
                     txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
 
                 # power_factor
-                if hasattr(i, "control") and (
-                    i.control is None or i.control == "powerfactor"
+                if hasattr(i, "control_type") and (
+                    i.control_type is None or i.control_type == "powerfactor"
                 ):  # use powerfactor as default mode
                     if hasattr(i, "power_factor") and i.power_factor is not None:
                         txt += " Model=1 pf={power_factor}".format(
@@ -2601,9 +2600,14 @@ class Writer(AbstractWriter):
                         hasattr(i, "measuring_element")
                         and i.measuring_element is not None
                     ):
-                        txt += " Element=Line.{elt} Terminal=1".format(
-                            elt=i.measuring_element
-                        )
+                        if "Line." not in i.measuring_element:
+                            txt += " Element=Line.{elt} Terminal=1".format(
+                                elt=i.measuring_element
+                            )
+                        else:
+                            txt += " Element={elt} Terminal=1".format(
+                                elt=i.measuring_element
+                            )
 
                     # Delay (CONTROL)
                     if hasattr(i, "delay") and i.delay is not None:
