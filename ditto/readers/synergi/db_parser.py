@@ -1,4 +1,3 @@
-
 # Remove this import since it works only for Windows...
 # import win32com.client
 #
@@ -40,15 +39,22 @@ class DbParser:
             table_list_warehouse = mdb.list_tables(self.paths["warehouse"])
 
         for table in table_list:
-            self.SynergiDictionary[table] = mdb.read_table(
-                self.paths["Synergi File"], table
+            self.SynergiDictionary[table] = self.ToLowerCase(
+                mdb.read_table(self.paths["Synergi File"], table)
             )
 
         for table in table_list_warehouse:
-            self.SynergiDictionary[table] = mdb.read_table(
-                self.paths["warehouse"], table
+            self.SynergiDictionary[table] = self.ToLowerCase(
+                mdb.read_table(self.paths["warehouse"], table)
             )
         return
+
+    def ToLowerCase(self, df):
+        """
+        This function converts all the input data to lower case.
+        """
+        df = df.apply(lambda x: x.str.lower() if x.dtype == "object" else x)
+        return df
 
     # def __ParseSynergiDatabase_deprecated(self, dataFile):
     #     """
