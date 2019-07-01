@@ -1662,7 +1662,7 @@ class Reader(AbstractReader):
             api_cap.ct_ratio = CapacitorCTRating[i]
 
             # Set the Measuring element
-            api_cap.measuring_element = "Line." + CapacitorSectionID[i].lower()
+            api_cap.measuring_element = CapacitorSectionID[i].lower()
 
             # Set the PT phase
             api_cap.pt_phase = MeteringPhase[i]

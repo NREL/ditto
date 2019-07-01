@@ -2600,14 +2600,9 @@ class Writer(AbstractWriter):
                         hasattr(i, "measuring_element")
                         and i.measuring_element is not None
                     ):
-                        if "Line." not in i.measuring_element:
-                            txt += " Element=Line.{elt} Terminal=1".format(
-                                elt=i.measuring_element
-                            )
-                        else:
-                            txt += " Element={elt} Terminal=1".format(
-                                elt=i.measuring_element
-                            )
+                        txt += " Element=Line.{elt} Terminal=1".format(
+                            elt=i.measuring_element
+                        )
 
                     # Delay (CONTROL)
                     if hasattr(i, "delay") and i.delay is not None:
