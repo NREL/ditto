@@ -90,7 +90,7 @@ class Reader(AbstractReader):
         if "warehouse" in kwargs:
             self.ware_house_input_file = kwargs["warehouse"]
         else:
-            self.ware_house_input_file = None
+            self.ware_house_input_file = "warehouse.mdb"
 
         self.SynergiData = None
 
@@ -119,6 +119,9 @@ class Reader(AbstractReader):
         Synergi --> DiTTo parse method.
         """
         if self.ware_house_input_file is not None:
+            self.ware_house_input_file = os.path.join(
+                os.path.dirname(self.input_file), self.ware_house_input_file
+            )
             self.SynergiData = DbParser(
                 self.input_file, warehouse=self.ware_house_input_file
             )
@@ -180,6 +183,7 @@ class Reader(AbstractReader):
         )
 
         ## Transformer Setting ##
+
         TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
         HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
         LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
@@ -572,7 +576,7 @@ class Reader(AbstractReader):
             api_source.is_sourcebus = 1
 
             # Set the connection type
-            api_source.connection_type = ConnectionType_src[i]
+            api_source.connection_type = ConnectionType_src[i][:1]
 
             # Set the angle of the first phase
             api_source.phase_angle = ByPhVoltDegPh1[i]
@@ -1331,6 +1335,7 @@ class Reader(AbstractReader):
             api_transformer.name = obj.replace(" ", "_").lower()
 
             # Set the feeder_name if it is in the mapping
+
             if TransformerSectionId[i] in self.section_feeder_mapping:
                 api_transformer.feeder_name = self.section_feeder_mapping[
                     TransformerSectionId[i]
@@ -1413,9 +1418,9 @@ class Reader(AbstractReader):
                             HighVoltageConnectionCode_N is not None
                             and len(HighVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = HighVoltageConnectionCode_N[i]
+                            w.connection_type = HighVoltageConnectionCode_N[i][:1]
                         elif HighVoltageConnectionCode_W is not None:
-                            w.connection_type = HighVoltageConnectionCode_W[Count]
+                            w.connection_type = HighVoltageConnectionCode_W[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1430,9 +1435,9 @@ class Reader(AbstractReader):
                             LowVoltageConnectionCode_N is not None
                             and len(LowVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = LowVoltageConnectionCode_N[i]
+                            w.connection_type = LowVoltageConnectionCode_N[i][:1]
                         elif LowVoltageConnectionCode_W is not None:
-                            w.connection_type = LowVoltageConnectionCode_W[Count]
+                            w.connection_type = LowVoltageConnectionCode_W[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1444,9 +1449,9 @@ class Reader(AbstractReader):
 
                         # Set the Connection_type of the Winding
                         if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
-                            w.connection_type = TertConnectCode[i]
+                            w.connection_type = TertConnectCode[i][:1]
                         elif TertiaryConnectionCode is not None:
-                            w.connection_type = TertiaryConnectionCode[Count]
+                            w.connection_type = TertiaryConnectionCode[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1637,7 +1642,7 @@ class Reader(AbstractReader):
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
 
             # Set the connection of the capacitor
-            api_cap.connection_type = CapacitorConnectionType[i]
+            api_cap.connection_type = CapacitorConnectionType[i][:1]
 
             # Set the Delay of the capacitor
             api_cap.delay = CapacitorTimeDelaySec[i]
@@ -1841,7 +1846,7 @@ class Reader(AbstractReader):
 
                 if Count is not None:
                     # Set the Connection of this Winding
-                    w.connection_type = RegulatorConnectionCode[Count]
+                    w.connection_type = RegulatorConnectionCode[Count][:1]
 
                     # Set the Nominal voltage
                     w.nominal_voltage = RegulatorRatedVoltage[Count]

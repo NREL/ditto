@@ -131,6 +131,9 @@ def metric(ctx, **kwargs):
 @click.option(
     "--remove_opendss_default_values", is_flag=True, help="Remove default values"
 )
+@click.option(
+    "--warehouse", type=click.Path(exists=True), help="Path to synergi warehouse file"
+)
 @click.pass_context
 def convert(ctx, **kwargs):
     """ Convert from one type to another"""
@@ -168,6 +171,11 @@ def convert(ctx, **kwargs):
     else:
         remove_opendss_default_values_flag = False
 
+    if kwargs["warehouse"] is not None:
+        synergi_warehouse_path = kwargs["warehouse"]
+    else:
+        synergi_warehouse_path = None
+
     Converter(
         registered_reader_class=_load(registered_readers, from_reader_name),
         registered_writer_class=_load(registered_writers, to_writer_name),
@@ -177,6 +185,7 @@ def convert(ctx, **kwargs):
         registered_json_writer_class=registered_json_writer_class,
         default_values_json=default_values_json,
         remove_opendss_default_values_flag=remove_opendss_default_values_flag,
+        synergi_warehouse_path=synergi_warehouse_path,
     ).convert()
 
     sys.exit(0)
