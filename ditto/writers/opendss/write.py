@@ -1292,7 +1292,7 @@ class Writer(AbstractWriter):
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
-                            txt += "." + str(self.phase_mapping(phase.default_value))
+                            txt += "." + str(self.phase_mapping(phase))
 
                 # Phases
                 if hasattr(i, "phases") and i.phases is not None:
@@ -1428,8 +1428,8 @@ class Writer(AbstractWriter):
                     txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
 
                 # power_factor
-                if hasattr(i, "control") and (
-                    i.control is None or i.control == "powerfactor"
+                if hasattr(i, "control_type") and (
+                    i.control_type is None or i.control_type == "powerfactor"
                 ):  # use powerfactor as default mode
                     if hasattr(i, "power_factor") and i.power_factor is not None:
                         txt += " Model=1 pf={power_factor}".format(
