@@ -183,7 +183,7 @@ class Reader(AbstractReader):
         )
 
         ## Transformer Setting ##
-        # import pdb;pdb.set_trace()
+
         TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
         HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
         LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
@@ -436,6 +436,9 @@ class Reader(AbstractReader):
         CapacitorFixedKvarPhase1 = self.get_data("InstCapacitors", "FixedKvarPhase1")
         CapacitorFixedKvarPhase2 = self.get_data("InstCapacitors", "FixedKvarPhase2")
         CapacitorFixedKvarPhase3 = self.get_data("InstCapacitors", "FixedKvarPhase3")
+        CapacitorModule1KvarPhase = self.get_data(
+            "InstCapacitors", "Module1KvarPerPhase"
+        )
         MeteringPhase = self.get_data("InstCapacitors", "MeteringPhase")
         CapacitorConnectedPhases = self.get_data("InstCapacitors", "ConnectedPhases")
 
@@ -495,6 +498,19 @@ class Reader(AbstractReader):
         PVGenPhase1Kvar = self.get_data("InstLargeCust", "GenPhase1Kvar")
         PVGenPhase2Kvar = self.get_data("InstLargeCust", "GenPhase2Kvar")
         PVGenPhase3Kvar = self.get_data("InstLargeCust", "GenPhase3Kvar")
+
+        ## Adding Distributed Gen PV ####
+
+        DSectionID = self.get_data("InstDGens", "SectionId")
+        DGeneratorType = self.get_data("InstDGens", "DGenType")
+        DGeneratorVoltageSetting = self.get_data("InstDGens", "DGenVoltSet")
+        DGeneratorPF = self.get_data("InstDGens", "SpecPowerFactorPct")
+        DGenPhase1Kw = self.get_data("InstDGens", "Phase1Kw")
+        DGenPhase1Kvar = self.get_data("InstDGens", "Phase1Kvar")
+        DGenPhase2Kw = self.get_data("InstDGens", "Phase2Kw")
+        DGenPhase2Kvar = self.get_data("InstDGens", "Phase2Kvar")
+        DGenPhase3Kw = self.get_data("InstDGens", "Phase3Kw")
+        DGenPhase3Kvar = self.get_data("InstDGens", "Phase3Kvar")
 
         ## Generators ###############################
         GeneratorSectionID = self.get_data("InstGenerators", "SectionId")
@@ -560,7 +576,7 @@ class Reader(AbstractReader):
             api_source.is_sourcebus = 1
 
             # Set the connection type
-            api_source.connection_type = ConnectionType_src[i]
+            api_source.connection_type = ConnectionType_src[i][:1]
 
             # Set the angle of the first phase
             api_source.phase_angle = ByPhVoltDegPh1[i]
@@ -973,6 +989,11 @@ class Reader(AbstractReader):
                         # The name can contain spaces. Replace them with "_"
                         #
                         api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
+                        if api_wire.nameclass.lower() == "unknown":
+                            if api_line.line_type == "underground":
+                                api_wire.nameclass += "_cable"
+                            else:
+                                api_wire.nameclass += "_wire"
 
                         # Cache the conductor name
                         conductor_name_raw = PhaseConductorID[i]
@@ -1000,6 +1021,16 @@ class Reader(AbstractReader):
                                 api_wire.nameclass = PhaseConductorID[i].replace(
                                     " ", "_"
                                 )
+                                set_unknown = set(api_wire.nameclass.lower().split())
+                                set_elem = next(iter(set_unknown))
+                                if api_wire.nameclass.lower() == "unknown" or (
+                                    set_elem == "unknown" and len(set_unknown) == 1
+                                ):
+                                    if api_line.line_type == "underground":
+                                        api_wire.nameclass += "_cable"
+                                    else:
+                                        api_wire.nameclass += "_wire"
+
                                 conductor_name_raw = PhaseConductorID[i]
                             except:
                                 pass
@@ -1024,6 +1055,16 @@ class Reader(AbstractReader):
                                 api_wire.nameclass = PhaseConductorID[i].replace(
                                     " ", "_"
                                 )
+                                set_unknown = set(api_wire.nameclass.lower().split())
+                                set_elem = next(iter(set_unknown))
+                                if api_wire.nameclass.lower() == "unknown" or (
+                                    set_elem == "unknown" and len(set_unknown) == 1
+                                ):
+                                    if api_line.line_type == "underground":
+                                        api_wire.nameclass += "_cable"
+                                    else:
+                                        api_wire.nameclass += "_wire"
+
                                 conductor_name_raw = PhaseConductorID[i]
                             except:
                                 pass
@@ -1037,6 +1078,11 @@ class Reader(AbstractReader):
 
                         # Set the nameclass
                         api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
+                        if api_wire.nameclass.lower() == "unknown":
+                            if api_line.line_type == "underground":
+                                api_wire.nameclass += "_cable"
+                            else:
+                                api_wire.nameclass += "_wire"
 
                         # Cache the conductor name
                         conductor_name_raw = NeutralConductorID[i]
@@ -1372,9 +1418,9 @@ class Reader(AbstractReader):
                             HighVoltageConnectionCode_N is not None
                             and len(HighVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = HighVoltageConnectionCode_N[i]
+                            w.connection_type = HighVoltageConnectionCode_N[i][:1]
                         elif HighVoltageConnectionCode_W is not None:
-                            w.connection_type = HighVoltageConnectionCode_W[Count]
+                            w.connection_type = HighVoltageConnectionCode_W[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1389,9 +1435,9 @@ class Reader(AbstractReader):
                             LowVoltageConnectionCode_N is not None
                             and len(LowVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = LowVoltageConnectionCode_N[i]
+                            w.connection_type = LowVoltageConnectionCode_N[i][:1]
                         elif LowVoltageConnectionCode_W is not None:
-                            w.connection_type = LowVoltageConnectionCode_W[Count]
+                            w.connection_type = LowVoltageConnectionCode_W[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1403,9 +1449,9 @@ class Reader(AbstractReader):
 
                         # Set the Connection_type of the Winding
                         if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
-                            w.connection_type = TertConnectCode[i]
+                            w.connection_type = TertConnectCode[i][:1]
                         elif TertiaryConnectionCode is not None:
-                            w.connection_type = TertiaryConnectionCode[Count]
+                            w.connection_type = TertiaryConnectionCode[Count][:1]
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1596,7 +1642,7 @@ class Reader(AbstractReader):
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
 
             # Set the connection of the capacitor
-            api_cap.connection_type = CapacitorConnectionType[i]
+            api_cap.connection_type = CapacitorConnectionType[i][:1]
 
             # Set the Delay of the capacitor
             api_cap.delay = CapacitorTimeDelaySec[i]
@@ -1621,7 +1667,7 @@ class Reader(AbstractReader):
             api_cap.ct_ratio = CapacitorCTRating[i]
 
             # Set the Measuring element
-            api_cap.measuring_element = "Line." + CapacitorSectionID[i].lower()
+            api_cap.measuring_element = CapacitorSectionID[i].lower()
 
             # Set the PT phase
             api_cap.pt_phase = MeteringPhase[i]
@@ -1643,6 +1689,12 @@ class Reader(AbstractReader):
 
             # Get the KVAR for each phase
             #
+            if float(CapacitorFixedKvarPhase1[i]) == 0:
+                CapacitorFixedKvarPhase1.at[i] = CapacitorModule1KvarPhase[i]
+            if float(CapacitorFixedKvarPhase2[i]) == 0:
+                CapacitorFixedKvarPhase2.at[i] = CapacitorModule1KvarPhase[i]
+            if float(CapacitorFixedKvarPhase3[i]) == 0:
+                CapacitorFixedKvarPhase3.at[i] = CapacitorModule1KvarPhase[i]
             QCap = [
                 float(CapacitorFixedKvarPhase1[i]),
                 float(CapacitorFixedKvarPhase2[i]),
@@ -1794,7 +1846,7 @@ class Reader(AbstractReader):
 
                 if Count is not None:
                     # Set the Connection of this Winding
-                    w.connection_type = RegulatorConnectionCode[Count]
+                    w.connection_type = RegulatorConnectionCode[Count][:1]
 
                     # Set the Nominal voltage
                     w.nominal_voltage = RegulatorRatedVoltage[Count]
@@ -1931,7 +1983,7 @@ class Reader(AbstractReader):
                 Count2 = None
                 for k2, section in enumerate(LineID):
                     if GeneratorSectionID[idx] == section:
-                        Count2 = k
+                        Count2 = k2
 
                 if Count2 is None:
                     print("WARNING: No section found for PV {}".format(obj))
@@ -1952,3 +2004,77 @@ class Reader(AbstractReader):
 
                 # Set the Power Factor
                 api_PV.power_factor = GeneratorPF[idx]
+
+        # Adding PV information from INSTDGens - Distribution Generator
+
+        for idx, obj in enumerate(DSectionID):
+            Count = None
+            for k, gen in enumerate(GeneratorName):
+                if DGeneratorType[idx] == gen:
+                    Count = k
+
+            if Count is not None and GeneratorTypeDev[Count] == "PV":
+
+                # Create a Photovoltaic DiTTo object
+                api_PV = Photovoltaic(model)
+
+                # Set the PV name
+                api_PV.name = DSectionID[idx].lower().replace(" ", "_")
+
+                # Set the Rated Power
+                api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
+
+                # Set feeder name if in mapping
+                if obj in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[obj]
+
+                rated_power_pv = 0
+                if DGenPhase1Kw[idx] != 0:
+                    api_PV.phases.append("A")
+                    rated_power_pv += DGenPhase1Kw[idx]
+                if DGenPhase2Kw[idx] != 0:
+                    api_PV.phases.append("B")
+                    rated_power_pv += DGenPhase2Kw[idx]
+                if DGenPhase3Kw[idx] != 0:
+                    api_PV.phases.append("C")
+                    rated_power_pv += DGenPhase3Kw[idx]
+
+                # Set the rated power
+                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.active_rating = rated_power_pv * 10 ** 3  # DiTTo in Watts
+
+                # Set the reactive power
+                reactive_rating_pv = 0
+                if DGenPhase1Kvar[idx] != 0:
+                    api_PV.phases.append("A") if "A" not in api_PV.phases else None
+                    reactive_rating_pv += DGenPhase1Kvar[idx]
+                if DGenPhase2Kvar[idx] != 0:
+                    api_PV.phases.append("B") if "B" not in api_PV.phases else None
+                    reactive_rating_pv += DGenPhase2Kvar[idx]
+                if DGenPhase3Kvar[idx] != 0:
+                    api_PV.phases.append("C") if "C" not in api_PV.phases else None
+                    reactive_rating_pv += DGenPhase3Kvar[idx]
+
+                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+
+                # Set the Connecting element
+                Count2 = None
+                for k2, section in enumerate(LineID):
+                    if DSectionID[idx] == section:
+                        Count2 = k2
+
+                if Count2 is None:
+                    print("WARNING: No section found for PV {}".format(obj))
+
+                if Count2 is not None:
+                    # Set the connecting element
+                    api_PV.connecting_element = (
+                        ToNodeId[Count2].lower().replace(" ", "_")
+                    )
+
+                # Set the Nominal voltage
+                api_PV.nominal_voltage = DGeneratorVoltageSetting[idx] * 10 ** 3
+
+                # Set the Power Factor
+                api_PV.control_type = "powerfactor"
+                api_PV.power_factor = DGeneratorPF[idx] * 0.01
