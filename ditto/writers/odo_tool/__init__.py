@@ -5,6 +5,6 @@ from builtins import super, range, zip, round, map
 
 from .write import Writer as ODO_writer
 
-__author__ = """Nicolas Gensollen"""
-__email__ = "nicolas.gensollen@nrel.gov"
-__version__ = "0.1.0"
+__author__ = """Rishabh Jain"""
+__email__ = "rishabh.jain@nrel.gov"
+__version__ = "0.4.0"
