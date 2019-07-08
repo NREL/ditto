@@ -276,18 +276,18 @@ class Writer(AbstractWriter):
 
         .. note:: Returns None if phase is not in ['A','B','C']
         """
-        if phase == u"a":
+        if phase == u"A":
             return 1
-        elif phase == u"b":
+        elif phase == u"B":
             return 2
-        elif phase == u"c":
+        elif phase == u"C":
             return 3
         else:
             return None
 
     def mode_mapping(self, mode):
         """TODO"""
-        if mode.lower() == "currentflow":
+        if mode.lower() == "currentFlow":
             return "current"
         elif mode.lower() == "voltage":
             return "voltage"
@@ -593,9 +593,9 @@ class Writer(AbstractWriter):
                                 hasattr(winding, "connection_type")
                                 and winding.connection_type is not None
                             ):
-                                if winding.connection_type == "y":
+                                if winding.connection_type == "Y":
                                     txt += " conn=wye"
-                                elif winding.connection_type == "d":
+                                elif winding.connection_type == "D":
                                     txt += " conn=delta"
                                 else:
                                     logger.error(
@@ -764,9 +764,9 @@ class Writer(AbstractWriter):
                                 hasattr(winding, "connection_type")
                                 and winding.connection_type is not None
                             ):
-                                if winding.connection_type == "y":
+                                if winding.connection_type == "Y":
                                     txt += " conn=wye"
-                                elif winding.connection_type == "d":
+                                elif winding.connection_type == "D":
                                     txt += " conn=delta"
                                 else:
                                     logger.error(
@@ -794,7 +794,7 @@ class Writer(AbstractWriter):
                                     )
                                     if (
                                         len(winding.phase_windings) > 1
-                                        and winding.connection_type == "y"
+                                        and winding.connection_type == "Y"
                                     ):
                                         print(
                                             "Warning - Wye center-tap transformer with more than one phase connection. Only using first one"
@@ -1393,7 +1393,7 @@ class Writer(AbstractWriter):
 
                 # connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:
-                    mapps = {"d": "delta", "y": "wye"}
+                    mapps = {"D": "delta", "Y": "wye"}
                     if i.connection_type in mapps:
                         txt += " conn={conn}".format(conn=mapps[i.connection_type])
                     else:
@@ -1806,9 +1806,9 @@ class Writer(AbstractWriter):
 
                 # Connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:
-                    if i.connection_type == "y":
+                    if i.connection_type == "Y":
                         txt += " conn=wye"
-                    elif i.connection_type == "d":
+                    elif i.connection_type == "D":
                         txt += " conn=delta"
 
                 # Connecting element
@@ -1824,15 +1824,15 @@ class Writer(AbstractWriter):
                                 and phase_load.phase is not None
                             ):
                                 txt += ".{p}".format(
-                                    p=self.phase_mapping(phase_load.phase.lower())
+                                    p=self.phase_mapping(phase_load.phase)
                                 )
 
-                        if i.connection_type == "d" and len(i.phase_loads) == 1:
-                            if self.phase_mapping(i.phase_loads[0].phase.lower()) == 1:
+                        if i.connection_type == "D" and len(i.phase_loads) == 1:
+                            if self.phase_mapping(i.phase_loads[0].phase) == 1:
                                 txt += ".2"
-                            if self.phase_mapping(i.phase_loads[0].phase.lower()) == 2:
+                            if self.phase_mapping(i.phase_loads[0].phase) == 2:
                                 txt += ".3"
-                            if self.phase_mapping(i.phase_loads[0].phase.lower()) == 3:
+                            if self.phase_mapping(i.phase_loads[0].phase) == 3:
                                 txt += ".1"
 
                 # nominal voltage
@@ -2509,11 +2509,11 @@ class Writer(AbstractWriter):
                                 hasattr(phase_capacitor, "phase")
                                 and phase_capacitor.phase is not None
                             ):
-                                if phase_capacitor.phase == "a":
+                                if phase_capacitor.phase == "A":
                                     txt += ".1"
-                                if phase_capacitor.phase == "b":
+                                if phase_capacitor.phase == "B":
                                     txt += ".2"
-                                if phase_capacitor.phase == "c":
+                                if phase_capacitor.phase == "C":
                                     txt += ".3"
 
                 # Phases
@@ -2542,9 +2542,9 @@ class Writer(AbstractWriter):
 
                 # connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:
-                    if i.connection_type == "y":
+                    if i.connection_type == "Y":
                         txt += " conn=Wye"
-                    elif i.connection_type == "d":
+                    elif i.connection_type == "D":
                         txt += " conn=delta"
                     else:
                         logger.error(
@@ -2839,7 +2839,7 @@ class Writer(AbstractWriter):
                             if (
                                 hasattr(wire, "phase")
                                 and wire.phase is not None
-                                and wire.phase not in ["n", "n1", "n2"]
+                                and wire.phase not in ["N", "N1", "N2"]
                             ):
                                 txt += ".{p}".format(p=self.phase_mapping(wire.phase))
 
@@ -2851,7 +2851,7 @@ class Writer(AbstractWriter):
                             if (
                                 hasattr(wire, "phase")
                                 and wire.phase is not None
-                                and wire.phase not in ["n", "n1", "n2"]
+                                and wire.phase not in ["N", "N1", "N2"]
                             ):
                                 txt += ".{p}".format(p=self.phase_mapping(wire.phase))
 
@@ -2870,7 +2870,7 @@ class Writer(AbstractWriter):
                             for wire in i.wires
                             if (wire.is_open == 0 or wire.is_open is None)
                             and wire.phase is not None
-                            and wire.phase not in ["n", "n1", "n2"]
+                            and wire.phase not in ["N", "N1", "N2"]
                         ]
                     )
                     if len(closed_phase) == 0:
@@ -2902,7 +2902,7 @@ class Writer(AbstractWriter):
 
                 # N_phases
                 if hasattr(i, "wires") and i.wires is not None:
-                    phase_wires = [w for w in i.wires if w.phase in ["a", "b", "c"]]
+                    phase_wires = [w for w in i.wires if w.phase in ["A", "B", "C"]]
                     txt += " phases=" + str(len(phase_wires))
 
                 if i in lines_to_geometrify:
@@ -3360,7 +3360,7 @@ class Writer(AbstractWriter):
                             nameclass = ""
                             if hasattr(i, "wires") and i.wires is not None:
                                 phase_wires = [
-                                    w for w in i.wires if w.phase in ["a", "b", "c"]
+                                    w for w in i.wires if w.phase in ["A", "B", "C"]
                                 ]
                                 nameclass += str(len(phase_wires)) + "P_"
 
@@ -3464,7 +3464,7 @@ class Writer(AbstractWriter):
 
         # N_phases
         if hasattr(line, "wires") and line.wires is not None:
-            phase_wires = [w for w in line.wires if w.phase in ["a", "b", "c"]]
+            phase_wires = [w for w in line.wires if w.phase in ["A", "B", "C"]]
             result["nphases"] = len(phase_wires)
 
         # faultrate
@@ -3706,7 +3706,7 @@ class Writer(AbstractWriter):
         result = {}
         wire_list = line.wires
         result["nconds"] = len(wire_list)
-        phase_wires = [w for w in wire_list if w.phase in ["a", "b", "c"]]
+        phase_wires = [w for w in wire_list if w.phase in ["A", "B", "C"]]
         result["nphases"] = len(phase_wires)
         result["units"] = "m"
         result["conductor_list"] = []
