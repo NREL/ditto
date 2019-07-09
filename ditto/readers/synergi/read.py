@@ -2016,9 +2016,6 @@ class Reader(AbstractReader):
                 for phase in GeneratorConnectedPhases[idx].strip():
                     api_PV.phases.append(phase.upper())
 
-                import pdb
-
-                pdb.set_trace()
                 # Set the Power Factor
                 api_PV.power_factor = GeneratorPF[idx]
 
