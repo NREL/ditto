@@ -1492,7 +1492,7 @@ class Reader(AbstractReader):
 
                     # Create the PhaseWindings
                     for phase in phases:
-                        if phase != "N":
+                        if phase.upper() != "N":
                             pw = PhaseWinding(model)
                             pw.phase = phase.upper()
                             w.phase_windings.append(pw)
