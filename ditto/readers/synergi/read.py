@@ -1393,6 +1393,13 @@ class Reader(AbstractReader):
                 # Set the NoLoadLosses
                 api_transformer.noload_loss = NoLoadLosses[Count]
 
+                # Set the reactances
+                api_transformer.reactances = [
+                    math.sqrt(
+                        PercentImpedance[Count] ** 2 - PercentResistance[Count] ** 2
+                    )
+                ]
+
                 # Number of windings
                 # TODO: IS THIS RIGHT???
                 #
@@ -1411,6 +1418,9 @@ class Reader(AbstractReader):
 
                     # Create a new Winding object
                     w = Winding(model)
+
+                    # Setting the resistance
+                    w.resistance = float(PercentResistance[Count])
 
                     # Primary
                     if winding == 0:
