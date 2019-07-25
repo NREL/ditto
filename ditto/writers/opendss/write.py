@@ -1824,7 +1824,7 @@ class Writer(AbstractWriter):
                                 and phase_load.phase is not None
                             ):
                                 txt += ".{p}".format(
-                                    p=self.phase_mapping(phase_load.phase.lower())
+                                    p=self.phase_mapping(phase_load.phase)
                                 )
 
                         if i.connection_type == "D" and len(i.phase_loads) == 1:
@@ -1870,8 +1870,7 @@ class Writer(AbstractWriter):
 
                 # KW
                 total_P = 0
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
-
+                if hasattr(i, "phase_loads") and i.phase_loads:
                     txt += " model={N}".format(N=i.phase_loads[0].model)
 
                     for phase_load in i.phase_loads:
@@ -1881,14 +1880,14 @@ class Writer(AbstractWriter):
 
                 # Kva
                 total_Q = 0
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                if hasattr(i, "phase_loads") and i.phase_loads:
                     for phase_load in i.phase_loads:
                         if hasattr(phase_load, "q") and phase_load.q is not None:
                             total_Q += phase_load.q
                     txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
 
                 # phase_loads
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                if hasattr(i, "phase_loads") and i.phase_loads:
 
                     # if i.connection_type=='Y':
                     txt += " Phases={N}".format(N=len(i.phase_loads))
