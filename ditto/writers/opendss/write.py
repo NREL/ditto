@@ -280,14 +280,14 @@ class Writer(AbstractWriter):
             return 1
         elif phase == u"B":
             return 2
-        elif phase == "C":
+        elif phase == u"C":
             return 3
         else:
             return None
 
     def mode_mapping(self, mode):
         """TODO"""
-        if mode.lower() == "currentFlow":
+        if mode.lower() == "currentflow":
             return "current"
         elif mode.lower() == "voltage":
             return "voltage"
@@ -1282,7 +1282,6 @@ class Writer(AbstractWriter):
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New PVSystem.{name}".format(name=i.name)
 
-
                 # connecting element
                 if (
                     hasattr(i, "connecting_element")
@@ -1293,7 +1292,7 @@ class Writer(AbstractWriter):
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
-                            txt += "." + str(self.phase_mapping(phase.default_value))
+                            txt += "." + str(self.phase_mapping(phase))
 
                 # Phases
                 if hasattr(i, "phases") and i.phases is not None:
@@ -1429,8 +1428,8 @@ class Writer(AbstractWriter):
                     txt += " Vminpu={v_min_pu}".format(v_min_pu=i.v_min_pu)
 
                 # power_factor
-                if hasattr(i, "control") and (
-                    i.control is None or i.control == "powerfactor"
+                if hasattr(i, "control_type") and (
+                    i.control_type is None or i.control_type == "powerfactor"
                 ):  # use powerfactor as default mode
                     if hasattr(i, "power_factor") and i.power_factor is not None:
                         txt += " Model=1 pf={power_factor}".format(
@@ -1438,17 +1437,17 @@ class Writer(AbstractWriter):
                         )
 
                 if (
-                    hasattr(i, "control")
-                    and i.control is not None
-                    and i.control == "voltwatt"
+                    hasattr(i, "control_type")
+                    and i.control_type is not None
+                    and i.control_type == "voltwatt"
                 ):
                     txt += " Model=1 kvar=0"
                     voltwatt_nodes.add(i.name)
 
                 if (
-                    hasattr(i, "control")
-                    and i.control is not None
-                    and i.control == "voltvar"
+                    hasattr(i, "control_type")
+                    and i.control_type is not None
+                    and i.control_type == "voltvar"
                 ):
                     txt += " Model=1 kvar=0"
                     voltvar_nodes.add(i.name)
@@ -1871,8 +1870,7 @@ class Writer(AbstractWriter):
 
                 # KW
                 total_P = 0
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
-
+                if hasattr(i, "phase_loads") and i.phase_loads:
                     txt += " model={N}".format(N=i.phase_loads[0].model)
 
                     for phase_load in i.phase_loads:
@@ -1882,14 +1880,14 @@ class Writer(AbstractWriter):
 
                 # Kva
                 total_Q = 0
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                if hasattr(i, "phase_loads") and i.phase_loads:
                     for phase_load in i.phase_loads:
                         if hasattr(phase_load, "q") and phase_load.q is not None:
                             total_Q += phase_load.q
                     txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
 
                 # phase_loads
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                if hasattr(i, "phase_loads") and i.phase_loads:
 
                     # if i.connection_type=='Y':
                     txt += " Phases={N}".format(N=len(i.phase_loads))
