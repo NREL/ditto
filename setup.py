@@ -52,7 +52,6 @@ synergi_requires = [
 
 
 class PostDevelopCommand(develop):
-
     def run(self):
         try:
             check_call(shlex.split("pre-commit install"))
@@ -91,6 +90,12 @@ setup(
         ],
     },
     include_package_data=True,
+    package_data={
+        "ditto": [
+            "default_values/opendss_default_values.json",
+            "formats/gridlabd/schema.json",
+        ]
+    },
     license="BSD license",
     zip_safe=False,
     keywords="ditto",
