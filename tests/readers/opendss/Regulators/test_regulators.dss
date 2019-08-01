@@ -1,0 +1,48 @@
+Clear
+
+New Circuit.test_regulators basekv=115 pu=1.01 bus1=sourcebus
+
+! Regulator No. 1 from IEEE 8500 test case
+
+New Transformer.VREG2_A phases=1  windings=2  bank=VREG2  buses=(regxfmr_190-8593.1, 190-8593.1)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(10000, 10000)  xhl=0.1 %loadloss=.01 Wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
+New Transformer.VREG2_B phases=1  windings=2  bank=VREG2  buses=(regxfmr_190-8593.2, 190-8593.2)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(10000, 10000)  xhl=0.1 %loadloss=.01 Wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
+New Transformer.VREG2_C phases=1  windings=2  bank=VREG2  buses=(regxfmr_190-8593.3, 190-8593.3)  conns=(wye, wye)  kvs=(7.2, 7.2)  kvas=(10000, 10000)  xhl=0.1 %loadloss=.01 Wdg=2 Maxtap=1.1 Mintap=0.9 ppm=0
+
+New RegControl.VREG2_A transformer=VREG2_A  winding=2 vreg=125  ptratio=60 band=2 vlimit=8.0 TapNum=0
+New RegControl.VREG2_B transformer=VREG2_B  winding=2 vreg=125  ptratio=60 band=2 vlimit=0 TapNum=-3
+New RegControl.VREG2_C transformer=VREG2_C  winding=2 vreg=125  ptratio=60 band=2 TapNum=2
+
+! Regulator No. 2 from IEEE 8500 test case
+
+New Transformer.regxfmr_B18865 phases=1 windings=2 buses=(B18865.3, B18865reg.3) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 tap=2 enabled=True
+New RegControl.regxfmr_B18865_ctrl transformer=regxfmr_B18865 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=45 CTPrim=0.12
+
+! Regulator No. 3 from IEEE 8500 test case
+
+New Transformer.regxfmr_B18865_2 phases=1 windings=2 buses=(B18865.3, B18865reg.3) conns=(wye, wye) kvs=(7.2,7.2) kvas=(10000, 10000) xhl=0.01 Maxtap=1.1 Mintap=0.9 tap=2 enabled=True
+New RegControl.regxfmr_B18865_2_ctrl transformer=regxfmr_B18865_2 winding=2 vreg=124 ptratio=60 band=2 enabled=True delay=45 CTPrim=0.12 TapNum=3
+
+! Substation regulator from SMART-DS P4U region
+New Transformer.sb5_p4uhs0_4_trans_439 phases=3 windings=2 wdg=1 conn=delta Kv=69.0 kva=8000.0 %R=0.4808326112068522 bus=sb5_p4uhs0_4_node_5_12 wdg=2 conn=wye Kv=4.0 kva=8000.0 %R=0.4808326112068522 bus=sb5_p4uhs0_4_node_5_13 XHL=0.9616652224137047
+New RegControl.sb5_p4uhs0_4_reg_439 transformer=sb5_p4uhs0_4_trans_439 winding=2 maxtapchange=10 ptratio=19.0 band=1.9919999999999998 vreg = 123.60000000000001
+
+! Rural regulator from SMART-DS rural region
+New Transformer.trans_reg_creduladortension phases=3 windings=2 buses=(rdt222-rdt298x.1.2.3, rdt222.1.2.3) conns=(wye,wye) kvs = (12.47,12.47) kvas=(10000,10000)
+New RegControl.reg_creguladortension transformer=trans_reg_creduladortension winding=2 ptratio=60 band=2.4 vreg=123.6 vlimit=12.6 CTPrim=0.2 TapNum=2
+
+
+! Regulator from IEEE 13 node feeder
+
+New Transformer.Reg1 phases=1 XHL=0.01 kVAs=[1666 1666]
+~ Buses=[650.1 RG60.1] kVs=[2.4  2.4] %LoadLoss=0.01
+New regcontrol.Reg1  transformer=Reg1 winding=2  vreg=122  band=2  ptratio=20 ctprim=700  R=3   X=9 vlimit=0
+
+New Transformer.Reg2 phases=1 XHL=0.01 kVAs=[1666 1666]
+~ Buses=[650.2 RG60.2] kVs=[2.4  2.4] %LoadLoss=0.01
+New regcontrol.Reg2  transformer=Reg2 winding=2  vreg=122  band=2  ptratio=20 ctprim=700  R=3   X=9 vlimit=2.8
+
+New Transformer.Reg3 phases=1 XHL=0.01 kVAs=[1666 1666]
+~ Buses=[650.3 RG60.3] kVs=[2.4  2.4] %LoadLoss=0.01
+New regcontrol.Reg3  transformer=Reg3 winding=2  vreg=122  band=2  ptratio=20 ctprim=700  R=3   X=9
+
+Solve

@@ -1695,6 +1695,34 @@ class Reader(AbstractReader):
                     )
                 )
 
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "wye"
+                and data["conns"][1].lower() == "wye"
+            ):
+                api_transformer.phase_shift = 0
+
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "delta"
+                and data["conns"][1].lower() == "delta"
+            ):
+                api_transformer.phase_shift = 0
+
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "wye"
+                and data["conns"][1].lower() == "delta"
+            ):
+                api_transformer.phase_shift = -30
+
+            if (
+                N_windings >= 2
+                and data["conns"][0].lower() == "delta"
+                and data["conns"][1].lower() == "wye"
+            ):
+                api_transformer.phase_shift = -30
+
             for w in range(N_windings):
 
                 windings.append(Winding(model))
@@ -1783,27 +1811,6 @@ class Reader(AbstractReader):
                 # Store the phase winding objects in the winding objects
                 for pw in phase_windings:
                     windings[w].phase_windings.append(pw)
-            # Voltage Type
-            if N_windings == 2:
-                if data["kVs"][0] > data["kVs"][1]:
-                    windings[0].voltage_type = 0
-                    windings[1].voltage_type = 2
-                else:
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 0
-            elif N_windings == 3:
-                if data["kVs"][0] == max(data["kVs"]):
-                    windings[0].voltage_type = 0
-                    windings[1].voltage_type = 2
-                    windings[2].voltage_type = 2
-                elif data["kVs"][1] == max(data["kVs"]):
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 0
-                    windings[2].voltage_type = 2
-                else:
-                    windings[0].voltage_type = 2
-                    windings[1].voltage_type = 2
-                    windings[2].voltage_type = 0
 
             # Voltage Type
             if N_windings == 2:
@@ -1889,6 +1896,33 @@ class Reader(AbstractReader):
 
                 # Total number of windings
                 N_windings = int(trans["windings"])
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "wye"
+                    and trans["conns"][1].lower() == "wye"
+                ):
+                    api_regulator.phase_shift = 0
+
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "delta"
+                    and trans["conns"][1].lower() == "delta"
+                ):
+                    api_regulator.phase_shift = 0
+
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "wye"
+                    and trans["conns"][1].lower() == "delta"
+                ):
+                    api_regulator.phase_shift = -30
+
+                if (
+                    N_windings >= 2
+                    and trans["conns"][0].lower() == "delta"
+                    and trans["conns"][1].lower() == "wye"
+                ):
+                    api_regulator.phase_shift = -30
 
                 # Initialize the list of Windings
                 api_regulator.windings = [Winding(model) for _ in range(N_windings)]
@@ -1902,6 +1936,14 @@ class Reader(AbstractReader):
                             ]
                         except:
                             pass
+
+                    try:
+                        if trans["conns"][w].lower() == "wye":
+                            api_regulator.windings[w].connection_type = "Y"
+                        elif trans["conns"][w].lower() == "delta":
+                            api_regulator.windings[w].connection_type = "D"
+                    except:
+                        pass
 
                 # nominal_voltage
                 for w in range(N_windings):
@@ -1938,9 +1980,7 @@ class Reader(AbstractReader):
                     if "emerghkVA" in trans:
                         try:
                             api_regulator.windings[w].emergency_power = (
-                                float(trans["emerghkVA"][w])
-                                * 10 ** 3
-                                / float(N_windings)
+                                float(trans["emerghkVA"]) * 10 ** 3
                             )  # DiTTo in volt ampere
                         except:
                             pass
@@ -1977,6 +2017,11 @@ class Reader(AbstractReader):
                                 p
                             ].tap_position = float(trans["taps"][w])
 
+                        elif "TapNum" in data:
+                            api_regulator.windings[w].phase_windings[
+                                p
+                            ].tap_position = float(data["TapNum"])
+
                         # compensator_r
                         if "R" in data:
                             try:
@@ -2002,6 +2047,28 @@ class Reader(AbstractReader):
                     )
                 )
 
+            # Voltage Type
+            if N_windings == 2:
+                if float(trans["kVs"][0]) >= float(trans["kVs"][1]):
+                    api_regulator.windings[0].voltage_type = 0
+                    api_regulator.windings[1].voltage_type = 2
+                else:
+                    api_regulator.windings[0].voltage_type = 2
+                    api_regulator.windings[1].voltage_type = 0
+            elif N_windings == 3:
+                if float(trans["kVs"][0]) == max(list(map(float, trans["kVs"]))):
+                    api_regulator.windings[0].voltage_type = 0
+                    api_regulator.windings[1].voltage_type = 2
+                    api_regulator.windings[2].voltage_type = 2
+                elif float(trans["kVs"][1]) == max(list(map(float, trans["kVs"]))):
+                    api_regulator.windings[0].voltage_type = 2
+                    api_regulator.windings[1].voltage_type = 0
+                    api_regulator.windings[2].voltage_type = 2
+                else:
+                    api_regulator.windings[0].voltage_type = 2
+                    api_regulator.windings[1].voltage_type = 2
+                    api_regulator.windings[2].voltage_type = 0
+
             # CTprim
             try:
                 api_regulator.ct_prim = float(data["CTprim"])
@@ -2023,6 +2090,18 @@ class Reader(AbstractReader):
             # highstep
             try:
                 api_regulator.highstep = int(data["maxtapchange"])
+            except:
+                pass
+
+            # lowstep
+            try:
+                api_regulator.lowstep = api_regulator.highstep
+            except:
+                pass
+
+            # setpoint
+            try:
+                api_regulator.setpoint = int(data["vreg"])
             except:
                 pass
 

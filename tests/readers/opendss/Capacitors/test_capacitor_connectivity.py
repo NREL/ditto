@@ -60,15 +60,6 @@ def test_capacitor_connectivity():
     assert m["cap1"].feeder_name == "sourcebus_src"
 
     assert set([pc.phase for pc in m["cap1"].phase_capacitors]) == set(["A", "B", "C"])
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["cap1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["cap1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections for phase_capacitor in m["cap1"].phase_capacitors
-    ] == [None, None, None]
 
     # Capacitor Cap2 should be a one phase capacitor (1 PhaseCapacitor object) connected to bus2 on phase C
     assert len(m["cap2"].phase_capacitors) == 1  # Cap2 is a one phase capacitor
@@ -93,9 +84,6 @@ def test_capacitor_connectivity():
     assert m["cap2"].feeder_name == "sourcebus_src"
 
     assert m["cap2"].phase_capacitors[0].phase == "C"
-    assert m["cap2"].phase_capacitors[0].switch == None
-    assert m["cap2"].phase_capacitors[0].sections == None
-    assert m["cap2"].phase_capacitors[0].normalsections == None
 
     # Capacitor Cap3 should be a one phase capacitor (1 PhaseCapacitor object) connected to bus3 on phase A
     assert len(m["cap3"].phase_capacitors) == 1  # Cap3 is a one phase capacitor
@@ -120,9 +108,6 @@ def test_capacitor_connectivity():
     assert m["cap3"].feeder_name == "sourcebus_src"
 
     assert m["cap3"].phase_capacitors[0].phase == "A"
-    assert m["cap3"].phase_capacitors[0].switch == None
-    assert m["cap3"].phase_capacitors[0].sections == None
-    assert m["cap3"].phase_capacitors[0].normalsections == None
 
     # Capacitor Cap4 should be a two phase capacitor (2 PhaseCapacitor objects) connected to bus4 on phase A and C
     assert len(m["cap4"].phase_capacitors) == 2  # Cap4 is a two phase capacitor
@@ -149,15 +134,6 @@ def test_capacitor_connectivity():
     assert m["cap4"].feeder_name == "sourcebus_src"
 
     assert set([pc.phase for pc in m["cap4"].phase_capacitors]) == set(["A", "C"])
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["cap4"].phase_capacitors
-    ] == [None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["cap4"].phase_capacitors
-    ] == [None, None]
-    assert [
-        phase_capacitor.normalsections for phase_capacitor in m["cap4"].phase_capacitors
-    ] == [None, None]
 
     #  Capacitors from epri_j1
     assert len(m["b4909-1"].phase_capacitors) == 3  # b4909-1 is a three phase capacitor
@@ -185,16 +161,6 @@ def test_capacitor_connectivity():
     assert set([pc.phase for pc in m["b4909-1"].phase_capacitors]) == set(
         ["A", "B", "C"]
     )
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["b4909-1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["b4909-1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections
-        for phase_capacitor in m["b4909-1"].phase_capacitors
-    ] == [None, None, None]
 
     assert len(m["b4909-2"].phase_capacitors) == 3  # b4909-2 is a three phase capacitor
     assert sum(
@@ -221,16 +187,6 @@ def test_capacitor_connectivity():
     assert set([pc.phase for pc in m["b4909-2"].phase_capacitors]) == set(
         ["A", "B", "C"]
     )
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["b4909-2"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["b4909-2"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections
-        for phase_capacitor in m["b4909-2"].phase_capacitors
-    ] == [None, None, None]
 
     # oh_b4904
     assert len(m["oh_b4904"].wires) == 3
@@ -325,16 +281,6 @@ def test_capacitor_connectivity():
     assert set([pc.phase for pc in m["b18944-1"].phase_capacitors]) == set(
         ["A", "B", "C"]
     )
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["b18944-1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["b18944-1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections
-        for phase_capacitor in m["b18944-1"].phase_capacitors
-    ] == [None, None, None]
 
     assert (
         len(m["b18944-2"].phase_capacitors) == 3
@@ -365,16 +311,6 @@ def test_capacitor_connectivity():
     assert set([pc.phase for pc in m["b18944-2"].phase_capacitors]) == set(
         ["A", "B", "C"]
     )
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["b18944-2"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["b18944-2"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections
-        for phase_capacitor in m["b18944-2"].phase_capacitors
-    ] == [None, None, None]
 
     # oh_b18944
     assert len(m["oh_b18944"].wires) == 3  # Number of wires
@@ -465,9 +401,6 @@ def test_capacitor_connectivity():
     assert m["capbank0a"].feeder_name == "sourcebus_src"
 
     assert m["capbank0a"].phase_capacitors[0].phase == "A"
-    assert m["capbank0a"].phase_capacitors[0].switch == None
-    assert m["capbank0a"].phase_capacitors[0].sections == None
-    assert m["capbank0a"].phase_capacitors[0].normalsections == None
 
     assert (
         len(m["capbank0b"].phase_capacitors) == 1
@@ -494,9 +427,6 @@ def test_capacitor_connectivity():
     assert m["capbank0b"].feeder_name == "sourcebus_src"
 
     assert m["capbank0b"].phase_capacitors[0].phase == "B"
-    assert m["capbank0b"].phase_capacitors[0].switch == None
-    assert m["capbank0b"].phase_capacitors[0].sections == None
-    assert m["capbank0b"].phase_capacitors[0].normalsections == None
 
     assert (
         len(m["capbank0c"].phase_capacitors) == 1
@@ -523,9 +453,6 @@ def test_capacitor_connectivity():
     assert m["capbank0c"].feeder_name == "sourcebus_src"
 
     assert m["capbank0c"].phase_capacitors[0].phase == "C"
-    assert m["capbank0c"].phase_capacitors[0].switch == None
-    assert m["capbank0c"].phase_capacitors[0].sections == None
-    assert m["capbank0c"].phase_capacitors[0].normalsections == None
 
     #  This is a 3-phase capacitor bank
     assert (
@@ -557,16 +484,6 @@ def test_capacitor_connectivity():
     assert set([pc.phase for pc in m["capbank3"].phase_capacitors]) == set(
         ["A", "B", "C"]
     )
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["capbank3"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["capbank3"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections
-        for phase_capacitor in m["capbank3"].phase_capacitors
-    ] == [None, None, None]
 
     # 3-phase capacitor with number of phases mentioned
     assert (
@@ -598,13 +515,3 @@ def test_capacitor_connectivity():
     assert set([pc.phase for pc in m["capbank3-1"].phase_capacitors]) == set(
         ["A", "B", "C"]
     )
-    assert [
-        phase_capacitor.switch for phase_capacitor in m["capbank3-1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.sections for phase_capacitor in m["capbank3-1"].phase_capacitors
-    ] == [None, None, None]
-    assert [
-        phase_capacitor.normalsections
-        for phase_capacitor in m["capbank3-1"].phase_capacitors
-    ] == [None, None, None]
