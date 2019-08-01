@@ -476,7 +476,7 @@ class Reader(AbstractReader):
             "InstRegulators", "ForwardVoltageSettingPhase3"
         )
         RegulatorSectionId = self.get_data("InstRegulators", "SectionId")
-        RegulagorPhases = self.get_data("InstRegulators", "ConnectedPhases")
+        RegulatorPhases = self.get_data("InstRegulators", "ConnectedPhases")
         RegulatorTypes = self.get_data("InstRegulators", "RegulatorType")
         RegulatorNames = self.get_data("DevRegulators", "RegulatorName")
         RegulatorPTRatio = self.get_data("DevRegulators", "PTRatio")
@@ -576,7 +576,7 @@ class Reader(AbstractReader):
             api_source.is_sourcebus = 1
 
             # Set the connection type
-            api_source.connection_type = ConnectionType_src[i][:1]
+            api_source.connection_type = ConnectionType_src[i][:1].upper()
 
             # Set the angle of the first phase
             api_source.phase_angle = ByPhVoltDegPh1[i]
@@ -636,7 +636,7 @@ class Reader(AbstractReader):
 
             # Set the phases for this node.
             for phase in phases:
-                api_node.phases.append(phase)
+                api_node.phases.append(phase.upper())
 
         ####################################################################################
         #                                                                                  #
@@ -792,7 +792,9 @@ class Reader(AbstractReader):
             SectionPhases_thisline1 = list(SectionPhases[i])
 
             # Remove the spaces from the list
-            SectionPhases_thisline = [s for s in SectionPhases_thisline1 if s != " "]
+            SectionPhases_thisline = [
+                s.upper() for s in SectionPhases_thisline1 if s != " "
+            ]
 
             # Get the number of phases as the length of this list
             # Warning: Neutral will be included in this number
@@ -1391,6 +1393,13 @@ class Reader(AbstractReader):
                 # Set the NoLoadLosses
                 api_transformer.noload_loss = NoLoadLosses[Count]
 
+                # Set the reactances
+                api_transformer.reactances = [
+                    math.sqrt(
+                        PercentImpedance[Count] ** 2 - PercentResistance[Count] ** 2
+                    )
+                ]
+
                 # Number of windings
                 # TODO: IS THIS RIGHT???
                 #
@@ -1410,6 +1419,9 @@ class Reader(AbstractReader):
                     # Create a new Winding object
                     w = Winding(model)
 
+                    # Setting the resistance
+                    w.resistance = float(PercentResistance[Count])
+
                     # Primary
                     if winding == 0:
 
@@ -1418,9 +1430,13 @@ class Reader(AbstractReader):
                             HighVoltageConnectionCode_N is not None
                             and len(HighVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = HighVoltageConnectionCode_N[i][:1]
+                            w.connection_type = HighVoltageConnectionCode_N[i][
+                                :1
+                            ].upper()
                         elif HighVoltageConnectionCode_W is not None:
-                            w.connection_type = HighVoltageConnectionCode_W[Count][:1]
+                            w.connection_type = HighVoltageConnectionCode_W[Count][
+                                :1
+                            ].upper()
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1435,9 +1451,13 @@ class Reader(AbstractReader):
                             LowVoltageConnectionCode_N is not None
                             and len(LowVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = LowVoltageConnectionCode_N[i][:1]
+                            w.connection_type = LowVoltageConnectionCode_N[i][
+                                :1
+                            ].upper()
                         elif LowVoltageConnectionCode_W is not None:
-                            w.connection_type = LowVoltageConnectionCode_W[Count][:1]
+                            w.connection_type = LowVoltageConnectionCode_W[Count][
+                                :1
+                            ].upper()
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1449,9 +1469,11 @@ class Reader(AbstractReader):
 
                         # Set the Connection_type of the Winding
                         if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
-                            w.connection_type = TertConnectCode[i][:1]
+                            w.connection_type = TertConnectCode[i][:1].upper()
                         elif TertiaryConnectionCode is not None:
-                            w.connection_type = TertiaryConnectionCode[Count][:1]
+                            w.connection_type = TertiaryConnectionCode[Count][
+                                :1
+                            ].upper()
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
@@ -1480,9 +1502,9 @@ class Reader(AbstractReader):
 
                     # Create the PhaseWindings
                     for phase in phases:
-                        if phase != "N":
+                        if phase.upper() != "N":
                             pw = PhaseWinding(model)
-                            pw.phase = phase
+                            pw.phase = phase.upper()
                             w.phase_windings.append(pw)
 
                     # Append the Winding to the Transformer
@@ -1642,7 +1664,7 @@ class Reader(AbstractReader):
             api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
 
             # Set the connection of the capacitor
-            api_cap.connection_type = CapacitorConnectionType[i][:1]
+            api_cap.connection_type = CapacitorConnectionType[i][:1].upper()
 
             # Set the Delay of the capacitor
             api_cap.delay = CapacitorTimeDelaySec[i]
@@ -1650,6 +1672,8 @@ class Reader(AbstractReader):
             # Set the control mode of the capacitor
             if CapacitorPrimaryControlMode[i] in control_mode_mapping:
                 api_cap.mode = control_mode_mapping[CapacitorPrimaryControlMode[i]]
+                if api_cap.mode == "currentflow":
+                    api_cap.mode == "currentFlow"
             # Default sets to voltage
             else:
                 api_cap.mode = "voltage"
@@ -1670,7 +1694,7 @@ class Reader(AbstractReader):
             api_cap.measuring_element = CapacitorSectionID[i].lower()
 
             # Set the PT phase
-            api_cap.pt_phase = MeteringPhase[i]
+            api_cap.pt_phase = MeteringPhase[i].upper()
 
             ## Find the connecting bus of the capacitor through the section
             Count = None
@@ -1703,7 +1727,7 @@ class Reader(AbstractReader):
 
             # Get the phases of this capacitor
             if len(CapacitorConnectedPhases[i]) > 0:
-                PhasesthisCap = CapacitorConnectedPhases[i]
+                PhasesthisCap = CapacitorConnectedPhases[i].upper()
             else:
                 PhasesthisCap = ["A", "B", "C"]
 
@@ -1756,7 +1780,7 @@ class Reader(AbstractReader):
             api_regulator.lowstep = -int(RegulatorTapLimiterLowSetting[i])
 
             # Get the phases
-            regulator_phases = list(RegulagorPhases[i])
+            regulator_phases = list(RegulatorPhases[i])
 
             # Set the Bandwidth
             # NOTE: DiTTo does not support different values on different phase
@@ -1846,7 +1870,7 @@ class Reader(AbstractReader):
 
                 if Count is not None:
                     # Set the Connection of this Winding
-                    w.connection_type = RegulatorConnectionCode[Count][:1]
+                    w.connection_type = RegulatorConnectionCode[Count][:1].upper()
 
                     # Set the Nominal voltage
                     w.nominal_voltage = RegulatorRatedVoltage[Count]
@@ -1868,7 +1892,7 @@ class Reader(AbstractReader):
                         pw = PhaseWinding(model)
 
                         # Set the phase
-                        pw.phase = phase
+                        pw.phase = phase.upper()
 
                         # Add PhaseWinding to the winding
                         w.phase_windings.append(pw)
@@ -2000,7 +2024,7 @@ class Reader(AbstractReader):
 
                 # Set the Phases
                 for phase in GeneratorConnectedPhases[idx].strip():
-                    api_PV.phases.append(phase)
+                    api_PV.phases.append(phase.upper())
 
                 # Set the Power Factor
                 api_PV.power_factor = GeneratorPF[idx]
