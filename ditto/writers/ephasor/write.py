@@ -865,39 +865,43 @@ class Writer(AbstractWriter):
             "X_zero (ohm)": [],
         }
 
-        _transformer_dict = {i.from_element: i for i in self._transformers}
-
+        #        _transformer_dict = {i.from_element: i for i in self._transformers}
         for index, i in enumerate(self._powersources):
             for key, value in obj_dict.items():
                 value.append(None)
 
-            if (
-                hasattr(i, "connecting_element")
-                and i.connecting_element is not None
-                and i.connecting_element in _transformer_dict
-            ):
-                transformer = _transformer_dict[i.connecting_element]
-                obj_dict["ID"][index] = i.name
-                obj_dict["Angle (deg)"][index] = i.phase_angle
-                obj_dict["V (kV)"][index] = (
-                    transformer.windings[1].nominal_voltage / 1000
-                )
-                obj_dict["SCL_1 (MVA)"][index] = (
-                    i.emergency_power / 1e6
-                )  # TODO should this be rated power?
-                obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
-                for pw in transformer.windings[1].phase_windings:
-                    obj_dict["bus " + pw.phase.upper()][index] = (
-                        transformer.to_element + "_" + pw.phase.lower()
+            #            if (
+            #                hasattr(i, "connecting_element")
+            #                and i.connecting_element is not None
+            #                and i.connecting_element in _transformer_dict
+            #            ):
+            #                transformer = _transformer_dict[i.connecting_element]
+            #                obj_dict["ID"][index] = i.name
+            #                obj_dict["Angle (deg)"][index] = i.phase_angle
+            #                obj_dict["V (kV)"][index] = (
+            #                    transformer.windings[1].nominal_voltage / 1000
+            #                )
+            #                obj_dict["SCL_1 (MVA)"][index] = (
+            #                    i.emergency_power / 1e6
+            #                )  # TODO should this be rated power?
+            #                obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
+            #                for pw in transformer.windings[1].phase_windings:
+            #                    obj_dict["bus " + pw.phase.upper()][index] = (
+            #                        transformer.to_element + "_" + pw.phase.lower()
+            #                    )
+            #           else:  # just a powersource object
+            obj_dict["ID"][index] = i.name
+            obj_dict["Angle (deg)"][index] = i.phase_angle
+            obj_dict["V (kV)"][index] = i.nominal_voltage / 1000
+            obj_dict["SCL_1 (MVA)"][index] = i.emergency_power / 1e6
+            obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
+            # import pdb;pdb.set_trace()
+            for phase_unicode in i.phases:
+                ph = phase_unicode.default_value.lower()
+                if str(ph).lower() in set(["a", "b", "c"]):
+                    obj_dict["bus " + str(ph).upper()][index] = (
+                        i.connecting_element + "_" + str(ph).lower()
                     )
-            else:  # just a powersource object
-                obj_dict["ID"][index] = i.name
-                obj_dict["V (kV)"][index] = i.nominal_voltage
-                for ph in i.phases:
-                    if str(ph).lower() in set(["a", "b", "c"]):
-                        obj_dict["bus " + str(ph).upper()][index] = (
-                            i.name + "_" + str(ph).lower()
-                        )
 
         df7 = pd.DataFrame(obj_dict)
         df7 = df7[
