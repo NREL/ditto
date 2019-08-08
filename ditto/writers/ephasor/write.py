@@ -893,8 +893,9 @@ class Writer(AbstractWriter):
             obj_dict["ID"][index] = i.name
             obj_dict["Angle (deg)"][index] = i.phase_angle
             obj_dict["V (kV)"][index] = i.nominal_voltage / 1000
-            obj_dict["SCL_1 (MVA)"][index] = i.emergency_power / 1e6
-            obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
+            if i.emergency_power is not None:
+                obj_dict["SCL_1 (MVA)"][index] = i.emergency_power / 1e6
+                obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
             # import pdb;pdb.set_trace()
             for phase_unicode in i.phases:
                 ph = phase_unicode.default_value.lower()
