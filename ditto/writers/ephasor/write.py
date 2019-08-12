@@ -601,20 +601,21 @@ class Writer(AbstractWriter):
         index = -1
         for i in self._transformers:
             # index += 1
+            # import pdb;pdb.set_trace;
             if len(i.windings[0].phase_windings) == 1:
                 pp = str(i.windings[0].phase_windings[0].phase)
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
-                if i.from_element in self._transformer_dict:
-                    self._transformer_dict[i.from_element]["combined"] = True
-                    index = self._transformer_dict[i.from_element]["i"]
-                    # import pdb;pdb.set_trace()
-                    self._transformer_dict[i.from_element]["kv1"] += i.windings[
+                from_element_name = i.from_element + i.name
+                if from_element_name in self._transformer_dict:
+                    self._transformer_dict[from_element_name]["combined"] = True
+                    index = self._transformer_dict[from_element_name]["i"]
+                    self._transformer_dict[from_element_name]["kv1"] += i.windings[
                         0
                     ].nominal_voltage
-                    self._transformer_dict[i.from_element]["kva"] += i.windings[
+                    self._transformer_dict[from_element_name]["kva"] += i.windings[
                         0
                     ].rated_power
-                    self._transformer_dict[i.from_element]["Tap " + pp] = (
+                    self._transformer_dict[from_element_name]["Tap " + pp] = (
                         i.windings[0].phase_windings[0].tap_position,
                     )
                 else:
@@ -622,7 +623,7 @@ class Writer(AbstractWriter):
                         value.append(None)
                     index += 1
                     logger.debug(i.windings[0].phase_windings[0].tap_position)
-                    self._transformer_dict[i.from_element] = {
+                    self._transformer_dict[i.from_element + i.name] = {
                         "combined": False,
                         "name": i.name,
                         "i": index,
@@ -631,6 +632,7 @@ class Writer(AbstractWriter):
                         "kva": i.windings[0].rated_power,
                     }
             else:
+                index += 1
                 for key, value in obj_dict.items():
                     value.append(None)
 
@@ -645,10 +647,11 @@ class Writer(AbstractWriter):
             if len(i.windings[0].phase_windings) == 1:
                 pp = i.windings[0].phase_windings[0].phase
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
-                if i.from_element in self._transformer_dict:
-                    index = self._transformer_dict[i.from_element]["i"]
-                    kv1 = self._transformer_dict[i.from_element]["kv1"]
-                    kva = self._transformer_dict[i.from_element]["kva"]
+                from_element_name = i.from_element + i.name
+                if from_element_name in self._transformer_dict:
+                    index = self._transformer_dict[from_element_name]["i"]
+                    kv1 = self._transformer_dict[from_element_name]["kv1"]
+                    kva = self._transformer_dict[from_element_name]["kva"]
                 # else:
                 #     index += 1
                 #     self._transformer_dict[i.from_element] = {"name": i.name,
