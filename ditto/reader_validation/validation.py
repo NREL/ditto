@@ -9,10 +9,15 @@ import opendssdirect as dss
 import os, shutil
 import matplotlib.pyplot as plt
 
+
+# Creating output directory
 current_dir = os.path.realpath(os.path.dirname(__file__))
 validation_dir = os.path.join(current_dir, "validation_outputs")
+
 small_tests_dir = os.path.join(current_dir, "../../tests/data/small_cases")
 small_tests = ["ieee_4node", "ieee_13node"]
+
+# Reading the input from every reader for each test case and creating the Opendss output
 for each_test in small_tests:
     case_dir = os.path.join(validation_dir, each_test)
     for dirname in os.listdir(small_tests_dir):
@@ -24,10 +29,9 @@ for each_test in small_tests:
         m = Store()
         if dirname == "opendss":
             r1 = OpenDSS_Reader(master_file=os.path.join(test_path, "master.dss"))
-            # elif dirname == "synergi":
-            # r1 = Synergi_Reader(input_file=os.path.join(test_path, "network.mdb"))
-            #    r1 = Synergi_Reader(input_file="ieee4node.mdb")
-            print("Not for now")
+        elif dirname == "synergi":
+            if each_test == "ieee_4node":
+                r1 = Synergi_Reader(input_file=os.path.join(test_path, "network.mdb"))
         elif dirname == "cyme":
             r1 = Cyme_Reader(data_folder_path=os.path.join(test_path))
         elif dirname == "gridlabd":
@@ -38,6 +42,7 @@ for each_test in small_tests:
         w1 = OpenDSS_Writer(output_path=output_dir)
         w1.write(m, separate_feeders=True)
 
+    # Comparison of fault study of readers
     comp_values = {}
     for dir in os.listdir(case_dir):
         with open(os.path.join(case_dir, dir, "Master.dss"), "r") as rfile:
@@ -53,3 +58,6 @@ for each_test in small_tests:
         for i in dss.Circuit.AllBusNames():
             dss.Circuit.SetActiveBus(i)
             comp_values[dir][dss.Bus.Name()] = dss.Bus.Zsc0() + dss.Bus.Zsc1()
+
+    # print(comp_values)
+    # Plotting of differences of sequence impedances
