@@ -46,7 +46,7 @@ def test_gridlabd_to_opendss_cli():
     output_path = tempfile.TemporaryDirectory()
     p = subprocess.Popen(
         shlex.split(
-            """ ditto-cli convert --from="gridlabd" --to="opendss" --input="./tests/data/small_cases/gridlabd/4node.glm" --output="{}" """.format(
+            """ ditto-cli convert --from="gridlabd" --to="opendss" --input="./tests/data/small_cases/gridlabd/ieee_4node/node.glm" --output="{}" """.format(
                 output_path.name
             ).strip()
         )
