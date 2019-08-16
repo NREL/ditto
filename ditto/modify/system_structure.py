@@ -18,6 +18,7 @@ from ditto.models.node import Node
 from ditto.models.line import Line
 from ditto.models.position import Position
 from ditto.models.power_source import PowerSource
+from ditto.models.phase_winding import PhaseWinding
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
@@ -883,8 +884,8 @@ class system_structure_modifier(Modifier):
                 # Set the percentage to distribute the load between the actives and the neutral
                 # Here we place 50% of the load between active 1 and neutral, and 50% between
                 # neutral and active 2
-                load.center_tap_perct_1_N = .5
-                load.center_tap_perct_N_2 = .5
+                load.center_tap_perct_1_N = 0.5
+                load.center_tap_perct_N_2 = 0.5
                 load.center_tap_perct_1_2 = 0
 
             total_P = sum([pl.p for pl in load.phase_loads])
@@ -970,6 +971,106 @@ class system_structure_modifier(Modifier):
         #             #Same story here, flag the wires with phases that do not match.
         #             if wire.drop==1:
         #                 self.delete_element(self.model,wire)
+
+    def terminals_to_phases(self):
+        """
+        This function is responsible for matching the phases of the loads to transformers.
+        In OpenDSS, for a transformer, the secondary winding has the bus representation as terminals and
+        for writers like ephasor, the terminal representation has to be retained.
+        Hence, the purpose of this function is to find the transformer associated with a load, capture the phases of the load and
+        apply it to the phases of secondary winding of the transformer.
+
+        .. note::
+
+            - This function is using the network module to find upstream elements in an efficient way.
+        """
+        # Set the names in the model.
+        # Required if we wish to access objects by names directly instead of looping
+        self.model.set_names()
+
+        for _obj in self.model.models:
+            if isinstance(_obj, Load):
+                connecting_element = _obj.connecting_element
+                load_name = _obj.name
+                load_phases = []
+                # Get the phases of the load
+                try:
+                    l_obj = self.model[load_name]
+                    for phase_load in l_obj.phase_loads:
+                        load_phases.append(phase_load.phase)
+                except:
+                    raise ValueError(
+                        "Unable to retrieve DiTTo object with name {}".format(l_name)
+                    )
+
+                continu = True
+                # Find the upstream transformer by walking the graph upstream
+                end_node = connecting_element
+                while continu:
+                    # Get predecessor node of current node in the DAG
+                    from_node = next(self.G.digraph.predecessors(end_node))
+
+                    # Look for the type of equipment that makes the connection between from_node and to_node
+                    _type = None
+                    if (from_node, end_node) in self.edge_equipment:
+                        _type = self.edge_equipment[(from_node, end_node)]
+                    elif (end_node, from_node) in self.edge_equipment:
+                        _type = self.edge_equipment[(end_node, from_node)]
+
+                    # It could be a Line, a Transformer...
+                    # If it is a transformer, then we have found the upstream transformer...
+                    if _type == "PowerTransformer":
+
+                        # ...we can then stop the loop...
+                        continu = False
+
+                        # ...and grab the transformer name to retrieve the data from the DiTTo object
+                        if (from_node, end_node) in self.edge_equipment_name:
+                            transformer_name = self.edge_equipment_name[
+                                (from_node, end_node)
+                            ]
+                            self.model[
+                                load_name
+                            ].upstream_transformer_name = self.edge_equipment_name[
+                                (from_node, end_node)
+                            ]
+                        elif (end_node, from_node) in self.edge_equipment_name:
+                            transformer_name = self.edge_equipment_name[
+                                (end_node, from_node)
+                            ]
+                            self.model[
+                                load_name
+                            ].upstream_transformer_name = self.edge_equipment_name[
+                                (end_node, from_node)
+                            ]
+                        # If we cannot find the object, raise an error because it sould not be the case...
+                        else:
+                            raise ValueError(
+                                "Unable to find equipment between {_from} and {_to}".format(
+                                    _from=from_node, _to=end_node
+                                )
+                            )
+                    # Go upstream...
+                    end_node = from_node
+
+                # Number of windings is 1; we ignore it as it will have the phase of the primary transformer
+                # Number of windings is 2; we will make sure the phases of the secondary winding of a transformer are the same as the phases of loads
+                # Number of windings is 3; we add a new phase winding to the secondary winding of the transformer and match the phases of the loads to transformer
+                t_obj = self.model[transformer_name]
+                N_windings = len(t_obj.windings)
+                if N_windings == 1:
+                    continue
+                if N_windings == 2:
+                    for phase_winding, l_phase in zip(
+                        t_obj.windings[1].phase_windings, load_phases
+                    ):
+                        phase_winding.phase = l_phase
+                if N_windings == 3:
+                    t_obj.windings[1].phase_windings.append(PhaseWinding(self.model))
+                    for phase_winding, l_phase in zip(
+                        t_obj.windings[1].phase_windings, load_phases
+                    ):
+                        phase_winding.phase = l_phase
 
     def open_close_switches(self, path_to_dss_file):
         """Since there is not way to indicate wether a switch is open or closed in OpenDSS, RNM use the following convention:

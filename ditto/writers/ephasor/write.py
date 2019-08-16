@@ -22,6 +22,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.power_source import PowerSource
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.winding import Winding
+from ditto.modify.system_structure import system_structure_modifier
 
 from ditto.writers.abstract_writer import AbstractWriter
 
@@ -548,8 +549,43 @@ class Writer(AbstractWriter):
 
             logger.debug(result)
         df1 = pd.DataFrame(obj_dict)
-        # df1 = df1[
-        #     ['bus0a','bus0b','bus0c','bus1a','bus1b','bus1c','name','Length (Mile)','r0 (ohm / Mile)','x0 (ohm / Mile)','r1 (ohm / Mile)','x1 (ohm / Mile)','b0 (uS / Mile)','b1 (uS / Mile)','r11 (ohm / Mile)','x11 (ohm / Mile)','r21 (ohm / Mile)','x21 (ohm / Mile)','r22 (ohm / Mile)','x22 (ohm / Mile)','r31 (ohm / Mile)','x31 (ohm / Mile)','r32 (ohm / Mile)','x32 (ohm / Mile)','r33 (ohm / Mile)', 'x33 (ohm / Mile)','b11 (uS / Mile)','b21 (uS / Mile)','b22 (uS / Mile)','b31 (uS / Mile)','b32 (uS / Mile)','b33 (uS / Mile)']]
+        df1 = df1[
+            [
+                "bus0a",
+                "bus0b",
+                "bus0c",
+                "bus1a",
+                "bus1b",
+                "bus1c",
+                "ID",
+                "Mode",
+                "Length (Mile)",
+                "r0 (ohm/Mile)",
+                "x0 (ohm/Mile)",
+                "r1 (ohm/Mile)",
+                "x1 (ohm/Mile)",
+                "b0 (uS/Mile)",
+                "b1 (uS/Mile)",
+                "r11 (ohm/Mile)",
+                "x11 (ohm/Mile)",
+                "r21 (ohm/Mile)",
+                "x21 (ohm/Mile)",
+                "r22 (ohm/Mile)",
+                "x22 (ohm/Mile)",
+                "r31 (ohm/Mile)",
+                "x31 (ohm/Mile)",
+                "r32 (ohm/Mile)",
+                "x32 (ohm/Mile)",
+                "r33 (ohm/Mile)",
+                "x33 (ohm/Mile)",
+                "b11 (uS/Mile)",
+                "b21 (uS/Mile)",
+                "b22 (uS/Mile)",
+                "b31 (uS/Mile)",
+                "b32 (uS/Mile)",
+                "b33 (uS/Mile)",
+            ]
+        ]
 
         return df1
 
@@ -637,6 +673,7 @@ class Writer(AbstractWriter):
                     value.append(None)
 
         index = -1
+
         for i in self._transformers:
             # for key, value in obj_dict.items():
             #     value.append(None)
@@ -699,9 +736,9 @@ class Writer(AbstractWriter):
                                 winding.nominal_voltage / 1000
                             )
 
-                        obj_dict["W" + str(winding_num + 1) + "R (pu)"][
-                            index
-                        ] = winding.resistance
+                        obj_dict["W" + str(winding_num + 1) + "R (pu)"][index] = (
+                            winding.resistance * 100
+                        )
                         if (
                             hasattr(winding, "connection_type")
                             and winding.connection_type is not None
@@ -737,12 +774,14 @@ class Writer(AbstractWriter):
                             phases = ["A", "B", "C"]
                             N_phases.append(len(winding.phase_windings))
                             for pw in winding.phase_windings:
-                                obj_dict["W1Bus " + phases[phase_cnt]][index] = (
-                                    i.from_element + "_" + pw.phase.lower()
-                                )
-                                obj_dict["W2Bus " + phases[phase_cnt]][index] = (
-                                    i.to_element + "_" + pw.phase.lower()
-                                )
+                                if winding_num == 0:
+                                    obj_dict["W1Bus " + phases[phase_cnt]][index] = (
+                                        i.from_element + "_" + pw.phase.lower()
+                                    )
+                                else:
+                                    obj_dict["W2Bus " + phases[phase_cnt]][index] = (
+                                        i.to_element + "_" + pw.phase.lower()
+                                    )
                                 tap_name = "Tap " + phases[phase_cnt]
                                 if pw.tap_position is None:
                                     obj_dict[tap_name][index] = 0
@@ -959,6 +998,8 @@ class Writer(AbstractWriter):
             if hasattr(node, "name"):
                 letter_phases = set()
                 for phase_unicode in node.phases:
+                    if phase_unicode.default_value is None:
+                        continue
                     phase = phase_unicode.default_value.lower()
                     if phase == "a" or phase == "b" or phase == "c":
                         letter_phases.add(phase)
@@ -1317,6 +1358,9 @@ class Writer(AbstractWriter):
         self._regulators = [i for i in self.m.models if isinstance(i, Regulator)]
         self._powersources = [i for i in self.m.models if isinstance(i, PowerSource)]
         self._photovoltaics = [i for i in self.m.models if isinstance(i, Photovoltaic)]
+
+        modifier = system_structure_modifier(self.m)
+        modifier.terminals_to_phases()
 
         df7 = self.source()
         df1 = self.line()
