@@ -648,7 +648,7 @@ class Reader(AbstractReader):
         for i, obj in enumerate(LineID):
 
             ## Do not parse sections with regulators or Transformers to Lines
-            if obj in RegulatorSectionId or obj in TransformerSectionId:
+            if obj in RegulatorSectionId.values or obj in TransformerSectionId.values:
                 continue
 
             # Create a DiTTo Line object
