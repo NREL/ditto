@@ -22,6 +22,7 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.models.power_source import PowerSource
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.winding import Winding
+from ditto.modify.system_structure import system_structure_modifier
 
 from ditto.writers.abstract_writer import AbstractWriter
 
@@ -69,6 +70,7 @@ class Writer(AbstractWriter):
     +-----------------+--------------------+
 
     """
+
     register_names = ["ephasor", "eph", "Ephasor"]
 
     def __init__(self, **kwargs):
@@ -307,11 +309,11 @@ class Writer(AbstractWriter):
                 obj_dict["Length (Mile)"][index] = self.convert_from_meters(
                     np.real(line.length), units
                 )
-                
+
             # Multiphase line Mode
             obj_dict["Mode"][index] = "full"
 
-            tmp_phase=['a','b','c']
+            tmp_phase = ["a", "b", "c"]
             if hasattr(line, "from_element") and line.from_element is not None:
                 logger.debug(" bus1={from_el}".format(from_el=line.from_element))
                 if hasattr(line, "wires") and line.wires is not None:
@@ -323,11 +325,13 @@ class Writer(AbstractWriter):
                             and wire.phase != "N"
                         ):
                             # logger.debug('.{p}'.format(p=self.phase_mapping(wire.phase)))
-                         #   obj_dict["bus0" + wire.phase.lower()][index] = (
-                         #       line.from_element + "_" + wire.phase.lower()
-                         #   )
-                            obj_dict["bus0"+tmp_phase[wire_cnt]][index] = line.from_element+"_"+wire.phase.lower()
-                            wire_cnt+=1
+                            #   obj_dict["bus0" + wire.phase.lower()][index] = (
+                            #       line.from_element + "_" + wire.phase.lower()
+                            #   )
+                            obj_dict["bus0" + tmp_phase[wire_cnt]][index] = (
+                                line.from_element + "_" + wire.phase.lower()
+                            )
+                            wire_cnt += 1
 
             if hasattr(line, "to_element") and line.to_element is not None:
                 logger.debug(" bus2={to_el}".format(to_el=line.to_element))
@@ -340,12 +344,13 @@ class Writer(AbstractWriter):
                             and wire.phase != "N"
                         ):
                             # logger.debug('.{p}'.format(p=self.phase_mapping(wire.phase)))
-                          #  obj_dict["bus1" + wire.phase.lower()][index] = (
-                          #      line.to_element + "_" + wire.phase.lower()
-                          #  )
-                            obj_dict["bus1"+tmp_phase[wire_cnt]][index] = line.to_element+"_"+wire.phase.lower()
-                            wire_cnt+=1
-
+                            #  obj_dict["bus1" + wire.phase.lower()][index] = (
+                            #      line.to_element + "_" + wire.phase.lower()
+                            #  )
+                            obj_dict["bus1" + tmp_phase[wire_cnt]][index] = (
+                                line.to_element + "_" + wire.phase.lower()
+                            )
+                            wire_cnt += 1
 
             if (
                 hasattr(line, "faultrate")
@@ -424,7 +429,7 @@ class Writer(AbstractWriter):
                 C = np.array(line.capacitance_matrix)
                 kf2mil = 0.189394
                 result += "Bmatrix=("
-                for rc, row in enumerate(C): #Should only be a real matrix
+                for rc, row in enumerate(C):  # Should only be a real matrix
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
@@ -438,19 +443,23 @@ class Writer(AbstractWriter):
                             # -.602 siemens per mile
                             # convet to micor se
                             B = 0
-                           # if np.imag(elt) != 0:
-                           #     B = 1 / self.convert_from_meters(
-                           #         np.imag(elt), units, inverse=True
-                           #     )*1e3*2*60*math.pi
-                            if elt !=0:
-                                B = np.real(self.convert_from_meters(
-                                    elt, units, inverse=True
-                                )*1e-3*2*60*math.pi)
+                            # if np.imag(elt) != 0:
+                            #     B = 1 / self.convert_from_meters(
+                            #         np.imag(elt), units, inverse=True
+                            #     )*1e3*2*60*math.pi
+                            if elt != 0:
+                                B = np.real(
+                                    self.convert_from_meters(elt, units, inverse=True)
+                                    * 1e-3
+                                    * 2
+                                    * 60
+                                    * math.pi
+                                )
 
-                            #import pdb;pdb.set_trace()
+                            # import pdb;pdb.set_trace()
                             logger.debug("Siemens line units ", B)
-                           # logger.debug(np.imag(B) * 0.000621371)
-                           # B = np.imag(B) * 0.000621371 * 1e6
+                            # logger.debug(np.imag(B) * 0.000621371)
+                            # B = np.imag(B) * 0.000621371 * 1e6
                             logger.debug("done", B)
 
                             # B = self.convert_from_meters(np.imag(B), units, inverse=True)
@@ -540,8 +549,43 @@ class Writer(AbstractWriter):
 
             logger.debug(result)
         df1 = pd.DataFrame(obj_dict)
-        # df1 = df1[
-        #     ['bus0a','bus0b','bus0c','bus1a','bus1b','bus1c','name','Length (Mile)','r0 (ohm / Mile)','x0 (ohm / Mile)','r1 (ohm / Mile)','x1 (ohm / Mile)','b0 (uS / Mile)','b1 (uS / Mile)','r11 (ohm / Mile)','x11 (ohm / Mile)','r21 (ohm / Mile)','x21 (ohm / Mile)','r22 (ohm / Mile)','x22 (ohm / Mile)','r31 (ohm / Mile)','x31 (ohm / Mile)','r32 (ohm / Mile)','x32 (ohm / Mile)','r33 (ohm / Mile)', 'x33 (ohm / Mile)','b11 (uS / Mile)','b21 (uS / Mile)','b22 (uS / Mile)','b31 (uS / Mile)','b32 (uS / Mile)','b33 (uS / Mile)']]
+        df1 = df1[
+            [
+                "bus0a",
+                "bus0b",
+                "bus0c",
+                "bus1a",
+                "bus1b",
+                "bus1c",
+                "ID",
+                "Mode",
+                "Length (Mile)",
+                "r0 (ohm/Mile)",
+                "x0 (ohm/Mile)",
+                "r1 (ohm/Mile)",
+                "x1 (ohm/Mile)",
+                "b0 (uS/Mile)",
+                "b1 (uS/Mile)",
+                "r11 (ohm/Mile)",
+                "x11 (ohm/Mile)",
+                "r21 (ohm/Mile)",
+                "x21 (ohm/Mile)",
+                "r22 (ohm/Mile)",
+                "x22 (ohm/Mile)",
+                "r31 (ohm/Mile)",
+                "x31 (ohm/Mile)",
+                "r32 (ohm/Mile)",
+                "x32 (ohm/Mile)",
+                "r33 (ohm/Mile)",
+                "x33 (ohm/Mile)",
+                "b11 (uS/Mile)",
+                "b21 (uS/Mile)",
+                "b22 (uS/Mile)",
+                "b31 (uS/Mile)",
+                "b32 (uS/Mile)",
+                "b33 (uS/Mile)",
+            ]
+        ]
 
         return df1
 
@@ -592,21 +636,22 @@ class Writer(AbstractWriter):
         ### Check for a sperated 3 phase transformer. Line to netural or whatever
         index = -1
         for i in self._transformers:
-            #index += 1
+            # index += 1
+            # import pdb;pdb.set_trace;
             if len(i.windings[0].phase_windings) == 1:
                 pp = str(i.windings[0].phase_windings[0].phase)
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
-                if i.from_element in self._transformer_dict:
-                    self._transformer_dict[i.from_element]["combined"] = True
-                    index = self._transformer_dict[i.from_element]["i"]
-                    # import pdb;pdb.set_trace()
-                    self._transformer_dict[i.from_element]["kv1"] += i.windings[
+                from_element_name = i.from_element + i.name
+                if from_element_name in self._transformer_dict:
+                    self._transformer_dict[from_element_name]["combined"] = True
+                    index = self._transformer_dict[from_element_name]["i"]
+                    self._transformer_dict[from_element_name]["kv1"] += i.windings[
                         0
                     ].nominal_voltage
-                    self._transformer_dict[i.from_element]["kva"] += i.windings[
+                    self._transformer_dict[from_element_name]["kva"] += i.windings[
                         0
                     ].rated_power
-                    self._transformer_dict[i.from_element]["Tap " + pp] = (
+                    self._transformer_dict[from_element_name]["Tap " + pp] = (
                         i.windings[0].phase_windings[0].tap_position,
                     )
                 else:
@@ -614,7 +659,7 @@ class Writer(AbstractWriter):
                         value.append(None)
                     index += 1
                     logger.debug(i.windings[0].phase_windings[0].tap_position)
-                    self._transformer_dict[i.from_element] = {
+                    self._transformer_dict[i.from_element + i.name] = {
                         "combined": False,
                         "name": i.name,
                         "i": index,
@@ -623,10 +668,12 @@ class Writer(AbstractWriter):
                         "kva": i.windings[0].rated_power,
                     }
             else:
+                index += 1
                 for key, value in obj_dict.items():
                     value.append(None)
 
         index = -1
+
         for i in self._transformers:
             # for key, value in obj_dict.items():
             #     value.append(None)
@@ -637,10 +684,11 @@ class Writer(AbstractWriter):
             if len(i.windings[0].phase_windings) == 1:
                 pp = i.windings[0].phase_windings[0].phase
                 # self._transformer_dict[i.from_element + str(pp)] =  i.name
-                if i.from_element in self._transformer_dict:
-                    index = self._transformer_dict[i.from_element]["i"]
-                    kv1 = self._transformer_dict[i.from_element]["kv1"]
-                    kva = self._transformer_dict[i.from_element]["kva"]
+                from_element_name = i.from_element + i.name
+                if from_element_name in self._transformer_dict:
+                    index = self._transformer_dict[from_element_name]["i"]
+                    kv1 = self._transformer_dict[from_element_name]["kv1"]
+                    kva = self._transformer_dict[from_element_name]["kva"]
                 # else:
                 #     index += 1
                 #     self._transformer_dict[i.from_element] = {"name": i.name,
@@ -688,9 +736,9 @@ class Writer(AbstractWriter):
                                 winding.nominal_voltage / 1000
                             )
 
-                        obj_dict["W" + str(winding_num + 1) + "R (pu)"][
-                            index
-                        ] = winding.resistance
+                        obj_dict["W" + str(winding_num + 1) + "R (pu)"][index] = (
+                            winding.resistance * 100
+                        )
                         if (
                             hasattr(winding, "connection_type")
                             and winding.connection_type is not None
@@ -723,15 +771,17 @@ class Writer(AbstractWriter):
                             and winding.phase_windings is not None
                         ):
                             phase_cnt = 0
-                            phases = ['A','B','C']
+                            phases = ["A", "B", "C"]
                             N_phases.append(len(winding.phase_windings))
                             for pw in winding.phase_windings:
-                                obj_dict["W1Bus " + phases[phase_cnt]][index] = (
-                                    i.from_element + "_" + pw.phase.lower()
-                                )
-                                obj_dict["W2Bus " + phases[phase_cnt]][index] = (
-                                    i.to_element + "_" + pw.phase.lower()
-                                )
+                                if winding_num == 0:
+                                    obj_dict["W1Bus " + phases[phase_cnt]][index] = (
+                                        i.from_element + "_" + pw.phase.lower()
+                                    )
+                                else:
+                                    obj_dict["W2Bus " + phases[phase_cnt]][index] = (
+                                        i.to_element + "_" + pw.phase.lower()
+                                    )
                                 tap_name = "Tap " + phases[phase_cnt]
                                 if pw.tap_position is None:
                                     obj_dict[tap_name][index] = 0
@@ -743,7 +793,7 @@ class Writer(AbstractWriter):
                                     #     obj_dict[tap_name][index] = self._transformer_dict[i.from_element][tap_name]
                                     # else:
                                     #     obj_dict[tap_name][index] = pw.tap_position
-                                phase_cnt+=1
+                                phase_cnt += 1
 
                     if len(np.unique(N_phases)) != 1:
                         self.logger.error(
@@ -808,7 +858,7 @@ class Writer(AbstractWriter):
                 "W2Bus B",
                 "W2Bus C",
                 "W2V (kV)",
-                "W2S_base (kVA)",               
+                "W2S_base (kVA)",
                 "W2R (pu)",
                 "W2Conn. type",
                 "Mutual Impedance",
@@ -857,39 +907,44 @@ class Writer(AbstractWriter):
             "X_zero (ohm)": [],
         }
 
-        _transformer_dict = {i.from_element: i for i in self._transformers}
-
+        #        _transformer_dict = {i.from_element: i for i in self._transformers}
         for index, i in enumerate(self._powersources):
             for key, value in obj_dict.items():
                 value.append(None)
 
-            if (
-                hasattr(i, "connecting_element")
-                and i.connecting_element is not None
-                and i.connecting_element in _transformer_dict
-            ):
-                transformer = _transformer_dict[i.connecting_element]
-                obj_dict["ID"][index] = i.name
-                obj_dict["Angle (deg)"][index] = i.phase_angle
-                obj_dict["V (kV)"][index] = (
-                    transformer.windings[1].nominal_voltage / 1000
-                )
-                obj_dict["SCL_1 (MVA)"][index] = (
-                    i.emergency_power / 1e6
-                )  # TODO should this be rated power?
+            #            if (
+            #                hasattr(i, "connecting_element")
+            #                and i.connecting_element is not None
+            #                and i.connecting_element in _transformer_dict
+            #            ):
+            #                transformer = _transformer_dict[i.connecting_element]
+            #                obj_dict["ID"][index] = i.name
+            #                obj_dict["Angle (deg)"][index] = i.phase_angle
+            #                obj_dict["V (kV)"][index] = (
+            #                    transformer.windings[1].nominal_voltage / 1000
+            #                )
+            #                obj_dict["SCL_1 (MVA)"][index] = (
+            #                    i.emergency_power / 1e6
+            #                )  # TODO should this be rated power?
+            #                obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
+            #                for pw in transformer.windings[1].phase_windings:
+            #                    obj_dict["bus " + pw.phase.upper()][index] = (
+            #                        transformer.to_element + "_" + pw.phase.lower()
+            #                    )
+            #           else:  # just a powersource object
+            obj_dict["ID"][index] = i.name
+            obj_dict["Angle (deg)"][index] = i.phase_angle
+            obj_dict["V (kV)"][index] = i.nominal_voltage / 1000
+            if i.emergency_power is not None:
+                obj_dict["SCL_1 (MVA)"][index] = i.emergency_power / 1e6
                 obj_dict["SCL_3 (MVA)"][index] = i.emergency_power / 1e6
-                for pw in transformer.windings[1].phase_windings:
-                    obj_dict["bus " + pw.phase.upper()][index] = (
-                        transformer.to_element + "_" + pw.phase.lower()
+            # import pdb;pdb.set_trace()
+            for phase_unicode in i.phases:
+                ph = phase_unicode.default_value.lower()
+                if str(ph).lower() in set(["a", "b", "c"]):
+                    obj_dict["bus " + str(ph).upper()][index] = (
+                        i.connecting_element + "_" + str(ph).lower()
                     )
-            else:  # just a powersource object
-                obj_dict["ID"][index] = i.name
-                obj_dict["V (kV)"][index] = i.nominal_voltage
-                for ph in i.phases:
-                    if str(ph).lower() in set(["a", "b", "c"]):
-                        obj_dict["bus " + str(ph).upper()][index] = (
-                            i.name + "_" + str(ph).lower()
-                        )
 
         df7 = pd.DataFrame(obj_dict)
         df7 = df7[
@@ -922,7 +977,13 @@ class Writer(AbstractWriter):
         :rtype: dataframe
 
         """
-        obj_dict = {"Bus": [], "BaseVoltage":[], "Voltage (V)": [], "Angle (deg)": [], "Type":[]}
+        obj_dict = {
+            "Bus": [],
+            "BaseVoltage": [],
+            "Voltage (V)": [],
+            "Angle (deg)": [],
+            "Type": [],
+        }
         nodes = [i for i in self.m.models if isinstance(i, Node)]
         index = 0
         # for c,i in enumerate(nodes):
@@ -933,48 +994,56 @@ class Writer(AbstractWriter):
         #             obj_dict['Bus'][index] = i.name + '_' + str(phase.default_value).lower()
         #             obj_dict['Voltage (V)'][index] = i.nominal_voltage
         #             index+=1
-        for node in self._nodes + self._powersources:
+        for node in self._nodes:
             if hasattr(node, "name"):
                 letter_phases = set()
                 for phase_unicode in node.phases:
+                    if phase_unicode.default_value is None:
+                        continue
                     phase = phase_unicode.default_value.lower()
-                    if (
-                        phase== "a"
-                        or phase== "b"
-                        or phase== "c"
-                    ):
+                    if phase == "a" or phase == "b" or phase == "c":
                         letter_phases.add(phase)
                         obj_dict["Bus"].append(node.name + "_" + phase)
                         if isinstance(node.nominal_voltage, float):
-                            obj_dict["BaseVoltage"].append(node.nominal_voltage/math.sqrt(3))
+                            obj_dict["BaseVoltage"].append(
+                                node.nominal_voltage / math.sqrt(3)
+                            )
                         else:
                             obj_dict["BaseVoltage"].append(node.nominal_voltage)
-                        
+
                         if isinstance(node.nominal_voltage, float):
-                            obj_dict["Voltage (V)"].append(node.nominal_voltage/math.sqrt(3)) # L-N voltage
+                            obj_dict["Voltage (V)"].append(
+                                node.nominal_voltage / math.sqrt(3)
+                            )  # L-N voltage
                         else:
-                            obj_dict["Voltage (V)"].append(node.nominal_voltage) # PAG why is this needed
-                        if isinstance(node, PowerSource): # PAG this is where we would match on source name
-                            obj_dict["Type"].append("SLACK") #PAG No generators so all nodes are PQ buses
+                            obj_dict["Voltage (V)"].append(
+                                node.nominal_voltage
+                            )  # PAG why is this needed
+                        if (
+                            node.name.lower() == "sourcebus"
+                        ):  # PAG this is where we would match on source name
+                            obj_dict["Type"].append(
+                                "SLACK"
+                            )  # PAG No generators so all nodes are PQ buses
                         else:
                             obj_dict["Type"].append("PQ")
 
-                if 'a' in letter_phases:
+                if "a" in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
-                if 'b' in letter_phases:
+                if "b" in letter_phases:
                     obj_dict["Angle (deg)"].append(120)
-                if 'c' in letter_phases:
+                if "c" in letter_phases:
                     obj_dict["Angle (deg)"].append(-120)
 
-#                if len(letter_phases) == 1:
-#                    obj_dict["Angle (deg)"].append(0)
-#                if len(letter_phases) == 2:
-#                    obj_dict["Angle (deg)"].append(0)
-#                    obj_dict["Angle (deg)"].append(180)
-#                if len(letter_phases) == 3:
-#                    obj_dict["Angle (deg)"].append(0)
-#                    obj_dict["Angle (deg)"].append(120)
-#                    obj_dict["Angle (deg)"].append(-120)
+                #                if len(letter_phases) == 1:
+                #                    obj_dict["Angle (deg)"].append(0)
+                #                if len(letter_phases) == 2:
+                #                    obj_dict["Angle (deg)"].append(0)
+                #                    obj_dict["Angle (deg)"].append(180)
+                #                if len(letter_phases) == 3:
+                #                    obj_dict["Angle (deg)"].append(0)
+                #                    obj_dict["Angle (deg)"].append(120)
+                #                    obj_dict["Angle (deg)"].append(-120)
                 index = index + 1
         """
         line_dict = {}
@@ -1069,7 +1138,7 @@ class Writer(AbstractWriter):
                             value.append(None)
                         index += 1
                         load_dict[n_name] = index
-                        if 'load_' == n_name[0:5]:
+                        if "load_" == n_name[0:5]:
                             obj_dict["ID"][index] = n_name[5:]
                         else:
                             obj_dict["ID"][index] = n_name
@@ -1080,15 +1149,16 @@ class Writer(AbstractWriter):
                     for key, value in obj_dict.items():
                         value.append(None)
                     index += 1
-                    if 'load_' == i.name[0:5]:
+                    if "load_" == i.name[0:5]:
                         obj_dict["ID"][index] = i.name[5:]
                     else:
                         obj_dict["ID"][index] = i.name
 
             if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                 # logger.debug('    nominal_voltage {nv};'.format(nv=i.nominal_voltage))
-                obj_dict["V (kV)"][index] = i.nominal_voltage / 1000.0  #template 1_6 says L-L kV
-
+                obj_dict["V (kV)"][index] = (
+                    i.nominal_voltage / 1000.0
+                )  # template 1_6 says L-L kV
 
             phase_cnt = 1
             if hasattr(i, "phase_loads") and i.phase_loads is not None:
@@ -1096,11 +1166,13 @@ class Writer(AbstractWriter):
                 for j in i.phase_loads:
                     if hasattr(j, "phase") and j.phase is not None:
                         phases = phases + j.phase
-                        if hasattr(i, "connecting_element") and i.connecting_element is not None:
+                        if (
+                            hasattr(i, "connecting_element")
+                            and i.connecting_element is not None
+                        ):
                             obj_dict["Bus " + str(phase_cnt)][index] = (
                                 i.connecting_element + "_" + j.phase.lower()
                             )
-
 
                         if hasattr(j, "use_zip") and j.use_zip is not None:
                             if (
@@ -1195,9 +1267,9 @@ class Writer(AbstractWriter):
                                             cp=str(complex(j.p, j.q)).strip("()"),
                                         )
                                     )
-                                    obj_dict["P_" + str(phase_cnt) + " (kW)"][
-                                        index
-                                    ] = (abs(j.p) / 1000.0)
+                                    obj_dict["P_" + str(phase_cnt) + " (kW)"][index] = (
+                                        abs(j.p) / 1000.0
+                                    )
                                     obj_dict["Q_" + str(phase_cnt) + " (kVAr)"][
                                         index
                                     ] = (abs(j.q) / 1000.0)
@@ -1219,13 +1291,24 @@ class Writer(AbstractWriter):
                                     obj_dict["K_i"][index] = 1
                                     obj_dict["K_z"][index] = 0
                                     obj_dict["Type"][index] = "ZIP"
-                        phase_cnt+=1
-            
-            obj_dict["Bandwidth (pu)"][index] = 0.02 # this doesn't work right
-            obj_dict["Conn. type"][index] = "wye" # this doesn't work right            
-            obj_dict["Status"][index] = int(1) # this doesn't work right
-            obj_dict["Use initial voltage?"][index] = int(0) # this doesn't work right
-            
+                        phase_cnt += 1
+
+            obj_dict["Bandwidth (pu)"][index] = 0.02  # this doesn't work right
+
+            if i.connection_type == "Y":
+                obj_dict["Conn. type"][index] = "wye"
+            elif i.connection_type == "D":
+                obj_dict["Conn. type"][index] = "delta"
+            else:
+                self.logger.error(
+                    "Unsupported type of connection {conn} for Load {name}".format(
+                        conn=i.connection_type, name=i.name
+                    )
+                )
+
+            obj_dict["Status"][index] = int(1)  # this doesn't work right
+            obj_dict["Use initial voltage?"][index] = int(0)  # this doesn't work right
+
         df3 = pd.DataFrame(obj_dict)
         df3 = df3[
             [
@@ -1276,6 +1359,9 @@ class Writer(AbstractWriter):
         self._powersources = [i for i in self.m.models if isinstance(i, PowerSource)]
         self._photovoltaics = [i for i in self.m.models if isinstance(i, Photovoltaic)]
 
+        modifier = system_structure_modifier(self.m)
+        modifier.terminals_to_phases()
+
         df7 = self.source()
         df1 = self.line()
         df2 = self.switch()
@@ -1292,7 +1378,7 @@ class Writer(AbstractWriter):
         # workbook = writer.book
         worksheet = writer.sheets["Vsource 3-phase"]
         worksheet.set_column(0, 25, 16)
-        
+
         df9.to_excel(writer, "Bus", index=False)
         workbook = writer.book
         worksheet = writer.sheets["Bus"]
@@ -1315,13 +1401,13 @@ class Writer(AbstractWriter):
         worksheet = writer.sheets["Multiphase Transformer"]
 
         worksheet.set_column(0, 19, 16)
-           
+
         df3.to_excel(writer, "Multiphase Load", index=False)
         # workbook = writer.book
         worksheet = writer.sheets["Multiphase Load"]
 
         worksheet.set_column(0, 19, 16)
-        
+
         writer.save()
 
 
