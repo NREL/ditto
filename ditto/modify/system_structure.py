@@ -1006,10 +1006,13 @@ class system_structure_modifier(Modifier):
                 continu = True
                 # Find the upstream transformer by walking the graph upstream
                 end_node = connecting_element
+                transformer_name = None
                 while continu:
                     # Get predecessor node of current node in the DAG
-                    from_node = next(self.G.digraph.predecessors(end_node))
-
+                    try:
+                        from_node = next(self.G.digraph.predecessors(end_node))
+                    except:
+                        break
                     # Look for the type of equipment that makes the connection between from_node and to_node
                     _type = None
                     if (from_node, end_node) in self.edge_equipment:
@@ -1056,21 +1059,24 @@ class system_structure_modifier(Modifier):
                 # Number of windings is 1; we ignore it as it will have the phase of the primary transformer
                 # Number of windings is 2; we will make sure the phases of the secondary winding of a transformer are the same as the phases of loads
                 # Number of windings is 3; we add a new phase winding to the secondary winding of the transformer and match the phases of the loads to transformer
-                t_obj = self.model[transformer_name]
-                N_windings = len(t_obj.windings)
-                if N_windings == 1:
-                    continue
-                if N_windings == 2:
-                    for phase_winding, l_phase in zip(
-                        t_obj.windings[1].phase_windings, load_phases
-                    ):
-                        phase_winding.phase = l_phase
-                if N_windings == 3:
-                    t_obj.windings[1].phase_windings.append(PhaseWinding(self.model))
-                    for phase_winding, l_phase in zip(
-                        t_obj.windings[1].phase_windings, load_phases
-                    ):
-                        phase_winding.phase = l_phase
+                if transformer_name is not None:
+                    t_obj = self.model[transformer_name]
+                    N_windings = len(t_obj.windings)
+                    if N_windings == 1:
+                        continue
+                    if N_windings == 2:
+                        for phase_winding, l_phase in zip(
+                            t_obj.windings[1].phase_windings, load_phases
+                        ):
+                            phase_winding.phase = l_phase
+                    if N_windings == 3:
+                        t_obj.windings[1].phase_windings.append(
+                            PhaseWinding(self.model)
+                        )
+                        for phase_winding, l_phase in zip(
+                            t_obj.windings[1].phase_windings, load_phases
+                        ):
+                            phase_winding.phase = l_phase
 
     def open_close_switches(self, path_to_dss_file):
         """Since there is not way to indicate wether a switch is open or closed in OpenDSS, RNM use the following convention:
