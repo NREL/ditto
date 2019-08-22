@@ -737,7 +737,7 @@ class Writer(AbstractWriter):
                             )
 
                         obj_dict["W" + str(winding_num + 1) + "R (pu)"][index] = (
-                            winding.resistance * 100
+                            winding.resistance / 100
                         )
                         if (
                             hasattr(winding, "connection_type")
