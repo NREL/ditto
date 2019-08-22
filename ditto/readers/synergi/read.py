@@ -1899,11 +1899,7 @@ class Reader(AbstractReader):
         #
         print("--> Parsing PV systems...")
         for i, obj in enumerate(PVUniqueDeviceId):
-
-            if (
-                PVGenType[i].lower() == "photovoltaic"
-                or PVGenType[i].lower() == "photovoltaic 3p"
-            ):
+            if PVGenType[i] == "photovoltaic" or PVGenType[i] == "photovoltaic 3p":
 
                 # Create a Photovoltaic object
                 api_PV = Photovoltaic(model)
@@ -1964,7 +1960,7 @@ class Reader(AbstractReader):
                 if GeneratorType[idx] == gen:
                     Count = k
 
-            if Count is not None and GeneratorTypeDev[Count].lower() == "pv":
+            if Count is not None and GeneratorTypeDev[Count] == "pv":
 
                 # Create a Photovoltaic DiTTo object
                 api_PV = Photovoltaic(model)
@@ -2013,7 +2009,7 @@ class Reader(AbstractReader):
                 if DGeneratorType[idx] == gen:
                     Count = k
 
-            if Count is not None and GeneratorTypeDev[Count].lower() == "pv":
+            if Count is not None and GeneratorTypeDev[Count] == "pv":
 
                 # Create a Photovoltaic DiTTo object
                 api_PV = Photovoltaic(model)
