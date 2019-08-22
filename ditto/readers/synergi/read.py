@@ -991,12 +991,6 @@ class Reader(AbstractReader):
                         # The name can contain spaces. Replace them with "_"
                         #
                         api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
-                        if api_wire.nameclass.lower() == "unknown":
-                            if api_line.line_type == "underground":
-                                api_wire.nameclass += "_cable"
-                            else:
-                                api_wire.nameclass += "_wire"
-
                         # Cache the conductor name
                         conductor_name_raw = PhaseConductorID[i]
 
@@ -1023,16 +1017,6 @@ class Reader(AbstractReader):
                                 api_wire.nameclass = PhaseConductorID[i].replace(
                                     " ", "_"
                                 )
-                                set_unknown = set(api_wire.nameclass.lower().split())
-                                set_elem = next(iter(set_unknown))
-                                if api_wire.nameclass.lower() == "unknown" or (
-                                    set_elem == "unknown" and len(set_unknown) == 1
-                                ):
-                                    if api_line.line_type == "underground":
-                                        api_wire.nameclass += "_cable"
-                                    else:
-                                        api_wire.nameclass += "_wire"
-
                                 conductor_name_raw = PhaseConductorID[i]
                             except:
                                 pass
@@ -1057,16 +1041,6 @@ class Reader(AbstractReader):
                                 api_wire.nameclass = PhaseConductorID[i].replace(
                                     " ", "_"
                                 )
-                                set_unknown = set(api_wire.nameclass.lower().split())
-                                set_elem = next(iter(set_unknown))
-                                if api_wire.nameclass.lower() == "unknown" or (
-                                    set_elem == "unknown" and len(set_unknown) == 1
-                                ):
-                                    if api_line.line_type == "underground":
-                                        api_wire.nameclass += "_cable"
-                                    else:
-                                        api_wire.nameclass += "_wire"
-
                                 conductor_name_raw = PhaseConductorID[i]
                             except:
                                 pass
@@ -1080,12 +1054,6 @@ class Reader(AbstractReader):
 
                         # Set the nameclass
                         api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
-                        if api_wire.nameclass.lower() == "unknown":
-                            if api_line.line_type == "underground":
-                                api_wire.nameclass += "_cable"
-                            else:
-                                api_wire.nameclass += "_wire"
-
                         # Cache the conductor name
                         conductor_name_raw = NeutralConductorID[i]
 
@@ -1104,6 +1072,11 @@ class Reader(AbstractReader):
                             SynergiValueType.MUL,
                             LengthUnits,
                         )
+
+                if api_line.line_type == "underground":
+                    api_wire.nameclass = "Cable_" + api_wire.nameclass
+                else:
+                    api_wire.nameclass = "Wire_" + api_wire.nameclass
 
                 # Set the characteristics of the wire:
                 # - GMR
