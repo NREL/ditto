@@ -12,10 +12,9 @@ output_dir = create_output_dir(small_tests_dir)
 
 # Create a dictionary of all the readers outputs (Each Node will have R0, X0, R1, X1 values) from the output saved in output_dir
 comp_values = create_dict(output_dir)
-print("Hi", comp_values)
 
-# Writing the output to excel
+# Writing the output to excel as output.xlsx in the current directory
 write_to_excel(comp_values)
 
-# Plotting of differences of sequence impedances
+# Plotting the sequence impedance values of all readers
 plots(comp_values)
