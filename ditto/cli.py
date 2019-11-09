@@ -94,11 +94,15 @@ def metric(ctx, **kwargs):
 
     if kwargs["from"] not in registered_readers.keys():
         raise click.BadOptionUsage(
+            "from",
             "Cannot read from format '{}'".format(kwargs["from"])
         )
 
     if kwargs["input"] is None:
-        raise click.BadOptionUsage("--input must be provided.")
+        raise click.BadOptionUsage(
+            "input",
+            "--input must be provided."
+        )
 
     from_reader_name = kwargs["from"]
 
@@ -142,14 +146,26 @@ def convert(ctx, **kwargs):
 
     if kwargs["from"] not in registered_readers.keys():
         raise click.BadOptionUsage(
+            "from",
             "Cannot read from format '{}'".format(kwargs["from"])
         )
 
     if kwargs["to"] not in registered_writers.keys():
-        raise click.BadOptionUsage("Cannot write to format '{}'".format(kwargs["to"]))
+        raise click.BadOptionUsage(
+            "to",
+            "Cannot write to format '{}'".format(kwargs["to"])
+        )
 
-    if kwargs["input"] is None or kwargs["output"] is None:
-        raise click.BadOptionUsage("Both --input and --output must be provided.")
+    if kwargs["input"] is None:
+        raise click.BadOptionUsage(
+            "input",
+            "Both --input and --output must be provided."
+        )
+
+    if kwargs["output"] is None:
+        raise click.BadOptionUsage(
+            "output",
+            "Both --input and --output must be provided.")
 
     from_reader_name = kwargs["from"]
     to_writer_name = kwargs["to"]
