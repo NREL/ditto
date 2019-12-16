@@ -1,8 +1,8 @@
 # coding: utf8
 
 ###### Read  in the synergi database #######
-from .db_parser import DbParser
-
+#from .db_parser import DbParser
+from ditto.readers.synergi.db_parser import DbParser
 # Python import
 import math
 import sys
@@ -12,7 +12,7 @@ import numpy as np
 import logging
 import time
 import operator
-
+import pandas as pd
 # Ditto imports #
 
 from ditto.readers.abstract_reader import AbstractReader
@@ -71,6 +71,8 @@ class Reader(AbstractReader):
     **Authors:**
     - Xiangqi Zhu
     - Nicolas Gensollen
+    **Contributor:**
+    - Wenbo Wang
     """
 
     register_names = ["synergi", "Synergi", "syn"]
@@ -93,6 +95,8 @@ class Reader(AbstractReader):
             self.ware_house_input_file = "warehouse.mdb"
 
         self.SynergiData = None
+        self.node_nominal_voltage_mapping = dict()
+        self.feeder_substation_mapping = dict()
 
     def get_data(self, key1, key2):
         """
@@ -141,6 +145,7 @@ class Reader(AbstractReader):
         ## Feeder ID ##########
         ## This is used to separate different feeders ##
         FeederId = self.get_data("InstFeeders", "FeederId")
+        SubstationId = self.get_data("InstFeeders", "SubstationId") # wenbo added
         NominalKvll_src = self.get_data("InstFeeders", "NominalKvll")
         ConnectionType_src = self.get_data("InstFeeders", "ConnectionType")
         BusVoltageLevel = self.get_data("InstFeeders", "BusVoltageLevel")
@@ -166,6 +171,70 @@ class Reader(AbstractReader):
         if LengthUnits is not None and len(LengthUnits) == 1:
             LengthUnits = LengthUnits[0]
 
+        ########## Line #####################
+        LineID = self.get_data("InstSection", "SectionId")
+        LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
+        PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
+        PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
+        PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
+        NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
+        ConfigurationId = self.get_data("InstSection", "ConfigurationId")
+        SectionPhases = self.get_data("InstSection", "SectionPhases")
+        LineFeederId = self.get_data("InstSection", "FeederId")
+        
+
+
+        # create mapping between feeder IDs and substation IDs   
+        for idx, id in enumerate(FeederId):
+            self.feeder_substation_mapping[FeederId[idx].replace(" ", "_")] = SubstationId[idx].replace(" ", "_")
+            
+
+
+        
+        
+        
+        print(self.feeder_substation_mapping)
+        
+        
+        
+        # add subtrans to feeder ID
+        FeederId_subtrans = list(set(list(LineFeederId))-set(FeederId))
+        
+        FeederId = FeederId.append(pd.Series(FeederId_subtrans), ignore_index=True)
+        
+        FromNodeId = self.get_data("InstSection", "FromNodeId")
+        ToNodeId = self.get_data("InstSection", "ToNodeId")
+        IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
+        IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
+        AmpRating = self.get_data("InstSection", "AmpRating")
+        AveHeightAboveGround_MUL = self.get_data(
+            "InstSection", "AveHeightAboveGround_MUL"
+        )
+        #wenbo add this to get line voltage
+        LineDescription = self.get_data("InstSection", "Description")
+        
+        
+
+        # Create mapping between section IDs and Feeder Ids
+        self.section_feeder_mapping = create_mapping(
+            LineID, LineFeederId, remove_spaces=True
+        )
+        
+
+
+
+
+        self.section_phase_mapping = create_mapping(LineID, SectionPhases)
+
+        self.section_from_to_mapping = {}
+        for idx, section in enumerate(LineID):
+            self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
+
+
+
+        
+        
         ###### Transformer ##################
         TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
         TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
@@ -178,10 +247,42 @@ class Reader(AbstractReader):
         ConnPhases = self.get_data("InstDTrans", "ConnPhases")
 
         ## Substration Transformers ##
+        # wenbo added
         SubstationTransformerV = self.get_data(
             "InstSubstationTransformers", "NominalKvll"
         )
-
+#        SubstationTransformerID = self.get_data(
+#            "InstSubstationTransformers", "SubTranId"
+#        )
+        #TransformerId = TransformerId.append(SubstationTransformerID, ignore_index=True)
+        
+        #SubstationTransformerType = self.get_data("InstSubstationTransformers", "TransformerType")
+        
+        # append to transformerType tab
+        #TransformerType = TransformerType.append(SubstationTransformerType, ignore_index=True)
+        
+        # get the section ID for subtrans and attach to TransformerSectionId
+#        for subtransid in SubstationTransformerID:
+#            
+#            try:
+#                idx = FromNodeId[FromNodeId==subtransid].index[0]
+#            
+#            except:
+#                idx = ToNodeId[ToNodeId==subtransid].index[0]
+#            
+#            TransformerSectionId = TransformerSectionId.append(pd.Series(LineID[idx]), ignore_index=True)
+        
+        # wenbo added for subtransmission
+        NominalKvll_src = NominalKvll_src.append(SubstationTransformerV,ignore_index=True)
+        
+        # wenbo added: BusVoltage level
+        SubstationTransformerVoltageLevel = self.get_data("InstSubstationTransformers", "BusVoltageLevel")
+        BusVoltageLevel = BusVoltageLevel.append(SubstationTransformerVoltageLevel,ignore_index=True)
+        
+        
+        SubtransByPhVoltDegPh1 = self.get_data("InstSubstationTransformers", "ByPhVoltDegPh1")
+        ByPhVoltDegPh1 = ByPhVoltDegPh1.append(SubtransByPhVoltDegPh1,ignore_index=True)
+        
         ## Transformer Setting ##
 
         TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
@@ -198,6 +299,9 @@ class Reader(AbstractReader):
         PercentImpedance = self.get_data("DevTransformers", "PercentImpedance")
         PercentResistance = self.get_data("DevTransformers", "PercentResistance")
         ConnectedPhases = self.get_data("InstPrimaryTransformers", "ConnectedPhases")
+        
+        TransformerHighSideNearFromNode = self.get_data("InstPrimaryTransformers", "HighSideNearFromNode")
+        
 
         # NOTE: When the same information is given in the database and in the warehouse,
         # both are stored and the priority will be given to the information from the
@@ -230,37 +334,7 @@ class Reader(AbstractReader):
             "DevTransformers", "TertiaryConnectionCode"
         )
 
-        ########## Line #####################
-        LineID = self.get_data("InstSection", "SectionId")
-        # FeederId = self.get_data("InstSection", "FeederId")
-        LineLength = self.get_data("InstSection", "SectionLength_MUL")
-        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
-        PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
-        PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
-        PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
-        NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
-        ConfigurationId = self.get_data("InstSection", "ConfigurationId")
-        SectionPhases = self.get_data("InstSection", "SectionPhases")
-        LineFeederId = self.get_data("InstSection", "FeederId")
-        FromNodeId = self.get_data("InstSection", "FromNodeId")
-        ToNodeId = self.get_data("InstSection", "ToNodeId")
-        IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
-        IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
-        AmpRating = self.get_data("InstSection", "AmpRating")
-        AveHeightAboveGround_MUL = self.get_data(
-            "InstSection", "AveHeightAboveGround_MUL"
-        )
 
-        # Create mapping between section IDs and Feeder Ids
-        self.section_feeder_mapping = create_mapping(
-            LineID, LineFeederId, remove_spaces=True
-        )
-
-        self.section_phase_mapping = create_mapping(LineID, SectionPhases)
-
-        self.section_from_to_mapping = {}
-        for idx, section in enumerate(LineID):
-            self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
 
         ## Reclosers #######
         recloser_sectionID = self.get_data("InstReclosers", "SectionId")
@@ -415,6 +489,7 @@ class Reader(AbstractReader):
         Phase2Kva = self.get_data("Loads", "Phase2Kva")
         Phase3Kva = self.get_data("Loads", "Phase3Kva")
 
+
         ## Capacitors ################
         CapacitorSectionID = self.get_data("InstCapacitors", "SectionId")
         CapacitorName = self.get_data("InstCapacitors", "UniqueDeviceId")
@@ -482,13 +557,32 @@ class Reader(AbstractReader):
         RegulatorPTRatio = self.get_data("DevRegulators", "PTRatio")
         RegulatorCTRating = self.get_data("DevRegulators", "CTRating")
         RegulatorNearFromNode = self.get_data("InstRegulators", "NearFromNode")
+        RegulatorTapsNearFromNode = self.get_data("InstRegulators", "TapsNearFromNode") # wenbo added
 
         RegulatorRatedVoltage = self.get_data("DevRegulators", "RegulatorRatedVoltage")
         RegulatorRatedKva = self.get_data("DevRegulators", "RegulatorRatedKva")
         RegulatorNoLoadLosses = self.get_data("DevRegulators", "NoLoadLosses")
         RegulatorConnectionCode = self.get_data("DevRegulators", "ConnectionCode")
+        
+        # wenbo added
+        RegulatorPercentZ = self.get_data("DevRegulators", "PercentZOnRegulatorBase")
+        RegulatorXRRatio = self.get_data("DevRegulators", "RegulatorXRRatio")
+        
 
-        ##### PV ##################################
+        ##### PV Wenbo changed this##################################
+        LargeCustDeviceId = self.get_data("InstLargeCust", "UniqueDeviceId")
+        
+        LargeCustSectionId = self.get_data("InstLargeCust", "SectionId")
+        LargeCustLoadPhase1Kw = self.get_data("InstLargeCust", "LoadPhase1Kw")
+        LargeCustLoadPhase2Kw = self.get_data("InstLargeCust", "LoadPhase2Kw")
+        LargeCustLoadPhase3Kw = self.get_data("InstLargeCust", "LoadPhase3Kw")
+        LargeCustLoadPhase1Kvar = self.get_data("InstLargeCust", "LoadPhase1Kvar")
+        LargeCustLoadPhase2Kvar = self.get_data("InstLargeCust", "LoadPhase2Kvar")
+        LargeCustLoadPhase3Kvar = self.get_data("InstLargeCust", "LoadPhase3Kvar")
+        LargeCustLoadPhase1Kva = np.sqrt(np.array(LargeCustLoadPhase1Kw)**2+np.array(LargeCustLoadPhase1Kvar)**2)
+        LargeCustLoadPhase2Kva = np.sqrt(np.array(LargeCustLoadPhase2Kw)**2+np.array(LargeCustLoadPhase2Kvar)**2)
+        LargeCustLoadPhase3Kva = np.sqrt(np.array(LargeCustLoadPhase3Kw)**2+np.array(LargeCustLoadPhase3Kvar)**2)
+        
         PVUniqueDeviceId = self.get_data("InstLargeCust", "UniqueDeviceId")
         PVSectionId = self.get_data("InstLargeCust", "SectionId")
         PVGenType = self.get_data("InstLargeCust", "GenType")
@@ -498,7 +592,26 @@ class Reader(AbstractReader):
         PVGenPhase1Kvar = self.get_data("InstLargeCust", "GenPhase1Kvar")
         PVGenPhase2Kvar = self.get_data("InstLargeCust", "GenPhase2Kvar")
         PVGenPhase3Kvar = self.get_data("InstLargeCust", "GenPhase3Kvar")
+        # wenbo added: for large cust there there are 3 types (C = cogenerator; D= DG-PV; L=load)
+        LargeCustType = self.get_data("InstLargeCust", "Category")
+        for i,x in enumerate(LargeCustType):
+            if x.upper() =='L' or x.upper() =='C':
+                LoadName = LoadName.append(pd.Series(LargeCustDeviceId[i]),ignore_index=True)
+                Phase1Kw = Phase1Kw.append(pd.Series(LargeCustLoadPhase1Kw[i]),ignore_index=True)
+                Phase2Kw = Phase2Kw.append(pd.Series(LargeCustLoadPhase2Kw[i]),ignore_index=True)
+                Phase3Kw = Phase3Kw.append(pd.Series(LargeCustLoadPhase3Kw[i]),ignore_index=True)
+                Phase1Kvar = Phase1Kvar.append(pd.Series(LargeCustLoadPhase1Kvar[i]),ignore_index=True)
+                Phase2Kvar = Phase2Kvar.append(pd.Series(LargeCustLoadPhase2Kvar[i]),ignore_index=True)
+                Phase3Kvar = Phase3Kvar.append(pd.Series(LargeCustLoadPhase3Kvar[i]),ignore_index=True)
+                Phase1Kva = Phase1Kva.append(pd.Series(LargeCustLoadPhase1Kva[i]),ignore_index=True)
+                Phase2Kva = Phase2Kva.append(pd.Series(LargeCustLoadPhase2Kva[i]),ignore_index=True)
+                Phase3Kva = Phase3Kva.append(pd.Series(LargeCustLoadPhase3Kva[i]),ignore_index=True)
+        
+        
+            
+        
 
+        
         ## Adding Distributed Gen PV ####
 
         DSectionID = self.get_data("InstDGens", "SectionId")
@@ -511,7 +624,7 @@ class Reader(AbstractReader):
         DGenPhase2Kvar = self.get_data("InstDGens", "Phase2Kvar")
         DGenPhase3Kw = self.get_data("InstDGens", "Phase3Kw")
         DGenPhase3Kvar = self.get_data("InstDGens", "Phase3Kvar")
-
+        
         ## Generators ###############################
         GeneratorSectionID = self.get_data("InstGenerators", "SectionId")
         GeneratorID = self.get_data("InstGenerators", "UniqueDeviceId")
@@ -526,7 +639,10 @@ class Reader(AbstractReader):
         GenPhase2Kvar = self.get_data("InstGenerators", "GenPhase2Kvar")
         GenPhase3Kw = self.get_data("InstGenerators", "GenPhase3Kw")
         GenPhase3Kvar = self.get_data("InstGenerators", "GenPhase3Kvar")
-
+        
+        
+        
+        
         GeneratorName = self.get_data("DevGenerators", "GeneratorName")
         GeneratorTypeDev = self.get_data("DevGenerators", "GeneratorType")
         GeneratorKvRating = self.get_data("DevGenerators", "KvRating")
@@ -550,14 +666,23 @@ class Reader(AbstractReader):
         ####################################################################################
         #
         print("--> Parsing Sources...")
+        # wenbo changed FeederId to FeederId_subtrans
+        
         for i, obj in enumerate(FeederId):
 
             # Create a DiTTo PowerSource object
             api_source = PowerSource(model)
 
             # Set the name
-            api_source.name = obj.lower().replace(" ", "_") + "_src"
+            api_source.name = obj.lower().replace(" ", "_")# + "_src"
 
+            # set the substation_name
+            if api_source.name in self.feeder_substation_mapping:
+                api_source.substation_name = self.feeder_substation_mapping[api_source.name]
+
+            
+            
+            
             # Set the nominal voltage
             api_source.nominal_voltage = NominalKvll_src[i] * 10 ** 3  # DiTTo in volts
 
@@ -576,23 +701,37 @@ class Reader(AbstractReader):
             api_source.is_sourcebus = 1
 
             # Set the connection type
-            api_source.connection_type = ConnectionType_src[i][:1].upper()
+            # wenbo added: this is to set some default value
+            
+            try: 
+                api_source.connection_type = ConnectionType_src[i][:1].upper()
+            except:
+                api_source.connection_type = 'Y'
+        
 
             # Set the angle of the first phase
             api_source.phase_angle = ByPhVoltDegPh1[i]
 
             # Set the positive sequence impedance of the source
-            api_source.positive_sequence_impedance = complex(
-                PosSequenceResistance_src[i], PosSequenceReactance_src[i]
-            )
-
+            
+            try:
+                api_source.positive_sequence_impedance = complex(
+                    PosSequenceResistance_src[i], PosSequenceReactance_src[i]
+                )
+            except:
+                api_source.positive_sequence_impedance = complex(0.01,0.01)
+                
             # Set the zero sequence impedance of the source
-            api_source.zero_sequence_impedance = complex(
-                ZeroSequenceResistance_src[i], ZeroSequenceReactance_src[i]
-            )
-
+            
+            try:
+                api_source.zero_sequence_impedance = complex(
+                    ZeroSequenceResistance_src[i], ZeroSequenceReactance_src[i]
+                )
+            except:
+                api_source.zero_sequence_impedance = complex(0.01,0.01)
             # Set the connecting element of the source
             api_source.connecting_element = obj.lower().replace(" ", "_")
+            # wenbo to do: change the connecting_element based on the from node: keep the fromnode and tonode
 
         ####################################################################################
         #                                                                                  #
@@ -613,6 +752,11 @@ class Reader(AbstractReader):
             if obj in self.section_feeder_mapping:
                 api_node.feeder_name = self.section_feeder_mapping[obj]
 
+            if api_node.feeder_name in self.feeder_substation_mapping:
+                api_node.substation_name = self.feeder_substation_mapping[api_node.feeder_name]
+       
+            
+            
             # Set the Position of the Node
             # Create a Position object
             #
@@ -662,7 +806,14 @@ class Reader(AbstractReader):
             # Set the feeder_name if it exists in the mapping
             if obj in self.section_feeder_mapping:
                 api_line.feeder_name = self.section_feeder_mapping[obj]
-
+                
+            # wenbo added:
+            if api_line.feeder_name in self.feeder_substation_mapping:
+                api_line.substation_name = self.feeder_substation_mapping[api_line.feeder_name]
+            
+            
+            
+            
             # Cache configuration
             if ConfigurationId is not None:
                 if (
@@ -694,7 +845,15 @@ class Reader(AbstractReader):
             # Replace spaces with "_"
             #
             api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
+            
+            # wenbo add this to get the line object nominal voltage
+            api_line.LineDescription = LineDescription[i]
+            
+            api_line.nominal_voltage = float(LineDescription[i].rsplit("-", 1)[1])*10**3
 
+            # wenbo added, bus_nominal_voltage from line sections
+            
+            
             # Switching devices and network protection devices
             # Set ratings to Nones
             #
@@ -795,12 +954,23 @@ class Reader(AbstractReader):
             SectionPhases_thisline = [
                 s.upper() for s in SectionPhases_thisline1 if s != " "
             ]
-
+            api_line.section_phases = SectionPhases_thisline
+            # wenbo added: add section_phases to the dict self.node_nominal_voltage
+            self.node_nominal_voltage_mapping[api_line.from_element]=[api_line.nominal_voltage]
+            self.node_nominal_voltage_mapping[api_line.from_element].append(api_line.section_phases)
+            
+            self.node_nominal_voltage_mapping[api_line.to_element]=[api_line.nominal_voltage]
+            self.node_nominal_voltage_mapping[api_line.to_element].append(api_line.section_phases)
+            
+            
             # Get the number of phases as the length of this list
-            # Warning: Neutral will be included in this number
+            # Warning: Neutral will be included in this number: this is not necessarily true - Wenbo
             #
             NPhase = len(SectionPhases_thisline)
+            #print(SectionPhases_thisline)
 
+            
+       
             ############################################################
             # BEGINING OF WIRES SECTION
             ############################################################
@@ -1234,36 +1404,83 @@ class Reader(AbstractReader):
                     convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3.0
                 )
 
-                # One phase case (One phase + neutral)
-                #
+                # One phase case (One phase + neutral): this is not necessarily true - wenbo
+                # There may be two phases also (no Neutral)
                 if NPhase == 2:
-                    impedance_matrix = [
-                        [complex(float(r0) + float(r1), float(x0) + float(x1))]
-                    ]
+                    if SectionPhases_thisline[-1]!='N':
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+    
+                        if b1 < 0:
+                            b1 = -b1
+                        if b1 == 0:
+                            b1 = float(r1)
+                        if b2 < 0:
+                            b2 = -b2
+                        if b2 == 0:
+                            b2 = float(x1)
+    
+                        b = complex(b1, b2)
+    
+                        a = complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+    
+                        impedance_matrix = [[a, b], [b, a]]
+                        
+                    else:
+                        
+                        impedance_matrix = [
+                            [complex(float(r0) + float(r1), float(x0) + float(x1))]
+                        ]
 
                 # Two phase case (Two phases + neutral)
                 #
                 if NPhase == 3:
-
-                    b1 = float(r0) - float(r1)
-                    b2 = float(x0) - float(x1)
-
-                    if b1 < 0:
-                        b1 = -b1
-                    if b1 == 0:
-                        b1 = float(r1)
-                    if b2 < 0:
-                        b2 = -b2
-                    if b2 == 0:
-                        b2 = float(x1)
-
-                    b = complex(b1, b2)
-
-                    a = complex(
+                    #print('SectionPhases_thisline[-1]={}'.format(SectionPhases_thisline[-1]))
+                    if SectionPhases_thisline[-1]!='N':
+                        
+                        
+                        a = complex(
                         (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
-                    )
-
-                    impedance_matrix = [[a, b], [b, a]]
+                        )
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+    
+                        if b1 < 0:
+                            b1 = -b1
+                        if b1 == 0:
+                            b1 = float(r1)
+                        if b2 < 0:
+                            b2 = -b2
+                        if b2 == 0:
+                            b2 = float(x1)
+    
+                        b = complex(b1, b2)
+    
+                        impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
+                        
+                    else:
+                            
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+    
+                        if b1 < 0:
+                            b1 = -b1
+                        if b1 == 0:
+                            b1 = float(r1)
+                        if b2 < 0:
+                            b2 = -b2
+                        if b2 == 0:
+                            b2 = float(x1)
+    
+                        b = complex(b1, b2)
+    
+                        a = complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+    
+                        impedance_matrix = [[a, b], [b, a]]
 
                 # Three phases case (Three phases + neutral)
                 #
@@ -1291,7 +1508,8 @@ class Reader(AbstractReader):
                 api_line.impedance_matrix = impedance_matrix
             else:
                 print("No impedance matrix for line {}".format(api_line.name))
-
+       
+        #print(self.node_nominal_voltage_mapping)
         ####################################################################################
         #                                                                                  #
         #                              TRANSFORMERS                                        #
@@ -1306,15 +1524,19 @@ class Reader(AbstractReader):
 
             # Set the name
             # Names can have spaces. Replace them with "_"
-            #
-            api_transformer.name = obj.replace(" ", "_").lower()
+            # wenbo changed this
+            api_transformer.name = obj.replace(",", "").replace(" ", "_").lower()
 
+            
+            
+            
             # Set the feeder_name if it is in the mapping
 
             if TransformerSectionId[i] in self.section_feeder_mapping:
                 api_transformer.feeder_name = self.section_feeder_mapping[
                     TransformerSectionId[i]
                 ]
+      
             # If it is not, try to remove the "tran" prefix that might have been added
             else:
                 cleaned_id = obj.replace("Tran", "").strip()
@@ -1323,6 +1545,11 @@ class Reader(AbstractReader):
                         cleaned_id
                     ]
 
+            # wenbo added:
+            # from feeder_substation_mapping get the substation name
+            if api_transformer.feeder_name in self.feeder_substation_mapping:
+                api_transformer.substation_name = self.feeder_substation_mapping[api_transformer.feeder_name]
+            
             # Find out the from and to elements which are available in the sections
             Count = None
             for k, section in enumerate(LineID):
@@ -1333,24 +1560,38 @@ class Reader(AbstractReader):
             # If no section found, print a warning
             if Count is None:
                 print("WARNING: No section found for section {}".format(obj))
-
-            # Set the To element
+            # Query the high side on either from element or to element
+            # 0 meaning high side is at the to node; 1 meaning high side is at the from node
             if Count is not None:
-                api_transformer.to_element = ToNodeId[Count].replace(" ", "_").lower()
-
+                api_transformer.HighSideNearFromNode = TransformerHighSideNearFromNode[i]                
+            # set the to element
+            if Count is not None:
+                if api_transformer.HighSideNearFromNode==1:
+                    api_transformer.to_element = ToNodeId[Count].replace(" ", "_").lower()
+                else:
+                    api_transformer.to_element = FromNodeId[Count].replace(" ", "_").lower()
+                    
+                
             # Set the From element
             if Count is not None:
-                api_transformer.from_element = (
-                    FromNodeId[Count].replace(" ", "_").lower()
-                )
-
+                if api_transformer.HighSideNearFromNode==1:
+                    api_transformer.from_element = FromNodeId[Count].replace(" ", "_").lower()
+                else:
+                    api_transformer.from_element = ToNodeId[Count].replace(" ", "_").lower()
+            
+   
+            
             # Find the transformer equipment from the Warehouse
             Count = None
+            
             if TransformerTypesinStock is not None:
                 for k, trans_obj in enumerate(TransformerTypesinStock):
+                    
                     if TransformerType[i] == trans_obj:
                         Count = k
                         break
+
+                        
 
             # If no equipment found, print a warning
             if Count is None:
@@ -1363,8 +1604,8 @@ class Reader(AbstractReader):
                 # Set the PT Ratio
                 api_transformer.pt_ratio = PTRatio[Count]
 
-                # Set the NoLoadLosses
-                api_transformer.noload_loss = NoLoadLosses[Count]
+                # Set the NoLoadLosses, it is okay to not map no load loss
+                #api_transformer.noload_loss = NoLoadLosses[Count]
 
                 # Set the reactances
                 api_transformer.reactances = [
@@ -1381,8 +1622,11 @@ class Reader(AbstractReader):
                 else:
                     n_windings = 2
 
-                # Get the phases
-                phases = self.section_phase_mapping[TransformerSectionId[i]]
+                
+                # Get the phases: 
+                phases = self.section_phase_mapping[TransformerSectionId[i]].replace(" ","")
+
+                
 
                 ############################################################
                 # BEGINING OF WINDING SECTION
@@ -1400,14 +1644,14 @@ class Reader(AbstractReader):
 
                         # Set the Connection_type of the Winding
                         if (
-                            HighVoltageConnectionCode_N is not None
-                            and len(HighVoltageConnectionCode_N[i]) > 0
+                            HighVoltageConnectionCode_W is not None
+                            and len(HighVoltageConnectionCode_W[i]) > 0
                         ):
                             w.connection_type = HighVoltageConnectionCode_N[i][
                                 :1
                             ].upper()
-                        elif HighVoltageConnectionCode_W is not None:
-                            w.connection_type = HighVoltageConnectionCode_W[Count][
+                        elif HighVoltageConnectionCode_N is not None:
+                            w.connection_type = HighVoltageConnectionCode_N[Count][
                                 :1
                             ].upper()
 
@@ -1421,14 +1665,14 @@ class Reader(AbstractReader):
 
                         # Set the Connection_type of the Winding
                         if (
-                            LowVoltageConnectionCode_N is not None
-                            and len(LowVoltageConnectionCode_N[i]) > 0
+                            LowVoltageConnectionCode_W is not None
+                            and len(LowVoltageConnectionCode_W[i]) > 0
                         ):
-                            w.connection_type = LowVoltageConnectionCode_N[i][
+                            w.connection_type = LowVoltageConnectionCode_W[i][
                                 :1
                             ].upper()
-                        elif LowVoltageConnectionCode_W is not None:
-                            w.connection_type = LowVoltageConnectionCode_W[Count][
+                        elif LowVoltageConnectionCode_N is not None:
+                            w.connection_type = LowVoltageConnectionCode_N[Count][
                                 :1
                             ].upper()
 
@@ -1457,7 +1701,7 @@ class Reader(AbstractReader):
                     if winding == 0 or winding == 1:
                         w.rated_power = (
                             TransformerRatedKva[Count]
-                            / float(n_windings)
+                            #/ float(n_windings) Wenbo changed
                             * 10
                             ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                         )  # DiTTo in Vars
@@ -1469,11 +1713,12 @@ class Reader(AbstractReader):
                     # Set the emergency power
                     w.emergency_power = (
                         EmergencyKvaRating[Count]
-                        / float(n_windings)
+                        #/ float(n_windings)  Wenbo changed
                         * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                     )  # DiTTo in Vars
 
                     # Create the PhaseWindings
+                    
                     for phase in phases:
                         if phase.upper() != "N":
                             pw = PhaseWinding(model)
@@ -1482,6 +1727,12 @@ class Reader(AbstractReader):
 
                     # Append the Winding to the Transformer
                     api_transformer.windings.append(w)
+                    
+#                    print('Transformername = {}'.format(api_transformer.name))
+#                    for winding in api_transformer.windings:
+#                        print('winding={}'.format(winding.rated_power))
+#                        for pw in winding.phase_windings:
+#                            print('winding.phase_windings.phase={}'.format(pw.phase))
 
         ####################################################################################
         #                                                                                  #
@@ -1497,31 +1748,60 @@ class Reader(AbstractReader):
 
             # Set the name
             api_load.name = "Load_" + obj.replace(" ", "_").lower()
-
+                                
+            
             # Set the feeder_name if in the mapping
+
             if obj in self.section_feeder_mapping:
                 api_load.feeder_name = self.section_feeder_mapping[obj]
 
-            # Fin the section for this load
+                        
+            # Find the section for this load
             Count = None
             for k, section in enumerate(LineID):
                 if obj == section:
                     Count = k
                     break
+            
 
-            # If no section found, print a warning
+            # if no section is found, go to large customer check
             if Count is None:
+                # large customer load need to map the section ID
+                for idx1, obj1 in enumerate(LargeCustDeviceId):
+                    if obj == obj1:
+                        for k, section in enumerate(LineID):
+                            if LargeCustSectionId[idx1]==section:
+                                Count=k
+                                api_load.feeder_name = self.section_feeder_mapping[LargeCustSectionId[idx1]]
+                                break
+            
+            # Wenbo added:
+            if api_load.feeder_name in self.feeder_substation_mapping:
+                api_load.substation_name = self.feeder_substation_mapping[api_load.feeder_name]
+
+
+                
+                            
+            # If no section found, print a warning
+            if Count is None:            
                 print("WARNING: No section found for Load {}".format(obj))
 
             if Count is not None:
 
                 # Set the connecting element
                 api_load.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
-
+                
+                
+                                
+                
+                
                 # Set P and Q
                 # Create a list for P and Q for each phase and convert to Watts and vars
                 #
-
+                
+                #print('Phase1Kw = {}, Phase2Kw = {}, Phase3Kw = {}'.format(Phase1Kw[i],Phase2Kw[i],Phase3Kw[i]))
+                
+                
                 PLoad = map(
                     lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
                 )
@@ -1529,6 +1809,8 @@ class Reader(AbstractReader):
                 QLoad = map(
                     lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
                 )
+                
+                
                 # if there is no load information in the kvar and kw, try to get information out from the kva information
                 LoadPF = 0.95
                 LoadQFactor = (1 - LoadPF ** 2) ** 0.5
@@ -1555,9 +1837,11 @@ class Reader(AbstractReader):
                 for P, Q, Pkva, Qkva, phase in zip(
                     PLoad, QLoad, PLoadkva, QLoadkva, ["A", "B", "C"]
                 ):
-
+                    
+                    #print('inside for loop')
+                    #print('P={}, Q={}, Pkva={}, Qkva={}, phase={}'.format(PLoad,QLoad,PLoadkva,QLoadkva,phase))
                     # Only create a PhaseLoad is P OR Q is not zero
-                    if P != 0 or Q != 0:
+                    if P != 0 or Q != 0: # phase load added from large cust
 
                         # Create the PhaseLoad DiTTo object
                         phase_load = PhaseLoad(model)
@@ -1590,6 +1874,29 @@ class Reader(AbstractReader):
 
                         # Add the PhaseLoad to the list
                         api_load.phase_loads.append(phase_load)
+
+                # set the nominal voltage: from the node_nominal_voltage_mapping
+                
+#                for phaseload in api_load.phase_loads:
+#                    print(phaseload.phase)
+#                    print("+++++")
+#                
+#                print('map(conelem)={}'.format(self.node_nominal_voltage_mapping.get(api_load.connecting_element)))
+#                
+                
+                if len(api_load.phase_loads)==1 and len(self.node_nominal_voltage_mapping.get(api_load.connecting_element)[1])==4:
+                    
+                    api_load.nominal_voltage = round(self.node_nominal_voltage_mapping.get(api_load.connecting_element)[0]/1.732,1) 
+                
+                elif len(api_load.phase_loads)>1 and len(self.node_nominal_voltage_mapping.get(api_load.connecting_element)[1])==3 and self.node_nominal_voltage_mapping.get(api_load.connecting_element)[1][-1]=='N':
+                    api_load.nominal_voltage = round(self.node_nominal_voltage_mapping.get(api_load.connecting_element)[0]*1.732,1) 
+                else:    
+                    api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(api_load.connecting_element)[0]  
+                
+                
+                
+                    #print('phase_load.phase={}, phase_load.p={}, phase_load.q={}'.format(phase_load.phase, phase_load.p, phase_load.q))
+
 
                     # else:
                     #
@@ -1626,6 +1933,11 @@ class Reader(AbstractReader):
             # Set the feeder_name if in the mapping
             if CapacitorSectionID[i] in self.section_feeder_mapping:
                 api_cap.feeder_name = self.section_feeder_mapping[CapacitorSectionID[i]]
+
+            #wenbo added
+            if api_cap.feeder_name in self.feeder_substation_mapping:
+                api_cap.substation_name = self.feeder_substation_mapping[api_cap.feeder_name]
+            
 
             # Maps control modes from Synergi format to DiTTo format
             # TODO: Complete the mapping with other control modes
@@ -1743,6 +2055,11 @@ class Reader(AbstractReader):
                 if cleaned_id in self.section_feeder_mapping:
                     api_regulator.feeder_name = self.section_feeder_mapping[cleaned_id]
 
+            # wenbo added:
+            if api_regulator.feeder_name in self.feeder_substation_mapping:
+                api_regulator.substation_name = self.feeder_substation_mapping[api_regulator.feeder_name]
+            
+            
             # Set the Delay of the regulator
             api_regulator.delay = RegulatorTimeDelay[i]
 
@@ -1752,9 +2069,13 @@ class Reader(AbstractReader):
             # Set the LowStep of the regulator
             api_regulator.lowstep = -int(RegulatorTapLimiterLowSetting[i])
 
-            # Get the phases
-            regulator_phases = list(RegulatorPhases[i])
-
+            # Get the phases: wenbo changed this
+            api_regulator.phases = RegulatorPhases[i].strip()
+            
+            # get the near from node: wenbo added this
+            api_regulator.tapsnearfromnode = RegulatorTapsNearFromNode[i]
+            
+            
             # Set the Bandwidth
             # NOTE: DiTTo does not support different values on different phase
             #
@@ -1833,6 +2154,17 @@ class Reader(AbstractReader):
                 # Set the CT ratio of the Regulator
                 api_regulator.ct_ratio = RegulatorCTRating[Count]
 
+            if Count is not None:
+                api_regulator.percentz = RegulatorPercentZ[Count]
+
+                api_regulator.xrratio = RegulatorXRRatio[Count]
+
+                api_regulator.resistances = np.sqrt(RegulatorPercentZ[Count]**2/(RegulatorXRRatio[Count]**2+1))
+
+                api_regulator.xhl = np.sqrt(RegulatorPercentZ[Count]**2/(RegulatorXRRatio[Count]**2+1))*RegulatorXRRatio[Count]
+
+            
+            
             # Create the Windings
             #
             n_windings = 2
@@ -1846,18 +2178,18 @@ class Reader(AbstractReader):
                     w.connection_type = RegulatorConnectionCode[Count][:1].upper()
 
                     # Set the Nominal voltage
-                    w.nominal_voltage = RegulatorRatedVoltage[Count]
+                    w.nominal_voltage = RegulatorRatedVoltage[Count]*10**3
 
                     # Set the Rated Power
                     w.rated_power = (
                         RegulatorRatedKva[Count]
-                        / float(n_windings)
+                        #/ float(n_windings)  wenbo changed: kva should be divided by num_of_windings
                         * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                     )
 
                 # Create the PhaseWindings
-                #
-                for phase in regulator_phases:
+                
+                for phase in api_regulator.phases:
 
                     if phase != "N":
 
@@ -1875,8 +2207,9 @@ class Reader(AbstractReader):
 
             ## Set the from and to elements through the sections
             Count = None
+
             for idx, section in enumerate(LineID):
-                if RegulatorSectionId[i] == obj:
+                if RegulatorSectionId[i] == section:
                     Count = idx
 
             # If no section found, print a warning
@@ -1897,6 +2230,7 @@ class Reader(AbstractReader):
         #                                                                                  #
         ####################################################################################
         #
+        """
         print("--> Parsing PV systems...")
         for i, obj in enumerate(PVUniqueDeviceId):
             if PVGenType[i] == "photovoltaic" or PVGenType[i] == "photovoltaic 3p":
@@ -1999,7 +2333,7 @@ class Reader(AbstractReader):
                     api_PV.phases.append(phase.upper())
 
                 # Set the Power Factor
-                api_PV.power_factor = GeneratorPF[idx]
+                api_PV.power_factor = GeneratorPF[idx]/100
 
         # Adding PV information from INSTDGens - Distribution Generator
 
@@ -2074,3 +2408,320 @@ class Reader(AbstractReader):
                 # Set the Power Factor
                 api_PV.control_type = "powerfactor"
                 api_PV.power_factor = DGeneratorPF[idx] * 0.01
+
+        """
+        ### wenbo added this:model pv as generator in opendss
+        ####################################################################################
+        #                                                                                  #
+        #                              Generator genpv.dss                                 #
+        #                                                                                  #
+        ####################################################################################
+        # 
+        print("--> Parsing PV generators...")
+        
+        # check large customer tab for PVs
+        for i, obj in enumerate(PVUniqueDeviceId):
+            
+            if PVGenType[i] == "photovoltaic" or PVGenType[i] == "photovoltaic 3p":
+                
+
+                # Create a Photovoltaic object
+                api_PV = Photovoltaic(model)
+
+                # Set the name
+                api_PV.name = obj.replace(" ", "_").lower()
+
+                # Set feeder name if in mapping
+                if PVSectionId[i] in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[PVSectionId[i]]
+
+                # wenbo added:
+                if api_PV.feeder_name in self.feeder_substation_mapping:
+                    api_PV.substation_name = self.feeder_substation_mapping[api_PV.feeder_name]
+ 
+                
+                # Set the phases and compute rated power
+                rated_power_pv = 0
+                if PVGenPhase1Kw[i] != 0:
+                    api_PV.phases.append("A")
+                    rated_power_pv += PVGenPhase1Kw[i]
+                if PVGenPhase2Kw[i] != 0:
+                    api_PV.phases.append("B")
+                    rated_power_pv += PVGenPhase2Kw[i]
+                if PVGenPhase3Kw[i] != 0:
+                    api_PV.phases.append("C")
+                    rated_power_pv += PVGenPhase3Kw[i]
+
+                # Set the rated power
+                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+
+                # Set the reactive power
+                reactive_rating_pv = 0
+                if PVGenPhase1Kvar[i] != 0:
+                    reactive_rating_pv += PVGenPhase1Kvar[i]
+                if PVGenPhase2Kvar[i] != 0:                    
+                    reactive_rating_pv += PVGenPhase2Kvar[i]
+                if PVGenPhase3Kvar[i] != 0:                    
+                    reactive_rating_pv += PVGenPhase3Kvar[i]
+
+                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+
+                ## Set the from and to elements through the sections
+                Count = None
+                for k, section in enumerate(LineID):
+                    if PVSectionId[i] == section:
+                        Count = k
+                        break
+
+                # If no section found, print a warning
+                if Count is None:
+                    print("WARNING: No section found for PV {}".format(obj))
+                else:
+                    # Set the connecting element
+                    api_PV.connecting_element = ToNodeId[Count].replace(" ", "_")
+                    
+                    
+                # from the connecting element, get the nominal voltage
+                if len(api_PV.phases)==1 and len(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[1])==4:
+                    api_PV.nominal_voltage = round(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[0]/1.732,1)
+                elif len(api_PV.phases)>1 and len(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[1])==3 and self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[1][-1]=='N':
+                    api_PV.nominal_voltage = round(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[0]*1.732,1) 
+                else:    
+                    api_PV.nominal_voltage = self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[0]  
+                
+                
+
+        # check generator tab for PVs
+        for idx, obj in enumerate(GeneratorSectionID):
+            Count = None
+            
+            if GeneratorType[idx]=='photovoltaic' or GeneratorType[idx]=='photovoltaic 3p': # this is for non-special name PV
+
+                api_PV = Photovoltaic(model)
+                api_PV.name = GeneratorID[idx].lower().replace(" ","-")
+                
+                # get the feeder name: 
+                if GeneratorSectionID[idx] in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[GeneratorSectionID[idx]]                
+                
+                # wenbo added:
+                if api_PV.feeder_name in self.feeder_substation_mapping:
+                    api_PV.substation_name = self.feeder_substation_mapping[api_PV.feeder_name]
+                
+                 
+                rated_power_pv = 0
+                if GenPhase1Kw[idx] !=0:
+                    api_PV.phases.append("A")
+                    rated_power_pv += GenPhase1Kw[idx]
+                    
+                if GenPhase2Kw[idx] !=0:
+                    api_PV.phases.append("B")
+                    rated_power_pv += GenPhase2Kw[idx]
+                if GenPhase3Kw[idx] !=0:
+                    api_PV.phases.append("C")
+                    rated_power_pv += GenPhase3Kw[idx]
+
+                # set the rated power
+                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+
+                # set the reactive power
+                reactive_rating_pv = 0
+                if GenPhase1Kvar[idx] != 0:
+                    api_PV.phases.append("A") if "A" not in api_PV.phases else None
+                    reactive_rating_pv += GenPhase1Kvar[idx]
+                if GenPhase2Kvar[idx] != 0:
+                    api_PV.phases.append("B") if "B" not in api_PV.phases else None
+                    reactive_rating_pv += GenPhase2Kvar[idx]
+                if GenPhase3Kvar[idx] != 0:
+                    api_PV.phases.append("C") if "C" not in api_PV.phases else None
+                    reactive_rating_pv += GenPhase3Kvar[idx]
+
+                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+                
+                # set the connecting element:              
+                Count1 = None
+                for k1, section in enumerate(LineID):
+                    if GeneratorSectionID[idx] == section:
+                        Count1 = k1
+                if Count1 is None:
+                    print("WARNING: No section found for PV {}".format(obj))
+                if Count1 is not None:
+                    # Set the connecting element
+                    api_PV.connecting_element = (
+                        ToNodeId[Count1].lower().replace(" ", "_")
+                    )
+                 
+                    
+                    # from the connecting element, get the nominal voltage
+                if len(api_PV.phases)==1 and len(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[1])==4:
+                    api_PV.nominal_voltage = round(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[0]/1.732,1)
+                elif len(api_PV.phases)>1 and len(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[1])==3 and self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[1][-1]=='N':
+                    api_PV.nominal_voltage = round(self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[0]*1.732,1) 
+                else:    
+                    api_PV.nominal_voltage = self.node_nominal_voltage_mapping.get(api_PV.connecting_element)[0]  
+
+                    
+                
+            # Adding PV information for the special name PV from generator tap
+            if GeneratorType[idx]!='photovoltaic' and GeneratorType[idx]!='photovoltaic 3p': # this is for non-special name PV
+                
+                for k, gen in enumerate(GeneratorName):
+                    Count = None
+                    
+                    if GeneratorType[idx] == gen: # gen is generator name
+                        Count = k
+                    
+#                    if Count is not None:
+#                        print('GeneratorType[idx]={}, gen={}'.format(GeneratorType[idx],gen))
+#                    
+#                        print('Count={}'.format(Count))
+                    
+                    if Count is not None and GeneratorTypeDev[Count].lower() == "pv":
+        
+                        # Create a Photovoltaic DiTTo object
+                        api_PV = Photovoltaic(model)
+        
+                        # Set the PV name
+                        api_PV.name = GeneratorID[idx].lower().replace(" ", "_")
+                        #api_PV.name = GeneratorSectionID[idx].lower().replace(" ", "_")
+        
+                        # Set the Rated Power
+                        api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
+        
+                        # Set the Phases
+        
+                        for phase in GeneratorConnectedPhases[idx].strip():
+                            api_PV.phases.append(phase.upper())
+                        
+            
+                        # Set feeder name if in mapping
+                        if obj in self.section_feeder_mapping:
+                            api_PV.feeder_name = self.section_feeder_mapping[obj]
+        
+                        # wenbo added:
+                        if api_PV.feeder_name in self.feeder_substation_mapping:
+                            api_PV.substation_name = self.feeder_substation_mapping[api_PV.feeder_name]
+         
+                        
+                        # Set the Connecting element
+                        Count2 = None
+                        for k2, section in enumerate(LineID):
+                            if GeneratorSectionID[idx] == section:
+                                Count2 = k2
+        
+                        if Count2 is None:
+                            print("WARNING: No section found for PV {}".format(obj))
+        
+                        if Count2 is not None:
+        
+                            # Set the connecting element
+                            api_PV.connecting_element = (
+                                ToNodeId[Count2].lower().replace(" ", "_")
+                            )
+        
+                        # Set the Nominal voltage wenbo changed this(was no nominal_voltage)
+
+                        
+                        if len(api_PV.phases)==1:
+                            api_PV.nominal_voltage = round(GeneratorKvRating[Count] * 10 ** 3/1.732,1)
+                        else: 
+                            api_PV.nominal_voltage = GeneratorKvRating[Count] * 10 ** 3
+        
+        
+        
+                        # Set the Power Factor
+                        api_PV.power_factor = GeneratorPF[idx]/100
+                        #print(' pv.name = {}, pv.kv={}, pv.kw={}, pv.phases={}, pv.connecting_element={}'.format(api_PV.name, api_PV.nominal_voltage,api_PV.rated_power,api_PV.phases, api_PV.connecting_element))
+        
+        
+        # Adding PV information from INSTDGens - Distribution Generator
+        for idx, obj in enumerate(DSectionID):
+            Count = None
+            for k, gen in enumerate(GeneratorName):
+                if DGeneratorType[idx] == gen:
+                    Count = k
+
+            if Count is not None and GeneratorTypeDev[Count] == "pv":
+
+                # Create a Photovoltaic DiTTo object
+                api_PV = Photovoltaic(model)
+
+                # Set the PV name
+                api_PV.name = DSectionID[idx].lower().replace(" ", "_")
+
+                # Set the Rated Power
+                
+                
+                
+                api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
+
+                # Set feeder name if in mapping
+                if obj in self.section_feeder_mapping:
+                    api_PV.feeder_name = self.section_feeder_mapping[obj]
+
+                rated_power_pv = 0
+                if DGenPhase1Kw[idx] != 0:
+                    api_PV.phases.append("A")
+                    rated_power_pv += DGenPhase1Kw[idx]
+                if DGenPhase2Kw[idx] != 0:
+                    api_PV.phases.append("B")
+                    rated_power_pv += DGenPhase2Kw[idx]
+                if DGenPhase3Kw[idx] != 0:
+                    api_PV.phases.append("C")
+                    rated_power_pv += DGenPhase3Kw[idx]
+
+                # Set the rated power
+                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.active_rating = rated_power_pv * 10 ** 3  # DiTTo in Watts
+
+                # Set the reactive power
+                reactive_rating_pv = 0
+                if DGenPhase1Kvar[idx] != 0:
+                    api_PV.phases.append("A") if "A" not in api_PV.phases else None
+                    reactive_rating_pv += DGenPhase1Kvar[idx]
+                if DGenPhase2Kvar[idx] != 0:
+                    api_PV.phases.append("B") if "B" not in api_PV.phases else None
+                    reactive_rating_pv += DGenPhase2Kvar[idx]
+                if DGenPhase3Kvar[idx] != 0:
+                    api_PV.phases.append("C") if "C" not in api_PV.phases else None
+                    reactive_rating_pv += DGenPhase3Kvar[idx]
+
+                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+
+                # Set the Connecting element
+                Count2 = None
+                for k2, section in enumerate(LineID):
+                    if DSectionID[idx] == section:
+                        Count2 = k2
+
+                if Count2 is None:
+                    print("WARNING: No section found for PV {}".format(obj))
+
+                if Count2 is not None:
+                    # Set the connecting element
+                    api_PV.connecting_element = (
+                        ToNodeId[Count2].lower().replace(" ", "_")
+                    )
+
+                # Set the Nominal voltage
+                api_PV.nominal_voltage = DGeneratorVoltageSetting[idx] * 10 ** 3
+
+                # Set the Power Factor
+                api_PV.control_type = "powerfactor"
+                api_PV.power_factor = DGeneratorPF[idx] * 0.01
+
+
+        ####################################################################################
+        #                                                                                  #
+        #                              Generator genwind.dss                                 #
+        #                                                                                  #
+        ####################################################################################
+        #
+        
+
+
+
+
+
+
+
