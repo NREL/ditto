@@ -14,17 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class Network:
-
     def __init__(self):
         self.graph = None
         self.digraph = None  # Doesn't contain attributes, just topology
-        self.class_map = {}  # Map the networkx names to the object type (not included in attributes)
+        self.class_map = (
+            {}
+        )  # Map the networkx names to the object type (not included in attributes)
         self.is_built = (
-            False
-        )  # Flag that indicates whether the Network has been built or not.
+            False  # Flag that indicates whether the Network has been built or not.
+        )
         self.attributes_set = (
-            False
-        )  # Flag that indicates whether the attributes have been set or not.
+            False  # Flag that indicates whether the attributes have been set or not.
+        )
 
     def provide_graphs(self, graph, digraph):
         """
@@ -492,9 +493,9 @@ class Network:
         for i in range(len(nodes)):
             # logger.debug('phaselen:')
             # logger.debug(len(self.graph.nodes[nodes[i]]['phases']))
-            if (not "phases" in self.graph.nodes[nodes[i]]) or self.graph.nodes[nodes[i]][
-                "phases"
-            ] == None:
+            if (not "phases" in self.graph.nodes[nodes[i]]) or self.graph.nodes[
+                nodes[i]
+            ]["phases"] == None:
                 pos = rand.randint(0, len(nodes) - 2)
                 order1 = tuple([nodes[pos], nodes[pos + 1]])
                 order2 = tuple([nodes[pos + 1], nodes[pos]])
