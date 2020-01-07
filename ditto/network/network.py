@@ -189,7 +189,7 @@ class Network:
                         set(dir(i)) - set(dir(DiTToHasTraits))
                     ):  # only set attributes from the subclass, not the base class
                         if attr[0] != "_":
-                            self.digraph.node[i.name][attr] = getattr(i, attr)
+                            self.digraph.nodes[i.name][attr] = getattr(i, attr)
 
                 if (
                     hasattr(i, "from_element")
@@ -251,8 +251,8 @@ class Network:
                         set(dir(i)) - set(dir(DiTToHasTraits))
                     ):  # only set attributes from the subclass, not the base class
                         if attr[0] != "_":
-                            self.graph.node[i.name][attr] = getattr(i, attr)
-                            self.digraph.node[i.name][attr] = getattr(i, attr)
+                            self.graph.nodes[i.name][attr] = getattr(i, attr)
+                            self.digraph.nodes[i.name][attr] = getattr(i, attr)
 
                 if (
                     hasattr(i, "from_element")
@@ -477,8 +477,8 @@ class Network:
         return final_cycles
 
     def order_by_phase(self, edge):
-        deg_1 = len(self.graph.node[edge[0]]["phases"])
-        deg_2 = len(self.graph.node[edge[1]]["phases"])
+        deg_1 = len(self.graph.nodes[edge[0]]["phases"])
+        deg_2 = len(self.graph.nodes[edge[1]]["phases"])
         if deg_2 > deg_1:
             return [edge[1], edge[0]]
         return [edge[0], edge[1]]
@@ -491,8 +491,8 @@ class Network:
         min_phase = 1000
         for i in range(len(nodes)):
             # logger.debug('phaselen:')
-            # logger.debug(len(self.graph.node[nodes[i]]['phases']))
-            if (not "phases" in self.graph.node[nodes[i]]) or self.graph.node[nodes[i]][
+            # logger.debug(len(self.graph.nodes[nodes[i]]['phases']))
+            if (not "phases" in self.graph.nodes[nodes[i]]) or self.graph.nodes[nodes[i]][
                 "phases"
             ] == None:
                 pos = rand.randint(0, len(nodes) - 2)
@@ -502,18 +502,18 @@ class Network:
                     return self.graph[order1[0]][order1[1]]["name"]
                 else:
                     return self.graph[order2[0]][order2[1]]["name"]
-            if len(self.graph.node[nodes[i]]["phases"]) < min_phase:
-                min_phase = len(self.graph.node[nodes[i]]["phases"])
+            if len(self.graph.nodes[nodes[i]]["phases"]) < min_phase:
+                min_phase = len(self.graph.nodes[nodes[i]]["phases"])
         # logger.debug(min_phase)
         for i in range(len(nodes)):
             node = nodes[i]
-            if at_1p_section and len(self.graph.node[node]["phases"]) > min_phase:
+            if at_1p_section and len(self.graph.nodes[node]["phases"]) > min_phase:
                 if cnt > max_cnt:
                     max_cnt = cnt
                     pos_max_cnt = i - 1
                 cnt = 0
                 at_1p_section = False
-            if len(self.graph.node[node]["phases"]) == min_phase:
+            if len(self.graph.nodes[node]["phases"]) == min_phase:
                 cnt = cnt + 1
                 at_1p_section = True
         if cnt > 0 and cnt > max_cnt:
