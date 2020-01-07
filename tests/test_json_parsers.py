@@ -138,8 +138,8 @@ def compare(obj1, obj2):
     """
 
     try:
-        attributes_1 = [x for x in obj1.class_trait_names()]
-        attributes_2 = [x for x in obj2.class_trait_names()]
+        attributes_1 = sorted([x for x in obj1.class_trait_names()])
+        attributes_2 = sorted([x for x in obj2.class_trait_names()])
     except:
         try:
             return obj1.default_value == obj2.default_value
