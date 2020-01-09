@@ -1371,6 +1371,12 @@
             "parent": null,
             "properties": [
                 {
+                    "description": "The name of the object based on its object identifier (e.g. node:123)",
+                    "name": "base_name",
+                    "type": "object",
+                    "unit": "N/A"
+                },
+                {
                     "description": "The unique name of the object",
                     "name": "name",
                     "type": "object",
