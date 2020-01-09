@@ -51,6 +51,7 @@ class Reader(AbstractReader):
     register_names = ["glm", "gridlabd"]
 
     all_gld_objects = {}
+    all_base_gld_objects = {}
     all_api_objects = {}
 
     def __init__(self, **kwargs):
@@ -540,6 +541,7 @@ class Reader(AbstractReader):
                     curr_object = getattr(gridlabd, obj_class)()
                     if len(obj) > 1:
                         curr_object["name"] = obj_class + ":" + obj[1]
+                        curr_object["base_name"] = obj_class + ":" + obj[1] # to reference what the original name is
                 else:
                     ignore_elements = True
 
@@ -577,6 +579,8 @@ class Reader(AbstractReader):
                                     self.all_gld_objects[
                                         curr_object["name"]
                                     ] = curr_object
+                                    if hasattr(curr_object,"_base_name"):
+                                        self.all_base_gld_objects[curr_object["base_name"]] = curr_object["name"]
                                     curr_object = None
                                 except:
 
@@ -592,6 +596,8 @@ class Reader(AbstractReader):
                                         self.all_gld_objects[
                                             curr_object["name"]
                                         ] = curr_object
+                                        if hasattr(curr_object,"_base_name"):
+                                            self.all_base_gld_objects[curr_object["base_name"]] = curr_object["name"]
 
                                     else:
                                         logger.debug("Warning object missing a name")
@@ -687,12 +693,22 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_transformer.from_element = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_transformer.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_transformer.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_transformer.name)
                 except AttributeError:
                     pass
 
                 try:
-                    api_transformer.to_element = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_transformer.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_transformer.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_transformer.name)
                 except AttributeError:
                     pass
 
@@ -1358,12 +1374,24 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_line.from_element = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_line.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_line.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
                 try:
-                    api_line.to_element = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_line.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_line.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
@@ -1428,14 +1456,25 @@ class Reader(AbstractReader):
                     api_line.name = obj["name"]
                 except AttributeError:
                     pass
-
                 try:
-                    api_line.from_element = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_line.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_line.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
                 try:
-                    api_line.to_element = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_line.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_line.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
@@ -1506,12 +1545,24 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_line.from_element = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_line.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_line.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
                 try:
-                    api_line.to_element = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_line.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_line.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
@@ -1649,14 +1700,27 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_line.from_element = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_line.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_line.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
                 try:
-                    api_line.to_element = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_line.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_line.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
+
 
                 try:
                     config_name = obj["configuration"]
@@ -1759,12 +1823,24 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_line.from_element = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_line.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_line.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
                 try:
-                    api_line.to_element = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_line.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_line.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_line.name)
+
                 except AttributeError:
                     pass
 
@@ -2185,12 +2261,22 @@ class Reader(AbstractReader):
                     pass
 
                 try:
-                    api_regulator.high_from = obj["from"]
+                    if obj["from"] in self.all_gld_objects:
+                        api_regulator.from_element = obj["from"]
+                    elif obj["from"] in self.all_base_gld_objects:
+                        api_regulator.from_element = self.all_base_gld_objects[obj["from"]]
+                    else:
+                        print("WARNING - from element of "+obj["from"]+" not connected for "+api_regulator.name)
                 except AttributeError:
                     pass
 
                 try:
-                    api_regulator.low_to = obj["to"]
+                    if obj["to"] in self.all_gld_objects:
+                        api_regulator.to_element = obj["to"]
+                    elif obj["to"] in self.all_base_gld_objects:
+                        api_regulator.to_element = self.all_base_gld_objects[obj["to"]]
+                    else:
+                        print("WARNING - from element of "+obj["to"]+" not connected for "+api_regulator.name)
                 except AttributeError:
                     pass
 
@@ -2205,7 +2291,7 @@ class Reader(AbstractReader):
                         winding1.nominal_voltage = float(nominal_voltage)
                         winding2.nominal_voltage = float(nominal_voltage)
                     else:
-                        from_element = obj["from"]
+                        from_element = api_regulator.from_element
                         from_nominal_voltage = self.all_gld_objects[from_element]["nominal_voltage"]
                         winding1.nominal_voltage = float(from_nominal_voltage)
                         winding2.nominal_voltage = float(from_nominal_voltage)
