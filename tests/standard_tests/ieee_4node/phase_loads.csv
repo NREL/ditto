@@ -1,0 +1,4 @@
+PhaseLoad.name,PhaseLoad.p,PhaseLoad.q,PhaseLoad.phase
+load_1_1,1800000,871779.7887,A
+load_1_2,1800000,871779.7887,B
+load_1_3,1800000,871779.7887,C

@@ -1,0 +1,5 @@
+Wire.name,Wire.phase,Wire.nameclass,Wire.X,Wire.Y,Wire.gmr,Wire.resistance,Wire.diameter
+wire_1_1,A,conductor,-1.2192,8.5344,0.00743712,0.00019014,0.0183134
+wire_1_2,B,conductor,-0.4572,8.5344,0.00743712,0.00019014,0.0183134
+wire_1_3,C,conductor,-0.9144,8.5344,0.00743712,0.00019014,0.0183134
+wire_1_4,N,neutral,0,7.3152,0.002481072,0.000367853,0.0143002

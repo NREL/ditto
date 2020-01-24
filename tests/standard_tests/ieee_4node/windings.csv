@@ -1,0 +1,3 @@
+Winding.name,Winding.nominal_voltage,Winding.connection_type,Winding.resistance,Winding.rated_power
+winding_1,12470,Y,0.5,6000000
+winding_2,4160,Y,0.5,6000000

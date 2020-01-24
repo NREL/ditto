@@ -1,0 +1,2 @@
+Load.name,Load.nominal_voltage,Load.connection_type,Load.vmin,Load.vmax,Load.connecting_element,Load.is_center_tap,Load.phase_loads
+load1,4160,Y,0.75,,n4,,"[load_1_1,load_1_2,load_1_3]"

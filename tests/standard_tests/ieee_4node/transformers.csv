@@ -1,0 +1,2 @@
+Transformer.name,Transformer.from_element,Transformer.to_element,Transformer.reactances,Transformer.windings
+t1,n2,n3,[6],"[winding_1,winding_2]"

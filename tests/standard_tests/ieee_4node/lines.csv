@@ -1,0 +1,1 @@
+Line.name,Line.nominal_voltage,Line.line_type,Line.length,Line.from_element,Line.to_element,Line.from_element_connection,Line.to_element_connection,Line.is_fuse,Line.is_switch,Line.is_banked,Line.faultrate,Line.

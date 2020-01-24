@@ -1,0 +1,5 @@
+Node.name,Node.nominal_voltage,Node.phases[0],Node.phases[1],Node.phases[2],Node.positions[0].lat,Node.positions[0].long,Node.feeder_name,Node.substation_name,Node.is_substation_connection,Node.is_substation,Node.setpoint
+sourcebus,12.47,A,B,C,,,,,TRUE,FALSE,
+n2,12.47,A,B,C,,,,,FALSE,FALSE,
+n3,4.16,A,B,C,,,,,FALSE,FALSE,
+n4,4.16,A,B,C,,,,,FALSE,FALSE,
