@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
@@ -383,8 +383,8 @@ class Reader(AbstractReader):
             # Set the source_bus flag to True
             try:
                 api_power_source.is_sourcebus = (
-                    1
-                )  # We have an external power source here
+                    1  # We have an external power source here
+                )
             except:
                 pass
 
