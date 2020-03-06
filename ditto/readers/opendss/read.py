@@ -347,7 +347,7 @@ class Reader(AbstractReader):
         :rtype: int
         """
         sources = dss.utils.class_to_dataframe("Vsource")
-
+   
         for source_name, source_data in sources.items():
 
             # Skip PowerSource object if disabled

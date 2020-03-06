@@ -141,8 +141,8 @@ class Store(object):
                         modifier.delete_element(self, j)
         self.build_networkx()
 
-    def direct_from_source(self):
-        ordered_nodes = self._network.bfs_order()
+    def direct_from_source(self,source="sourcebus"):
+        ordered_nodes = self._network.bfs_order(source)
         # logger.debug(ordered_nodes)
         for i in self.models:
             if (
