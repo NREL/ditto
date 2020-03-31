@@ -540,47 +540,48 @@ class Writer(AbstractWriter):
                 # For banked 3-phase transformers, separate single phase transformers are used
                 if hasattr(i, "windings") and i.windings is not None:
 
-                    if (
-                        hasattr(winding, "phase_windings")
-                        and winding.phase_windings is not None
-                    ):
+                    for cnt, winding in enumerate(i.windings):
+                        if (
+                            hasattr(winding, "phase_windings")
+                            and winding.phase_windings is not None
+                        ):
 
-                        for phase_winding in winding.phase_windings:
-                            if (
-                                hasattr(phase_winding, "compensator_r")
-                                and phase_winding.compensator_r is not None
-                            ):
-                                if not i.name in self.compensator:
-                                    self.compensator[i.name] = {}
-                                    self.compensator[i.name]["R"] = set(
-                                        [phase_winding.compensator_r]
-                                    )
-                                elif "R" in self.compensator[i.name]:
-                                    self.compensator[i.name]["R"].add(
-                                        phase_winding.compensator_r
-                                    )
-                                else:
-                                    self.compensator[i.name]["R"] = set(
-                                        [phase_winding.compensator_r]
-                                    )
+                            for phase_winding in winding.phase_windings:
+                                if (
+                                    hasattr(phase_winding, "compensator_r")
+                                    and phase_winding.compensator_r is not None
+                                ):
+                                    if not i.name in self.compensator:
+                                        self.compensator[i.name] = {}
+                                        self.compensator[i.name]["R"] = set(
+                                            [phase_winding.compensator_r]
+                                        )
+                                    elif "R" in self.compensator[i.name]:
+                                        self.compensator[i.name]["R"].add(
+                                            phase_winding.compensator_r
+                                        )
+                                    else:
+                                        self.compensator[i.name]["R"] = set(
+                                            [phase_winding.compensator_r]
+                                        )
 
-                            if (
-                                hasattr(phase_winding, "compensator_x")
-                                and phase_winding.compensator_x is not None
-                            ):
-                                if not i.name in self.compensator:
-                                    self.compensator[i.name] = {}
-                                    self.compensator[i.name]["X"] = set(
-                                        [phase_winding.compensator_x]
-                                    )
-                                elif "X" in self.compensator[i.name]:
-                                    self.compensator[i.name]["X"].add(
-                                        phase_winding.compensator_x
-                                    )
-                                else:
-                                    self.compensator[i.name]["X"] = set(
-                                        [phase_winding.compensator_x]
-                                    )
+                                if (
+                                    hasattr(phase_winding, "compensator_x")
+                                    and phase_winding.compensator_x is not None
+                                ):
+                                    if not i.name in self.compensator:
+                                        self.compensator[i.name] = {}
+                                        self.compensator[i.name]["X"] = set(
+                                            [phase_winding.compensator_x]
+                                        )
+                                    elif "X" in self.compensator[i.name]:
+                                        self.compensator[i.name]["X"].add(
+                                            phase_winding.compensator_x
+                                        )
+                                    else:
+                                        self.compensator[i.name]["X"] = set(
+                                            [phase_winding.compensator_x]
+                                        )
 
                     if len(i.windings) == 2:
 
@@ -1613,22 +1614,18 @@ class Writer(AbstractWriter):
                 if (
                     hasattr(i, "data_location")
                     and i.data_location is not None
-                    and os.path.isfile(i.data_location)
+                    and i.data_label is not None
                     and (i.scale_factor is None or i.scale_factor == 1)
                 ):
-                    filename = i.data_location.split("/")[-1][
-                        :-4
-                    ]  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
-                    location = os.path.join(
-                        "..", "..", filename
-                    )  # Assume the load is in a feeder and the data is two folders up. TODO Fix this correctly
+                    filename = i.data_label
+                    location = i.data_location
                     if (
                         i.data_location
                         in self.timeseries_datasets[substation_name + "_" + feeder_name]
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
-                    npoints = len(pd.read_csv(i.data_location))
+                    npoints = len(pd.read_csv(os.path.join(self.output_path,i.data_location)))
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
                     ):  # The cases of hourly, minute or second resolution data for exactly one day TODO: make this more precise
@@ -1653,13 +1650,11 @@ class Writer(AbstractWriter):
                 elif (
                     hasattr(i, "data_location")
                     and i.data_location is not None
-                    and os.path.isfile(i.data_location)
+                    and i.data_label is not None
                     and i.scale_factor is not None
                     and i.scale_factor != 1
                 ):
-                    filename = (
-                        i.data_location.split("/")[-1][:-4] + "_scaled"
-                    )  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
+                    filename = i.data_label + "_scaled"
                     scaled_data_location = (
                         i.data_location[:-4]
                         + "__scaled%s" % (str(int((i.scale_factor) * 100)).zfill(3))
@@ -1671,7 +1666,7 @@ class Writer(AbstractWriter):
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
-                    timeseries = pd.read_csv(i.data_location)
+                    timeseries = pd.read_csv(os.path.join(self.output_path,i.data_location))
                     npoints = len(timeseries)
                     timeseries.iloc[:, [0]] = timeseries.iloc[:, [0]] * i.scale_factor
                     timeseries.to_csv(scaled_data_location, index=False)
@@ -1958,13 +1953,19 @@ class Writer(AbstractWriter):
                 # timeseries object
                 if hasattr(i, "timeseries") and i.timeseries is not None:
                     for ts in i.timeseries:
+                        substation = 'DEFAULT'
+                        feeder= 'DEFAULT'
+                        if ts.feeder_name is not None:
+                            feeder = ts.feeder_name
+                        if ts.substation_name is not None:
+                            substation = ts.substation_name
                         if (
                             hasattr(ts, "data_location")
+                            and ts.data_label is not None
                             and ts.data_location is not None
-                            and os.path.isfile(ts.data_location)
                         ):
                             filename = self.timeseries_datasets[
-                                ts.substation_name + "_" + ts.feeder_name
+                                substation + "_" + feeder
                             ][ts.data_location]
                             txt += " {ts_format}={filename}".format(
                                 ts_format=self.timeseries_format[filename],
