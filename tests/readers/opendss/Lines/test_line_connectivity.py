@@ -295,7 +295,7 @@ def test_line_connectivity():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line5"].capacitance_matrix == cap_matrix
+    np.testing.assert_array_almost_equal(m["line5"].capacitance_matrix, cap_matrix)
     assert m["line5"].feeder_name == "sourcebus_src"
     assert m["line5"].is_recloser is None
     assert m["line5"].is_breaker is None
