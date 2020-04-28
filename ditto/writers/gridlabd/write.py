@@ -236,7 +236,7 @@ class Writer(AbstractWriter):
                                 else:
                                     fp.write("    switch" + j.phase + " CLOSED;\n")
 
-                    if phases is not "":
+                    if phases != "":
                         fp.write("    phases {ps};\n".format(ps=phases))
 
                 else:
@@ -510,7 +510,7 @@ class Writer(AbstractWriter):
                 for p in phase_set:
                     phases = phases + p
 
-                if phases is not "":
+                if phases != "":
                     fp.write("    phases {pw};\n".format(pw=phases))
 
                 if (
