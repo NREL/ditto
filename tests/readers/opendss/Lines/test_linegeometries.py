@@ -124,11 +124,11 @@ def test_linegeometries():
         assert w.emergency_ampacity == 795
         assert w.insulation_thickness == parsed_values["Wire"]["insulation_thickness"]
         assert w.is_open is None
-        assert w.concentric_neutral_gmr == None
-        assert w.concentric_neutral_resistance == None
-        assert w.concentric_neutral_diameter == None
-        assert w.concentric_neutral_outside_diameter == None
-        assert w.concentric_neutral_nstrand == None
+        assert w.concentric_neutral_gmr is None
+        assert w.concentric_neutral_resistance is None
+        assert w.concentric_neutral_diameter is None
+        assert w.concentric_neutral_outside_diameter is None
+        assert w.concentric_neutral_nstrand is None
 
     phased_wires = {}
     for wire in m["line1"].wires:
@@ -215,7 +215,7 @@ def test_linegeometries():
     assert m["line2"].nameclass == ""
 
     for w in m["line2"].wires:
-        assert w.emergency_ampacity == None
+        assert w.emergency_ampacity is None
         assert w.insulation_thickness == 0.005588
         assert w.is_open is None
         assert w.concentric_neutral_gmr == 0.0508
@@ -230,7 +230,7 @@ def test_linegeometries():
 
     # Nameclass
     for p in ["A", "B", "C"]:
-        assert phased_wires[p].ampacity == None
+        assert phased_wires[p].ampacity is None
         assert phased_wires[p].nameclass == "cndata1"
 
     # Positions of the wires
