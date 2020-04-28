@@ -255,7 +255,7 @@ def test_line_connectivity():
     #  Line5 connects bus1 to bus5 and should have 2 wires: A, C
     assert len(m["line5"].wires) == 2
     #    Phases of the different wires
-    assert set([w.phase for w in m["line5"].wires]) == set(["A", "C"])
+    assert set(w.phase for w in m["line5"].wires) == set(["A", "C"])
     assert m["line5"].name == "line5"
     assert m["line5"].nominal_voltage == float(4.16) * 10 ** 3
     assert m["line5"].line_type is None
