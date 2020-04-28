@@ -439,7 +439,7 @@ def test_switches():
 
     assert len(m["switch8"].wires) == 2
     # Phases of the different wires
-    assert set([w.phase for w in m["switch8"].wires]) == set(["A", "B"])
+    assert set(w.phase for w in m["switch8"].wires) == set(["A", "B"])
     assert m["switch8"].name == "switch8"
     assert m["switch8"].nominal_voltage == float(12.47) * 10 ** 3
     assert m["switch8"].line_type is None
