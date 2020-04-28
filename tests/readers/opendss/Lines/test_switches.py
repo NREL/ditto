@@ -133,7 +133,7 @@ def test_switches():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert np.round(m["switch1"].capacitance_matrix, 5) == np.round(cap_matrix, 5)
+    np.testing.assert_array_almost_equal(m["switch1"].capacitance_matrix, cap_matrix)
     assert m["switch1"].feeder_name == "sourcebus_src"
     assert m["switch1"].is_recloser is None
     assert m["switch1"].is_breaker is None
