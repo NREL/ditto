@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -442,9 +443,7 @@ class Writer(AbstractWriter):
                         resistance = i.windings[0].resistance * 2
                         dic[
                             "resistance"
-                        ] = (
-                            resistance
-                        )  # The resistance of the whole transformer. TODO: Check if this is right...
+                        ] = resistance  # The resistance of the whole transformer. TODO: Check if this is right...
                         dic["reactance"] = i.reactance[0]
 
                         dic["impedance1"] = complex(resistance, i.reactance[1])
