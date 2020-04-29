@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
@@ -383,8 +383,8 @@ class Reader(AbstractReader):
             # Set the source_bus flag to True
             try:
                 api_power_source.is_sourcebus = (
-                    1
-                )  # We have an external power source here
+                    1  # We have an external power source here
+                )
             except:
                 pass
 
@@ -831,13 +831,6 @@ class Reader(AbstractReader):
 
             api_line.nameclass = linecode
 
-            # Based on naming convention.
-            # TODO: Find a cleaner way to get this information
-            if "OH" in linecode:
-                api_line.line_type = "overhead"
-            else:
-                api_line.line_type = "underground"
-
             # If we have a valid linecode, try to get the data
             if linecode is not None:
                 linecodes = dss.utils.class_to_dataframe("linecode")
@@ -856,16 +849,16 @@ class Reader(AbstractReader):
                     line_unit = linecode_data["units"]
                 except:
                     logger.warning(
-                        "Could not find the distance unit for line {name}. Using feet instead...".format(
+                        "Could not find the distance unit for line {name}. Using kilometers instead...".format(
                             name=name
                         )
                     )
-                    line_unit = u"ft"
+                    line_unit = u"km"
                     pass
                 pass
 
             if line_unit.lower() not in ["ft", "mi", "m", "km", "kft", "cm", "in"]:
-                line_unit = u"ft"
+                line_unit = u"km"
 
             # length
             try:
@@ -1125,15 +1118,7 @@ class Reader(AbstractReader):
                 # Initialize the wire nameclass with the linecode name
                 # This is just a best effort to get some information
                 # when no wiredata is provided...
-                try:
-                    wires[p].nameclass = reduce(
-                        lambda x, y: x + "-" + y, linecode.split("_")[2:]
-                    )  # RNM uses linecodes like "1P_OH_Pigeon_ACSR3/0"
-                except:
-                    try:
-                        wires[p].nameclass = api_line.nameclass
-                    except:
-                        pass
+                wires[p].nameclass = ""
 
                 if name in fuses_names:
                     wires[p].is_fuse = 1
@@ -1290,12 +1275,23 @@ class Reader(AbstractReader):
                         this_line_wireData_code = None
 
                     # Try to get the Wire data for this lineGeometry
+                    is_cable = False
                     if this_line_wireData_code is not None:
                         try:
                             all_wire_data = dss.utils.class_to_dataframe("wiredata")
-                            this_line_wireData = all_wire_data[
-                                "wiredata.{}".format(this_line_wireData_code)
-                            ]
+                            CNData = dss.utils.class_to_dataframe("CNData")
+                            for cnname, cnvalues in CNData.items():
+                                if this_line_wireData_code == cnname.split(".")[1]:
+                                    is_cable = True
+                                    this_line_wireData = CNData[
+                                        "CNData.{}".format(cnname.split(".")[1])
+                                    ]
+                                    api_line.line_type = "underground"
+                            if is_cable is False:
+                                this_line_wireData = all_wire_data[
+                                    "wiredata.{}".format(this_line_wireData_code)
+                                ]
+                                api_line.line_type = "overhead"
                         except:
                             logger.warning(
                                 "Could not get the wireData {wiredata} of lineGeometry {line_geom}".format(
@@ -1380,6 +1376,9 @@ class Reader(AbstractReader):
                         except:
                             pass
 
+                        if wires[p].ampacity == -1 or wires[p].ampacity == 0:
+                            wires[p].ampacity = None
+
                         # ampacity emergency
                         try:
                             wires[p].emergency_ampacity = float(
@@ -1387,6 +1386,12 @@ class Reader(AbstractReader):
                             )
                         except:
                             pass
+
+                        if (
+                            wires[p].emergency_ampacity == -1
+                            or wires[p].emergency_ampacity == 0
+                        ):
+                            wires[p].emergency_ampacity = None
 
                         # resistance
                         # Should be Rac*length_of_line
@@ -1426,19 +1431,20 @@ class Reader(AbstractReader):
                                     pass
                                 # If we have a valid unit for the resistance
                                 if Runits is not None:
-
                                     wires[p].resistance = (
                                         self.convert_to_meters(
                                             Rac, Runits, inverse=True
                                         )
                                         * api_line.length
                                     )
-
                     if wires[p].ampacity is None and "normamps" in data:
                         try:
                             wires[p].ampacity = float(data["normamps"])
                         except:
                             pass
+
+                    if wires[p].ampacity == -1 or wires[p].ampacity == 0:
+                        wires[p].ampacity = None
 
                     if wires[p].emergency_ampacity is None and "emergamps" in data:
                         try:
@@ -1446,8 +1452,85 @@ class Reader(AbstractReader):
                         except:
                             pass
 
+                    if (
+                        wires[p].emergency_ampacity == -1
+                        or wires[p].emergency_ampacity == 0
+                    ):
+                        wires[p].emergency_ampacity = None
+
                     # is_switch
                     wires[p].is_switch = api_line.is_switch
+
+                    # Concentric Neutral
+                    if is_cable == True:
+                        cndata = dss.utils.class_to_dataframe("CNData")
+                        if cndata is not None:
+                            for name, data in cndata.items():
+                                try:
+                                    gmr_unit = data["GMRunits"]
+                                except:
+                                    logger(
+                                        "Could not find the GMRunits for {name}.".format(
+                                            name=name
+                                        )
+                                    )
+                                if gmr_unit is not None:
+                                    try:
+                                        wires[
+                                            p
+                                        ].concentric_neutral_gmr = self.convert_to_meters(
+                                            float(data["GmrStrand"]), gmr_unit
+                                        )
+                                    except:
+                                        logger("Could not convert to GMRunits")
+
+                                try:
+                                    r_unit = data["Runits"]
+                                except:
+                                    logger(
+                                        "Could not find the Runits for {name}.".format(
+                                            name=name
+                                        )
+                                    )
+                                if r_unit is not None:
+                                    try:
+                                        wires[
+                                            p
+                                        ].concentric_neutral_resistance = self.convert_to_meters(
+                                            float(data["Rstrand"]), r_unit
+                                        )
+                                    except:
+                                        logger("Could not convert to  Runits")
+
+                                try:
+                                    rad_unit = data["radunits"]
+                                except:
+                                    logger(
+                                        "Could not find the Radunits for {name}.".format(
+                                            name=name
+                                        )
+                                    )
+                                if rad_unit is not None:
+                                    try:
+                                        wires[
+                                            p
+                                        ].concentric_neutral_diameter = self.convert_to_meters(
+                                            float(data["DiaStrand"]), data["radunits"]
+                                        )
+                                        wires[
+                                            p
+                                        ].concentric_neutral_outside_diameter = self.convert_to_meters(
+                                            float(data["DiaCable"]), data["radunits"]
+                                        )
+                                        wires[
+                                            p
+                                        ].insulation_thickness = self.convert_to_meters(
+                                            float(data["InsLayer"]), data["radunits"]
+                                        )
+                                    except:
+                                        logger("Could not convert to radunits")
+                                wires[p].concentric_neutral_nstrand = int(data["k"])
+
             api_line.wires = wires
             self._lines.append(api_line)
 
@@ -1561,7 +1644,7 @@ class Reader(AbstractReader):
                         b3_phases = temp[1:]
                     else:
                         b3_name = b3
-                        b2_phases = [1, 2, 3]
+                        b3_phases = [1, 2, 3]
                 api_transformer.from_element = b1_name
                 api_transformer.to_element = b2_name
             except:

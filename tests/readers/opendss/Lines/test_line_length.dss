@@ -28,6 +28,10 @@ New Line.line6 Bus1=bus2.1 Bus2=bus6.1 phases=1 Length=1666.87 units=in
 ! Line 8 uses like to have the same characteristics as line 1
 ! New Line.line8 Bus1=bus7 Bus2=Bus8 like=line1 Length=300
 
+New Line.line9 bus1=bus2 bus2=bus9 length=1.01 units=mi faultrate=0
+New Line.line10 bus1=bus2 bus2=bus10 length=1.01 units=mi faultrate=0.1
+New Line.line11 bus1=bus2 bus2=bus11 length=1.01 units=mi faultrate=1.0
+
 Set Voltagebases=[4.16]
 Calcvoltagebases
 Solve

@@ -5,8 +5,8 @@
       "X1":0.1206,
       "R0":0.1784,
       "X0":0.4047,
-      "C1":3.4e-9,
-      "C0":1.6e-9,
+      "C1":3.4,
+      "C0":1.6,
       "length":1,
       "rmatrix":[
          [
@@ -63,7 +63,8 @@
    },
    "Wire":{
       "ampacity":400.0,
-      "emergency_ampacity":600.0
+      "emergency_ampacity":600.0,
+      "insulation_thickness":0
    },
    "Capacitor":{
       "connection_type":"Y",

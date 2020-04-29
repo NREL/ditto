@@ -23,7 +23,7 @@ New Line.line5 Bus1=bus1.1.3 Bus2=bus5.1.3 phases=2 Length=1500 units=ft
 New Line.line6 Bus1=bus4.2.3 Bus2=bus6.2.3 phases=2 Length=110 units=m
 
 ! Line7 should raise some error in DiTTo since it only supports 1, 2, 3, and 0.
-New Line.line7 Bus1=bus1.6.9 Bus2=bus2.6.9 phases=2 Length=100 units=m
+New Line.line7 Bus1=bus1.2.3 Bus2=bus2.2.3 phases=2 Length=100 units=m
 
 Set Voltagebases=[4.16]
 Calcvoltagebases

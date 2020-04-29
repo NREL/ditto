@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -77,7 +78,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Nodes...")
             if self.verbose:
                 logger.debug("Writing the Nodes...")
-            s = self.write_nodes(model, fp)
+            _ = self.write_nodes(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -85,7 +86,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Capacitors...")
             if self.verbose:
                 logger.debug("Writing the Capacitors...")
-            s = self.write_capacitors(model, fp)
+            _ = self.write_capacitors(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -93,7 +94,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Loads...")
             if self.verbose:
                 logger.debug("Writing the Loads...")
-            s = self.write_loads(model, fp)
+            _ = self.write_loads(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -101,7 +102,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Transformer Configurations...")
             if self.verbose:
                 logger.debug("Writing the Transformer Configurations...")
-            s = self.write_transformer_configurations(model, fp)
+            _ = self.write_transformer_configurations(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -109,7 +110,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Transformers...")
             if self.verbose:
                 logger.debug("Writing the Transformers...")
-            s = self.write_transformers(model, fp)
+            _ = self.write_transformers(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -117,7 +118,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Regulator Configurations...")
             if self.verbose:
                 logger.debug("Writing the Regulator Configurations...")
-            s = self.write_regulator_configurations(model, fp)
+            _ = self.write_regulator_configurations(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -125,7 +126,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Regulators...")
             if self.verbose:
                 logger.debug("Writing the Regulators...")
-            s = self.write_regulators(model, fp)
+            _ = self.write_regulators(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -133,7 +134,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Line Configurations...")
             if self.verbose:
                 logger.debug("Writing the Line Configurations...")
-            s = self.write_line_configurations(model, fp)
+            _ = self.write_line_configurations(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -141,7 +142,7 @@ class Writer(AbstractWriter):
             logger.info("Writing the Lines...")
             if self.verbose:
                 logger.debug("Writing the Lines...")
-            s = self.write_lines(model, fp)
+            _ = self.write_lines(model, fp)
             if self.verbose:
                 logger.debug("Succesful!")
 
@@ -236,7 +237,7 @@ class Writer(AbstractWriter):
                                 else:
                                     fp.write("    switch" + j.phase + " CLOSED;\n")
 
-                    if phases is not "":
+                    if phases != "":
                         fp.write("    phases {ps};\n".format(ps=phases))
 
                 else:
@@ -442,9 +443,7 @@ class Writer(AbstractWriter):
                         resistance = i.windings[0].resistance * 2
                         dic[
                             "resistance"
-                        ] = (
-                            resistance
-                        )  # The resistance of the whole transformer. TODO: Check if this is right...
+                        ] = resistance  # The resistance of the whole transformer. TODO: Check if this is right...
                         dic["reactance"] = i.reactance[0]
 
                         dic["impedance1"] = complex(resistance, i.reactance[1])
@@ -510,7 +509,7 @@ class Writer(AbstractWriter):
                 for p in phase_set:
                     phases = phases + p
 
-                if phases is not "":
+                if phases != "":
                     fp.write("    phases {pw};\n".format(pw=phases))
 
                 if (
@@ -563,7 +562,7 @@ class Writer(AbstractWriter):
                     dic_set.add((a, b))
                 dic_set = frozenset(dic_set)
 
-                if not dic_set in self.regulator_configurations:
+                if dic_set not in self.regulator_configurations:
                     self.regulator_phases[dic_set] = {}
                 if (
                     hasattr(i, "connected_transformer")
@@ -795,7 +794,7 @@ class Writer(AbstractWriter):
                                 pattern = re.compile("[^e]-")
 
                                 if (
-                                    not "+" in impedance
+                                    "+" not in impedance
                                     and not len(pattern.findall(impedance)) > 0
                                 ):
                                     impedance = "0+" + impedance
