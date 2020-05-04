@@ -1588,9 +1588,7 @@ class Reader(AbstractReader):
             # normhkva
             try:
                 # DiTTo in volt ampere
-                api_transformer.normhkva = float(
-                    data["normhkVA"]
-                )
+                api_transformer.normhkva = float(data["normhkVA"])
             except:
                 pass
 

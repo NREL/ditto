@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # -*- coding: utf-8 -*-
 
@@ -21,6 +22,7 @@ New Transformer.XFM1  Phases=3   Windings=2  XHL=2
 ~ wdg=2 bus=634.1.2.3.0       conn=Wye kv=0.480    kva=500    %r=.55   XLT=1
 """
 
+
 def test_opendss_transformer_reader():
     from ditto.readers.opendss.read import Reader
     from ditto.store import Store
@@ -33,9 +35,7 @@ def test_opendss_transformer_reader():
         f.write(opendss_test_data)
 
     m = Store()
-    r = Reader(
-        master_file=master_file.name,
-    )
+    r = Reader(master_file=master_file.name,)
     r.parse(m)
     m.set_names()
 

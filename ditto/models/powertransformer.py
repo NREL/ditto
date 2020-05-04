@@ -93,9 +93,7 @@ class PowerTransformer(DiTToHasTraits):
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
     )
-    feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""",
-    )
+    feeder_name = Unicode(help="""The name of the feeder the object is on.""",)
 
     def build(self, model):
         """
