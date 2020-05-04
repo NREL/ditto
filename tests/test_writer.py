@@ -128,18 +128,8 @@ def test_opendss_writer():
     phase_load1 = PhaseLoad(m, p=5400, q=2615.3394)
     load1 = Load(m, name="load1", phase_loads=[phase_load1])
 
-    winding1 = Winding(
-        m,
-        connection_type="W",
-        nominal_voltage=12.47,
-        rated_power=25,
-    )
-    winding2 = Winding(
-        m,
-        connection_type="W",
-        nominal_voltage=6.16,
-        rated_power=25,
-    )
+    winding1 = Winding(m, connection_type="W", nominal_voltage=12.47, rated_power=25,)
+    winding2 = Winding(m, connection_type="W", nominal_voltage=6.16, rated_power=25,)
     transformer1 = PowerTransformer(
         m,
         name="t1",
@@ -150,18 +140,9 @@ def test_opendss_writer():
     )
     transformer1.reactances.append(6)
     reg1 = Regulator(
-        m,
-        name="t1_reg",
-        connected_transformer="t1",
-        pt_ratio=60,
-        delay=2,
+        m, name="t1_reg", connected_transformer="t1", pt_ratio=60, delay=2,
     )
-    cap1 = Capacitor(
-        m,
-        name="cap1",
-        nominal_voltage=7.2,
-        connection_type="Y",
-    )
+    cap1 = Capacitor(m, name="cap1", nominal_voltage=7.2, connection_type="Y",)
     print(line1.impedance_matrix)
 
     # Storage testing
