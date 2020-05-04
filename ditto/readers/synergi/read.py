@@ -933,7 +933,7 @@ class Reader(AbstractReader):
                 idd = np.argwhere(fuse_sectionID.values == obj).flatten()
 
                 # Set the is_fuse flag to True
-                api_line.is_fuse = 1
+                api_line.is_fuse = True
 
                 # Get the current ratings (to be used in the wires)
                 if len(idd) == 1:
@@ -967,16 +967,16 @@ class Reader(AbstractReader):
 
                             # Try to map this type to one supported by DiTTo
                             if "fuse" in protect_type:
-                                api_line.is_fuse = 1
+                                api_line.is_fuse = True
                             elif "sectionalizer" in protect_type:
-                                api_line.is_sectionalizer = 1
+                                api_line.is_sectionalizer = True
                             elif "breaker" in protect_type:
-                                api_line.is_breaker = 1
+                                api_line.is_breaker = True
                             elif "recloser" in protect_type:
-                                api_line.is_recloser = 1
+                                api_line.is_recloser = True
                             # If nothing more specific was found, map to a network protector
                             else:
-                                api_line.is_network_protector = 1
+                                api_line.is_network_protector = True
 
                             eqt_rating = ContinuousCurrentRating[eqt_id]
                             eqt_interrupting_rating = InterruptCurrentRating[eqt_id]
@@ -1071,10 +1071,10 @@ class Reader(AbstractReader):
                     api_wire.is_open = int(eqt_open)
 
                 # Is_fuse
-                if api_line.is_fuse == 1:
+                if api_line.is_fuse is True:
 
                     # Set the flag to True if the line has been identified as a Fuse
-                    api_wire.is_fuse = 1
+                    api_wire.is_fuse = True
 
                     # Set the ampacity
                     api_wire.ampacity = float(
@@ -1095,10 +1095,10 @@ class Reader(AbstractReader):
                     api_wire.is_open = int(eqt_open)
 
                 # Is_sectionalizer
-                if api_line.is_sectionalizer == 1:
+                if api_line.is_sectionalizer is True:
 
                     # Set the flag to True if the line has been identified as a sectionalizer
-                    api_wire.is_sectionalizer = 1
+                    api_wire.is_sectionalizer = True
 
                     # Set the ampacity
                     api_wire.ampacity = float(
@@ -1111,10 +1111,10 @@ class Reader(AbstractReader):
                     )  # Value should already be in amps
 
                 # Is_network_protector
-                if api_line.is_network_protector == 1:
+                if api_line.is_network_protector is True:
 
                     # Set the flag to True if the line has been identified as a network protector
-                    api_wire.is_network_protector = 1
+                    api_wire.is_network_protector = True
 
                     # Set the ampacity
                     api_wire.ampacity = float(

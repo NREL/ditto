@@ -114,7 +114,7 @@ class Storage(DiTToHasTraits):
     # Modification: Nicolas (May 2018)
     is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=None,
+        default_value=False,
     )
 
     def build(self, model):

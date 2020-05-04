@@ -1122,11 +1122,11 @@ class system_structure_modifier(Modifier):
         for obj in self.model.models:
             if isinstance(obj, Line):
                 if (
-                    obj.is_switch == 1
-                    or obj.is_breaker == 1
-                    or obj.is_sectionalizer == 1
-                    or obj.is_fuse == 1
-                    or obj.is_recloser == 1
+                    obj.is_switch is True
+                    or obj.is_breaker is True
+                    or obj.is_sectionalizer is True
+                    or obj.is_fuse is True
+                    or obj.is_recloser is True
                 ):
 
                     # Store the ampacities of the device's wires

@@ -114,7 +114,7 @@ def test_fuses():
     assert m["line1"].length == 0.001 * 1000  # units = km
     assert m["line1"].from_element == "node1"
     assert m["line1"].to_element == "node2"
-    assert m["line1"].is_fuse == 1
+    assert m["line1"].is_fuse is True
     assert m["line1"].is_switch is None
     assert m["line1"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["line1"].impedance_matrix == imp_matrix
@@ -150,7 +150,7 @@ def test_fuses():
     assert m["line2"].length == 0.001 * 1000  # units = km
     assert m["line2"].from_element == "node1"
     assert m["line2"].to_element == "node3"
-    assert m["line2"].is_fuse == 1
+    assert m["line2"].is_fuse is True
     assert m["line2"].is_switch is None
     assert m["line2"].faultrate == parsed_values["Line"]["faultrate"]
     imp_matrix = (
@@ -191,7 +191,7 @@ def test_fuses():
     assert m["line3"].length == 0.001 * 1000  # units = km
     assert m["line3"].from_element == "node1"
     assert m["line3"].to_element == "node4"
-    assert m["line3"].is_fuse == 1
+    assert m["line3"].is_fuse is True
     assert m["line3"].is_switch is None
     assert m["line3"].faultrate == parsed_values["Line"]["faultrate"]
     assert m["line3"].impedance_matrix == [[imp_matrix]]  # units = km
@@ -227,7 +227,7 @@ def test_fuses():
     assert m["line4"].length == 0.001 * 1000  # units = km
     assert m["line4"].from_element == "node1"
     assert m["line4"].to_element == "node4"
-    assert m["line4"].is_fuse == 1
+    assert m["line4"].is_fuse is True
     assert m["line4"].is_switch is None
     assert m["line4"].faultrate == parsed_values["Line"]["faultrate"]
 

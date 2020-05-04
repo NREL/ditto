@@ -127,7 +127,6 @@ class Load(DiTToHasTraits):
     # Modification: Nicolas (July 2018)
     is_center_tap = Bool(
         help="""Flag that indicates whether the element is a center tap load or not.""",
-        default_value=None,
     )
     center_tap_perct_1_N = Float(
         help="""Percentage of the load between active 1 and neutral. Should be a float between 0 and 1.""",

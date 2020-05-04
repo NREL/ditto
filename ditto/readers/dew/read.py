@@ -910,7 +910,7 @@ class reader:
                         wires[pw].phase = ph_w[pw]
                         if int(entries[5][:-1]) == 8 or int(entries[5][:-1]) == 100:
                             wires[pw].nameclass = PTSWT_STDESC[int(entries[6][:-1])]
-                            wires[pw].is_fuse = 1
+                            wires[pw].is_fuse = True
                             wires[pw].resistance = 0.001
                             wires[pw].ampacity = float(
                                 PTSWT_DCURTRATA[int(entries[6][:-1])]
@@ -919,7 +919,7 @@ class reader:
                                 float(PTSWT_DCURTRATA[int(entries[6][:-1])]) * 1.5
                             )
                         else:
-                            wires[pw].is_fuse = 0
+                            wires[pw].is_fuse = False
                         if int(entries[5][:-1]) in (
                             4,
                             5,
@@ -1299,10 +1299,10 @@ class reader:
                 ):
                     api_line.line_type = "underground"
                 if int(entries[5][:-1]) == 8 or int(entries[5][:-1]) == 100:
-                    api_line.is_fuse = 1
+                    api_line.is_fuse = True
                     api_line.length = 0.1
                 else:
-                    api_line.is_fuse = 0
+                    api_line.is_fuse = False
                 if int(entries[5][:-1]) in (
                     4,
                     5,

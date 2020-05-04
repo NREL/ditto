@@ -844,7 +844,7 @@ class NetworkAnalyzer(object):
             # Update the counts
             #
             # Fuses
-            if obj.is_fuse == 1:
+            if obj.is_fuse is True:
                 self.results[feeder_name]["num_fuses"] += 1
 
             # Switches

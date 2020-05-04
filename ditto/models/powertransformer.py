@@ -78,7 +78,7 @@ class PowerTransformer(DiTToHasTraits):
 
     # Modification: Nicolas (November 2017)
     is_center_tap = Bool(
-        help="""Set to 1 if the transformer is a center tap transformer""", default=0
+        help="""Set to 1 if the transformer is a center tap transformer"""
     )
 
     # Modification: Nicolas (December 2017)

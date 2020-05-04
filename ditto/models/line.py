@@ -87,11 +87,11 @@ class Line(DiTToHasTraits):
         default_value=None,
     )
     impedance_matrix = List(
-        List(Complex),
+        List(Complex()),
         help="""This provides the matrix representation of the line impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
     capacitance_matrix = List(
-        List(Complex),
+        List(Complex()),
         help="""This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
 
