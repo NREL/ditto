@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -11,6 +12,7 @@ from .base import (
     observe,
     Instance,
     Complex,
+    Bool,
 )
 
 from .position import Position
@@ -35,7 +37,7 @@ class PowerSource(DiTToHasTraits):
         Instance(Position),
         help="""This parameter is a list of positional points describing the power source - it should only contain one. The positions are objects containing elements of long, lat and elevation.""",
     )
-    is_sourcebus = Int(
+    is_sourcebus = Bool(
         help="""A Boolean flag which is 1 if the PowerSource object is an external power source at the distribution system head"""
     )
     rated_power = Float(

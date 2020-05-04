@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -78,7 +79,7 @@ class system_structure_modifier(Modifier):
                 isinstance(x, PowerSource)
                 and hasattr(x, "nominal_voltage")
                 and x.nominal_voltage is not None
-                and x.is_sourcebus == 1
+                and x.is_sourcebus
             ):
                 self.source_voltage = x.nominal_voltage
 
@@ -187,9 +188,7 @@ class system_structure_modifier(Modifier):
                 headnodes = list(self.G.digraph.successors(obj.substation))
 
                 if name_cleaned in headnodes:
-                    obj.headnode = (
-                        name_cleaned
-                    )  # This should not be the case because of name conflicts
+                    obj.headnode = name_cleaned  # This should not be the case because of name conflicts
                 else:
                     cleaned_headnodes = [h.strip("x") for h in headnodes]
 
@@ -879,7 +878,7 @@ class system_structure_modifier(Modifier):
             #
             if self.model[transformer_names[idx]].is_center_tap == 1:
                 # Tag the load as a center tap load
-                load.is_center_tap = 1
+                load.is_center_tap = True
 
                 # Set the percentage to distribute the load between the actives and the neutral
                 # Here we place 50% of the load between active 1 and neutral, and 50% between
@@ -1000,7 +999,7 @@ class system_structure_modifier(Modifier):
                         load_phases.append(phase_load.phase)
                 except:
                     raise ValueError(
-                        "Unable to retrieve DiTTo object with name {}".format(l_name)
+                        "Unable to retrieve DiTTo object with name {}".format(load_name)
                     )
 
                 continu = True

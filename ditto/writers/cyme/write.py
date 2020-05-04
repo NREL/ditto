@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 import hashlib
 import math
@@ -1555,9 +1555,7 @@ class Writer(AbstractWriter):
 
                             # If we have less than 3 phases, then use a BY_PHASE configuration
                             else:
-                                line_type = (
-                                    "by_phase"
-                                )  # Change the line_type to write the line under the proper header
+                                line_type = "by_phase"  # Change the line_type to write the line under the proper header
 
                                 # Add device number and phase conductor IDs
                                 new_line_string += ",{device},{condIDA},{condIDB},{condIDC}".format(
@@ -1653,9 +1651,7 @@ class Writer(AbstractWriter):
                             )
 
                         # ConnectionStatus
-                        new_line_string += (
-                            ",0"
-                        )  # Assumes the line is connected because there is no connected field in DiTTo
+                        new_line_string += ",0"  # Assumes the line is connected because there is no connected field in DiTTo
 
                         # DeviceNumber
                         if (
@@ -1668,8 +1664,8 @@ class Writer(AbstractWriter):
 
                         if line_type == "underground":
                             new_line_string += (
-                                ",10,2"
-                            )  # DistanceBetweenConductors, CableConfiguration
+                                ",10,2"  # DistanceBetweenConductors, CableConfiguration
+                            )
 
                         # Add the strings to the lists
                         #
@@ -2123,8 +2119,8 @@ class Writer(AbstractWriter):
                             new_pv_setting_string += str(num_x) + "," + str(num_y) + ","
                         else:
                             new_pv_setting_string += (
-                                ",,"
-                            )  # This will produce garbage output power
+                                ",,"  # This will produce garbage output power
+                            )
 
                         if hasattr(i, "temperature") and i.temperature is not None:
                             new_pv_setting_string += str(i.temperature)
@@ -2276,8 +2272,8 @@ class Writer(AbstractWriter):
                                 )
                         else:
                             new_converter_control_setting_string += (
-                                "10,,,,,100"
-                            )  # Use Powerfactor as default
+                                "10,,,,,100"  # Use Powerfactor as default
+                            )
 
                         if (
                             hasattr(i, "timeseries")
@@ -2891,18 +2887,18 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )
-                                            if transformer_object.is_center_tap == 1:
+                                            if transformer_object.is_center_tap == True:
                                                 KVLLprim = round(
                                                     KVLLprim / (3 ** 0.5), 2
                                                 )  # produces output in L-N format if center-tap rather than L-L
                                             VoltageUnit = (
-                                                1
-                                            )  # Voltage declared in KV, not in KVLL
+                                                1  # Voltage declared in KV, not in KVLL
+                                            )
                                         elif w == 1:
                                             KVLLsec = winding.nominal_voltage * 10 ** -3
                                             VoltageUnit = (
-                                                1
-                                            )  # Voltage declared in KV, not in KVLL
+                                                1  # Voltage declared in KV, not in KVLL
+                                            )
                                     except:
                                         pass
                                 # NoLoadLosses
@@ -3318,7 +3314,7 @@ class Writer(AbstractWriter):
                         #
                         if (
                             len(transformer_object.windings) == 2
-                            or transformer_object.is_center_tap == 1
+                            or transformer_object.is_center_tap == True
                         ):
                             # Empty new transformer string
                             new_transformer_line = ""
@@ -3333,7 +3329,7 @@ class Writer(AbstractWriter):
                             ):
                                 try:
                                     if (
-                                        transformer_object.is_center_tap == 1
+                                        transformer_object.is_center_tap == True
                                         and len(
                                             transformer_object.windings[
                                                 0
@@ -3392,9 +3388,7 @@ class Writer(AbstractWriter):
                             CONN = ""
                             try:
                                 if TYPE == 4:
-                                    CONN = (
-                                        "0"
-                                    )  # Center Tap not a configuration for transformer object. Leave as Y-Y
+                                    CONN = "0"  # Center Tap not a configuration for transformer object. Leave as Y-Y
                                     new_transformer_line += ",15"
                                 else:
                                     new_transformer_line += (
@@ -3590,13 +3584,13 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )
-                                            # if transformer_object.is_center_tap == 1:
+                                            # if transformer_object.is_center_tap == True:
                                             #     KVLLprim = round(
                                             #         KVLLprim / (3 ** 0.5), 2
                                             #     )  # produces output in L-N format if center-tap rather than L-L
                                             voltageUnit = (
-                                                1
-                                            )  # Voltage declared in KV, not in KVLL
+                                                1  # Voltage declared in KV, not in KVLL
+                                            )
                                         elif w == 1:
                                             # In addition, if we have a center tap, we need to add the secondary and tertiary voltages here
                                             if TYPE == 4:
@@ -3609,9 +3603,7 @@ class Writer(AbstractWriter):
                                                         ].nominal_voltage
                                                         * 10 ** -3
                                                     )
-                                                    voltageUnit = (
-                                                        1
-                                                    )  # Voltage declared in KV, not in KVLL
+                                                    voltageUnit = 1  # Voltage declared in KV, not in KVLL
                                                 except:
                                                     KVLLsec = "DEFAULT"
                                                     pass
@@ -3619,9 +3611,7 @@ class Writer(AbstractWriter):
                                                 KVLLsec = (
                                                     winding.nominal_voltage * 10 ** -3
                                                 )
-                                                voltageUnit = (
-                                                    1
-                                                )  # Voltage declared in KV, not in KVLL
+                                                voltageUnit = 1  # Voltage declared in KV, not in KVLL
                                     # If we have a three phase transformer, we need to specify the voltage in KVLL.
                                     # This is done by setting the voltageUnit to 0, and multiplying the voltage by sqrt(3)
                                     # Note: If we have three phases, the transformer shouln't be a center tap
@@ -3637,7 +3627,7 @@ class Writer(AbstractWriter):
                                             KVLLprim = (
                                                 winding.nominal_voltage * 10 ** -3
                                             )  # *math.sqrt(3)
-                                            if transformer_object.is_center_tap == 1:
+                                            if transformer_object.is_center_tap == True:
                                                 KVLLprim = round(
                                                     KVLLprim / (3 ** 0.5), 2
                                                 )  # produces output in L-N format if center-tap rather than L-L
@@ -4961,7 +4951,7 @@ class Writer(AbstractWriter):
                     new_load_string += ",SPOT"
 
                     if hasattr(i, "connection_type") and i.connection_type is not None:
-                        if i.is_center_tap == 1:
+                        if i.is_center_tap == True:
                             new_load_string += ",6"
                         else:
                             try:
@@ -5040,7 +5030,7 @@ class Writer(AbstractWriter):
 
                         # Value1=P
                         try:
-                            if hasattr(i, "is_center_tap") and i.is_center_tap != 1:
+                            if hasattr(i, "is_center_tap") and i.is_center_tap != True:
                                 new_customer_load_string += "," + str(P)
                             else:
                                 new_customer_load_string += ","
@@ -5050,7 +5040,7 @@ class Writer(AbstractWriter):
 
                         # Value2=P
                         try:
-                            if hasattr(i, "is_center_tap") and i.is_center_tap != 1:
+                            if hasattr(i, "is_center_tap") and i.is_center_tap != True:
                                 new_customer_load_string += "," + str(Q)
                             else:
                                 new_customer_load_string += ","
@@ -5086,7 +5076,7 @@ class Writer(AbstractWriter):
                     #
                     if (
                         hasattr(i, "is_center_tap")
-                        and i.is_center_tap == 1
+                        and i.is_center_tap == True
                         and hasattr(i, "center_tap_perct_1_N")
                         and i.center_tap_perct_1_N is not None
                         and hasattr(i, "center_tap_perct_N_2")

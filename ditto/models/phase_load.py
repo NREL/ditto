@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Int,
+    Bool,
+    List,
+    observe,
+    Instance,
+)
 
 from .position import Position
 
@@ -34,9 +45,9 @@ class PhaseLoad(DiTToHasTraits):
     # Modification: Nicolas Gensollen (December 2017)
     # Drop flag is used if we created objects in the reader that we do not want to output.
     # This is much faster than looping over objects to remove them in a pre/post-processing step
-    drop = Int(
+    drop = Bool(
         help="""Set to 1 if the object should be dropped in the writing process. Otherwise leave 0.""",
-        default_value=0,
+        default_value=False,
     )
 
     ppercentcurrent = Float(

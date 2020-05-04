@@ -141,7 +141,7 @@ class Store(object):
                         modifier.delete_element(self, j)
         self.build_networkx()
 
-    def direct_from_source(self,source="sourcebus"):
+    def direct_from_source(self, source="sourcebus"):
         ordered_nodes = self._network.bfs_order(source)
         # logger.debug(ordered_nodes)
         for i in self.models:
@@ -205,7 +205,6 @@ class Store(object):
 
 
 class EnvAttributeIntercepter(object):
-
     def __init__(self, model):
         self.model = model
         self.generate_attributes()
@@ -263,15 +262,11 @@ def set_callback(self, name, value):
         for v in value:
             assert (
                 v.UUID in self.link_model.cim_store
-            ), "{} not found in Store {}".format(
-                self.UUID, self.link_model
-            )
+            ), "{} not found in Store {}".format(self.UUID, self.link_model)
     else:
         assert (
             value.UUID in self.link_model.cim_store
-        ), "{} not found in Store {}".format(
-            self.UUID, self.link_model
-        )
+        ), "{} not found in Store {}".format(self.UUID, self.link_model)
 
 
 def del_callback(self, name, obj):

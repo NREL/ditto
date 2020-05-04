@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 import logging
 import math
@@ -974,7 +975,7 @@ class Reader(AbstractReader):
         for key in self.subnetwork_connections:
             model[
                 self.subnetwork_connections[key]["nodeid"]
-            ].is_substation_connection = 1
+            ].is_substation_connection = True
 
     def parse_head_nodes(self, model):
         """ This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes"""
@@ -1094,7 +1095,7 @@ class Reader(AbstractReader):
                 except:
                     pass
 
-                api_source.is_sourcebus = 1
+                api_source.is_sourcebus = True
 
                 try:
                     api_source.rated_power = 10 ** 3 * float(
@@ -1172,7 +1173,7 @@ class Reader(AbstractReader):
                     except:
                         pass
 
-                    api_source.is_sourcebus = 1
+                    api_source.is_sourcebus = True
 
                     try:
                         api_source.rated_power = 10 ** 3 * float(subs[sid]["mva"])
@@ -1332,10 +1333,7 @@ class Reader(AbstractReader):
 
         for ID, node in nodes.items():
             # Create a new DiTTo node object
-            try:
-                api_node = Node(model)
-            except:
-                raise ValueError("Could not instanciate DiTTo Node object.")
+            api_node = Node(model)
 
             # Set the name
             try:
@@ -2417,12 +2415,12 @@ class Reader(AbstractReader):
                 pass
 
             # Set the line type
-            new_line["is_switch"] = 0
-            new_line["is_fuse"] = 0
-            new_line["is_recloser"] = 0
-            new_line["is_breaker"] = 0
-            new_line["is_sectionalizer"] = 0
-            new_line["is_network_protector"] = 0
+            new_line["is_switch"] = False
+            new_line["is_fuse"] = False
+            new_line["is_recloser"] = False
+            new_line["is_breaker"] = False
+            new_line["is_sectionalizer"] = False
+            new_line["is_network_protector"] = False
 
             # Set the nameclass of the line as the equipment ID
             if "eqid" in settings:
@@ -2440,7 +2438,7 @@ class Reader(AbstractReader):
 
                 # Switch
                 elif "switch" in settings["type"]:
-                    new_line["is_switch"] = 1
+                    new_line["is_switch"] = True
                     new_line["wires"] = []
                     total_closed = 0
 
@@ -2449,8 +2447,8 @@ class Reader(AbstractReader):
                         closedphase = mapp_closed_phase[settings["closedphase"]]
                     else:
                         closedphase = (
-                            "ABC"
-                        )  # If no info, then everything is closed by default...
+                            "ABC"  # If no info, then everything is closed by default...
+                        )
 
                     # Get the sectionalizer equipment data
                     if "eqid" in settings and settings["eqid"] in self.switches:
@@ -2520,7 +2518,7 @@ class Reader(AbstractReader):
 
                 # Sectionalizer
                 elif "sectionalizer" in settings["type"]:
-                    new_line["is_sectionalizer"] = 1
+                    new_line["is_sectionalizer"] = True
                     new_line["wires"] = []
                     total_closed = 0
 
@@ -2529,8 +2527,8 @@ class Reader(AbstractReader):
                         closedphase = mapp_closed_phase[settings["closedphase"]]
                     else:
                         closedphase = (
-                            "ABC"
-                        )  # If no info, then everything is closed by default...
+                            "ABC"  # If no info, then everything is closed by default...
+                        )
 
                     # Get the sectionalizer equipment data
                     if "eqid" in settings and settings["eqid"] in self.sectionalizers:
@@ -2602,7 +2600,7 @@ class Reader(AbstractReader):
 
                 # Fuse
                 elif "fuse" in settings["type"]:
-                    new_line["is_fuse"] = 1
+                    new_line["is_fuse"] = True
                     new_line["wires"] = []
                     total_closed = 0
 
@@ -2611,8 +2609,8 @@ class Reader(AbstractReader):
                         closedphase = mapp_closed_phase[settings["closedphase"]]
                     else:
                         closedphase = (
-                            "ABC"
-                        )  # If no info, then everything is closed by default...
+                            "ABC"  # If no info, then everything is closed by default...
+                        )
 
                     # Get the fuse equipment data
                     if "eqid" in settings and settings["eqid"] in self.fuses:
@@ -2683,7 +2681,7 @@ class Reader(AbstractReader):
 
                 # recloser
                 elif "recloser" in settings["type"]:
-                    new_line["is_recloser"] = 1
+                    new_line["is_recloser"] = True
                     new_line["wires"] = []
                     total_closed = 0
 
@@ -2692,8 +2690,8 @@ class Reader(AbstractReader):
                         closedphase = mapp_closed_phase[settings["closedphase"]]
                     else:
                         closedphase = (
-                            "ABC"
-                        )  # If no info, then everything is closed by default...
+                            "ABC"  # If no info, then everything is closed by default...
+                        )
 
                     # Get the recloser equipment data
                     if "eqid" in settings and settings["eqid"] in self.reclosers:
@@ -2765,7 +2763,7 @@ class Reader(AbstractReader):
 
                 # breaker
                 elif "breaker" in settings["type"]:
-                    new_line["is_breaker"] = 1
+                    new_line["is_breaker"] = True
                     new_line["wires"] = []
                     total_closed = 0
 
@@ -2774,8 +2772,8 @@ class Reader(AbstractReader):
                         closedphase = mapp_closed_phase[settings["closedphase"]]
                     else:
                         closedphase = (
-                            "ABC"
-                        )  # If no info, then everything is closed by default...
+                            "ABC"  # If no info, then everything is closed by default...
+                        )
 
                     # Get the breaker equipment data
                     if "eqid" in settings and settings["eqid"] in self.breakers:
@@ -2846,7 +2844,7 @@ class Reader(AbstractReader):
 
                 # Network Protectors
                 elif "network_protector" in settings["type"]:
-                    new_line["is_network_protector"] = 1
+                    new_line["is_network_protector"] = True
                     new_line["wires"] = []
                     total_closed = 0
 
@@ -2855,8 +2853,8 @@ class Reader(AbstractReader):
                         closedphase = mapp_closed_phase[settings["closedphase"]]
                     else:
                         closedphase = (
-                            "ABC"
-                        )  # If no info, then everything is closed by default...
+                            "ABC"  # If no info, then everything is closed by default...
+                        )
 
                     # Get the network protector equipment data
                     if (
@@ -3001,7 +2999,7 @@ class Reader(AbstractReader):
 
                             impedance_matrix = [
                                 [
-                                    1.
+                                    1.0
                                     / 3.0
                                     * coeff
                                     * complex(
@@ -3014,7 +3012,7 @@ class Reader(AbstractReader):
                         elif len(phases) == 2:
 
                             a = (
-                                1.
+                                1.0
                                 / 3.0
                                 * coeff
                                 * complex(
@@ -3023,7 +3021,7 @@ class Reader(AbstractReader):
                                 )
                             )
                             b = (
-                                1.
+                                1.0
                                 / 3.0
                                 * coeff
                                 * complex(
@@ -3037,7 +3035,7 @@ class Reader(AbstractReader):
                         else:
 
                             a = (
-                                1.
+                                1.0
                                 / 3.0
                                 * coeff
                                 * complex(
@@ -3046,7 +3044,7 @@ class Reader(AbstractReader):
                                 )
                             )
                             b = (
-                                1.
+                                1.0
                                 / 3.0
                                 * coeff
                                 * complex(
@@ -4675,7 +4673,7 @@ class Reader(AbstractReader):
                     [[complex0, 0, 0], [0, complex1, 0], [0, 0, complex1]]
                 )
                 a = 1 * cmath.exp(2 * math.pi * 1j / 3)
-                T = np.matrix([[1., 1., 1.], [1., a * a, a], [1., a, a * a]])
+                T = np.matrix([[1.0, 1.0, 1.0], [1.0, a * a, a], [1.0, a, a * a]])
                 T_inv = T.I
                 Zabc = T * matrix * T_inv
                 Z_perc = Zabc.item((0, 0))

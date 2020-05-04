@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Bool,
+    Int,
+    List,
+    observe,
+    Instance,
+)
 
 from .position import Position
 
@@ -43,15 +54,15 @@ class Node(DiTToHasTraits):
 
     # Modification: Tarek (April 2018)
     # Support for substation connection points. These identify if the node connects the substation to a feeder or high voltage source
-    is_substation_connection = Int(
+    is_substation_connection = Bool(
         help="""1 if the node connects from inside a substation to outside, 0 otherwise.""",
         default=None,
     )
 
     # Modification: Nicolas (May 2018)
-    is_substation = Int(
+    is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
+        default_value=False,
     )
 
     setpoint = Float(

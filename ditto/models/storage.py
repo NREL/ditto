@@ -1,4 +1,15 @@
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+# -*- coding: utf-8 -*-
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Bool,
+    Int,
+    List,
+    observe,
+    Instance,
+)
 
 from .position import Position
 from .phase_storage import PhaseStorage
@@ -101,7 +112,7 @@ class Storage(DiTToHasTraits):
     )
 
     # Modification: Nicolas (May 2018)
-    is_substation = Int(
+    is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
         default_value=None,
     )

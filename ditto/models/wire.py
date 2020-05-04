@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Int,
+    List,
+    Bool,
+    observe,
+    Instance,
+)
 
 from .position import Position
 
@@ -48,15 +59,15 @@ class Wire(DiTToHasTraits):
         help="""Thickness of the insulation around the secondary live conductors""",
         default=None,
     )
-    is_fuse = Int(
+    is_fuse = Bool(
         help="""This flag indicates whether or not this wire is also a fuse""",
         default_value=None,
     )
-    is_switch = Int(
+    is_switch = Bool(
         help="""This flag indicates whether or not this wire is also a switch""",
         default_value=None,
     )
-    is_open = Int(
+    is_open = Bool(
         help="""This flag indicates whether or not the line is open (if it is a switch/fuse/breaker/recloser/sectionalizer/network protector).""",
         default_value=None,
     )
@@ -96,32 +107,32 @@ class Wire(DiTToHasTraits):
     # Modification: Nicolas Gensollen (December 2017)
     # Drop flag is used if we created objects in the reader that we do not want to output.
     # This is much faster than looping over objects to remove them in a pre/post-processing step
-    drop = Int(
+    drop = Bool(
         help="""Set to 1 if the object should be dropped in the writing process. Otherwise leave 0.""",
-        default_value=0,
+        default_value=False,
     )
 
     # Modification: Nicolas (December 2017)
     # Add a is_recloser attribute as an easy and quick way to handle reclosers in DiTTo
-    is_recloser = Int(
+    is_recloser = Bool(
         help="""This flag indicates whether or not this wire is also a recloser""",
         default_value=None,
     )
 
     # Modification: Nicolas (January 2018)
-    is_breaker = Int(
+    is_breaker = Bool(
         help="""This flag indicates whether or not this wire is also a recloser""",
         default_value=None,
     )
 
     # Modification: Nicolas (June 2018)
-    is_network_protector = Int(
+    is_network_protector = Bool(
         help="""This flag indicates whether or not this wire is also a network protector.""",
         default_value=None,
     )
 
     # Modification: Nicolas (August 2018)
-    is_sectionalizer = Int(
+    is_sectionalizer = Bool(
         help="""This flag indicates whether or not this wire is also a sectionalizer.""",
         default_value=None,
     )

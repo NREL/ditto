@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Bool,
+    Int,
+    List,
+    observe,
+    Instance,
+)
 
 from .position import Position
 from .phase_capacitor import PhaseCapacitor
@@ -108,9 +119,9 @@ class Capacitor(DiTToHasTraits):
     )
 
     # Modification: Nicolas (May 2018)
-    is_substation = Int(
+    is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
+        default_value=False,
     )
 
     def build(self, model):

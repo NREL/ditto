@@ -382,9 +382,8 @@ class Reader(AbstractReader):
 
             # Set the source_bus flag to True
             try:
-                api_power_source.is_sourcebus = (
-                    1  # We have an external power source here
-                )
+                # We have an external power source here
+                api_power_source.is_sourcebus = True
             except:
                 pass
 
@@ -1686,7 +1685,7 @@ class Reader(AbstractReader):
 
             # If we have a one phase 3 winding transformer in OpenDSS, it should represent a 2 winding center tap transformer
             if N_windings == 3 and N_phases == 1:
-                api_transformer.is_center_tap = 1
+                api_transformer.is_center_tap = True
 
             if not 1 <= N_phases <= 3:
                 logger.warning(
