@@ -62,13 +62,12 @@ def test_cyme_writer():
         to_element="n2",
         feeder_name="f1",
     )
-    load1 = Load(m, name="load1", p=5400, q=2615.3394, feeder_name="f1")
+    load1 = Load(m, name="load1", feeder_name="f1")
 
     phase_winding = PhaseWinding(m, phase=u"A")
     winding1 = Winding(
         m,
         phase_windings=[phase_winding],
-        connecting_element="n2",
         connection_type="Y",
         nominal_voltage=12.47,
         rated_power=25,
@@ -77,7 +76,6 @@ def test_cyme_writer():
     winding2 = Winding(
         m,
         phase_windings=[phase_winding],
-        connecting_element="l1",
         connection_type="Y",
         nominal_voltage=6.16,
         rated_power=25,
@@ -130,24 +128,8 @@ def test_opendss_writer():
     phase_load1 = PhaseLoad(m, p=5400, q=2615.3394)
     load1 = Load(m, name="load1", phase_loads=[phase_load1])
 
-    winding1 = Winding(
-        m,
-        connecting_element="n2",
-        connection_type="W",
-        num_phases=3,
-        nominal_voltage=12.47,
-        rated_power=25,
-        tap_percentage=1,
-    )
-    winding2 = Winding(
-        m,
-        connecting_element="l1",
-        connection_type="W",
-        num_phases=3,
-        nominal_voltage=6.16,
-        rated_power=25,
-        tap_percentage=1.2,
-    )
+    winding1 = Winding(m, connection_type="W", nominal_voltage=12.47, rated_power=25,)
+    winding2 = Winding(m, connection_type="W", nominal_voltage=6.16, rated_power=25,)
     transformer1 = PowerTransformer(
         m,
         name="t1",
@@ -158,22 +140,9 @@ def test_opendss_writer():
     )
     transformer1.reactances.append(6)
     reg1 = Regulator(
-        m,
-        name="t1_reg",
-        connected_transformer="t1",
-        connected_winding=2,
-        pt_ratio=60,
-        delay=2,
+        m, name="t1_reg", connected_transformer="t1", pt_ratio=60, delay=2,
     )
-    cap1 = Capacitor(
-        m,
-        name="cap1",
-        connecting_element="n2",
-        num_phases=3,
-        nominal_voltage=7.2,
-        var=300,
-        connection_type="Y",
-    )
+    cap1 = Capacitor(m, name="cap1", nominal_voltage=7.2, connection_type="Y",)
     print(line1.impedance_matrix)
 
     # Storage testing
@@ -271,13 +240,12 @@ def test_gridlabd_writer():
         to_element="n2",
         feeder_name="f1",
     )
-    load1 = Load(m, name="load1", p=5400, q=2615.3394, feeder_name="f1")
+    load1 = Load(m, name="load1", feeder_name="f1")
 
     phase_winding = PhaseWinding(m, phase=u"A")
     winding1 = Winding(
         m,
         phase_windings=[phase_winding],
-        connecting_element="n2",
         connection_type="Y",
         nominal_voltage=12.47,
         rated_power=25,
@@ -286,7 +254,6 @@ def test_gridlabd_writer():
     winding2 = Winding(
         m,
         phase_windings=[phase_winding],
-        connecting_element="l1",
         connection_type="Y",
         nominal_voltage=6.16,
         rated_power=25,
@@ -350,14 +317,13 @@ def test_ephasor_writer():
         to_element="n2",
         feeder_name="f1",
     )
-    load1 = Load(m, name="load1", p=5400, q=2615.3394, feeder_name="f1")
+    load1 = Load(m, name="load1", feeder_name="f1")
 
     phase_winding = PhaseWinding(m, phase=u"A")
 
     winding1 = Winding(
         m,
         phase_windings=[phase_winding],
-        connecting_element="n2",
         connection_type="Y",
         nominal_voltage=12.47,
         rated_power=25,
@@ -366,7 +332,6 @@ def test_ephasor_writer():
     winding2 = Winding(
         m,
         phase_windings=[phase_winding],
-        connecting_element="l1",
         connection_type="Y",
         nominal_voltage=6.16,
         rated_power=25,
