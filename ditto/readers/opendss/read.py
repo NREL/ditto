@@ -382,9 +382,8 @@ class Reader(AbstractReader):
 
             # Set the source_bus flag to True
             try:
-                api_power_source.is_sourcebus = (
-                    1  # We have an external power source here
-                )
+                # We have an external power source here
+                api_power_source.is_sourcebus = True
             except:
                 pass
 
@@ -909,17 +908,17 @@ class Reader(AbstractReader):
             # is_fuse
             # if line_name.replace("(", "").replace(")", "") in fuses_names:
             if line_name in fuses_names:
-                api_line.is_fuse = 1
+                api_line.is_fuse = True
                 api_line.nameclass = line_name.split("(")[0]
             # is_recloser
             elif line_name in reclosers_names or "recloser" in line_name:
-                api_line.is_recloser = 1
+                api_line.is_recloser = True
                 api_line.nameclass = line_name.split("(")[0]
             elif "breaker" in line_name:
-                api_line.is_breaker = 1
+                api_line.is_breaker = True
                 api_line.nameclass = line_name.split("(")[0]
             elif "Switch" in data and data["Switch"]:
-                api_line.is_switch = 1
+                api_line.is_switch = True
                 api_line.nameclass = line_name.split("(")[0]
 
             # faultrate
@@ -1121,28 +1120,28 @@ class Reader(AbstractReader):
                 wires[p].nameclass = ""
 
                 if name in fuses_names:
-                    wires[p].is_fuse = 1
+                    wires[p].is_fuse = True
                 else:
-                    wires[p].is_fuse = 0
+                    wires[p].is_fuse = False
 
-                if api_line.is_switch == 1:
-                    wires[p].is_switch = 1
-                    if data["enabled"] == True:
-                        wires[p].is_open = 0
+                if api_line.is_switch is True:
+                    wires[p].is_switch = True
+                    if data["enabled"] is True:
+                        wires[p].is_open = False
                     else:
-                        wires[p].is_open = 1
+                        wires[p].is_open = True
                 else:
-                    wires[p].is_switch = 0
+                    wires[p].is_switch = False
 
-                if api_line.is_breaker == 1:
-                    wires[p].is_breaker = 1
+                if api_line.is_breaker is True:
+                    wires[p].is_breaker = True
                 else:
-                    wires[p].is_breaker = 0
+                    wires[p].is_breaker = False
 
-                if api_line.is_recloser == 1:
-                    wires[p].is_recloser = 1
+                if api_line.is_recloser is True:
+                    wires[p].is_recloser = True
                 else:
-                    wires[p].is_recloser = 0
+                    wires[p].is_recloser = False
 
                 # phase
                 try:
@@ -1686,7 +1685,7 @@ class Reader(AbstractReader):
 
             # If we have a one phase 3 winding transformer in OpenDSS, it should represent a 2 winding center tap transformer
             if N_windings == 3 and N_phases == 1:
-                api_transformer.is_center_tap = 1
+                api_transformer.is_center_tap = True
 
             if not 1 <= N_phases <= 3:
                 logger.warning(

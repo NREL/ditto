@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -11,6 +12,7 @@ from .base import (
     List,
     observe,
     Instance,
+    Bool,
 )
 
 from .position import Position
@@ -51,9 +53,9 @@ class Reactor(DiTToHasTraits):
     feeder_name = Unicode(
         help="""The name of the feeder the object is on.""", default_value=None
     )
-    is_substation = Int(
+    is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
+        default_value=False,
     )
 
     faultrate = Float(

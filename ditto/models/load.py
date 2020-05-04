@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Bool,
+    Int,
+    List,
+    observe,
+    Instance,
+)
 
 from .position import Position
 from .phase_load import PhaseLoad
@@ -108,15 +119,14 @@ class Load(DiTToHasTraits):
     )
 
     # Modification: Nicolas (May 2018)
-    is_substation = Int(
+    is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
+        default_value=False,
     )
 
     # Modification: Nicolas (July 2018)
-    is_center_tap = Int(
+    is_center_tap = Bool(
         help="""Flag that indicates whether the element is a center tap load or not.""",
-        default_value=None,
     )
     center_tap_perct_1_N = Float(
         help="""Percentage of the load between active 1 and neutral. Should be a float between 0 and 1.""",

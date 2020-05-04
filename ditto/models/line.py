@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -11,6 +12,7 @@ from .base import (
     List,
     observe,
     Instance,
+    Bool,
 )
 
 from .position import Position
@@ -59,15 +61,15 @@ class Line(DiTToHasTraits):
         default_value=None,
     )
 
-    is_fuse = Int(
+    is_fuse = Bool(
         help="""This flag indicates whether or not the line is also a fuse""",
         default_value=None,
     )
-    is_switch = Int(
+    is_switch = Bool(
         help="""This flag indicates whether or not the line is also a switch""",
         default_value=None,
     )
-    is_banked = Int(
+    is_banked = Bool(
         help="""This flag indicates whether or not the switch is banked. If this is true, the switch objects are controlled together""",
         default_value=None,
     )
@@ -85,11 +87,11 @@ class Line(DiTToHasTraits):
         default_value=None,
     )
     impedance_matrix = List(
-        List(Complex),
+        List(Complex()),
         help="""This provides the matrix representation of the line impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
     capacitance_matrix = List(
-        List(Complex),
+        List(Complex()),
         help="""This provides the matrix representation of the line capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.""",
     )
 
@@ -107,19 +109,19 @@ class Line(DiTToHasTraits):
 
     # Modification: Nicolas (December 2017)
     # Add a is_recloser attribute as an easy and quick way to handle reclosers in DiTTo
-    is_recloser = Int(
+    is_recloser = Bool(
         help="""This flag indicates whether or not the line is also a recloser""",
         default_value=None,
     )
 
     # Modification: Nicolas (January 2018)
-    is_breaker = Int(
+    is_breaker = Bool(
         help="""This flag indicates whether or not the line is also a breaker""",
         default_value=None,
     )
 
     # Modification: Nicolas (March 2018)
-    is_sectionalizer = Int(
+    is_sectionalizer = Bool(
         help="""This flag indicates whether or not the line is also a sectionalizer""",
         default_value=None,
     )
@@ -128,13 +130,13 @@ class Line(DiTToHasTraits):
     nameclass = Unicode(help="""Nameclass of the line object.""", default_value=None)
 
     # Modification: Nicolas (May 2018)
-    is_substation = Int(
+    is_substation = Bool(
         help="""Flag that indicates wheter the element is inside a substation or not.""",
-        default_value=0,
+        default_value=False,
     )
 
     # Modification: Nicolas (June 2018)
-    is_network_protector = Int(
+    is_network_protector = Bool(
         help="""This flag indicates whether or not the line is also a network protector.""",
         default_value=None,
     )

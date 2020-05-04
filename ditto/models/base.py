@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
@@ -9,7 +10,6 @@ from traitlets.traitlets import (
     EventHandler,
 )
 import traitlets as T
-from builtins import super
 
 import logging
 
@@ -129,6 +129,10 @@ class List(T.List, DiTToTraitType):
 
 
 class Instance(T.Instance, DiTToTraitType):
+    pass
+
+
+class Bool(T.Bool, DiTToTraitType):
     pass
 
 

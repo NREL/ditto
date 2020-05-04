@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Int,
+    List,
+    Bool,
+    observe,
+    Instance,
+)
 
 from .position import Position
 from .winding import Winding
@@ -66,14 +77,14 @@ class PowerTransformer(DiTToHasTraits):
     normhkva = Float(help="Normal maximum kVA rating for H winding", default_value=None)
 
     # Modification: Nicolas (November 2017)
-    is_center_tap = Int(
-        help="""Set to 1 if the transformer is a center tap transformer""", default=0
+    is_center_tap = Bool(
+        help="""Set to 1 if the transformer is a center tap transformer"""
     )
 
     # Modification: Nicolas (December 2017)
-    is_substation = Int(
+    is_substation = Bool(
         help="""Set to 1 if the transformer is a substation or is inside a substation""",
-        default=0,
+        default=False,
     )
 
     # Modification: Nicolas (December 2017)

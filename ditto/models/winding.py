@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-from .base import DiTToHasTraits, Float, Unicode, Any, Int, List, observe, Instance
+from .base import (
+    DiTToHasTraits,
+    Float,
+    Unicode,
+    Any,
+    Int,
+    List,
+    Bool,
+    observe,
+    Instance,
+)
 
 from .position import Position
 from .phase_winding import PhaseWinding
@@ -34,6 +45,9 @@ class Winding(DiTToHasTraits):
         Instance(PhaseWinding),
         help="""A list of phasewinding objects which contain the phase, tap position and compensator settings""",
         default_value=None,
+    )
+    is_grounded = Bool(
+        help="""The boolean value to indicate whether tis winding is grounded or not""",
     )
 
     # Added by Nicolas (August 2017)
