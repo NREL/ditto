@@ -202,7 +202,7 @@ def test_opendss_writer():
     PV_system = PowerSource(
         m,
         name="PV1",
-        is_sourcebus=0,
+        is_sourcebus=False,
         nominal_voltage=12470,
         phases=[Unicode("A"), Unicode("C")],
         rated_power=20000.0,
@@ -332,7 +332,7 @@ def test_ephasor_writer():
         phases=[Unicode("A"), Unicode("B"), Unicode("C")],
         nominal_voltage=12470,
         connecting_element="n1",
-        is_sourcebus=1,
+        is_sourcebus=True,
     )
     meta = Feeder_metadata(
         m, name="f1", nominal_voltage=12470, headnode="f1_src", substation="f1_src"

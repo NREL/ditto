@@ -24,9 +24,9 @@ def test_center_tap_load_writing():
     m = Store()
     l = Load(m)
     l.name = "load1"
-    l.is_center_tap = 1
-    l.center_tap_perct_1_N = .5
-    l.center_tap_perct_N_2 = .5
+    l.is_center_tap = True
+    l.center_tap_perct_1_N = 0.5
+    l.center_tap_perct_N_2 = 0.5
     l.center_tap_perct_1_2 = 0
 
     pl = PhaseLoad(m)
