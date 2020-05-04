@@ -1765,8 +1765,10 @@ class Reader(AbstractReader):
                 except:
                     pass
 
-                if ".0" in data["bus"]:
+                if ".0" in data["buses"][w]:
                     windings[w].is_grounded = True
+                else:
+                    windings[w].is_grounded = False
 
                 phase_windings = []
                 # need to use info from the bus since N_phases may not match number of connections
