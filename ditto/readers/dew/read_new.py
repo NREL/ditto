@@ -38,7 +38,6 @@ logger = logging.getLogger(__name__)
 
 
 class Reader:
-
     def parse(self, model, inputfile, databasepath):
         xl_workbook = xlrd.open_workbook(databasepath, "r")
         sheet_names = xl_workbook.sheet_names()
@@ -1001,8 +1000,8 @@ class Reader:
                                         wires[
                                             pw
                                         ].resistance = (
-                                            None
-                                        )  # switches resistance update it
+                                            None  # switches resistance update it
+                                        )
                                     else:
                                         wires[pw].nameclass = PTLINECOND_STDESC[
                                             int(row_wr1[6][:-1])

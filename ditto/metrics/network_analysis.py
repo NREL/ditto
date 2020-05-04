@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
@@ -460,9 +460,7 @@ class NetworkAnalyzer(object):
                                 done_looping = True
                                 break
                             prev_obj = self.model[predecessor]
-                            curr_name = (
-                                predecessor
-                            )  # Only decent along the branch of the last predecessor for simplicity
+                            curr_name = predecessor  # Only decent along the branch of the last predecessor for simplicity
                             if (
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
@@ -495,9 +493,7 @@ class NetworkAnalyzer(object):
                                 done_looping = True
                                 break
                             prev_obj = self.model[predecessor]
-                            curr_name = (
-                                predecessor
-                            )  # Only decent along the branch of the last predecessor for simplicity
+                            curr_name = predecessor  # Only decent along the branch of the last predecessor for simplicity
                             if (
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
@@ -524,9 +520,7 @@ class NetworkAnalyzer(object):
                                 done_looping = True
                                 break
                             prev_obj = self.model[predecessor]
-                            curr_name = (
-                                predecessor
-                            )  # Only decent along the branch of the last predecessor for simplicity
+                            curr_name = predecessor  # Only decent along the branch of the last predecessor for simplicity
                             if (
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
