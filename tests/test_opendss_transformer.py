@@ -51,6 +51,7 @@ def test_opendss_center_transformer():
     assert "bus2.1.0" in string
     assert "bus2.0.2" in string
 
+
 def test_opendss_transformer():
 
     opendss_test_data = """
