@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
@@ -1628,7 +1628,9 @@ class Writer(AbstractWriter):
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
-                    npoints = len(pd.read_csv(os.path.join(self.output_path,i.data_location)))
+                    npoints = len(
+                        pd.read_csv(os.path.join(self.output_path, i.data_location))
+                    )
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
                     ):  # The cases of hourly, minute or second resolution data for exactly one day TODO: make this more precise
@@ -1669,7 +1671,9 @@ class Writer(AbstractWriter):
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
-                    timeseries = pd.read_csv(os.path.join(self.output_path,i.data_location))
+                    timeseries = pd.read_csv(
+                        os.path.join(self.output_path, i.data_location)
+                    )
                     npoints = len(timeseries)
                     timeseries.iloc[:, [0]] = timeseries.iloc[:, [0]] * i.scale_factor
                     timeseries.to_csv(scaled_data_location, index=False)
@@ -1956,8 +1960,8 @@ class Writer(AbstractWriter):
                 # timeseries object
                 if hasattr(i, "timeseries") and i.timeseries is not None:
                     for ts in i.timeseries:
-                        substation = 'DEFAULT'
-                        feeder= 'DEFAULT'
+                        substation = "DEFAULT"
+                        feeder = "DEFAULT"
                         if ts.feeder_name is not None:
                             feeder = ts.feeder_name
                         if ts.substation_name is not None:
