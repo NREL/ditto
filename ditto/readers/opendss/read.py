@@ -1765,7 +1765,7 @@ class Reader(AbstractReader):
                 except:
                     pass
 
-                if ".0" in data["buses"][w]:
+                if ".0" in data["buses"][w] and N_windings == 2:
                     windings[w].is_grounded = True
                 else:
                     windings[w].is_grounded = False

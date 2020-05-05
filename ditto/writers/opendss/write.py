@@ -676,6 +676,9 @@ class Writer(AbstractWriter):
 
                             # Reverse resistance (Not mapped)
 
+                            # Check if winding is grounded
+                            # this check is done here so that it happens only for 2 windings
+
                             # Phase windings
                             if (
                                 hasattr(winding, "phase_windings")
@@ -715,9 +718,13 @@ class Writer(AbstractWriter):
                                         if self.phase_mapping(phase_winding.phase) == 3:
                                             txt += ".1"
 
-                                    if winding.is_grounded:
-                                        txt += ".0"
+                            if winding.is_grounded:
+                                txt += ".0"
 
+                            if (
+                                hasattr(winding, "phase_windings")
+                                and winding.phase_windings is not None
+                            ):
                                 # Tap position
                                 # THIS CAN CAUSE PROBLEMS
                                 # Use write_taps boolean to write this information or not
