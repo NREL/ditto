@@ -715,6 +715,9 @@ class Writer(AbstractWriter):
                                         if self.phase_mapping(phase_winding.phase) == 3:
                                             txt += ".1"
 
+                                    if winding.is_grounded:
+                                        txt += ".0"
+
                                 # Tap position
                                 # THIS CAN CAUSE PROBLEMS
                                 # Use write_taps boolean to write this information or not

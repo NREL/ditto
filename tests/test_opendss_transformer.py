@@ -7,6 +7,10 @@ import os
 import pytest as pt
 import tempfile
 
+from ditto.readers.opendss.read import Reader
+from ditto.store import Store
+from ditto.writers.opendss.write import Writer
+from ditto.models.powertransformer import PowerTransformer
 
 opendss_test_data = """
 Clear
@@ -23,12 +27,7 @@ New Transformer.XFM1  Phases=3   Windings=2  XHL=2
 """
 
 
-def test_opendss_transformer_reader():
-    from ditto.readers.opendss.read import Reader
-    from ditto.store import Store
-    from ditto.writers.cyme.write import Writer
-    from ditto.models.powertransformer import PowerTransformer
-
+def test_opendss_transformer():
     master_file = tempfile.NamedTemporaryFile(mode="w")
 
     with open(master_file.name, "w") as f:
@@ -44,3 +43,17 @@ def test_opendss_transformer_reader():
 
         assert t.windings[0].is_grounded is True
         assert t.windings[1].is_grounded is False
+
+    output_path = tempfile.TemporaryDirectory()
+    w = Writer(output_path=output_path.name)
+    w.write(m)
+
+    with open(os.path.join(output_path.name, "Transformers.dss")) as f:
+        string = f.read()
+
+    assert "sourcebus.1.2.3.0" in string
+    assert "651.1.2.3.0" not in string
+    assert "651.1.2.3" in string
+    assert "633.1.2.3.0" in string
+    assert "634.1.2.3.0" not in string
+    assert "634.1.2.3" in string
