@@ -47,9 +47,9 @@ def test_opendss_center_transformer():
     with open(os.path.join(output_path.name, "Transformers.dss")) as f:
         string = f.read()
 
-    assert "bus1.1.2" in string
-    assert "bus2.1.0" in string
-    assert "bus2.0.2" in string
+    assert "bus1.1.2 " in string
+    assert "bus2.1.0 " in string
+    assert "bus2.0.2 " in string
 
 
 def test_opendss_transformer():
