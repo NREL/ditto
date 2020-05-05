@@ -40,6 +40,10 @@ def test_opendss_center_transformer():
     for t in m.iter_models(type=PowerTransformer):
         assert len(t.windings) == 3
 
+        assert t.windings[0].is_grounded is False
+        assert t.windings[1].is_grounded is False
+        assert t.windings[2].is_grounded is False
+
     output_path = tempfile.TemporaryDirectory()
     w = Writer(output_path=output_path.name)
     w.write(m)
