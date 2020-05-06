@@ -72,9 +72,10 @@ class Store(object):
     def __setitem__(self, k, v):
         self._model_names[k] = v
 
-    def iter_elements(self, type=None):
+    def iter_elements(self, type=DiTToBase):
 
-        type = DiTToBase
+        if type == None:
+            type = DiTToBase
 
         if not issubclass(type, DiTToBase):
             raise AttributeError("Unable to find {} in ditto.environment".format(type))
@@ -82,6 +83,15 @@ class Store(object):
         for e in self.elements:
             if isinstance(e, type):
                 yield e
+
+    def iter_models(self, type=None):
+
+        if type == None:
+            type = object
+
+        for m in self.models:
+            if isinstance(m, type):
+                yield m
 
     @property
     def elements(self):

@@ -1582,17 +1582,13 @@ class Reader(AbstractReader):
             except:
                 pass
 
-            try:
-                if data["sub"] == "Yes":
-                    api_transformer.is_substation = 1
-            except:
-                pass
+            if "sub" in data and data["sub"] == "Yes":
+                api_transformer.is_substation = True
 
             # normhkva
             try:
-                api_transformer.normhkva = float(
-                    data["normhkVA"]
-                )  # DiTTo in volt ampere
+                # DiTTo in volt ampere
+                api_transformer.normhkva = float(data["normhkVA"])
             except:
                 pass
 
@@ -1768,6 +1764,11 @@ class Reader(AbstractReader):
                     windings[w].resistance = float(data["%Rs"][w])
                 except:
                     pass
+
+                if ".0" in data["buses"][w] and N_windings == 2:
+                    windings[w].is_grounded = True
+                else:
+                    windings[w].is_grounded = False
 
                 phase_windings = []
                 # need to use info from the bus since N_phases may not match number of connections

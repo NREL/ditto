@@ -84,7 +84,6 @@ class PowerTransformer(DiTToHasTraits):
     # Modification: Nicolas (December 2017)
     is_substation = Bool(
         help="""Set to 1 if the transformer is a substation or is inside a substation""",
-        default=False,
     )
 
     # Modification: Nicolas (December 2017)
@@ -93,11 +92,8 @@ class PowerTransformer(DiTToHasTraits):
     # These attributes are filled once the DiTTo model has been created using the Network module
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
-        default=None,
     )
-    feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
-    )
+    feeder_name = Unicode(help="""The name of the feeder the object is on.""",)
 
     def build(self, model):
         """
