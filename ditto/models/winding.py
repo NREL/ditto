@@ -47,7 +47,7 @@ class Winding(DiTToHasTraits):
         default_value=None,
     )
     is_grounded = Bool(
-        help="""The boolean value to indicate whether tis winding is grounded or not""",
+        help="""The boolean value to indicate whether the winding is grounded or not""",
     )
 
     # Added by Nicolas (August 2017)
