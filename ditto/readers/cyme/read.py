@@ -1149,6 +1149,11 @@ class Reader(AbstractReader):
                             _from = v["fromnodeid"]
                             _to = v["tonodeid"]
                             phases = list(v["phase"])
+                        if v["tonodeid"] == sdata["nodeid"]: #If it's backwards
+                            sectionID = k
+                            _to = v["fromnodeid"]
+                            _from = v["tonodeid"]
+                            phases = list(v["phase"])
                     try:
                         api_source = PowerSource(model)
                     except:
