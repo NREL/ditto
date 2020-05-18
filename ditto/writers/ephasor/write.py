@@ -282,7 +282,7 @@ class Writer(AbstractWriter):
 
             if hasattr(line, "name") and line.name is not None:
                 logger.debug("New Line." + line.name)
-                obj_dict["ID"][index] = line.name
+                obj_dict["ID"][index] = "line_" + line.name
             else:
                 obj_dict["ID"][index] = "None"
 
@@ -697,7 +697,7 @@ class Writer(AbstractWriter):
             logger.debug(index)
             if hasattr(i, "name") and i.name is not None:
                 logger.debug("New Transformer." + i.name)
-                obj_dict["ID"][index] = i.name
+                obj_dict["ID"][index] = "transformer_" + i.name
             else:
                 obj_dict["ID"][index] = "None"
 
@@ -774,6 +774,8 @@ class Writer(AbstractWriter):
                             phases = ["A", "B", "C"]
                             N_phases.append(len(winding.phase_windings))
                             for pw in winding.phase_windings:
+                                if pw.phase is None:
+                                    continue
                                 if winding_num == 0:
                                     obj_dict["W1Bus " + phases[phase_cnt]][index] = (
                                         i.from_element + "_" + pw.phase.lower()
@@ -932,7 +934,7 @@ class Writer(AbstractWriter):
             #                        transformer.to_element + "_" + pw.phase.lower()
             #                    )
             #           else:  # just a powersource object
-            obj_dict["ID"][index] = i.name
+            obj_dict["ID"][index] = "powersource_" + i.name
             obj_dict["Angle (deg)"][index] = i.phase_angle
             obj_dict["V (kV)"][index] = i.nominal_voltage / 1000
             if i.emergency_power is not None:
@@ -1031,9 +1033,9 @@ class Writer(AbstractWriter):
                 if "a" in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
                 if "b" in letter_phases:
-                    obj_dict["Angle (deg)"].append(120)
-                if "c" in letter_phases:
                     obj_dict["Angle (deg)"].append(-120)
+                if "c" in letter_phases:
+                    obj_dict["Angle (deg)"].append(120)
 
                 #                if len(letter_phases) == 1:
                 #                    obj_dict["Angle (deg)"].append(0)
@@ -1132,16 +1134,16 @@ class Writer(AbstractWriter):
                     or i.name[-1].lower() == "b"
                     or i.name[-1].lower() == "c"
                 ):
-                    n_name = i.name[0:-1]
-                    if not n_name in load_dict:
+                    n_name = i.name
+                    if n_name not in load_dict:
                         for key, value in obj_dict.items():
                             value.append(None)
                         index += 1
                         load_dict[n_name] = index
                         if "load_" == n_name[0:5]:
-                            obj_dict["ID"][index] = n_name[5:]
+                            obj_dict["ID"][index] = "load_" + n_name[5:]
                         else:
-                            obj_dict["ID"][index] = n_name
+                            obj_dict["ID"][index] = "load_" + n_name
 
                     else:
                         index = load_dict[n_name]
@@ -1150,15 +1152,23 @@ class Writer(AbstractWriter):
                         value.append(None)
                     index += 1
                     if "load_" == i.name[0:5]:
-                        obj_dict["ID"][index] = i.name[5:]
+                        obj_dict["ID"][index] = "load_" + i.name[5:]
                     else:
-                        obj_dict["ID"][index] = i.name
+                        obj_dict["ID"][index] = "load_" + i.name
 
             if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                 # logger.debug('    nominal_voltage {nv};'.format(nv=i.nominal_voltage))
-                obj_dict["V (kV)"][index] = (
-                    i.nominal_voltage / 1000.0
-                )  # template 1_6 says L-L kV
+                # ephasorsim only accepts phase to phase values
+                # opendss reader reads this value incorrectly if there are three phases
+                if i.connection_type == "Y" and len(i.phase_loads) <= 2:
+                    obj_dict["V (kV)"][index] = (
+                        i.nominal_voltage / 1000.0 * math.sqrt(3)
+                    )  # template 1_6 says L-L kV
+                else:
+                    obj_dict["V (kV)"][index] = (
+                        i.nominal_voltage / 1000.0
+                    )  # template 1_6 says L-L kV
+
 
             phase_cnt = 1
             if hasattr(i, "phase_loads") and i.phase_loads is not None:
@@ -1267,6 +1277,8 @@ class Writer(AbstractWriter):
                                             cp=str(complex(j.p, j.q)).strip("()"),
                                         )
                                     )
+                                    print(obj_dict["ID"][index], ": ", "P_" + str(phase_cnt) + " (kW)", j.p)
+                                    print(obj_dict["ID"][index], ": ", "Q_" + str(phase_cnt) + " (kW)", j.q)
                                     obj_dict["P_" + str(phase_cnt) + " (kW)"][index] = (
                                         abs(j.p) / 1000.0
                                     )
@@ -1293,7 +1305,7 @@ class Writer(AbstractWriter):
                                     obj_dict["Type"][index] = "ZIP"
                         phase_cnt += 1
 
-            obj_dict["Bandwidth (pu)"][index] = 0.02  # this doesn't work right
+            obj_dict["Bandwidth (pu)"][index] = 0.2   # this doesn't work right
 
             if i.connection_type == "Y":
                 obj_dict["Conn. type"][index] = "wye"
@@ -1359,8 +1371,8 @@ class Writer(AbstractWriter):
         self._powersources = [i for i in self.m.models if isinstance(i, PowerSource)]
         self._photovoltaics = [i for i in self.m.models if isinstance(i, Photovoltaic)]
 
-        modifier = system_structure_modifier(self.m)
-        modifier.terminals_to_phases()
+        # modifier = system_structure_modifier(self.m)
+        # modifier.terminals_to_phases()
 
         df7 = self.source()
         df1 = self.line()
@@ -1370,7 +1382,7 @@ class Writer(AbstractWriter):
         df9 = self.bus()
 
         writer = pd.ExcelWriter(
-            os.path.join(self.output_path, self.output_name + ".xlsx"),
+            os.path.join(self.output_path, self.output_name + ".xls"),
             engine="xlsxwriter",
         )
 

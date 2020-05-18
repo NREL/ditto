@@ -1789,10 +1789,7 @@ class Reader(AbstractReader):
                             pass
 
                     # phase
-                    try:
-                        phase_windings[p].phase = self.phase_mapping(b1_phases[p])
-                    except:
-                        pass
+                    phase_windings[p].phase = self.phase_mapping(b1_phases[p])
 
                     regulators = dss.utils.class_to_dataframe("RegControl")
                     for reg_name, reg_data in regulators.items():
@@ -2455,6 +2452,11 @@ class Reader(AbstractReader):
 
             # Get the actual phase numbers (in the connection data)
             try:
+                if ".0" in data["bus1"]:
+                    api_load.is_grounded = True
+                else:
+                    api_load.is_grounded = False
+
                 if "." in data["bus1"]:
                     temp = data["bus1"].split(".")
                     bus = temp[0]
@@ -2528,8 +2530,14 @@ class Reader(AbstractReader):
                 pass
 
             # Phase Loads
-            kW /= float(len(phases))  # Load assumed balanced
-            kva /= float(len(phases))  # Load assumed balanced
+            # TODO: is_grounded is required here
+
+            if api_load.is_grounded:
+                kW /= float(len(phases) - 1)  # Load assumed balanced
+                kva /= float(len(phases) - 1)  # Load assumed balanced
+            else:
+                kW /= float(len(phases))  # Load assumed balanced
+                kva /= float(len(phases))  # Load assumed balanced
 
             _phase_loads = []
 
@@ -2538,42 +2546,24 @@ class Reader(AbstractReader):
                 _phase_loads.append(PhaseLoad(model))
                 _phase_loads[i].phase = self.phase_mapping(p)
 
-                # Case one: KW and pf
-                if kW is not None and pf is not None:
+                # Try to get the model
+                if load_model is not None:
+                    _phase_loads[i].model = load_model
+
+                if load_model == 1:
+                    _phase_loads[i].p = kW * 10 ** 3  # DiTT0 in watts
+                    _phase_loads[i].q = (
+                        kW * 10 ** 3 * np.sqrt(1 - pf ** 2)
+                    ) / pf  # DiTT0 in var
+                elif kW is not None and pf is not None:
+                    # Case one: KW and pf
                     _phase_loads[i].p = kW * 10 ** 3  # DiTT0 in watts
                     _phase_loads[i].q = (
                         kW * 10 ** 3 * np.sqrt(1 - pf ** 2)
                     ) / pf  # DiTT0 in var
 
-                # Case two: kvar and pf
-                elif kva is not None and pf is not None:
-                    # Handle the special case where pf=1
-                    if pf == 1:
-                        # in this case, pure reactive power
-                        _phase_loads[i].p = 0.0
-                    else:
-                        _phase_loads[i].p = (pf * kvar * 10 ** 3) / np.sqrt(
-                            1 - pf ** 2
-                        )  # DiTT0 in watts
-                    _phase_loads[i].q = kva * 10 ** 3  # DiTT0 in var
-
-                # Case three kW and kvar
-                elif kW is not None and kva is not None:
-                    _phase_loads[i].p = kW * 10 ** 3  # DiTT0 in Watts
-                    _phase_loads[i].q = kvar * 10 ** 3  # DiTT0 in var
-
-                # Try to get the model
-                try:
-                    _model = int(data["model"])
-                except:
-                    _model = None
-                    pass
-
-                if load_model is not None:
-                    _phase_loads[i].model = load_model
-
                 # ZIPV model (model==8)
-                if _model == 8:
+                if load_model == 8:
                     # Try to get the ZIPV coefficients
                     try:
                         ZIPV = list(map(lambda x: float(x), data["ZIPV"].split()))
