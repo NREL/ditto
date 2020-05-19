@@ -600,38 +600,41 @@ class Writer(AbstractWriter):
         :rtype: dataframe
 
         """
-        obj_dict = {
-            "ID": [],
-            "Num Phases": [],
-            "W1Bus A": [],
-            "W1Bus B": [],
-            "W1Bus C": [],
-            "W1V (kV)": [],
-            "W1S_base (kVA)": [],
-            "W1R (pu)": [],
-            "W1Conn. type": [],
-            "W2Bus A": [],
-            "W2Bus B": [],
-            "W2Bus C": [],
-            "W2V (kV)": [],
-            "W2S_base (kVA)": [],
-            "W2R (pu)": [],
-            "W2Conn. type": [],
-            "Mutual Impedance": [],
-            "Tap A": [],
-            "Tap B": [],
-            "Tap C": [],
-            "Lowest Tap": [],
-            "Highest Tap": [],
-            "Min Range (%)": [],
-            "Max Range (%)": [],
-            "X (pu)": [],
-            "Z0 leakage(pu)": [],
-            "Z1 leakage(pu)": [],
-            "X0/R0": [],
-            "X1/R1": [],
-            "No Load Loss(kW)": [],
-        }
+
+        column_names = [
+            "ID",
+            "Num Phases",
+            "W1Bus A",
+            "W1Bus B",
+            "W1Bus C",
+            "W1V (kV)",
+            "W1S_base (kVA)",
+            "W1R (pu)",
+            "W1Conn. type",
+            "W2Bus A",
+            "W2Bus B",
+            "W2Bus C",
+            "W2V (kV)",
+            "W2S_base (kVA)",
+            "W2R (pu)",
+            "W2Conn. type",
+            "Mutual Impedance",
+            "Tap A",
+            "Tap B",
+            "Tap C",
+            "Lowest Tap",
+            "Highest Tap",
+            "Min Range (%)",
+            "Max Range (%)",
+            "X (pu)",
+            "Z0 leakage(pu)",
+            "Z1 leakage(pu)",
+            "X0/R0",
+            "X1/R1",
+            "No Load Loss(kW)",
+        ]
+
+        obj_dict = {c: [] for c in column_names}
 
         ### Check for a sperated 3 phase transformer. Line to netural or whatever
         index = -1
@@ -664,7 +667,7 @@ class Writer(AbstractWriter):
                         "name": i.name,
                         "i": index,
                         "kv1": i.windings[0].nominal_voltage,
-                        "Tap " + pp: i.windings[0].phase_windings[0].tap_position,
+                        "Tap " + pp: 0,  # i.windings[0].phase_windings[0].tap_position,
                         "kva": i.windings[0].rated_power,
                     }
             else:
@@ -834,7 +837,10 @@ class Writer(AbstractWriter):
             obj_dict["Min Range (%)"][index] = 10
             obj_dict["Max Range (%)"][index] = 10
             obj_dict["Mutual Impedance"][index] = int(0)
-            obj_dict["Num Phases"][index] = int(N_phases[0])
+            if int(N_phases[0]) != 1:
+                obj_dict["Num Phases"][index] = 3
+            else:
+                obj_dict["Num Phases"][index] = 1
             obj_dict["Z0 leakage(pu)"][index] = int(0)
             obj_dict["Z1 leakage(pu)"][index] = int(0)
             obj_dict["X0/R0"][index] = int(0)
@@ -845,39 +851,14 @@ class Writer(AbstractWriter):
         logger.debug("df4")
         logger.debug(df4)
 
-        df4 = df4[
+        df4 = df4[column_names]
+
+        df4.columns = [
             [
-                "ID",
-                "Num Phases",
-                "W1Bus A",
-                "W1Bus B",
-                "W1Bus C",
-                "W1V (kV)",
-                "W1S_base (kVA)",
-                "W1R (pu)",
-                "W1Conn. type",
-                "W2Bus A",
-                "W2Bus B",
-                "W2Bus C",
-                "W2V (kV)",
-                "W2S_base (kVA)",
-                "W2R (pu)",
-                "W2Conn. type",
-                "Mutual Impedance",
-                "Tap A",
-                "Tap B",
-                "Tap C",
-                "Lowest Tap",
-                "Highest Tap",
-                "Min Range (%)",
-                "Max Range (%)",
-                "X (pu)",
-                "Z0 leakage(pu)",
-                "Z1 leakage(pu)",
-                "X0/R0",
-                "X1/R1",
-                "No Load Loss(kW)",
-            ]
+                "", "", "winding From", "", "", "", "", "", "", "winding To", "", "", "", "", "", "",
+                " ", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            ],
+            column_names,
         ]
 
         return df4
@@ -1080,6 +1061,48 @@ class Writer(AbstractWriter):
         logger.debug(obj_dict)
         return df9
 
+    def capacitor(self):
+        """
+        Create capacitors
+        """
+        obj_dict = {
+            "Bus1": [],
+            "Bus2": [],
+            "Bus3": [],
+            "ID": [],
+            "P1(kW)": [],
+            "Q1(kVAr)": [],
+            "P2 (kW)": [],
+            "Q2 (kVAr)": [],
+            "P3(kW)": [],
+            "Q3 (kVAr)": [],
+            "kV (ph-gr RMS)": [],
+            "Status1": [],
+            "Status2": [],
+            "Status3": [],
+        }
+        for i, capacitor in enumerate(self._capacitors):
+            capacitor
+
+        # df3 = pd.DataFrame(obj_dict)
+        # df3 = df3[[
+        #     "Bus1"
+        #     "Bus2"
+        #     "Bus3"
+        #     "ID"
+        #     "P1(kW)"
+        #     "Q1(kVAr)"
+        #     "P2 (kW)"
+        #     "Q2 (kVAr)"
+        #     "P3(kW)"
+        #     "Q3 (kVAr)"
+        #     "kV (ph-gr RMS)"
+        #     "Status1"
+        #     "Status2"
+        #     "Status3"
+        # ]]
+        # return df3
+
     def load(self):
         """Create loads
 
@@ -1277,8 +1300,6 @@ class Writer(AbstractWriter):
                                             cp=str(complex(j.p, j.q)).strip("()"),
                                         )
                                     )
-                                    print(obj_dict["ID"][index], ": ", "P_" + str(phase_cnt) + " (kW)", j.p)
-                                    print(obj_dict["ID"][index], ": ", "Q_" + str(phase_cnt) + " (kW)", j.q)
                                     obj_dict["P_" + str(phase_cnt) + " (kW)"][index] = (
                                         abs(j.p) / 1000.0
                                     )
@@ -1379,10 +1400,11 @@ class Writer(AbstractWriter):
         df2 = self.switch()
         df3 = self.load()
         df4 = self.transformer()
+        df5 = self.capacitor()
         df9 = self.bus()
 
         writer = pd.ExcelWriter(
-            os.path.join(self.output_path, self.output_name + ".xls"),
+            os.path.join(self.output_path, self.output_name + ".xlsx"),
             engine="xlsxwriter",
         )
 
@@ -1408,7 +1430,7 @@ class Writer(AbstractWriter):
 
         worksheet.set_column(0, 25, 16)
 
-        df4.to_excel(writer, "Multiphase Transformer", index=False)
+        df4.to_excel(writer, "Multiphase Transformer")
         # workbook  = writer.book
         worksheet = writer.sheets["Multiphase Transformer"]
 
