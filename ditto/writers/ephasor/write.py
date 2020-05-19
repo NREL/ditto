@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 import os
 import math
 import logging
-
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -853,13 +854,41 @@ class Writer(AbstractWriter):
 
         df4 = df4[column_names]
 
-        df4.columns = [
-            [
-                "", "", "winding From", "", "", "", "", "", "", "winding To", "", "", "", "", "", "",
-                " ", "", "", "", "", "", "", "", "", "", "", "", "", "",
-            ],
-            column_names,
-        ]
+        # df4.columns = [
+        #     [
+        #         "",
+        #         "",
+        #         "winding From",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "winding To",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         " ",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #     ],
+        #     column_names,
+        # ]
 
         return df4
 
@@ -1192,7 +1221,6 @@ class Writer(AbstractWriter):
                         i.nominal_voltage / 1000.0
                     )  # template 1_6 says L-L kV
 
-
             phase_cnt = 1
             if hasattr(i, "phase_loads") and i.phase_loads is not None:
                 phases = ""
@@ -1326,7 +1354,7 @@ class Writer(AbstractWriter):
                                     obj_dict["Type"][index] = "ZIP"
                         phase_cnt += 1
 
-            obj_dict["Bandwidth (pu)"][index] = 0.2   # this doesn't work right
+            obj_dict["Bandwidth (pu)"][index] = 0.2  # this doesn't work right
 
             if i.connection_type == "Y":
                 obj_dict["Conn. type"][index] = "wye"
@@ -1403,47 +1431,81 @@ class Writer(AbstractWriter):
         df5 = self.capacitor()
         df9 = self.bus()
 
-        writer = pd.ExcelWriter(
-            os.path.join(self.output_path, self.output_name + ".xlsx"),
-            engine="xlsxwriter",
-        )
+        excel_file_name = os.path.join(self.output_path, self.output_name + ".xlsx")
+        shutil.copy(os.path.join(os.path.dirname(os.path.realpath(__file__)), "Template.xlsx"), excel_file_name)
 
-        df7.to_excel(writer, "Vsource 3-phase", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Vsource 3-phase"]
-        worksheet.set_column(0, 25, 16)
+        append_df_to_excel(excel_file_name, df9, sheet_name="Bus")
+        append_df_to_excel(excel_file_name, df7, sheet_name="Vsource 3-phase")
+        append_df_to_excel(excel_file_name, df1, sheet_name="Multiphase Line")
+        append_df_to_excel(excel_file_name, df2, sheet_name="Switch")
+        append_df_to_excel(excel_file_name, df4, sheet_name="Multiphase Transformer")
+        append_df_to_excel(excel_file_name, df3, sheet_name="Multiphase Load")
 
-        df9.to_excel(writer, "Bus", index=False)
-        workbook = writer.book
-        worksheet = writer.sheets["Bus"]
+# https://stackoverflow.com/questions/20219254/how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
+def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
+                       truncate_sheet=False, index=False,
+                       **to_excel_kwargs):
+    """
+    Append a DataFrame [df] to existing Excel file [filename]
+    into [sheet_name] Sheet.
+    If [filename] doesn't exist, then this function will create it.
 
-        worksheet.set_column(0, 3, 16)
+    Parameters:
+      filename : File path or existing ExcelWriter
+                 (Example: '/path/to/file.xlsx')
+      df : dataframe to save to workbook
+      sheet_name : Name of sheet which will contain DataFrame.
+                   (default: 'Sheet1')
+      startrow : upper left cell row to dump data frame.
+                 Per default (startrow=None) calculate the last row
+                 in the existing DF and write to the next row...
+      truncate_sheet : truncate (remove and recreate) [sheet_name]
+                       before writing DataFrame to Excel file
+      to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
+                        [can be dictionary]
 
-        df1.to_excel(writer, "Multiphase Line", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Multiphase Line"]
+    Returns: None
+    """
+    from openpyxl import load_workbook
 
-        worksheet.set_column(0, 25, 16)
-        df2.to_excel(writer, "Switch", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Switch"]
+    # ignore [engine] parameter if it was passed
+    if 'engine' in to_excel_kwargs:
+        to_excel_kwargs.pop('engine')
 
-        worksheet.set_column(0, 25, 16)
+    writer = pd.ExcelWriter(filename, engine='openpyxl')
 
-        df4.to_excel(writer, "Multiphase Transformer")
-        # workbook  = writer.book
-        worksheet = writer.sheets["Multiphase Transformer"]
+    try:
+        # try to open an existing workbook
+        writer.book = load_workbook(filename)
 
-        worksheet.set_column(0, 19, 16)
+        # get the last row in the existing Excel sheet
+        # if it was not specified explicitly
+        if startrow is None and sheet_name in writer.book.sheetnames:
+            startrow = writer.book[sheet_name].max_row
 
-        df3.to_excel(writer, "Multiphase Load", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Multiphase Load"]
+        # truncate sheet
+        if truncate_sheet and sheet_name in writer.book.sheetnames:
+            # index of [sheet_name] sheet
+            idx = writer.book.sheetnames.index(sheet_name)
+            # remove [sheet_name]
+            writer.book.remove(writer.book.worksheets[idx])
+            # create an empty sheet [sheet_name] using old index
+            writer.book.create_sheet(sheet_name, idx)
 
-        worksheet.set_column(0, 19, 16)
+        # copy existing sheets
+        writer.sheets = {ws.title:ws for ws in writer.book.worksheets}
+    except FileNotFoundError:
+        # file does not exist yet, we will create it
+        pass
 
-        writer.save()
+    if startrow is None:
+        startrow = 0
 
+    # write out the new sheet
+    df.to_excel(writer, sheet_name, startrow=startrow, header=False, index=index, **to_excel_kwargs)
+
+    # save the workbook
+    writer.save()
 
 if __name__ == "__main__":
     # self.m = Store()
