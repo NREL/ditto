@@ -481,6 +481,9 @@ class Writer(AbstractWriter):
                             # print B
                             # print line.name
                             # exit(0)
+                        if ec != rc:
+                            # FIXME: why does B return positive for off diagonal values
+                            B = -1 * abs(B)
                         obj_dict[name][index] = B
                         result += "{e} ".format(
                             e=self.convert_from_meters(
@@ -1432,7 +1435,10 @@ class Writer(AbstractWriter):
         df9 = self.bus()
 
         excel_file_name = os.path.join(self.output_path, self.output_name + ".xlsx")
-        shutil.copy(os.path.join(os.path.dirname(os.path.realpath(__file__)), "Template.xlsx"), excel_file_name)
+        shutil.copy(
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "Template.xlsx"),
+            excel_file_name,
+        )
 
         append_df_to_excel(excel_file_name, df9, sheet_name="Bus")
         append_df_to_excel(excel_file_name, df7, sheet_name="Vsource 3-phase")
@@ -1441,10 +1447,17 @@ class Writer(AbstractWriter):
         append_df_to_excel(excel_file_name, df4, sheet_name="Multiphase Transformer")
         append_df_to_excel(excel_file_name, df3, sheet_name="Multiphase Load")
 
+
 # https://stackoverflow.com/questions/20219254/how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
-def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
-                       truncate_sheet=False, index=False,
-                       **to_excel_kwargs):
+def append_df_to_excel(
+    filename,
+    df,
+    sheet_name="Sheet1",
+    startrow=None,
+    truncate_sheet=False,
+    index=False,
+    **to_excel_kwargs
+):
     """
     Append a DataFrame [df] to existing Excel file [filename]
     into [sheet_name] Sheet.
@@ -1469,10 +1482,10 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
     from openpyxl import load_workbook
 
     # ignore [engine] parameter if it was passed
-    if 'engine' in to_excel_kwargs:
-        to_excel_kwargs.pop('engine')
+    if "engine" in to_excel_kwargs:
+        to_excel_kwargs.pop("engine")
 
-    writer = pd.ExcelWriter(filename, engine='openpyxl')
+    writer = pd.ExcelWriter(filename, engine="openpyxl")
 
     try:
         # try to open an existing workbook
@@ -1493,7 +1506,7 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
             writer.book.create_sheet(sheet_name, idx)
 
         # copy existing sheets
-        writer.sheets = {ws.title:ws for ws in writer.book.worksheets}
+        writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
     except FileNotFoundError:
         # file does not exist yet, we will create it
         pass
@@ -1502,10 +1515,18 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
         startrow = 0
 
     # write out the new sheet
-    df.to_excel(writer, sheet_name, startrow=startrow, header=False, index=index, **to_excel_kwargs)
+    df.to_excel(
+        writer,
+        sheet_name,
+        startrow=startrow,
+        header=False,
+        index=index,
+        **to_excel_kwargs
+    )
 
     # save the workbook
     writer.save()
+
 
 if __name__ == "__main__":
     # self.m = Store()
