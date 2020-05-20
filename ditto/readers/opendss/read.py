@@ -271,27 +271,27 @@ class Reader(AbstractReader):
             # Set the active bus
             dss.Circuit.SetActiveBus(bus_name)
             # Set the nominal voltage of the corresponding node in the DiTTo Model
-            try:
-                model[bus_name.lower()].nominal_voltage = (
-                    dss.Bus.kVBase() * math.sqrt(3) * 10 ** 3
-                )  # DiTTo in volts
-            except:
-                print("Could not set nominal voltage for bus {b}".format(b=bus_name))
-                pass
+            model[bus_name.lower()].nominal_voltage = (
+                dss.Bus.kVBase() * math.sqrt(3) * 10 ** 3
+            )  # DiTTo in volts
 
         for obj in model.models:
             if hasattr(obj, "nominal_voltage") and obj.nominal_voltage is None:
                 # If the object has a connecting_element attribute
                 if hasattr(obj, "connecting_element"):
                     try:
-                        obj.nominal_voltage = model[
+                        if model[
                             obj.connecting_element
-                        ].nominal_voltage
+                        ].nominal_voltage is not None:
+                            obj.nominal_voltage = model[
+                                obj.connecting_element
+                            ].nominal_voltage
                     except:
                         pass
                 elif hasattr(obj, "from_element"):
                     try:
-                        obj.nominal_voltage = model[obj.from_element].nominal_voltage
+                        if model[obj.from_element].nominal_voltage is not None:
+                            obj.nominal_voltage = model[obj.from_element].nominal_voltage
                     except:
                         pass
             elif isinstance(obj, PowerTransformer) or isinstance(obj, Regulator):
@@ -306,9 +306,12 @@ class Reader(AbstractReader):
                         and obj.windings[x].nominal_voltage is None
                     ):
                         try:
-                            obj.windings[x].nominal_voltage = model[
+                            if model[
                                 mapp[x]
-                            ].nominal_voltage
+                            ].nominal_voltage is not None:
+                                obj.windings[x].nominal_voltage = model[
+                                    mapp[x]
+                                ].nominal_voltage
                         except:
                             pass
 
@@ -590,6 +593,8 @@ class Reader(AbstractReader):
         # Loop over the lines to get the phases
         for name, data in lines.items():
 
+            if not data["enabled"]:
+                continue
             # Parse bus1 data
             if "." in data["bus1"]:
                 temp = data["bus1"].split(".")
@@ -803,9 +808,8 @@ class Reader(AbstractReader):
 
             # Skip Line object if disabled and not a switch
             # (Otherwise it could mean that the switch is open)
-            if not data["Switch"] and not data["enabled"]:
+            if not data["enabled"]:
                 continue
-
             api_line = Line(model)
             api_line.feeder_name = self.source_name
 

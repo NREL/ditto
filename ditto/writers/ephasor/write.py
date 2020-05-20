@@ -1042,7 +1042,6 @@ class Writer(AbstractWriter):
                             )  # PAG No generators so all nodes are PQ buses
                         else:
                             obj_dict["Type"].append("PQ")
-
                 if "a" in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
                 if "b" in letter_phases:
@@ -1195,11 +1194,9 @@ class Writer(AbstractWriter):
                             value.append(None)
                         index += 1
                         load_dict[n_name] = index
-                        if "load_" == n_name[0:5]:
-                            obj_dict["ID"][index] = "load_" + n_name[5:]
-                        else:
-                            obj_dict["ID"][index] = "load_" + n_name
-
+                        if not n_name.startswith("load_"):
+                            n_name = f"load_{n_name}"
+                        obj_dict["ID"][index] = n_name
                     else:
                         index = load_dict[n_name]
                 else:
