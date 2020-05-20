@@ -280,9 +280,7 @@ class Reader(AbstractReader):
                 # If the object has a connecting_element attribute
                 if hasattr(obj, "connecting_element"):
                     try:
-                        if model[
-                            obj.connecting_element
-                        ].nominal_voltage is not None:
+                        if model[obj.connecting_element].nominal_voltage is not None:
                             obj.nominal_voltage = model[
                                 obj.connecting_element
                             ].nominal_voltage
@@ -291,7 +289,9 @@ class Reader(AbstractReader):
                 elif hasattr(obj, "from_element"):
                     try:
                         if model[obj.from_element].nominal_voltage is not None:
-                            obj.nominal_voltage = model[obj.from_element].nominal_voltage
+                            obj.nominal_voltage = model[
+                                obj.from_element
+                            ].nominal_voltage
                     except:
                         pass
             elif isinstance(obj, PowerTransformer) or isinstance(obj, Regulator):
@@ -306,9 +306,7 @@ class Reader(AbstractReader):
                         and obj.windings[x].nominal_voltage is None
                     ):
                         try:
-                            if model[
-                                mapp[x]
-                            ].nominal_voltage is not None:
+                            if model[mapp[x]].nominal_voltage is not None:
                                 obj.windings[x].nominal_voltage = model[
                                     mapp[x]
                                 ].nominal_voltage

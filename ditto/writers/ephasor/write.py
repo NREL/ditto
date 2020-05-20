@@ -1453,7 +1453,7 @@ def append_df_to_excel(
     startrow=None,
     truncate_sheet=False,
     index=False,
-    **to_excel_kwargs
+    **to_excel_kwargs,
 ):
     """
     Append a DataFrame [df] to existing Excel file [filename]
@@ -1518,7 +1518,7 @@ def append_df_to_excel(
         startrow=startrow,
         header=False,
         index=index,
-        **to_excel_kwargs
+        **to_excel_kwargs,
     )
 
     # save the workbook
