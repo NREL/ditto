@@ -113,9 +113,9 @@ class AbstractWriter(object):
 
         if unit.lower() == "mi":
             if inverse:
-                return quantity / 0.000621371
+                return quantity * 1609.344
             else:
-                return 0.000621371 * quantity
+                return quantity / 1609.344
 
         elif unit.lower() == "km":
             if inverse:
