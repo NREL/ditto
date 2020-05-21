@@ -149,9 +149,9 @@ class AbstractReader(object):
 
         if unit.lower() == "mi":
             if inverse:
-                return quantity / 1609.34
+                return quantity / 1609.344
             else:
-                return 1609.34 * quantity
+                return 1609.344 * quantity
 
         elif unit.lower() == "km":
             if inverse:
