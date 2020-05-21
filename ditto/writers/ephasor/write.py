@@ -481,9 +481,6 @@ class Writer(AbstractWriter):
                             # print B
                             # print line.name
                             # exit(0)
-                        if ec != rc:
-                            # FIXME: why does B return positive for off diagonal values
-                            B = -1 * abs(B)
                         obj_dict[name][index] = B
                         result += "{e} ".format(
                             e=self.convert_from_meters(

@@ -859,6 +859,7 @@ class Reader(AbstractReader):
                 pass
 
             if line_unit.lower() not in ["ft", "mi", "m", "km", "kft", "cm", "in"]:
+                raise NotImplementedError("OpenDSS line length is none")
                 line_unit = u"km"
 
             # length
