@@ -288,7 +288,6 @@ class Writer(AbstractWriter):
                 obj_dict["ID"][index] = "None"
 
             units = "mi"
-            result = "temp "
             logger.debug("Type " + str(line.line_type))
 
             for wire in line.wires:
@@ -363,6 +362,7 @@ class Writer(AbstractWriter):
                 # Rmatrix, Xmatrix, and Cmatrix
                 # Can also be defined through the linecodes (check linecodes_flag)
             if hasattr(line, "impedance_matrix") and line.impedance_matrix is not None:
+                print("using impedance matrix")
                 # Use numpy arrays since it is much easier for complex numbers
                 try:
                     zz = line.impedance_matrix
@@ -376,7 +376,6 @@ class Writer(AbstractWriter):
                         )
                     )
 
-                result += "Rmatrix=("
                 logger.debug(R.shape)
 
                 for rc, row in enumerate(R):
@@ -385,41 +384,14 @@ class Writer(AbstractWriter):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = "r" + num_str + " (ohm/Mile)"
-                            obj_dict[name][index] = self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
-
-                result += "Xmatrix=("
+                            obj_dict[name][index] = np.real(elt)
 
                 for rc, row in enumerate(X):
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = "x" + num_str + " (ohm/Mile)"
-                            obj_dict[name][index] = self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-
-                            # B = 1 /(np.real(R[rc,ec]) + np.imag(elt))
-                            # B = 1 / Z[rc,ec]
-                            # name = 'b' + num_str + ' (uS/Mile)'
-                            # obj_dict[name][index] = self.convert_from_meters(np.imag(B), units, inverse=False)
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
+                            obj_dict[name][index] = np.real(elt)
             else:
                 logger.debug("no matrix")
 
@@ -429,7 +401,6 @@ class Writer(AbstractWriter):
             ):
                 C = np.array(line.capacitance_matrix)
                 kf2mil = 0.189394
-                result += "Bmatrix=("
                 for rc, row in enumerate(C):  # Should only be a real matrix
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
@@ -444,17 +415,9 @@ class Writer(AbstractWriter):
                             # -.602 siemens per mile
                             # convet to micor se
                             B = 0
-                            # if np.imag(elt) != 0:
-                            #     B = 1 / self.convert_from_meters(
-                            #         np.imag(elt), units, inverse=True
-                            #     )*1e3*2*60*math.pi
                             if elt != 0:
                                 B = np.real(
-                                    self.convert_from_meters(elt, units, inverse=True)
-                                    * 1e-3
-                                    * 2
-                                    * 60
-                                    * math.pi
+                                    elt * 1e-3 * 2 * 60 * math.pi
                                 )
 
                             # import pdb;pdb.set_trace()
@@ -463,36 +426,7 @@ class Writer(AbstractWriter):
                             # B = np.imag(B) * 0.000621371 * 1e6
                             logger.debug("done", B)
 
-                            # B = self.convert_from_meters(np.imag(B), units, inverse=True)
-                            # print B
-                            # B = -np.real(elt) / (np.real(elt)**2 + np.imag(elt))
-                            # B = -np.imag(elt) / (np.real(elt)**2 + np.imag(elt)**2)
-                            # print self.convert_from_meters(B, units, inverse=True)
-                            # B = - np.imag(elt) / np.abs(elt)**2
-                            # print self.convert_from_meters(B, units, inverse=True)
-                            # B = - self.convert_from_meters(np.imag(elt), units, inverse=True) / self.convert_from_meters(np.abs(elt), units, inverse=True) ** 2
-                            # print B
-                            # B = self.convert_from_meters(B, units, inverse=True)
-                            # print name, self.convert_from_meters(B, units, inverse=False)
-                            # B= elt
-                            # B / kf2mil * 2.65
-                            # B = B/1000 * 2.65
-                            # obj_dict[name][index] = B
-                            # print B
-                            # print line.name
-                            # exit(0)
                         obj_dict[name][index] = B
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
-
-                result += "Cmatrix=("
                 for rc, row in enumerate(C):
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
@@ -509,9 +443,7 @@ class Writer(AbstractWriter):
 
                             B = np.real(elt) * line.length
                             logger.debug("line units ", B)
-                            B = self.convert_from_meters(
-                                np.real(B), units, inverse=False
-                            )
+                            B = np.real(B)
                             B = B * 1e6
                             # print "Siemens line units ", B /(2.6526)
                             # obj_dict[name][index] = B /(2.6526)
@@ -530,25 +462,6 @@ class Writer(AbstractWriter):
                             # print line.name
                             # exit(0)
 
-                            # obj_dict[name][index]=self.convert_from_meters(np.real(elt), units, inverse=True) * 2.65
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
-
-            # # Ampacity
-            # if hasattr(line.wires[0], 'ampacity') and line.wires[0].ampacity is not None:
-            #     result += ' normamps={na}'.format(na=line.wires[0].ampacity)
-            #
-            # # Emergency ampacity
-            # if hasattr(line.wires[0], 'ampacity_emergency') and line.wires[0].ampacity_emergency is not None:
-            #     result += ' emergamps={emer}'.format(emer=line.wires[0].ampacity_emergency)
-
-            logger.debug(result)
         df1 = pd.DataFrame(obj_dict)
         df1 = df1[
             [
@@ -716,7 +629,7 @@ class Writer(AbstractWriter):
                 logger.debug("here", i.reactances, i.reactances[0], i.name)
                 obj_dict["X (pu)"][index] = i.reactances[
                     0
-                ]  # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
+                ] / 100 # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
                 if hasattr(i, "windings") and i.windings is not None:
                     N_phases = []
                     for winding_num, winding in enumerate(i.windings):
@@ -842,11 +755,11 @@ class Writer(AbstractWriter):
                 obj_dict["Num Phases"][index] = 3
             else:
                 obj_dict["Num Phases"][index] = 1
-            obj_dict["Z0 leakage(pu)"][index] = int(0)
-            obj_dict["Z1 leakage(pu)"][index] = int(0)
-            obj_dict["X0/R0"][index] = int(0)
-            obj_dict["X1/R1"][index] = int(0)
-            obj_dict["No Load Loss(kW)"][index] = int(0)
+            obj_dict["Z0 leakage(pu)"][index] = None
+            obj_dict["Z1 leakage(pu)"][index] = None
+            obj_dict["X0/R0"][index] = None
+            obj_dict["X1/R1"][index] = None
+            obj_dict["No Load Loss(kW)"][index] = None
 
         df4 = pd.DataFrame(obj_dict)
         logger.debug("df4")

@@ -948,76 +948,71 @@ class Reader(AbstractReader):
                 Rmatrix = None
                 Xmatrix = None
 
+            print(Rmatrix)
             # Matrices are in Ohms per some unit distance which is the unit defined in the line
             if line_unit is not None and Rmatrix is not None and Xmatrix is not None:
-                try:
-                    if (
-                        isinstance(Rmatrix, list)
-                        and len(Rmatrix) == 1
-                        and "|" in Rmatrix[0]
-                    ):
-                        rowsR = Rmatrix[0].split("|")
-                        rowsR = list(map(lambda x: x.strip(), rowsR))
-                        new_Rmatrix = []
-                        for rowR in rowsR:
-                            new_Rmatrix.append([])
-                            new_Rmatrix[-1] += list(
-                                map(
-                                    lambda x: self.convert_to_meters(
-                                        float(x.strip()), line_unit, inverse=True
-                                    ),
-                                    rowR.split(" "),
-                                )
-                            )
-                        new_Rmatrix = self.symmetrize(new_Rmatrix)
-                    else:
-                        new_Rmatrix = list(
+                if (
+                    isinstance(Rmatrix, list)
+                    and len(Rmatrix) == 1
+                    and "|" in Rmatrix[0]
+                ):
+                    rowsR = Rmatrix[0].split("|")
+                    rowsR = list(map(lambda x: x.strip(), rowsR))
+                    new_Rmatrix = []
+                    for rowR in rowsR:
+                        new_Rmatrix.append([])
+                        new_Rmatrix[-1] += list(
                             map(
-                                lambda x: self.convert_to_meters(
-                                    float(x), line_unit, inverse=True
-                                ),
-                                Rmatrix,
+                                lambda x: float(x.strip()),
+                                rowR.split(" "),
                             )
                         )
+                    new_Rmatrix = self.symmetrize(new_Rmatrix)
+                else:
+                    new_Rmatrix = list(
+                        map(
+                            lambda x: float(x.strip()),
+                            Rmatrix,
+                        )
+                    )
 
-                    if (
-                        isinstance(Xmatrix, list)
-                        and len(Xmatrix) == 1
-                        and "|" in Xmatrix[0]
-                    ):
-                        rowsX = Xmatrix[0].split("|")
-                        rowsX = list(map(lambda x: x.strip(), rowsX))
-                        new_Xmatrix = []
-                        for rowX in rowsX:
-                            new_Xmatrix.append([])
-                            new_Xmatrix[-1] += list(
-                                map(
-                                    lambda x: self.convert_to_meters(
-                                        float(x.strip()), line_unit, inverse=True
-                                    ),
-                                    rowX.split(" "),
-                                )
-                            )
-                        new_Xmatrix = self.symmetrize(new_Xmatrix)
-                    else:
-                        new_Xmatrix = list(
+                if (
+                    isinstance(Xmatrix, list)
+                    and len(Xmatrix) == 1
+                    and "|" in Xmatrix[0]
+                ):
+                    rowsX = Xmatrix[0].split("|")
+                    rowsX = list(map(lambda x: x.strip(), rowsX))
+                    new_Xmatrix = []
+                    for rowX in rowsX:
+                        new_Xmatrix.append([])
+                        new_Xmatrix[-1] += list(
                             map(
                                 lambda x: self.convert_to_meters(
-                                    float(x), line_unit, inverse=True
+                                    float(x.strip()), line_unit, inverse=True
                                 ),
-                                Xmatrix,
+                                rowX.split(" "),
                             )
                         )
-                    new_Rmatrix = np.array(new_Rmatrix)
-                    new_Xmatrix = np.array(new_Xmatrix)
-                    Z = new_Rmatrix + 1j * new_Xmatrix
-                    if Z.ndim == 1:
-                        Z = [Z.tolist()]
-                    else:
-                        Z = Z.tolist()
-                    api_line.impedance_matrix = Z
-                except:
-                    pass
+                    new_Xmatrix = self.symmetrize(new_Xmatrix)
+                else:
+                    new_Xmatrix = list(
+                        map(
+                            lambda x: self.convert_to_meters(
+                                float(x), line_unit, inverse=True
+                            ),
+                            Xmatrix,
+                        )
+                    )
+                new_Rmatrix = np.array(new_Rmatrix)
+                new_Xmatrix = np.array(new_Xmatrix)
+                Z = new_Rmatrix + 1j * new_Xmatrix
+                if Z.ndim == 1:
+                    Z = [Z.tolist()]
+                else:
+                    Z = Z.tolist()
+                print(new_Rmatrix)
+                api_line.impedance_matrix = Z
 
             if "cmatrix" in data:
                 Cmatrix = data["cmatrix"]
