@@ -78,7 +78,7 @@ $ flake8 ditto tests
 $ pytest -sv
 ```
 
-To get flake8, just `pip install flake` into your virtualenv.
+To get flake8, just `pip install flake8` into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub:
 
