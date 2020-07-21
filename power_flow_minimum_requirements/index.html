@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Power Flow Minimum Requirements - ditto</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Power Flow Minimum Requirements";
+    var mkdocs_page_input_path = "power_flow_minimum_requirements.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> ditto</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../authors/">Credits</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../cli-examples/">DiTTo examples</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../contributing/">Contributing</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../history/">History</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../metrics/">Metrics documentation</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../modifications/">Modifications documentation</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../plugin/">Plugin</a>
+                    </li>
+                </ul>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Power Flow Minimum Requirements</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#node">Node</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#line">Line</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#wire">Wire</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#powertransformer">PowerTransformer</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#winding">Winding</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#phasewinding">PhaseWinding</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#regulator">Regulator</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#capacitor">Capacitor</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#phasecapacitor">PhaseCapacitor</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#load">Load</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#phaseload">PhaseLoad</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#powersource">PowerSource</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../usage/">Usage</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Developer guide</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../developer-guide/">Index</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../developer-guide/docs/">Docs</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../developer-guide/install/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../developer-guide/style/">Style</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">ditto</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Power Flow Minimum Requirements</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="power-flow-minimum-requirements">Power Flow Minimum Requirements</h1>
+<p>This document provides a list of the smallest possible set of DiTTo attributes required during a conversion if a snapshot power flow needs to be run on the output.</p>
+<h2 id="node">Node</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>phases</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="line">Line</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>length</code></td>
+<td>Needed since some parameters are specified in per-unit length.</td>
+</tr>
+<tr>
+<td><code>line_type</code></td>
+<td>Equations are different for overhead and underground lines.</td>
+</tr>
+<tr>
+<td><code>from_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>to_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>wires</code></td>
+<td>Wires are needed even if only the phase will be defined for each wire (see <code>Wire</code> section).</td>
+</tr>
+<tr>
+<td><code>impedance_matrix</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: If switching equipments, fuses and so on need to be also modeled, then use the flag attributes (ex: <code>is_switch</code>).</p>
+<h2 id="wire">Wire</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>phase</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ampacity</code></td>
+<td>Not sure about this one, might not be absolutely required for power flow</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: This is assuming the impedance matrix of the line has been provided. Otherwise, wire parameters like <code>resistance</code>, <code>gmr</code>, and so on need to be defined here.</p>
+<h2 id="powertransformer">PowerTransformer</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>from_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>to_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>reactances</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>windings</code></td>
+<td>Need to provide some <code>Winding</code> information (see <code>Winding</code> section).</td>
+</tr>
+<tr>
+<td><code>loadloss</code></td>
+<td>Less sure about this one.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="winding">Winding</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connection_type</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>nominal_voltage</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>phase_windings</code></td>
+<td>Need to provide some <code>PhaseWinding</code> information (see <code>PhaseWinding</code> section).</td>
+</tr>
+<tr>
+<td><code>rated_power</code></td>
+<td>This is supposed to move to <code>PowerTransformer</code> one day as this is confusing...</td>
+</tr>
+</tbody>
+</table>
+<h2 id="phasewinding">PhaseWinding</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>phase</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="regulator">Regulator</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>bandcenter</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>bandwidth</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>from_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>to_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>windings</code></td>
+<td>Need to provide some <code>Winding</code> information (see <code>Winding</code> section).</td>
+</tr>
+<tr>
+<td><code>setpoint</code></td>
+<td>This is a recent addition from Tarek, not sure how this is used.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="capacitor">Capacitor</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>nominal_voltage</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>connection_type</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>low</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>high</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>connecting_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+<tr>
+<td><code>phase_capacitors</code></td>
+<td>Need to provide some <code>PhaseCapacitor</code> information (see <code>PhaseCapacitor</code> section).</td>
+</tr>
+<tr>
+<td><code>measuring_element</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="phasecapacitor">PhaseCapacitor</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>phase</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>var</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="load">Load</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>nominal_voltage</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>connection_type</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>phase_loads</code></td>
+<td>Need to provide some <code>PhaseLoad</code> information (see <code>PhaseLoad</code> section).</td>
+</tr>
+<tr>
+<td><code>connecting_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="phaseload">PhaseLoad</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>phase</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="powersource">PowerSource</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>nominal_voltage</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>phases</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>is_sourcebus</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rated_power</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>connecting_element</code></td>
+<td>Connectivity is required.</td>
+</tr>
+</tbody>
+</table>
+<p>Note: You need to define a power source at the feeder head.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../usage/" class="btn btn-neutral float-right" title="Usage">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../plugin/" class="btn btn-neutral" title="Plugin"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../plugin/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../usage/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
