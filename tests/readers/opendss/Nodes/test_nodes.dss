@@ -17,4 +17,3 @@ New Load.load1 phases=3 bus1=b1 conn=wye kV=4.16 kW=5400 Kvar=4285 model=1
 Set Voltagebases=[12.47]
 Calcvoltagebases
 Solve
-Buscoords buscoords.dss
