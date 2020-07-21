@@ -27,13 +27,15 @@ def test_opendss_center_transformer():
     ~ conns=[delta wye wye]
     """
 
-    master_file = tempfile.NamedTemporaryFile(mode="w")
+    master_file = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
+    # TODO: figure out why named temporary file doesn't work as expected on windows
+    # master_file = tempfile.NamedTemporaryFile(mode="w")
 
-    with open(master_file.name, "w") as f:
+    with open(master_file, "w") as f:
         f.write(opendss_test_data)
 
     m = Store()
-    r = Reader(master_file=master_file.name)
+    r = Reader(master_file=master_file)
     r.parse(m)
     m.set_names()
 
@@ -72,13 +74,15 @@ def test_opendss_transformer():
     ~ wdg=2 bus=634.1.2.3       conn=Wye kv=0.480    kva=500    %r=.55   XLT=1
     """
 
-    master_file = tempfile.NamedTemporaryFile(mode="w")
+    master_file = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
+    # TODO: figure out why named temporary file doesn't work as expected on windows
+    # master_file = tempfile.NamedTemporaryFile(mode="w")
 
-    with open(master_file.name, "w") as f:
+    with open(master_file, "w") as f:
         f.write(opendss_test_data)
 
     m = Store()
-    r = Reader(master_file=master_file.name,)
+    r = Reader(master_file=master_file,)
     r.parse(m)
     m.set_names()
 

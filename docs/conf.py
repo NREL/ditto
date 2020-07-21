@@ -60,15 +60,11 @@ def which(program):
 if which("pandoc") is None:
     import warnings
     warnings.warn("`pandoc` not found in PATH. Please consider installing Pandoc or consult the developer documentation")
-    from recommonmark.parser import CommonMarkParser as MarkdownParser
-
 
 extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages',
-    'nbsphinx',
     'IPython.sphinxext.ipython_console_highlighting',
-    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -77,10 +73,10 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
-# source_suffix = '.rst'
-
-source_parsers = {'.md': MarkdownParser}
+source_suffix = ['.md']
+source_parsers = {
+   '.md': MarkdownParser,
+}
 
 # The master toctree document.
 master_doc = 'index'
