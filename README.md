@@ -15,7 +15,7 @@ Readers and writers are then implemented to perform the translation from a given
 ### Install DiTTo
 
 ```bash
-pip install git+https://github.com/NREL/ditto.git@master#egg=ditto[all]
+pip install git+https://github.com/NREL/ditto.git@v0.1.0#egg=ditto[all]
 ```
 
 ### Basic Usage
