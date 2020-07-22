@@ -1,0 +1,41 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macOS-latest
+          - ubuntu-latest
+          - windows-latest
+        python-version: [ '3.6','3.7','3.8' ]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install -U pip
+        pip install ".[all,test]"
+    - name: run pytests
+      run: |
+        pip install pytest pytest-ordering pytest-cov
+        pytest -vvv
+    - name: Generate coverage report
+      run: |
+        pytest --cov=./ --cov-report=xml:unit.coverage.xml
+    - name: Upload unit test coverage to Codecov
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./unit.coverage.xml
+        flags: unit
+        env_vars: PYTHON
+        name: codecov-unit
+        fail_ci_if_error: false

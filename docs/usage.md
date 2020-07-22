@@ -41,7 +41,7 @@ cyme_writer.write(m)
 
 Here is a simplified view of the code structure (only the key components are displayed):
 
-```reStructuredText
+```eval_rst
 DiTTo
 │   README.md
 │   docs
