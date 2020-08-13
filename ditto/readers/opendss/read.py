@@ -209,11 +209,6 @@ class Reader(AbstractReader):
 
         self.is_opendssdirect_built = True
 
-        # Disable Pandas such that we deal only with dictionaries
-        # This remove one dependancy
-        logger.info("Turning off pandas in OpenDSSdirect.")
-        dss.utils.is_pandas_installed = False
-
         logger.info("build_opendssdirect succesful")
 
         return 1
@@ -346,7 +341,7 @@ class Reader(AbstractReader):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        sources = dss.utils.class_to_dataframe("Vsource")
+        sources = _dss_class_to_dict("Vsource")
 
         for source_name, source_data in sources.items():
 
@@ -585,7 +580,7 @@ class Reader(AbstractReader):
                     buses[name]["positions"] = [X, Y]
 
         # Extract the line data
-        lines = dss.utils.class_to_dataframe("line")
+        lines = _dss_class_to_dict("line")
 
         # Loop over the lines to get the phases
         for name, data in lines.items():
@@ -663,7 +658,7 @@ class Reader(AbstractReader):
                 buses[b2_name]["phases"] = np.unique(buses[b2_name]["phases"]).tolist()
 
         # Extract the transformer data
-        transformers = dss.utils.class_to_dataframe("transformer")
+        transformers = _dss_class_to_dict("transformer")
         # Loop over the transformers to get the phases
         for name, data in transformers.items():
 
@@ -700,7 +695,7 @@ class Reader(AbstractReader):
                     ).tolist()
 
         # Extract the load data
-        loads = dss.utils.class_to_dataframe("load")
+        loads = _dss_class_to_dict("load")
         # Loop over the loads to get the phases
         for name, data in loads.items():
             # Parse bus1 data
@@ -779,19 +774,19 @@ class Reader(AbstractReader):
         # Here, we get all the line names which have a fuse
         # Even if a fuse is disabled we identify it as a fuse.
         # If the line is disabled we ignore it unless it's a switch
-        fuses = dss.utils.class_to_dataframe("Fuse")
+        fuses = _dss_class_to_dict("Fuse")
         fuses_names = [
             d["MonitoredObj"].lower().split(".")[1] for name, d in fuses.items()
         ]
 
         # In the same way, reclosers are also attached to line objects
-        reclosers = dss.utils.class_to_dataframe("recloser")
+        reclosers = _dss_class_to_dict("recloser")
         reclosers_names = [
             d["MonitoredObj"].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
         start = time.time()
-        lines = dss.utils.class_to_dataframe("Line")
+        lines = _dss_class_to_dict("Line")
 
         middle = time.time()
         logger.debug("Line class to dataframe= {}".format(middle - start))
@@ -832,7 +827,7 @@ class Reader(AbstractReader):
 
             # If we have a valid linecode, try to get the data
             if linecode is not None:
-                linecodes = dss.utils.class_to_dataframe("linecode")
+                linecodes = _dss_class_to_dict("linecode")
                 if "linecode." + linecode.lower() in linecodes:
                     linecode_data = linecodes["linecode." + linecode.lower()]
                 else:
@@ -1083,7 +1078,7 @@ class Reader(AbstractReader):
             # If we have a geometry code, try to get the corresponding data
             if line_geometry_code is not None:
                 try:
-                    line_geometries = dss.utils.class_to_dataframe("linegeometry")
+                    line_geometries = _dss_class_to_dict("linegeometry")
                     this_line_geometry = line_geometries[
                         "linegeometry.{}".format(line_geometry_code)
                     ]
@@ -1277,8 +1272,8 @@ class Reader(AbstractReader):
                     is_cable = False
                     if this_line_wireData_code is not None:
                         try:
-                            all_wire_data = dss.utils.class_to_dataframe("wiredata")
-                            CNData = dss.utils.class_to_dataframe("CNData")
+                            all_wire_data = _dss_class_to_dict("wiredata")
+                            CNData = _dss_class_to_dict("CNData")
                             for cnname, cnvalues in CNData.items():
                                 if this_line_wireData_code == cnname.split(".")[1]:
                                     is_cable = True
@@ -1462,7 +1457,7 @@ class Reader(AbstractReader):
 
                     # Concentric Neutral
                     if is_cable == True:
-                        cndata = dss.utils.class_to_dataframe("CNData")
+                        cndata = _dss_class_to_dict("CNData")
                         if cndata is not None:
                             for name, data in cndata.items():
                                 try:
@@ -1547,7 +1542,7 @@ class Reader(AbstractReader):
         :rtype: int
         """
 
-        transformers = dss.utils.class_to_dataframe("transformer")
+        transformers = _dss_class_to_dict("transformer")
         self._transformers = []
 
         for name, data in transformers.items():
@@ -1794,7 +1789,7 @@ class Reader(AbstractReader):
                     except:
                         pass
 
-                    regulators = dss.utils.class_to_dataframe("RegControl")
+                    regulators = _dss_class_to_dict("RegControl")
                     for reg_name, reg_data in regulators.items():
 
                         if (
@@ -1848,8 +1843,8 @@ class Reader(AbstractReader):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        regulators = dss.utils.class_to_dataframe("RegControl")
-        transformers = dss.utils.class_to_dataframe("Transformer")
+        regulators = _dss_class_to_dict("RegControl")
+        transformers = _dss_class_to_dict("Transformer")
         self._regulators = []
 
         for name, data in regulators.items():
@@ -2172,8 +2167,8 @@ class Reader(AbstractReader):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        capacitors = dss.utils.class_to_dataframe("capacitor")
-        cap_control = dss.utils.class_to_dataframe("CapControl")
+        capacitors = _dss_class_to_dict("capacitor")
+        cap_control = _dss_class_to_dict("CapControl")
         self._capacitors = []
 
         for name, data in capacitors.items():
@@ -2381,7 +2376,7 @@ class Reader(AbstractReader):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        loads = dss.utils.class_to_dataframe("Load")
+        loads = _dss_class_to_dict("Load")
         self._loads = []
 
         for name, data in loads.items():
@@ -2610,7 +2605,7 @@ class Reader(AbstractReader):
 
     def parse_storage(self, model):
         """Parse the storages."""
-        storages = dss.utils.class_to_dataframe("storage")
+        storages = _dss_class_to_dict("storage")
 
         for name, data in storages.items():
 
@@ -2764,3 +2759,7 @@ class Reader(AbstractReader):
                     pass
 
                 api_storage.phase_storages.append(api_phase_storage)
+
+
+def _dss_class_to_dict(class_name):
+    return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")
