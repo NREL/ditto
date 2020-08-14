@@ -4674,12 +4674,12 @@ class Reader(AbstractReader):
                 X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
                 complex0 = complex(R0, X0)
                 complex1 = complex(R1, X1)
-                matrix = np.matrix(
+                matrix = np.array(
                     [[complex0, 0, 0], [0, complex1, 0], [0, 0, complex1]]
                 )
                 a = 1 * cmath.exp(2 * math.pi * 1j / 3)
-                T = np.matrix([[1.0, 1.0, 1.0], [1.0, a * a, a], [1.0, a, a * a]])
-                T_inv = T.I
+                T = np.array([[1.0, 1.0, 1.0], [1.0, a * a, a], [1.0, a, a * a]])
+                T_inv = np.linalg.inv(T)
                 Zabc = T * matrix * T_inv
                 Z_perc = Zabc.item((0, 0))
                 R_perc = Z_perc.real / 2.0
