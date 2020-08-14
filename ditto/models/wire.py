@@ -57,8 +57,7 @@ class Wire(DiTToHasTraits):
     )
     insulation_thickness = Float(
         help="""Thickness of the insulation around the secondary live conductors""",
-        default=None,
-    )
+    ).tag(default=None)
     is_fuse = Bool(
         help="""This flag indicates whether or not this wire is also a fuse""",
         default_value=None,
