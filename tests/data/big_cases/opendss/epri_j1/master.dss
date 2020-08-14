@@ -6,7 +6,7 @@ Clear
 
 Redirect LoadShapes_mod.dss
 Redirect substation.dss
-Redirect lineCodes.dss
+Redirect linecodes.dss
 Redirect lines.dss
 Redirect transformers.dss
 Redirect LoadsInd.dss
