@@ -18,6 +18,7 @@ from ditto.default_values.default_values_json import Default_Values
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
 
+@pytest.mark.xfail(reason="This test fails when opendssdirect v0.5.0 is used.")
 def test_linegeometries():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_linegeometries.dss"))

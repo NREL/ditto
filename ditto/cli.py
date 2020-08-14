@@ -54,6 +54,9 @@ def cli(ctx, verbose):
 @click.option("--writers", is_flag=True, help="List all available writers")
 @click.pass_context
 def list(ctx, readers, writers):
+    if not readers and not writers:
+        readers = True
+        writers = True
 
     click.echo("List of available plugins:")
     reader_names = []
@@ -74,10 +77,18 @@ def list(ctx, readers, writers):
 
 
 @cli.command()
-@click.option("--input", type=click.Path(exists=True), help="Path to input file")
+@click.option(
+    "--input",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to input file",
+)
 @click.option("--from", help="Convert from OpenDSS, Cyme, Gridlab-D, Demo, JSON")
 @click.option(
-    "--output", type=click.Path(exists=True), help="Path to the metrics output file"
+    "--output",
+    type=click.Path(exists=True),
+    required=True,
+    help="Metrics output directory",
 )
 @click.option("--to", help="Format for the metrics output file. xlsx or json")
 @click.option(
@@ -98,32 +109,28 @@ def metric(ctx, **kwargs):
             "Cannot read from format '{}'".format(kwargs["from"])
         )
 
-    if kwargs["input"] is None:
-        raise click.BadOptionUsage(
-            "input",
-            "--input must be provided."
-        )
-
-    from_reader_name = kwargs["from"]
-
-    try:
-        MetricComputer(
-            registered_reader_class=_load(registered_readers, from_reader_name),
-            input_path=kwargs["input"],
-            output_format=kwargs["to"],
-            output_path=kwargs["output"],
-            by_feeder=kwargs["feeder"],
-        ).compute()
-    except Exception as e:
-        # TODO: discuss whether we should raise exception here?
-        sys.exit(1)  # TODO: Set error code based on exception
-    else:
-        sys.exit(0)
+    MetricComputer(
+        registered_reader_class=_load(registered_readers, kwargs["from"]),
+        input_path=kwargs["input"],
+        output_format=kwargs["to"],
+        output_path=kwargs["output"],
+        by_feeder=kwargs["feeder"],
+    ).compute()
 
 
 @cli.command()
-@click.option("--input", type=click.Path(exists=True), help="Path to input file")
-@click.option("--output", type=click.Path(exists=True), help="Path to output file")
+@click.option(
+    "--input",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to input file",
+)
+@click.option(
+    "--output",
+    type=click.Path(exists=True),
+    required=True,
+    help="Output directory",
+)
 @click.option("--from", help="Convert from OpenDSS, Cyme, GridLAB-D, Demo")
 @click.option("--to", help="Convert to OpenDSS, Cyme, GridLAB-D, Demo")
 @click.option(
@@ -156,20 +163,6 @@ def convert(ctx, **kwargs):
             "Cannot write to format '{}'".format(kwargs["to"])
         )
 
-    if kwargs["input"] is None:
-        raise click.BadOptionUsage(
-            "input",
-            "Both --input and --output must be provided."
-        )
-
-    if kwargs["output"] is None:
-        raise click.BadOptionUsage(
-            "output",
-            "Both --input and --output must be provided.")
-
-    from_reader_name = kwargs["from"]
-    to_writer_name = kwargs["to"]
-
     if kwargs["jsonize"] is not None:
         json_path = kwargs["jsonize"]
         registered_json_writer_class = registered_writers["json"].load()
@@ -177,34 +170,17 @@ def convert(ctx, **kwargs):
         json_path = False
         registered_json_writer_class = None
 
-    if kwargs["default_values"] is not None:
-        default_values_json = kwargs["default_values"]
-    else:
-        default_values_json = None
-
-    if kwargs["remove_opendss_default_values"] is True:
-        remove_opendss_default_values_flag = True
-    else:
-        remove_opendss_default_values_flag = False
-
-    if kwargs["warehouse"] is not None:
-        synergi_warehouse_path = kwargs["warehouse"]
-    else:
-        synergi_warehouse_path = None
-
     Converter(
-        registered_reader_class=_load(registered_readers, from_reader_name),
-        registered_writer_class=_load(registered_writers, to_writer_name),
+        registered_reader_class=_load(registered_readers, kwargs["from"]),
+        registered_writer_class=_load(registered_writers, kwargs["to"]),
         input_path=kwargs["input"],
         output_path=kwargs["output"],
         json_path=json_path,
         registered_json_writer_class=registered_json_writer_class,
-        default_values_json=default_values_json,
-        remove_opendss_default_values_flag=remove_opendss_default_values_flag,
-        synergi_warehouse_path=synergi_warehouse_path,
+        default_values_json=kwargs["default_values"],
+        remove_opendss_default_values_flag=kwargs["remove_opendss_default_values"],
+        synergi_warehouse_path=kwargs["warehouse"],
     ).convert()
-
-    sys.exit(0)
 
 
 if __name__ == "__main__":
