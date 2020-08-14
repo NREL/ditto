@@ -20,8 +20,7 @@ class Timeseries(DiTToHasTraits):
     )
     interval = Float(
         help="""This is the interval in the default units that the timeseries data is recorded at. E.g. minute data would have an interval of 60 for a unit of seconds""",
-        default=None,
-    )
+    ).tag(default=None)
     data_location = Unicode(
         help="""The absolute location on disk of the data""", default_value=None
     )
@@ -32,8 +31,7 @@ class Timeseries(DiTToHasTraits):
     )
     loaded = Int(
         help="""A boolean describing whether the data is in memory or on disk. If this is 1, the data is loaded into the data field. Otherwise it is not in memory and is on disk at data_location""",
-        default=None,
-    )
+    ).tag(default=None)
 
     scale_factor = Float(
         help="""A number to multiply the entire timeseries by for scaling purposes""",
@@ -42,12 +40,10 @@ class Timeseries(DiTToHasTraits):
 
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
-        default=None,
-    )
+    ).tag(default=None)
     feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
-    )
-
+        help="""The name of the feeder the object is on.""",
+    ).tag(default=None)
 
     def build(self, model):
         self._model = model

@@ -118,11 +118,10 @@ class Photovoltaic(DiTToHasTraits):
     # These attributes are filled once the DiTTo model has been created using the Network module
     substation_name = Unicode(
         help="""The name of the substation to which the object is connected.""",
-        default=None,
-    )
+    ).tag(default=None)
     feeder_name = Unicode(
-        help="""The name of the feeder the object is on.""", default=None
-    )
+        help="""The name of the feeder the object is on.""",
+    ).tag(default=None)
 
     def build(self, model):
         self._model = model
