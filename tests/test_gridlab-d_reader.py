@@ -11,6 +11,7 @@ import os
 import ditto.models.base as bs
 from ditto.readers.gridlabd.read import Reader
 from ditto.store import Store
+import pytest
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 model = '4node.glm'
@@ -212,26 +213,62 @@ def verify_component_values(component_dict, model_obj, component, to_append):
     csv_set = get_non_empty_columns(component_dict[component])
     if (component == 'loads') or (component == 'phase_loads'):
         names = list(component_dict['loads']['Load.name'])
-        obj_names = ['load_' + name for name in names]
+        obj_names = []
+        for model in m.model_names:
+            if str(type(m.model_names[model]))[-6:-2] == 'Load':
+                obj_names.append(m.model_names[model].name)
     elif component == 'nodes':
         obj_names= []
         for model in m.model_names:
             if str(type(m.model_names[model]))[-6:-2] == 'Node':
                 obj_names.append(m.model_names[model].name)
+    elif component == 'transformers':
+        obj_names= []
+        for model in m.model_names:
+            if str(type(m.model_names[model]))[43:-2] == 'Transformer':
+                obj_names.append(m.model_names[model].name)
     else:
         obj_names = names
     df = component_dict[component]
-
     if component == 'phase_loads':
         # phase_load object lies inside load objects
         csv_set.remove(to_append + 'name')
-        loads = [key for key in m.model_names.keys() if 'load' in key]
+        loads = []
+        for model in m.model_names:
+            if str(type(m.model_names[model]))[-6:-2] == 'Load':
+                loads.append(m.model_names[model].name)
         for load in loads:
             phase_loads = model_obj.model_names[load].phase_loads
             for p_count, name in enumerate(names):
                 for t in csv_set:
                     in_model = getattr(phase_loads[p_count], t[len(to_append):])
                     in_csv = df[df[to_append + 'name'] == name[0:4] + '_' + name[4:] + '_' + str(p_count + 1)][t]
+                    if t == 'PhaseLoad.q':
+                        in_csv = in_csv.round(3)
+                    if isinstance(in_model, str):
+                        if len(list(in_csv)) > 0:
+                            ind = in_csv.index[0]
+                            assert in_csv[ind] == in_model
+                            assert str(in_csv[0]) == in_model
+                    elif isinstance(in_csv, bool):
+                        assert float(bool(in_csv[0])) == in_model
+                    elif isinstance(in_model, float):
+                        in_model = round(in_model, 4)
+                        assert float(in_csv) == in_model
+    if component == 'wires':
+        # phase_load object lies inside load objects
+        csv_set.remove(to_append + 'name')
+        lines = []
+        for model in m.model_names:
+            if str(type(m.model_names[model]))[-6:-2] == 'Line':
+                lines.append(m.model_names[model].name)
+        for line in lines:
+            wires = model_obj.model_names[line].wires
+            for w_count, name in enumerate(names):
+                for t in csv_set:
+                    in_model = getattr(wires[w_count], t[len(to_append):])
+                    in_csv = df[df[to_append + 'name'] == name][t]
+
                     if isinstance(in_model, str):
                         if len(list(in_csv)) > 0:
                             ind = in_csv.index[0]
@@ -246,11 +283,15 @@ def verify_component_values(component_dict, model_obj, component, to_append):
                         in_model = in_model.round(4)
                         if len(list(in_csv)>0):
                             assert float(list(in_csv)[0]) == in_model'''
+
     elif (component == 'windings') or (component == 'phase_windings'):
         names = list(component_dict['windings']['Winding.name'])
         # windings object lies inside transformer objects
         csv_set.remove(to_append + 'name')
-        transformers = list(component_dict['transformers']['Transformer.name'])
+        transformers = []
+        for model in m.model_names:
+            if str(type(m.model_names[model]))[43:-2] == 'Transformer':
+                transformers.append(m.model_names[model].name)
         for transformer in transformers:
             windings = model_obj.model_names[transformer].windings
             for p_count, name in enumerate(names):
@@ -306,6 +347,7 @@ def verify_component_values(component_dict, model_obj, component, to_append):
                     if component == 'transformers':
                         if t == 'Transformer.reactances':
                             in_csv = [float(in_csv.replace('[', '').replace(']', ''))]
+
                     try:
                         if isinstance(in_csv, str):
                             if isinstance(in_model, list):
@@ -320,6 +362,12 @@ def verify_component_values(component_dict, model_obj, component, to_append):
                     except AssertionError as e:
                         if str(e) == 'assert 12.47 == 7200.0' or 'assert 4.16 == 2400.0':
                             raise
+                            """msg = "Ignore broken Last.fm API: " + str(e)
+                            print(msg)
+                            pytest.skip(msg)
+                        else:
+                            raise (e)"""
+
             if phase_count > 0:
                 for p_count in range(phase_count):
                     csv_phase_value = list(df[df[to_append + 'name'] == name][to_append + 'phases[' + str(p_count) + ']'])
@@ -343,7 +391,7 @@ print(comp_dict)
 
 ############################################################
 
-'''
+
 def test_verify_node():
     verify_component(comp_dict, m, 'nodes', 'Node.')
 
@@ -364,7 +412,7 @@ def test_comp_node_values():
 # 3- Verify line component values
 
 ############################################################
-'''
+
 def test_verify_lines():
     verify_component(comp_dict, m, 'lines', 'Line.')
 '''
@@ -392,7 +440,6 @@ def test_verify_loads():
 
 def test_verify_load_properties():
     verify_properties(comp_dict, m, 'loads', 'Load.')
-"""
 
 def test_comp_load_values():
     verify_component_values(comp_dict, m, 'loads', 'Load.')
@@ -406,7 +453,7 @@ def test_comp_load_values():
 # 3- Verify transformer component values
 
 ############################################################
-"""
+
 def test_verify_transformers():
     verify_component(comp_dict, m, 'transformers', 'Transformer.')
 
@@ -414,7 +461,7 @@ def test_verify_transformers():
 def test_verify_transformer_properties():
     verify_properties(comp_dict, m, 'transformers', 'Transformer.')
 
-"""
+
 def test_comp_transformer_values():
     verify_component_values(comp_dict, m, 'transformers', 'Transformer.')
 
@@ -427,14 +474,14 @@ def test_comp_transformer_values():
 # 3- Verify phase_load component values
 
 #############################################################
-"""
+
 def test_verify_phase_load():
     verify_component(comp_dict, m, 'phase_loads', 'PhaseLoad.')
 
 def test_verify_phase_load_properties():
     verify_properties(comp_dict, m, 'phase_loads', 'PhaseLoad.')
 
-"""
+
 
 def test_comp_phase_load_values():
     verify_component_values(comp_dict, m, 'phase_loads', 'PhaseLoad.')
@@ -448,13 +495,13 @@ def test_comp_phase_load_values():
 # 3- Verify winding component values
 
 #############################################################
-"""
+
 def test_verify_winding():
     verify_component(comp_dict, m, 'windings', 'Winding.')
 
 def test_verify_winding_properties():
     verify_properties(comp_dict, m, 'windings', 'Winding.')
-"""
+
 
 
 def test_comp_winding_values():
@@ -469,14 +516,14 @@ def test_comp_winding_values():
 # 3- Verify phase winding component values
 
 #############################################################
-"""
+
 def test_verify_phase_winding():
     verify_component(comp_dict, m, 'phase_windings', 'PhaseWinding.')
 
 
 def test_verify_phase_winding_properties():
     verify_properties(comp_dict, m, 'phase_windings', 'PhaseWinding.')
-"""
+
 
 def test_comp_phase_winding_values():
     verify_component_values(comp_dict, m, 'phase_windings', 'PhaseWinding.')
@@ -490,15 +537,14 @@ def test_comp_phase_winding_values():
 # 3- Verify winding component values
 
 #############################################################
-"""
+
 def test_verify_wire():
     verify_component(comp_dict, m, 'wires', 'Wire.')
 
 
 def test_verify_wire_properties():
     verify_properties(comp_dict, m, 'wires', 'Wire.')
-"""
+
 
 def test_comp_wire_values():
     verify_component_values(comp_dict, m, 'wires', 'Wire.')
-"""
