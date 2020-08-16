@@ -123,6 +123,7 @@ class Shaper:
     events: float
 
 
+@unique
 class ViolationFlag(IntEnum):
     ALLVIOLATIONS = 255
     VIOLATION8 = 128
@@ -196,6 +197,7 @@ class CsvReader:
     filename: str
 
 
+@dataclass
 class ModuleClimate:
     pass
 
@@ -265,27 +267,32 @@ class ModuleResidential:
     aux_cutin_temperature: float  # [degF]
 
 
+@unique
 class ResidentialEnduseConfiguration(IntEnum):
     IS220 = 1
     IS110 = 0
 
 
+@unique
 class ResidentialEnduseOverride(IntEnum):
     OFF = 2
     ON = 1
     NORMAL = 0
 
 
+@unique
 class ResidentialEndusePowerState(IntEnum):
     UNKNOWN = 2
     ON = 1
     OFF = 0
 
 
+@dataclass
 class Loadshape:
     pass
 
 
+@dataclass
 class Enduse:
     pass
 
@@ -324,6 +331,7 @@ class Appliance(ResidentialEnduse):
     heatgains: List[float]
 
 
+@unique
 class ClotheswasherState(IntEnum):
     SPIN4 = 9
     SPIN3 = 8
@@ -334,6 +342,7 @@ class ClotheswasherState(IntEnum):
     STOPPED = 0
 
 
+@unique
 class ClotheswasherSpinMode(IntEnum):
     SMALLWASH = 4
     SPIN_WASH = 3
@@ -342,6 +351,7 @@ class ClotheswasherSpinMode(IntEnum):
     SPIN_LOW = 0
 
 
+@unique
 class ClotheswasherWashMode(IntEnum):
     GENTLE = 2
     PERM_PRESS = 1
@@ -408,6 +418,7 @@ class Clotheswasher(ResidentialEnduse):
     wash_mode: ClotheswasherWashMode
 
 
+@unique
 class DishwasherState(IntEnum):
     HEATEDDRY_ONLY = 7
     CONTROL_ONLY = 6
@@ -500,6 +511,7 @@ class Dishwasher(ResidentialEnduse):
     is_240: bool  # load is 220/240 V (across both phases)
 
 
+@dataclass
 class DryerState:
     CONTROL_ONLY = 5
     MOTOR_COIL_ONLY = 3
@@ -561,19 +573,22 @@ class Dryer(ResidentialEnduse):
     is_240: bool  # load is 220/240 V (across both phases)
 
 
-class EVChargerState:
+@unique
+class EVChargerState(IntEnum):
     WORK = 1
     HOME = 0
     UNKNOWN = 4294967295
 
 
-class EVChargerChargerType:
+@unique
+class EVChargerChargerType(IntEnum):
     HIGH = 2
     MEDIUM = 1
     LOW = 0
 
 
-class EVChargerVehicleType:
+@unique
+class EVChargerVehicleType(IntEnum):
     HYBRID = 1
     ELECTRIC = 0
 
@@ -596,7 +611,8 @@ class EVCharger(ResidentialEnduse):
     demand_profile: str
 
 
-class EVChargerDeterministicVehicleLocation:
+@unique
+class EVChargerDeterministicVehicleLocation(IntEnum):
     DRIVING_WORK = 4
     DRIVING_HOME = 3
     WORK = 2
@@ -629,7 +645,8 @@ class EVChargerDeterministic(ResidentialEnduse):
     charging_efficiency: float  # [unit]  # Efficiency of charger (ratio) when charging
 
 
-class FreezerState:
+@unique
+class FreezerState(IntEnum):
     ON = 1
     OFF = 0
 
@@ -648,7 +665,8 @@ class Freezer(ResidentialEnduse):
     state: FreezerState
 
 
-class HouseIncludeSolarQuadrant:
+@unique
+class HouseIncludeSolarQuadrant(IntEnum):
     W = 16
     S = 8
     E = 4
@@ -657,42 +675,48 @@ class HouseIncludeSolarQuadrant:
     NONE = 0
 
 
-class HouseHeatingCOPCurve:
+@unique
+class HouseHeatingCOPCurve(IntEnum):
     CURVED = 3
     LINEAR = 2
     FLAT = 1
     DEFAULT = 0
 
 
-class HouseHeatingCAPCurve:
+@unique
+class HouseHeatingCAPCurve(IntEnum):
     CURVED = 3
     LINEAR = 2
     FLAT = 1
     DEFAULT = 0
 
 
-class HouseCoolingCOPCurve:
+@unique
+class HouseCoolingCOPCurve(IntEnum):
     CURVED = 3
     LINEAR = 2
     FLAT = 1
     DEFAULT = 0
 
 
-class HouseCoolingCAPCurve:
+@unique
+class HouseCoolingCAPCurve(IntEnum):
     CURVED = 3
     LINEAR = 2
     FLAT = 1
     DEFAULT = 0
 
 
-class HouseThermostatMode:
+@unique
+class HouseThermostatMode(IntEnum):
     COOL = 3
     HEAT = 2
     AUTO = 1
     OFF = 0
 
 
-class HouseSystemType:
+@unique
+class HouseSystemType(IntEnum):
     RESISTIVE = 16
     TWOSTAGE = 8
     FORCEDAIR = 4
@@ -701,14 +725,16 @@ class HouseSystemType:
     NONE = 0
 
 
-class HouseAuxilaryStrategy:
+@unique
+class HouseAuxilaryStrategy(IntEnum):
     LOCKOUT = 4
     TIMER = 2
     DEADBAND = 1
     NONE = 0
 
 
-class HouseSystemMode:
+@unique
+class HouseSystemMode(IntEnum):
     AUX = 3
     COOL = 4
     OFF = 1
@@ -716,31 +742,36 @@ class HouseSystemMode:
     UNKNOWN = 0
 
 
-class HouseHeatingSystemType:
+@unique
+class HouseHeatingSystemType(IntEnum):
     RESISTANCE = 4
     HEAT_PUMP = 3
     GAS = 2
     NONE = 1
 
 
-class HouseCoolingSystemType:
+@unique
+class HouseCoolingSystemType(IntEnum):
     HEAT_PUMP = 2
     ELECTRIC = 2
     NONE = 1
 
 
-class HouseAuxiliarySystemType:
+@unique
+class HouseAuxiliarySystemType(IntEnum):
     ELECTRIC = 2
     NONE = 1
 
 
-class HouseFanType:
+@unique
+class HouseFanType(IntEnum):
     TWO_SPEED = 3
     ONE_SPEED = 2
     NONE = 1
 
 
-class HouseThermalIntegrityLevel:
+@unique
+class HouseThermalIntegrityLevel(IntEnum):
     UNKNOWN = 7
     VERY_GOOD = 6
     GOOD = 5
@@ -751,13 +782,15 @@ class HouseThermalIntegrityLevel:
     VERY_LITTLE = 0
 
 
-class HouseGlassType:
+@unique
+class HouseGlassType(IntEnum):
     LOW_E_GLASS = 2
     GLASS = 1
     OTHER = 0
 
 
-class HouseWindowFrame:
+@unique
+class HouseWindowFrame(IntEnum):
     INSULATED = 4
     WOOD = 3
     THERMAL_BREAK = 2
@@ -766,7 +799,8 @@ class HouseWindowFrame:
     NONE = 0
 
 
-class HouseGlazingTreatment:
+@unique
+class HouseGlazingTreatment(IntEnum):
     HIGH_S = 5
     LOW_S = 4
     REFL = 3
@@ -775,20 +809,23 @@ class HouseGlazingTreatment:
     OTHER = 0
 
 
-class HouseGlazingLayers:
+@unique
+class HouseGlazingLayers(IntEnum):
     OTHER = 4
     THREE = 3
     TWO = 2
     ONE = 1
 
 
-class HouseMotorModel:
+@unique
+class HouseMotorModel(IntEnum):
     FULL = 2
     BASIC = 1
     NONE = 0
 
 
-class HouseMotorEfficiency:
+@unique
+class HouseMotorEfficiency(IntEnum):
     VERY_GOOD = 4
     GOOD = 3
     AVERAGE = 2
@@ -796,21 +833,25 @@ class HouseMotorEfficiency:
     VERY_POOR = 0
 
 
+@unique
 class HousePanelConfiguration(IntEnum):
     IS220 = 1
     IS110 = 0
 
 
+@unique
 class HouseThermostatControl(IntEnum):
     NONE = 2
     BAND = 1
     FULL = 0
 
 
+@dataclass
 class HousePanel:
     pass
 
 
+@dataclass
 class House(ResidentialEnduse):
     weather: object  # reference to the climate object
     floor_area: float  # [sf]  # home conditioned floor area
@@ -973,6 +1014,7 @@ class House(ResidentialEnduse):
     thermostat_control: HouseThermostatControl  # determine level of internal thermostatic control
 
 
+@unique
 class MicrowaveState(IntEnum):
     ON = 1
     OFF = 0
@@ -1004,16 +1046,19 @@ class PlugLoad(ResidentialEnduse):
     actual_power: complex  # [kVA]  # actual power demand
 
 
+@unique
 class RangeHeatMode(IntEnum):
     GASHEAT = 1
     ELECTRIC = 0
 
 
+@unique
 class RangeLocation(IntEnum):
     GARAGE = 1
     INSIDE = 0
 
 
+@unique
 class RangeStateCooktop(IntEnum):
     CT_TRIPPED = 6
     CT_STALLED = 5
@@ -1081,12 +1126,14 @@ class Range(ResidentialEnduse):
     is_range_on: float  # simple logic output to determine state of range (1-on, 0-off)
 
 
+@unique
 class RefrigeratorDefrostCriterion(IntEnum):
     COMPRESSOR_TIME = 3
     DOOR_OPENINGS = 2
     TIMED = 1
 
 
+@unique
 class RefrigeratorState(IntEnum):
     COMPRESSSOR_ON_NORMAL = 3
     COMPRESSSOR_ON_LONG = 4
@@ -1140,11 +1187,13 @@ class Refrigerator(ResidentialEnduse):
     state: RefrigeratorState
 
 
+@unique
 class ThermalStorageDischargeScheduleType(IntEnum):
     EXTERNAL = 1
     INTERNAL = 0
 
 
+@unique
 class ThermalStorageRechargeScheduleType(IntEnum):
     EXTERNAL = 1
     INTERNAL = 0
@@ -1167,6 +1216,7 @@ class ThermalStorage(ResidentialEnduse):
     k: float  # [W/m/K]  # coefficient of thermal conductivity (W/m/K)
 
 
+@unique
 class WaterHeaterWaterHeaterModel(IntEnum):
     NONE = 3
     FORTRAN = 2
@@ -1174,29 +1224,34 @@ class WaterHeaterWaterHeaterModel(IntEnum):
     ONEZNODE = 0
 
 
+@unique
 class WaterHeaterHeatMode(IntEnum):
     HEAT_PUMP = 2
     GASHEAT = 1
     ELECTRIC = 0
 
 
+@unique
 class WaterHeaterLocation(IntEnum):
     GARAGE = 1
     INSIDE = 0
 
 
+@unique
 class WaterHeaterCurrentTankStatus(IntEnum):
     EMPTY = 2
     PARTIAL = 1
     FULL = 0
 
 
+@unique
 class WaterHeaterLoadState(IntEnum):
     STABLE = 2
     RECOVERING = 1
     DEPLETING = 0
 
 
+@unique
 class WaterHeaterREOverride(IntEnum):
     OV_OFF = 2
     OV_NORMAL = 0
@@ -1243,12 +1298,14 @@ class ZIPLoad(ResidentialEnduse):
     pass
 
 
+@unique
 class ModulePowerFlowSolverMethod(IntEnum):
     NR = 2
     GS = 1
     FBS = 0
 
 
+@unique
 class ModulePowerFlowNRMatrixOutputInterval(IntEnum):
     ALL = 3
     PER_CALL = 2
@@ -1298,12 +1355,13 @@ class ModulePowerFlow:
     market_price_name: str
 
 
+@unique
 class BillDumpMeterType(IntEnum):
     METER = 1
     TRIPLEX_METER = 0
 
 
-class BillDump:
+class BillDump(IntEnum):
     group: str  # the group ID to output data for (all nodes if empty)
     runtime: timestamp  # the time to check voltage data
     filename: str  # the file to dump the voltage data into
@@ -1311,6 +1369,7 @@ class BillDump:
     meter_type: BillDumpMeterType  # describes whether to collect from 3-phase or S-phase meters
 
 
+@unique
 class PowerFlowObjectPhases(IntEnum):
     A = 1
     B = 2
@@ -1321,11 +1380,13 @@ class PowerFlowObjectPhases(IntEnum):
     G = 128
 
 
+@dataclass
 class PowerFlowObject:
     phases: List[PowerFlowObjectPhases]
     nominal_voltage: float  # [V]
 
 
+@unique
 class NodeBusType(IntEnum):
     SWING_PQ = 3
     SWING = 2
@@ -1333,17 +1394,20 @@ class NodeBusType(IntEnum):
     PQ = 0
 
 
+@unique
 class NodeBusFlag(IntEnum):
     ISSOURCE = 2
     HASSOURCE = 1
 
 
+@unique
 class NodeFrequencyMeasureType(IntEnum):
     PLL = 3
     SIMPLE = 2
     NONE = 1
 
 
+@unique
 class NodeServiceStatus(IntEnum):
     OUT_OF_SERVICE = 0
     IN_SERVICE = 1
@@ -1351,9 +1415,7 @@ class NodeServiceStatus(IntEnum):
 
 class Node(PowerFlowObject):
     bustype: NodeBusType  # defines whether the node is a PQ, PV, or SWING node
-    busflags: List[
-        NodeBusFlag
-    ]  # flag indicates node has a source for voltage, i.e. connects to the swing node
+    busflags: List[NodeBusFlag]  # flag indicates node has a source for voltage, i.e. connects to the swing node
     reference_bus: object  # reference bus from which frequency is defined
     maximum_voltage_error: float  # [V]  # convergence voltage limit or convergence criteria
     voltage_A: complex  # [V]  # bus voltage, Phase A to ground
@@ -1391,6 +1453,7 @@ class Node(PowerFlowObject):
     topological_parent: object  # topological parent as per GLM configuration
 
 
+@unique
 class CapacitorPhase(IntEnum):
     N = 8
     D = 256
@@ -1399,11 +1462,13 @@ class CapacitorPhase(IntEnum):
     A = 1
 
 
+@unique
 class CapacitorSwitch(IntEnum):
     CLOSED = 1
     OPEN = 0
 
 
+@unique
 class CapacitorControl(IntEnum):
     CURRENT = 4
     VARVOLT = 3
@@ -1412,15 +1477,15 @@ class CapacitorControl(IntEnum):
     MANUAL = 0
 
 
+@unique
 class CapacitorControlLevel(IntEnum):
     INDIVIDUAL = 1
     BANK = 0
 
 
+@dataclass
 class Capacitor(Node):
-    pt_phase: List[
-        CapacitorPhase
-    ]  # Phase(s) that the PT is on, used as measurement points for control
+    pt_phase: List[CapacitorPhase]  # Phase(s) that the PT is on, used as measurement points for control
     phases_connected: List[CapacitorPhase]  # phases capacitors connected to
     switchA: CapacitorSwitch  # capacitor A switch open or close
     switchB: CapacitorSwitch  # capacitor B switch open or close
@@ -1447,11 +1512,13 @@ class Capacitor(Node):
     control_level: CapacitorControlLevel  # define bank or individual control
 
 
+@unique
 class CurrDumpMode(IntEnum):
     polar = 1
     rect = 0
 
 
+@dataclass
 class CurrDump:
     group: str  # the group ID to output data for (all links if empty)
     runtime: timestamp  # the time to check current data
@@ -1460,6 +1527,7 @@ class CurrDump:
     mode: CurrDumpMode
 
 
+@dataclass
 class Emissions:
     Nuclear_Order: float
     Hydroelectric_Order: float
@@ -1559,12 +1627,14 @@ class Emissions:
     cycle_interval: float  # [s]
 
 
+@unique
 class FaultCheckCheckMode(IntEnum):
     ALL = 2
     ONCHANGE = 1
     SINGLE = 0
 
 
+@dataclass
 class FaultCheck:
     check_mode: FaultCheckCheckMode  # Frequency of fault checks
     output_filename: str  # Output filename for list of unsupported nodes
@@ -1575,11 +1645,13 @@ class FaultCheck:
     eventgen_object: object  # Link to generic eventgen object to handle unexpected faults
 
 
+@unique
 class FrequencyGeneratorFrequencyMode(IntEnum):
     AUTO = 1
     OFF = 0
 
 
+@dataclass
 class FrequencyGenerator:
     Frequency_Mode: FrequencyGeneratorFrequencyMode  # Frequency object operations mode
     Frequency: float  # [Hz]  # Instantaneous frequency value
@@ -1602,11 +1674,13 @@ class FrequencyGenerator:
     Num_Resp_Eqs: int  # Total number of equations the response can contain
 
 
+@unique
 class LinkStatus(IntEnum):
     OPEN = 0
     CLOSED = 1
 
 
+@unique
 class LinkFlowDirection(IntEnum):
     CN = 768
     CR = 512
@@ -1620,6 +1694,7 @@ class LinkFlowDirection(IntEnum):
     UNKNOWN = 0
 
 
+@dataclass
 class Link(PowerFlowObject):
     status: LinkStatus  #
     from_: object  # from_node - source node
@@ -1649,25 +1724,26 @@ class Link(PowerFlowObject):
     fault_current_out_A: complex  # [A]  # fault current flowing out, phase A
     fault_current_out_B: complex  # [A]  # fault current flowing out, phase B
     fault_current_out_C: complex  # [A]  # fault current flowing out, phase C
-    flow_direction: List[
-        LinkFlowDirection
-    ]  # flag used for describing direction of the flow of power
+    flow_direction: List[LinkFlowDirection]  # flag used for describing direction of the flow of power
     mean_repair_time: float  # [s]  # Time after a fault clears for the object to be back in service
     continuous_rating: float  # [A]  # Continuous rating for this link object (set individual line segments
     emergency_rating: float  # [A]  # Emergency rating for this link object (set individual line segments
     inrush_convergence_value: float  # [V]  # Tolerance, as change in line voltage drop between iterations, for deltamode in-rush completion
 
 
+@unique
 class FusePhaseStatus(IntEnum):
     GOOD = 1
     BLOWN = 0
 
 
+@unique
 class FuseRepairDistType(IntEnum):
     EXPONENTIAL = 1
     NONE = 0
 
 
+@dataclass
 class Fuse(Link):
     phase_A_status: FusePhaseStatus
     phase_B_status: FusePhaseStatus
@@ -1678,6 +1754,7 @@ class Fuse(Link):
     fuse_resistance: float  # [Ohm]  # The resistance value of the fuse when it is not blown.
 
 
+@dataclass
 class ImpedanceDump:
     group: str  # the group ID to output data for (all links if empty)
     filename: str  # the file to dump the current data into
@@ -1685,11 +1762,13 @@ class ImpedanceDump:
     runcount: int  # the number of times the file has been written to
 
 
+@dataclass
 class Line:
     configuration: object
     length: float  # [ft]
 
 
+@dataclass
 class LineConfiguration:
     conductor_A: object
     conductor_B: object
@@ -1720,6 +1799,7 @@ class LineConfiguration:
     rating_winter_emergency: float  # [A]  # amp rating in winter, short term
 
 
+@dataclass
 class LineSpacing:
     distance_AB: float  # [ft]
     distance_BC: float  # [ft]
@@ -1733,6 +1813,7 @@ class LineSpacing:
     distance_NE: float  # [ft]  # distance between neutral wire and earth
 
 
+@unique
 class LoadLoadClass(IntEnum):
     A = 4
     I = 3
@@ -1741,6 +1822,7 @@ class LoadLoadClass(IntEnum):
     U = 0
 
 
+@dataclass
 class Load(Node):
     load_class: LoadLoadClass  # Flag to track load type, not currently used for anything except sorting
     constant_power_A: complex  # [VA]  # constant power load on phase A, specified as VA
@@ -1854,6 +1936,7 @@ class Load(Node):
     impedance_fraction_C: float  # [pu]  # this is the constant impedance fraction of base power on phase C
 
 
+@unique
 class LoadTrackerOperation(IntEnum):
     ANGLE = 3
     MAGNITUDE = 2
@@ -1861,6 +1944,7 @@ class LoadTrackerOperation(IntEnum):
     REAL = 0
 
 
+@dataclass
 class LoadTracker:
     target: object  # target object to track the load of
     target_property: str  # property on the target object representing the load
@@ -1873,6 +1957,7 @@ class LoadTracker:
     feedback: float  # the feedback signal, for reference purposes
 
 
+@unique
 class MeterBillMode(IntEnum):
     TIERED_RTP = 4
     HOURLY = 3
@@ -1881,6 +1966,7 @@ class MeterBillMode(IntEnum):
     NONE = 0
 
 
+@dataclass
 class Meter:
     measured_real_energy: float  # [Wh]  # metered real energy consumption, cummalitive
     measured_reactive_energy: float  # [VAh]  # metered reactive energy consumption, cummalitive
@@ -1921,15 +2007,18 @@ class Meter:
     third_tier_energy: float  # [kWh]  # switching point between second tier price and third tier price
 
 
+@dataclass
 class Motor(Node):
     pass
 
 
+@dataclass
 class OverheadLine(PowerFlowObject):
     configuration: object
     length: float  # [ft]
 
 
+@dataclass
 class OverheadLineConductor:
     geometric_mean_radius: float  # [ft]  # radius of the conductor
     resistance: float  # [Ohm/mile]  # resistance in Ohms/mile of the conductor
@@ -1940,6 +2029,7 @@ class OverheadLineConductor:
     rating.winter.emergency: float  # [A]  # Emergency winter amp rating
 
 
+@dataclass
 class PowerMetrics:
     SAIFI: float  # Displays annual SAIFI values as per IEEE 1366-2003
     SAIFI_int: float  # Displays SAIFI values over the period specified by base_time_value as per IEEE 1366-2003
@@ -1954,10 +2044,12 @@ class PowerMetrics:
     base_time_value: float  # [s]  # time period over which _int values are claculated
 
 
+@dataclass
 class PowerFlowLibrary:
     pass
 
 
+@dataclass
 class PQLoad(Load):
     weather: object
     T_nominal: float  # [degF]
@@ -2013,16 +2105,19 @@ class PQLoad(Load):
     output_power: complex  # [VA]
 
 
+@unique
 class SwitchPhaseState(IntEnum):
     CLOSED = 1
     OPEN = 0
 
 
+@unique
 class SwitchOperatingMode(IntEnum):
     BANKED = 1
     INDIVIDUAL = 0
 
 
+@dataclass
 class Switch(Link):
     phase_A_state: SwitchPhaseState  # Defines the current state of the phase A switch
     phase_B_state: SwitchPhaseState  # Defines the current state of the phase B switch
@@ -2031,12 +2126,14 @@ class Switch(Link):
     switch_resistance: float  # [Ohm]  # The resistance value of the switch when it is not blown.
 
 
+@dataclass
 class Recloser(Switch):
     retry_time: float  # [s]  # the amount of time in seconds to wait before the recloser attempts to close
     max_number_of_tries: float  # the number of times the recloser will try to close before permanently opening
     number_of_tries: float  # Current number of tries recloser has attempted
 
 
+@dataclass
 class Regulator(Link):
     configuration: object  # reference to the regulator_configuration object used to determine regulator properties
     tap_A: int  # current tap position of tap A
@@ -2049,6 +2146,7 @@ class Regulator(Link):
     regulator_resistance: float  # [Ohm]  # The resistance value of the regulator when it is not blown.
 
 
+@unique
 class RegulatorConfigurationConnectType(IntEnum):
     CLOSED_DELTA = 5
     OPEN_DELTA_CABA = 4
@@ -2058,11 +2156,13 @@ class RegulatorConfigurationConnectType(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class RegulatorConfigurationControlLevel(IntEnum):
     BANK = 2
     INDIVIDUAL = 1
 
 
+@unique
 class RegulatorConfigurationControl(IntEnum):
     REMOTE_NODE = 3
     LINE_DROP_COMP = 4
@@ -2070,23 +2170,27 @@ class RegulatorConfigurationControl(IntEnum):
     MANUAL = 1
 
 
+@unique
 class RegulatorConfigurationReverseFlowControl(IntEnum):
     LOCK_CURRENT_POSITION = 2
     LOCK_NEUTRAL = 1
     LOCK_NONE = 0
 
 
+@unique
 class RegulatorConfigurationType(IntEnum):
     B = 2
     A = 1
 
 
+@unique
 class RegulatorConfigurationPhase(IntEnum):
     C = 4
     B = 2
     A = 1
 
 
+@dataclass
 class RegulatorConfiguration:
     connect_type: RegulatorConfigurationConnectType  # Designation of connection style
     band_center: float  # [V]  # band center setting of regulator control
@@ -2115,6 +2219,7 @@ class RegulatorConfiguration:
     tap_pos_C: int  # initial tap position of phase C
 
 
+@dataclass
 class Restoration:
     reconfig_attempts: int  # Number of reconfigurations/timestep to try before giving up
     reconfig_iteration_limit: int  # Number of iterations to let PF go before flagging this as a bad reconfiguration
@@ -2132,16 +2237,19 @@ class Restoration:
     generate_all_scenarios: bool  # Flag to determine if restoration reconfiguration and continues, or explores the full space
 
 
+@unique
 class SectionalizerPhaseState(IntEnum):
     CLOSED = 1
     OPEN = 0
 
 
+@unique
 class SectionalizerOperatingMode(IntEnum):
     BANKED = 1
     INDIVIDUAL = 0
 
 
+@dataclass
 class Sectionalizer(Switch):
     phase_A_state: SectionalizerPhaseState  # Defines the current state of the phase A switch
     phase_B_state: SectionalizerPhaseState  # Defines the current state of the phase B switch
@@ -2150,6 +2258,7 @@ class Sectionalizer(Switch):
     switch_resistance: float  # [Ohm]  # The resistance value of the switch when it is not blown.
 
 
+@dataclass
 class SeriesReactor(Link):
     phase_A_impedance: complex  # [Ohm]  # Series impedance of reactor on phase A
     phase_A_resistance: float  # [Ohm]  # Resistive portion of phase A's impedance
@@ -2163,12 +2272,14 @@ class SeriesReactor(Link):
     rated_current_limit: float  # [A]  # Rated current limit for the reactor
 
 
+@unique
 class SubstationReferencePhase(IntEnum):
     PHASE_C = 2
     PHASE_B = 1
     PHASE_A = 0
 
 
+@dataclass
 class Substation(Node):
     zero_sequence_voltage: complex  # [V]  # The zero sequence representation of the voltage for the substation object.
     positive_sequence_voltage: complex  # [V]  # The positive sequence representation of the voltage for the substation object.
@@ -2195,6 +2306,7 @@ class Substation(Node):
     distribution_real_energy: float  # [Wh]
 
 
+@dataclass
 class Transformer(Link):
     configuration: object  # Configuration library used for transformer setup
     climate: object  # climate object used to describe thermal model ambient temperature
@@ -2214,6 +2326,7 @@ class Transformer(Link):
     phase_C_secondary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase C on the secondary side of the transformer during saturation calculations
 
 
+@unique
 class TransformerConfigurationConnectType(IntEnum):
     SINGLE_PHASE_CENTER_TAPPED = 5
     SINGLE_PHASE = 4
@@ -2223,6 +2336,7 @@ class TransformerConfigurationConnectType(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class TransformerConfigurationInstallType(IntEnum):
     VAULT = 3
     PADMOUNT = 2
@@ -2230,12 +2344,14 @@ class TransformerConfigurationInstallType(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class TransformerConfigurationCoolantType(IntEnum):
     DRY = 2
     MINERAL_OIL = 1
     UNKNOWN = 0
 
 
+@unique
 class TransformerConfigurationCoolingType(IntEnum):
     DFOW = 6
     DFOA = 5
@@ -2246,6 +2362,7 @@ class TransformerConfigurationCoolingType(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class TransformerConfigurationMagnetizationLocation(IntEnum):
     BOTH = 3
     SECONDARY = 2
@@ -2253,6 +2370,7 @@ class TransformerConfigurationMagnetizationLocation(IntEnum):
     NONE = 0
 
 
+@dataclass
 class TransformerConfiguration:
     connect_type: TransformerConfigurationConnectType  # connect type enum: Wye-Wye, single-phase, etc.
     install_type: TransformerConfigurationInstallType  # Defines location of the transformer installation
@@ -2295,10 +2413,12 @@ class TransformerConfiguration:
     T_D: float  # Inrush decay time constant for inrush current
 
 
+@dataclass
 class TriplexLine:
     pass
 
 
+@dataclass
 class TriplexLineConductor:
     resistance: float  # [Ohm/mile]  # resistance of cable in ohm/mile
     geometric_mean_radius: float  # [ft]  # geometric mean radius of the cable
@@ -2308,6 +2428,7 @@ class TriplexLineConductor:
     rating_winter_emergency: float  # [A]  # amp ratings for the cable during short term operation in winter
 
 
+@dataclass
 class TriplexLineConfiguration:
     conductor_1: object  # conductor type for phase 1
     conductor_2: object  # conductor type for phase 2
@@ -2325,6 +2446,7 @@ class TriplexLineConfiguration:
     rating_winter_emergency: float  # [A]  # amp rating in winter, short term
 
 
+@unique
 class TriplexNodeBusType(IntEnum):
     SWING_PQ = 3
     SWING = 2
@@ -2332,21 +2454,22 @@ class TriplexNodeBusType(IntEnum):
     PQ = 0
 
 
+@unique
 class TriplexNodeBusFlag(IntEnum):
     ISSOURCE = 2
     HASSOURCE = 1
 
 
+@unique
 class TriplexNodeServiceStatus(IntEnum):
     OUT_OF_SERVICE = 0
     IN_SERVICE = 1
 
 
+@dataclass
 class TriplexNode(PowerFlowObject):
     bustype: TriplexNodeBusType  # defines whether the node is a PQ, PV, or SWING node
-    busflags: List[
-        TriplexNodeBusFlag
-    ]  # flag indicates node has a source for voltage, i.e. connects to the swing node
+    busflags: List[TriplexNodeBusFlag]  # flag indicates node has a source for voltage, i.e. connects to the swing node
     reference_bus: object  # reference bus from which frequency is defined
     maximum_voltage_error: float  # [V]  # convergence voltage limit or convergence criteria
     voltage_1: complex  # [V]  # bus voltage, phase 1 to ground
@@ -2396,6 +2519,7 @@ class TriplexNode(PowerFlowObject):
     topological_parent: object  # topological parent as per GLM: configuration
 
 
+@unique
 class TriplexLoadLoadClass(IntEnum):
     A = 4
     I = 3
@@ -2404,6 +2528,7 @@ class TriplexLoadLoadClass(IntEnum):
     U = 0
 
 
+@dataclass
 class TriplexLoad(TriplexNode):
     load_class: TriplexLoadLoadClass  # Flag to track load type, not currently used for anything except sorting
     constant_power_1: complex  # [VA]  # constant power load on split phase 1, specified as VA
@@ -2459,6 +2584,7 @@ class TriplexLoad(TriplexNode):
     impedance_fraction_12: float  # [pu]  # this is the constant impedance fraction of base power on phase 12
 
 
+@unique
 class TriplexMeterBillMode(IntEnum):
     TIERED_RTP = 4
     HOURLY = 3
@@ -2467,6 +2593,7 @@ class TriplexMeterBillMode(IntEnum):
     NONE = 0
 
 
+@dataclass
 class TriplexMeter(TriplexNode):
     measured_real_energy: float  # [Wh]  # metered real energy consumption
     measured_reactive_energy: float  # [VAh]  # metered reactive energy consumption
@@ -2504,10 +2631,12 @@ class TriplexMeter(TriplexNode):
     third_tier_energy: float  # [kWh]  # price of energy on tier above second tier
 
 
+@dataclass
 class UndergroundLine(Line):
     pass
 
 
+@dataclass
 class UndergroundLineConductor:
     outer_diameter: float  # [in]  # Outer diameter of conductor and sheath
     conductor_gmr: float  # [ft]  # Geometric mean radius of the conductor
@@ -2528,17 +2657,20 @@ class UndergroundLineConductor:
     rating_winter_emergency: float  # [A]  # amp rating in winter, short term
 
 
+@unique
 class VoltVarControlControlMethod(IntEnum):
     STANDBY = 0
     ACTIVE = 1
 
 
+@unique
 class VoltVarControlPhase(IntEnum):
     C = 4
     B = 2
     A = 1
 
 
+@dataclass
 class VoltVarControl:
     control_method: VoltVarControlControlMethod  # IVVC activated or in standby
     capacitor_delay: float  # [s]  # Default capacitor time delay - overridden by local defintions
@@ -2560,11 +2692,13 @@ class VoltVarControl:
     pf_signed: bool  # Set to true to consider the sign on the power factor.  Otherwise, it just maintains the deadband of +/-desired_pf
 
 
+@unique
 class VoltDumpMode(IntEnum):
     polar = 1
     rect = 0
 
 
+@dataclass
 class VoltDump:
     group: str  # the group ID to output data for (all nodes if empty)
     runtime: timestamp  # the time to check voltage data
