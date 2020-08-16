@@ -2023,10 +2023,10 @@ class OverheadLineConductor:
     geometric_mean_radius: float  # [ft]  # radius of the conductor
     resistance: float  # [Ohm/mile]  # resistance in Ohms/mile of the conductor
     diameter: float  # [in]  # Diameter of line for capacitance calculations
-    rating.summer.continuous: float  # [A]  # Continuous summer amp rating
-    rating.summer.emergency: float  # [A]  # Emergency summer amp rating
-    rating.winter.continuous: float  # [A]  # Continuous winter amp rating
-    rating.winter.emergency: float  # [A]  # Emergency winter amp rating
+    rating_summer_continuous: float  # [A]  # Continuous summer amp rating
+    rating_summer_emergency: float  # [A]  # Emergency summer amp rating
+    rating_winter_continuous: float  # [A]  # Continuous winter amp rating
+    rating_winter_emergency: float  # [A]  # Emergency winter amp rating
 
 
 @dataclass
@@ -2805,25 +2805,25 @@ class Auction:
     init_stdev: float
     future_mean_price: float
     use_future_mean_price: bool
-    current_market.start_time: timestamp
-    current_market.end_time: timestamp
-    current_market.clearing_price: float  # [$]
-    current_market.clearing_quantity: float
-    current_market.clearing_type: AuctionCurrentMarketClearingType
-    current_market.marginal_quantity_load: float
-    current_market.marginal_quantity: float
-    current_market.marginal_quantity_bid: float
-    current_market.marginal_quantity_frac: float
-    current_market.seller_total_quantity: float
-    current_market.buyer_total_quantity: float
-    current_market.seller_min_price: float
-    current_market.buyer_total_unrep: float
-    current_market.cap_ref_unrep: float
+    current_market_start_time: timestamp
+    current_market_end_time: timestamp
+    current_market_clearing_price: float  # [$]
+    current_market_clearing_quantity: float
+    current_market_clearing_type: AuctionCurrentMarketClearingType
+    current_market_marginal_quantity_load: float
+    current_market_marginal_quantity: float
+    current_market_marginal_quantity_bid: float
+    current_market_marginal_quantity_frac: float
+    current_market_seller_total_quantity: float
+    current_market_buyer_total_quantity: float
+    current_market_seller_min_price: float
+    current_market_buyer_total_unrep: float
+    current_market_cap_ref_unrep: float
     next_market_start_time: timestamp
     next_market_end_time: timestamp
     next_market_clearing_price: float  # [$]
     next_market_clearing_quantity: float
-    next_market.clearing_type: AuctionNextMarketClearingType
+    next_market_clearing_type: AuctionNextMarketClearingType
     next_market_marginal_quantity_load: float
     next_market_marginal_quantity_bid: float
     next_market_marginal_quantity_frac: float
@@ -2835,7 +2835,7 @@ class Auction:
     past_market_end_time: timestamp
     past_market_clearing_price: float  # [$]
     past_market_clearing_quantity: float
-    past_market.clearing_type: AuctionPastMarketClearingType
+    past_market_clearing_type: AuctionPastMarketClearingType
     past_market_marginal_quantity_load: float
     past_market_marginal_quantity_bid: float
     past_market_marginal_quantity_frac: float
@@ -3286,10 +3286,10 @@ class StubAuctionControlMode(IntEnum):
 class StubAuction:
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
-    last.P: float  # last cleared price
-    current_market.clearing_price: float  # next cleared price
-    past_market.clearing_price: float  # last cleared price
-    next.P: float  # next cleared price
+    last_P: float  # last cleared price
+    current_market_clearing_price: float  # next cleared price
+    past_market_clearing_price: float  # last cleared price
+    next_P: float  # next cleared price
     avg24: float  # daily average of price
     std24: float  # daily stdev of price
     avg72: float  # three day price average
@@ -4518,16 +4518,16 @@ class Office:
     interior_ua: float  # [Btu/degF/h]
     interior_mass: float  # [Btu/degF]
     glazing: float  # [sf]
-    glazing.north: float  # [sf]
-    glazing.northeast: float  # [sf]
-    glazing.east: float  # [sf]
-    glazing.southeast: float  # [sf]
-    glazing.south: float  # [sf]
-    glazing.southwest: float  # [sf]
-    glazing.west: float  # [sf]
-    glazing.northwest: float  # [sf]
-    glazing.horizontal: float  # [sf]
-    glazing.coefficient: float  # [pu]
+    glazing_north: float  # [sf]
+    glazing_northeast: float  # [sf]
+    glazing_east: float  # [sf]
+    glazing_southeast: float  # [sf]
+    glazing_south: float  # [sf]
+    glazing_southwest: float  # [sf]
+    glazing_west: float  # [sf]
+    glazing_northwest: float  # [sf]
+    glazing_horizontal: float  # [sf]
+    glazing_coefficient: float  # [pu]
     occupancy: float
     occupants: float
     schedule: str
@@ -4540,22 +4540,22 @@ class Office:
     Qi: float  # [Btu/h]
     Qz: float  # [Btu/h]
     hvac_mode: OfficeHvacMode
-    hvac.cooling.balance_temperature: float  # [degF]
-    hvac.cooling.capacity: float  # [Btu/h]
-    hvac.cooling.capacity_perF: float  # [Btu/degF/h]
-    hvac.cooling.design_temperature: float  # [degF]
-    hvac.cooling.efficiency: float  # [pu]
-    hvac.cooling.cop: float  # [pu]
-    hvac.heating.balance_temperature: float  # [degF]
-    hvac.heating.capacity: float  # [Btu/h]
-    hvac.heating.capacity_perF: float  # [Btu/degF/h]
-    hvac.heating.design_temperature: float  # [degF]
-    hvac.heating.efficiency: float  # [pu]
-    hvac.heating.cop: float  # [pu]
-    lights.capacity: float  # [kW]
-    lights.fraction: float  # [pu]
-    plugs.capacity: float  # [kW]
-    plugs.fraction: float  # [pu]
+    hvac_cooling_balance_temperature: float  # [degF]
+    hvac_cooling_capacity: float  # [Btu/h]
+    hvac_cooling_capacity_perF: float  # [Btu/degF/h]
+    hvac_cooling_design_temperature: float  # [degF]
+    hvac_cooling_efficiency: float  # [pu]
+    hvac_cooling_cop: float  # [pu]
+    hvac_heating_balance_temperature: float  # [degF]
+    hvac_heating_capacity: float  # [Btu/h]
+    hvac_heating_capacity_perF: float  # [Btu/degF/h]
+    hvac_heating_design_temperature: float  # [degF]
+    hvac_heating_efficiency: float  # [pu]
+    hvac_heating_cop: float  # [pu]
+    lights_capacity: float  # [kW]
+    lights_fraction: float  # [pu]
+    plugs_capacity: float  # [kW]
+    plugs_fraction: float  # [pu]
     demand: complex  # [kW]
     total_load: complex  # [kW]
     energy: complex  # [kWh]
@@ -4563,25 +4563,25 @@ class Office:
     power: complex  # [kW]
     current: complex  # [A]
     admittance: complex  # [1/Ohm]
-    hvac.demand: complex  # [kW]
-    hvac.load: complex  # [kW]
-    hvac.energy: complex  # [kWh]
-    hvac.power_factor: float
-    lights.demand: complex  # [kW]
-    lights.load: complex  # [kW]
-    lights.energy: complex  # [kWh]
-    lights.power_factor: float
-    lights.heatgain_fraction: float
-    lights.heatgain: float  # [kW]
-    plugs.demand: complex  # [kW]
-    plugs.load: complex  # [kW]
-    plugs.energy: complex  # [kWh]
-    plugs.power_factor: float
-    plugs.heatgain_fraction: float
-    plugs.heatgain: float  # [kW]
+    hvac_demand: complex  # [kW]
+    hvac_load: complex  # [kW]
+    hvac_energy: complex  # [kWh]
+    hvac_power_factor: float
+    lights_demand: complex  # [kW]
+    lights_load: complex  # [kW]
+    lights_energy: complex  # [kWh]
+    lights_power_factor: float
+    lights_heatgain_fraction: float
+    lights_heatgain: float  # [kW]
+    plugs_demand: complex  # [kW]
+    plugs_load: complex  # [kW]
+    plugs_energy: complex  # [kWh]
+    plugs_power_factor: float
+    plugs_heatgain_fraction: float
+    plugs_heatgain: float  # [kW]
     cooling_setpoint: float  # [degF]
     heating_setpoint: float  # [degF]
     thermostat_deadband: float  # [degF]
-    control.ventilation_fraction: float
-    control.lighting_fraction: float
+    control_ventilation_fraction: float
+    control_lighting_fraction: float
     ACH: float
