@@ -1977,7 +1977,7 @@ class Meter:
     measured_demand: float  # [W]  # greatest metered real power during simulation
     measured_real_power: float  # [W]  # metered real power
     measured_reactive_power: float  # [VAr]  # metered reactive power
-    meter_power_consumption: complex  # [VA]  # metered power used for operating the meter; standby and communication losses
+    meter_power_consumption: complex  # [VA]  # metered power used for operating the meter standby and communication losses
     measured_voltage_A: complex  # [V]  # measured line-to-neutral voltage on phase A
     measured_voltage_B: complex  # [V]  # measured line-to-neutral voltage on phase B
     measured_voltage_C: complex  # [V]  # measured line-to-neutral voltage on phase C
@@ -2706,3 +2706,1762 @@ class VoltDump:
     file: str  # the file to dump the voltage data into
     runcount: int  # the number of times the file has been written to
     mode: VoltDumpMode  # dumps the voltages in either polar or rectangular notation
+
+
+class ModuleMarket:
+    bid_offset: float  # [$]  # the bid offset value that prevents bids from being wrongly triggered
+
+
+class AuctionSpecialMode(IntEnum):
+    BUYERS_ONLY = 2
+    SELLERS_ONLY = 1
+    NONE = 0
+
+
+class AuctionStatisticMode(IntEnum):
+    OFF = 1
+    ON = 0
+
+
+class AuctionCurrentMarketClearingType(IntEnum):
+    NULL = 0
+    FAILURE = 5
+    EXACT = 4
+    MARGINAL_PRICE = 3
+    MARGINAL_BUYER = 2
+    MARGINAL_SELLER = 1
+
+
+class AuctionNextMarketClearingType(IntEnum):
+    NULL = 0
+    FAILURE = 5
+    EXACT = 4
+    MARGINAL_PRICE = 3
+    MARGINAL_BUYER = 2
+    MARGINAL_SELLER = 1
+
+
+class AuctionPastMarketClearingType(IntEnum):
+    NULL = 0
+    FAILURE = 5
+    EXACT = 4
+    MARGINAL_PRICE = 3
+    MARGINAL_BUYER = 2
+    MARGINAL_SELLER = 1
+
+
+class AuctionMarginMode(IntEnum):
+    PROB = 2
+    DENY = 1
+    NORMAL = 0
+
+
+class AuctionIgnoreFailedMarket(IntEnum):
+    TRUE = 1
+    FALSE = 0
+
+
+class AuctionIgnorePricecap(IntEnum):
+    TRUE = 1
+    FALSE = 0
+
+
+class AuctionCurveLogInfo(IntEnum):
+    EXTRA = 1
+    NORMAL = 0
+
+
+class Auction:
+    unit: str  # unit of quantity
+    period: float  # [s]  # interval of time between market clearings
+    latency: float  # [s]  # latency between market clearing and delivery
+    market_id: int  # unique identifier of market clearing
+    network: object  # the comm network used by object to talk to the market (if any)
+    verbose: bool  # enable verbose auction operations
+    linkref: object  # (DEPRECATED) reference to link object that has demand as power_out (only used when not all loads are bidding)
+    pricecap: float  # (DEPRECATED) the maximum price (magnitude) allowed
+    price_cap: float  # the maximum price (magnitude) allowed
+    special_mode: AuctionSpecialMode
+    statistic_mode: AuctionStatisticMode
+    fixed_price: float
+    fixed_quantity: float
+    capacity_reference_object: object
+    capacity_reference_property: str
+    capacity_reference_bid_price: float
+    max_capacity_reference_bid_quantity: float
+    capacity_reference_bid_quantity: float
+    init_price: float
+    init_stdev: float
+    future_mean_price: float
+    use_future_mean_price: bool
+    current_market.start_time: timestamp
+    current_market.end_time: timestamp
+    current_market.clearing_price: float  # [$]
+    current_market.clearing_quantity: float
+    current_market.clearing_type: AuctionCurrentMarketClearingType
+    current_market.marginal_quantity_load: float
+    current_market.marginal_quantity: float
+    current_market.marginal_quantity_bid: float
+    current_market.marginal_quantity_frac: float
+    current_market.seller_total_quantity: float
+    current_market.buyer_total_quantity: float
+    current_market.seller_min_price: float
+    current_market.buyer_total_unrep: float
+    current_market.cap_ref_unrep: float
+    next_market_start_time: timestamp
+    next_market_end_time: timestamp
+    next_market_clearing_price: float  # [$]
+    next_market_clearing_quantity: float
+    next_market.clearing_type: AuctionNextMarketClearingType
+    next_market_marginal_quantity_load: float
+    next_market_marginal_quantity_bid: float
+    next_market_marginal_quantity_frac: float
+    next_market_seller_total_quantity: float
+    next_market_buyer_total_quantity: float
+    next_market_seller_min_price: float
+    next_market_cap_ref_unrep: float
+    past_market_start_time: timestamp
+    past_market_end_time: timestamp
+    past_market_clearing_price: float  # [$]
+    past_market_clearing_quantity: float
+    past_market.clearing_type: AuctionPastMarketClearingType
+    past_market_marginal_quantity_load: float
+    past_market_marginal_quantity_bid: float
+    past_market_marginal_quantity_frac: float
+    past_market_seller_total_quantity: float
+    past_market_buyer_total_quantity: float
+    past_market_seller_min_price: float
+    past_market_cap_ref_unrep: float
+    margin_mode: AuctionMarginMode
+    warmup: int
+    ignore_failed_market: AuctionIgnoreFailedMarket
+    ignore_pricecap: AuctionIgnorePricecap
+    transaction_log_file: str
+    transaction_log_limit: int
+    curve_log_file: str
+    curve_log_limit: int
+    curve_log_info: AuctionCurveLogInfo
+
+
+class ControllerSimpleMode(IntEnum):
+    DOUBLE_RAMP = 6
+    WATERHEATER = 5
+    HOUSE_PRECOOL = 4
+    HOUSE_PREHEAT = 3
+    HOUSE_COOL = 2
+    HOUSE_HEAT = 1
+    NONE = 0
+
+
+class ControllerBidMode(IntEnum):
+    PROXY = 2
+    OFF = 0
+    ON = 1
+
+
+class ControllerUseOverride(IntEnum):
+    ON = 1
+    OFF = 0
+
+
+class ControllerControlMode(IntEnum):
+    DEV_LEVEL = 2
+    DOUBLE_RAMP = 1
+    RAMP = 0
+
+
+class ControllerResolveMode(IntEnum):
+    SLIDING = 1
+    DEADBAND = 0
+
+
+class ControllerProxyMarginMode(IntEnum):
+    PROB = 2
+    DENY = 1
+    NORMAL = 0
+
+
+class ControllerProxyClearingType(IntEnum):
+    NULL = 0
+    FAILURE = 5
+    EXACT = 4
+    MARGINAL_PRICE = 3
+    MARGINAL_BUYER = 2
+    MARGINAL_SELLER = 1
+
+
+class Controller:
+    simple_mode: ControllerSimpleMode
+    bid_mode: ControllerBidMode
+    use_override: ControllerUseOverride
+    ramp_low: float  # [degF]  # the comfort response below the setpoint
+    ramp_high: float  # [degF]  # the comfort response above the setpoint
+    range_low: float  # the setpoint limit on the low side
+    range_high: float  # the setpoint limit on the high side
+    target: str  # the observed property (e.g., air temperature)
+    setpoint: str  # the controlled property (e.g., heating setpoint)
+    demand: str  # the controlled load when on
+    load: str  # the current controlled load
+    total: str  # the uncontrolled load (if any)
+    market: str  # the market to bid into
+    state: str  # the state property of the controlled load
+    avg_target: str
+    std_target: str
+    bid_price: float  # the bid price
+    bid_quantity: float  # the bid quantity
+    set_temp: float  # [degF]  # the reset value
+    base_setpoint: float  # [degF]
+    market_price: float  # the current market clearing price seen by the controller.
+    period: float  # [s]  # interval of time between market clearings
+    control_mode: ControllerControlMode
+    resolve_mode: ControllerResolveMode
+    slider_setting: float
+    slider_setting_heat: float
+    slider_setting_cool: float
+    override: str
+    heating_range_high: float  # [degF]
+    heating_range_low: float  # [degF]
+    heating_ramp_high: float
+    heating_ramp_low: float
+    cooling_range_high: float  # [degF]
+    cooling_range_low: float  # [degF]
+    cooling_ramp_high: float
+    cooling_ramp_low: float
+    heating_base_setpoint: float  # [degF]
+    cooling_base_setpoint: float  # [degF]
+    deadband: str
+    heating_setpoint: str
+    heating_demand: str
+    cooling_setpoint: str
+    cooling_demand: str
+    sliding_time_delay: float  # [s]  # time interval desired for the sliding resolve mode to change from cooling or heating to off
+    use_predictive_bidding: bool
+    device_actively_engaged: float
+    cleared_market: int
+    locked: int
+    p_ON: float
+    p_OFF: float
+    p_ONLOCK: float
+    p_OFFLOCK: float
+    delta_u: float
+    regulation_market_on: str  # the willing to change state from ON->OFF market to bid into for regulation case
+    regulation_market_off: str  # the willing to change state from OFF->ON market to bid into for regulation case
+    fast_regulation_signal: float  # [s]  # the regulation signal that the controller compares against (i.e., how often is there a control action
+    market_price_on: float  # the current market clearing price seen by the controller in ON->OFF regulation market
+    market_price_off: float  # the current market clearing price seen by the controller  in OFF->ON regulation market
+    period_on: float  # [s]  # interval of time between market clearings in ON->OFF regulation market
+    period_off: float  # [s]  # interval of time between market clearings in  OFF->ON regulation market
+    regulation_period: int  # fast regulation signal period
+    r1: float  # temporary diagnostic variable
+    mu0: float  # temporary diagnostic variable
+    mu1: float  # temporary diagnostic variable
+    average_target: str
+    standard_deviation_target: str
+    bid_id: int
+    bid_delay: int
+    thermostat_state: str  # The name of the thermostat state property within the object being controlled
+    proxy_average: float
+    proxy_standard_deviation: float
+    proxy_market_id: int
+    proxy_market2_id: int
+    proxy_clear_price: float  # [$]
+    proxy_clear_price2: float  # [$]
+    proxy_price_cap: float
+    proxy_price_cap2: float
+    proxy_market_unit: str
+    proxy_initial_price: float
+    proxy_marginal_fraction: float
+    proxy_marginal_fraction2: float
+    proxy_clearing_quantity: float
+    proxy_clearing_quantity2: float
+    proxy_seller_total_quantity: float
+    proxy_seller_total_quantity2: float
+    proxy_margin_mode: ControllerProxyMarginMode
+    proxy_clearing_type: ControllerProxyClearingType
+    proxy_clearing_type2: ControllerProxyClearingType
+
+
+class DoubleControllerThermostatMode(IntEnum):
+    COOL = 3
+    HEAT = 2
+    OFF = 1
+    INVALID = 0
+
+
+class DoubleControllerLastMode(IntEnum):
+    COOL = 3
+    HEAT = 2
+    OFF = 1
+    INVALID = 0
+
+
+class DoubleControllerResolveMode(IntEnum):
+    STICKY = 2
+    DEADBAND = 1
+    NONE = 0
+
+
+class DoubleControllerSetupMode(IntEnum):
+    HOUSE = 1
+    NONE = 0
+
+
+class DoubleControllerBidMode(IntEnum):
+    OFF = 0
+    ON = 1
+
+
+class DoubleController:
+    thermostat_mode: DoubleControllerThermostatMode
+    last_mode: DoubleControllerLastMode
+    resolve_mode: DoubleControllerResolveMode
+    setup_mode: DoubleControllerSetupMode
+    bid_mode: DoubleControllerBidMode
+    last_mode_timer: int
+    cool_ramp_low: float
+    cool_ramp_high: float
+    cool_range_low: float
+    cool_range_high: float
+    cool_set_base: float
+    cool_setpoint: float
+    heat_ramp_low: float
+    heat_ramp_high: float
+    heat_range_low: float
+    heat_range_high: float
+    heat_set_base: float
+    heat_setpoint: float
+    temperature_name: str
+    cool_setpoint_name: str
+    cool_demand_name: str
+    heat_setpoint_name: str
+    heat_demand_name: str
+    load_name: str
+    total_load_name: str
+    deadband_name: str
+    state_name: str
+    market: object  # the market to bid into
+    market_period: float
+    bid_price: float  # the bid price
+    bid_quant: float  # the bid quantity
+    load: str  # the current controlled load
+    total: str  # the uncontrolled load (if any)
+    last_price: float
+    temperature: float
+    cool_bid: float
+    heat_bid: float
+    cool_demand: float
+    heat_demand: float
+    price: float
+    avg_price: float
+    stdev_price: float
+
+
+class GeneratorControllerGeneratorState(IntEnum):
+    STARTING = 2
+    RUNNING = 1
+    OFF = 0
+
+
+class GeneratorControllerAmortizationType(IntEnum):
+    LINEAR_BID = 2
+    LINEAR_COST = 1
+    EXPONENTIAL = 0
+
+
+class GeneratorControllerGeneratorAttachment(IntEnum):
+    BUILDING = 1
+    STANDALONE = 0
+
+
+class GeneratorController:
+    generator_state: GeneratorControllerGeneratorState  # Current generator state
+    amortization_type: GeneratorControllerAmortizationType  # Amortization compounding method
+    generator_state_number: int  # Current generator state as numeric value
+    market: object  # Market the object will watch and bid into
+    bid_curve: str  # Bidding curve text format
+    bid_curve_file: str  # Bidding curve file name
+    bid_generator_rating: float  # [VA]  # Size of generator in VA for the bid curve
+    update_curve: bool  # Flag to force updating of bidding curve parse
+    is_marginal_gen: bool  # Flag to indicate if the generator is a marginal generator
+    generator_rating: float  # [VA]  # Size of generator in VA for the active bid
+    generator_output: float  # Current real power output of generator
+    input_unit_base: float  # [MW]  # Base multiplier for generator bid units
+    startup_cost: float  # [$]  # Cost to start the generator from OFF status
+    shutdown_cost: float  # [$]  # Cost to shut down the generator prematurely
+    minimum_runtime: float  # [s]  # Minimum time the generator should run to avoid shutdown cost
+    minimum_downtime: float  # [s]  # Minimum down time for the generator before it can bid again
+    capacity_factor: float  # Calculation of generator's current capacity factor based on the market period
+    amortization_factor[1 / s]: float  # Exponential decay factor in 1/s for shutdown cost repayment
+    bid_delay: float  # Time before a market closes to bid
+    generator_attachment: GeneratorControllerGeneratorAttachment  # Generator attachment type - determines interactions
+    building_load_curr: float  # Present building load value (if BUILDING attachment)
+    building_load_bid: float  # Expected building load value for currently bidding market period (if BUILDING attachment)
+    year_runtime_limit: float  # [h]  # Total number of hours the generator can run in a year
+    current_year_runtime: float  # [h]  # Total number of hours generator has run this year
+    runtime_year_end: str  # Date and time the generator runtime year resets
+    scaling_factor: float  # [unit]  # scaling factor applied to license premium calculation
+    license_premium: float  # current value of the generator license premium calculated
+    hours_in_year: float  # [h]  # Number of hours assumed for the total year
+    op_and_maint_cost: float  # [$]  # Operation and maintenance cost per runtime year
+    bid_id: int
+
+
+class PassiveControllerPFCMode(IntEnum):
+    OVER_UNDER_FREQUENCY = 2
+    UNDER_FREQUENCY = 1
+    OVER_FREQUENCY = 0
+
+
+class PassiveControllerPFCState(IntEnum):
+    RELEASED_ON = 6
+    RELEASED_OFF = 5
+    FORCED_ON = 4
+    FORCED_OFF = 3
+    TRIGGERED_ON = 2
+    TRIGGERED_OFF = 1
+    FREE = 0
+
+
+class PassiveControllerDistributionType(IntEnum):
+    UNIFORM = 2
+    EXPONENTIAL = 1
+    NORMAL = 0
+
+
+class PassiveControllerControlMode(IntEnum):
+    PRIMARY_FREQUENCY_CONTROL = 8
+    DIRECT_LOAD_CONTROL = 7
+    ELASTICITY_MODEL = 6
+    PROBABILITY_OFF = 5
+    DUTYCYCLE = 4
+    RAMP = 1
+    NONE = 0
+
+
+class PassiveControllerDLCMode(IntEnum):
+    CYCLING = 1
+    OFF = 0
+
+
+class PassiveController:
+    input_state: int
+    input_setpoint: float
+    input_chained: bool
+    observation: float  # the observed value
+    mean_observation: float  # the observed mean value
+    stdev_observation: float  # the observed standard deviation value
+    expectation: float  # the observed expected value
+    sensitivity: float  # (DEPRECATED) the sensitivity of the control actuator to observation deviations
+    period: float  # [s]  # the cycle period for the controller logic
+    expectation_prop: str  # (DEPRECATED) the name of the property to observe for the expected value
+    expectation_obj: object  # (DEPRECATED) the object to watch for the expectation property
+    expectation_property: str  # the name of the property to observe for the expected value
+    expectation_object: object  # the object to watch for the expectation property
+    setpoint_prop: str  # (DEPRECATED) the name of the setpoint property in the parent object
+    setpoint: str  # the name of the setpoint property in the parent object
+    state_prop: str  # (DEPRECATED) the name of the actuator property in the parent object
+    state_property: str  # the name of the actuator property in the parent object
+    observation_obj: object  # (DEPRECATED) the object to observe
+    observation_prop: str  # (DEPRECATED) the name of the observation property
+    observation_object: object  # the object to observe
+    observation_property: str  # the name of the observation property
+    mean_observation_prop: str  # (DEPRECATED) the name of the mean observation property
+    stdev_observation_prop: str  # (DEPRECATED) the name of the standard deviation observation property
+    stdev_observation_property: str  # the name of the standard deviation observation property
+    cycle_length: int  # (DEPRECATED) length of time between processing cycles
+    base_setpoint: float  # the base setpoint to base control off of
+    critical_day: float  # used to switch between TOU and CPP days, 1 is CPP, 0 is TOU
+    two_tier_cpp: bool
+    daily_elasticity: float
+    sub_elasticity_first_second: float
+    sub_elasticity_first_third: float
+    second_tier_hours: int
+    third_tier_hours: int
+    first_tier_hours: int
+    first_tier_price: float
+    second_tier_price: float
+    third_tier_price: float
+    old_first_tier_price: float
+    old_second_tier_price: float
+    old_third_tier_price: float
+    Percent_change_in_price: float
+    Percent_change_in_peakoffpeak_ratio: float
+    Percent_change_in_Criticalpeakoffpeak_ratio: float
+    linearize_elasticity: bool
+    price_offset: float
+    pool_pump_model: bool  # Boolean flag for turning on the pool pump version of the DUTYCYCLE control
+    base_duty_cycle: float  # This is the duty cycle before modification due to the price signal
+    trigger_time_under_frequency: int  # Time to stay in triggered off state in seconds
+    trigger_time_over_frequency: int  # Time to stay in triggered on state in seconds
+    release_time_under_frequency: int  # Time to stay in released on state in seconds
+    release_time_over_frequency: int  # Time to stay in released off state in seconds
+    release_point_under_frequency: float  # Frequency value for releasing GFA in under frequency mode
+    release_point_over_frequency: float  # Frequency value for releasing GFA in over frequency mode
+    trigger_point_under_frequency: float  # Frequency value for triggereing GFA in under frequency mode
+    trigger_point_over_frequency: float  # Frequency value for triggereing GFA in over frequency mode
+    frequency: float  # Frequency value
+    PFC_mode: PassiveControllerPFCMode  # operation mode of the primary frequency controller
+    PFC_state: PassiveControllerPFCState  # State of the primary frequency controller
+    state_observed: str  # the name of the observed state property in the parent object
+    power_observed: str  # the name of the observed state property in the parent object
+    output_observed: int
+    bid_delay: int  # time the controller will bid in advance before clearing
+    voltage_lockout: float  # [%]  # lockout primary frequency control if voltage is deviating % from nominal
+    voltage_lockout_time: float  # [s]  # voltage lockout period
+    voltage_lockout_state: int  # value to determine if water heater is in voltage lockout
+    distribution_type: PassiveControllerDistributionType
+    comfort_level: float
+    range_high: float
+    range_low: float
+    ramp_high: float
+    ramp_low: float
+    prob_off: float
+    output_state: int  # the target setpoint given the input observations
+    output_setpoint: float
+    control_mode: PassiveControllerControlMode  # the control mode to use for determining controller action
+    dlc_mode: PassiveControllerDLCMode  # this mode is roughly designed to force cycle an AC unit
+    cycle_length_off: float  # [s]
+    cycle_length_on: float  # [s]
+
+
+class StubBidderRole(IntEnum):
+    SELLER = 1
+    BUYER = 0
+
+
+class StubBidder:
+    bid_period: float  # [s]
+    count: int
+    market: object
+    role: StubBidderRole
+    price: float
+    quantity: float
+    bid_id: int
+
+
+class StubAuctionControlMode(IntEnum):
+    DISABLED = 1
+    NORMAL = 0
+
+
+class StubAuction:
+    unit: str  # unit of quantity
+    period: float  # [s]  # interval of time between market clearings
+    last.P: float  # last cleared price
+    current_market.clearing_price: float  # next cleared price
+    past_market.clearing_price: float  # last cleared price
+    next.P: float  # next cleared price
+    avg24: float  # daily average of price
+    std24: float  # daily stdev of price
+    avg72: float  # three day price average
+    std72: float  # three day price stdev
+    avg168: float  # weekly average of price
+    std168: float  # weekly stdev of price
+    market_id: int  # unique identifier of market clearing
+    verbose: bool  # enable verbose stubauction operations
+    control_mode: StubAuctionControlMode  # the control mode to use for determining average and deviation calculations
+
+
+class SupervisoryControlBidSortMode(IntEnum):
+    VOLTAGE_EXTREMES = 4
+    VOLTAGE_DEVIAION_FROM_NOMINAL = 3
+    POWER_DECREASING = 2
+    POWER_INCREASING = 1
+    NONE = 0
+
+
+class SupervisoryControllerPFCMode(IntEnum):
+    OVER_UNDER_FREQUENCY = 2
+    UNDER_FREQUENCY = 1
+    OVER_FREQUENCY = 0
+
+
+class SupervisoryControl:
+    unit: str  # unit of quantity
+    period: float  # [s]  # interval of time between market clearings
+    market_id: int  # unique identifier of market clearing
+    nominal_frequency: float  # [Hz]  # nominal frequency
+    droop: float  # [%]  # droop value for the supervisor
+    frequency_deadband: float  # [Hz]  # frequency deadband for assigning trigger frequencies
+    PFC_mode: SupervisoryControllerPFCMode  # operation mode of the primary frequency controller
+    bid_sort_mode: SupervisoryControlBidSortMode  # Determines how the bids into the market is sorted to contruct the PF curve
+
+
+class ModuleReliability:
+    enable_subsecond_models: bool  # Flag to enable deltamode functionality in the reliability module
+    maximum_event_length: float  # [s]  # Maximum duration of any faulting event
+    report_event_log: bool  # Should the metrics object dump a logfile?
+    deltamode_timestep: int  # Default timestep for reliability deltamode operations
+
+
+class Metrics:
+    report_file: str
+    customer_group: str
+    module_metrics_object: object
+    metrics_of_interest: str
+    metric_interval: float  # [s]
+    report_interval: float  # [s]
+
+
+class EventGenFailureDist(IntEnum):
+    TRIANGLE = 10
+    BETA = 9
+    GAMMA = 8
+    WEIBULL = 7
+    RAYLEIGH = 6
+    EXPONENTIAL = 5
+    PARETO = 4
+    BERNOULLI = 3
+    LOGNORMAL = 2
+    NORMAL = 1
+    UNIFORM = 0
+
+
+class EventGenRestorationDist(IntEnum):
+    TRIANGLE = 10
+    BETA = 9
+    GAMMA = 8
+    WEIBULL = 7
+    RAYLEIGH = 6
+    EXPONENTIAL = 5
+    PARETO = 4
+    BERNOULLI = 3
+    LOGNORMAL = 2
+    NORMAL = 1
+    UNIFORM = 0
+
+
+class EventGen:
+    target_group: str
+    fault_type: str
+    failure_dist: EventGenFailureDist
+    restoration_dist: EventGenRestorationDist
+    failure_dist_param_1: float
+    failure_dist_param_2: float
+    restoration_dist_param_1: float
+    restoration_dist_param_2: float
+    manual_outages: str
+    max_outage_length: float  # [s]
+    max_simultaneous_faults: int
+
+
+class ModuleGenerators:
+    enable_subsecond_models: bool  # Enable deltamode capabilities within the powerflow module
+    deltamode_timestep: float  # [ns]  # Desired minimum timestep for deltamode-related simulations
+
+
+class BatteryGeneratorMode(IntEnum):
+    POWER_VOLTAGE_HYBRID = 7
+    VOLTAGE_CONTROLLED = 6
+    POWER_DRIVEN = 5
+    SUPPLY_DRIVEN = 4
+    CONSTANT_PF = 3
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class BatteryAdditionalControls(IntEnum):
+    LINEAR_TEMPERATURE = 1
+    NONE = 0
+
+
+class BatteryGeneratorStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class BatteryRfbSize(IntEnum):
+    LARGE = 4
+    MED_HIGH_ENERGY = 3
+    MED_COMMERCIAL = 2
+    SMALL = 1
+    HOUSEHOLD = 5
+
+
+class BatteryPowerType(IntEnum):
+    DC = 1
+    AC = 2
+
+
+class BatteryBatteryState(IntEnum):
+    CONFLICTED = 5
+    EMPTY = 4
+    FULL = 3
+    WAITING = 0
+    DISCHARGING = 2
+    CHARGING = 1
+
+
+class BatteryBatteryType(IntEnum):
+    LEAD_ACID = 2
+    LI_ION = 1
+    UNKNOWON = 0
+
+
+class Battery:
+    generator_mode: BatteryGeneratorMode  # LEGACY MODEL: Selects generator control mode when using legacy model in non-legacy models, this should be SUPPLY_DRIVEN.
+    additional_controls: BatteryAdditionalControls  # LEGACY MODEL: In conjunction with POWER_DRIVEN, VOLTAGE_CONTROLLED, and POWER_VOLTAGE_HYBRID, this will activate control set points that adjust with temperature
+    generator_status: BatteryGeneratorStatus  # describes whether the generator is online or offline
+    rfb_size: BatteryRfbSize  # Default settings for certain sizes of batteries
+    power_type: BatteryPowerType  # LEGACY MODEL: Not currently used
+    battery_state: BatteryBatteryState  # Describes the current state of the battery
+    number_battery_state_changes: float  # LEGACY MODEL: Number of times battery switches between charging and discharging
+    monitored_power: float  # [W]  # LEGACY MODEL: output only power output value of parent meter when performing load following modes (POWER_DRIVEN)
+    power_set_high: float  # [W]  # LEGACY MODEL: high set point of dead band for load following (POWER_DRIVEN)
+    power_set_low: float  # [W]  # LEGACY MODEL: low set point of dead band for load following (POWER_DRIVEN)
+    power_set_high_highT: float  # [W]  # LEGACY MODEL: high set point of dead band for load following at higher temperatures (POWER_DRIVEN + LINEAR_TEMPERATURE)
+    power_set_low_highT: float  # [W]  # LEGACY MODEL: low set point of dead band for load following at higher temperatures (POWER_DRIVEN + LINEAR_TEMPERATURE)
+    check_power_low: float  # [W]  # LEGACY MODEL: high set point of dead band for load following at lower temperatures (POWER_DRIVEN + LINEAR_TEMPERATURE)
+    check_power_high: float  # [W]  # LEGACY MODEL: low set point of dead band for load following at lower temperatures (POWER_DRIVEN + LINEAR_TEMPERATURE)
+    voltage_set_high: float  # [V]  # LEGACY MODEL: high set point for voltage control
+    voltage_set_low: float  # [V]  # LEGACY MODEL: low set point for voltage control
+    deadband: float  # [V]  # LEGACY MODEL: voltage deadband
+    sensitivity: float  # LEGACY MODEL: describes how sensitive the control is to temperature excursions defines slope of linear control
+    high_temperature: float  # LEGACY MODEL: high temperature of linear control defines slope
+    midpoint_temperature: float  # LEGACY MODEL: midpoint temperature of linear control defines slope
+    low_temperature: float  # LEGACY MODEL: low temperature of linear control defines slope
+    scheduled_power: float  # [W]  # LEGACY MODEL: real power output of battery/inverter system
+    Rinternal: float  # [Ohm]  # LEGACY MODEL: the internal resistance of the battery.
+    V_Max: float  # [V]  # LEGACY MODEL: the maximum terminal voltage of the battery.
+    I_Max: complex  # [A]  # LEGACY MODEL: the maximum current output of the battery.
+    E_Max: float  # [Wh]  # LEGACY MODEL: the maximum capacity of the battery.
+    P_Max: float  # [W]  # LEGACY MODEL: the maximum power output of the battery.
+    power_factor: float  # LEGACY MODEL: the power factor output of the battery.
+    Energy: float  # [Wh]  # LEGACY MODEL: the available capacity of the battery.
+    efficiency: float  # [unit]  # LEGACY MODEL: the efficiency of the battery.
+    base_efficiency: float  # [unit]  # LEGACY MODEL: the efficiency of the battery at rated voltaged and current.
+    parasitic_power_draw: float  # [W]  # LEGACY MODEL: the parasytic power draw of the battery when idle.
+    Rated_kVA: float  # [kVA]  # LEGACY MODEL: the rated power of the battery.
+    V_Out: complex  # [V]  # LEGACY MODEL: the AC voltage at the terminals of the battery.
+    I_Out: complex  # [A]  # LEGACY MODEL: the AC current output of the battery.
+    VA_Out: complex  # [VA]  # LEGACY MODEL: the power output of the battery.
+    V_In: complex  # [V]  # LEGACY MODEL: the voltage at the terminals of the battery.
+    I_In: complex  # [A]  # LEGACY MODEL: the current flowing into the battery of the battery.
+    V_Internal: complex  # [V]  # LEGACY MODEL: the internal voltage of the battery.
+    I_Internal: complex  # [A]  # LEGACY MODEL: the internal current of the battery.
+    I_Prev: complex  # [A]  # LEGACY MODEL: the previous current output of the battery.
+    power_transferred: float  # LEGACY MODEL: the power output of the battery.
+    use_internal_battery_model: bool  # Enables the INTERNAL BATTERY MODEL.
+    battery_type: BatteryBatteryType  # INTERNAL BATTERY MODEL: the type of the battery. Used to determine the soc vs voltage curve.
+    nominal_voltage: float  # [V]  # INTERNAL BATTERY MODEL: the rated DC voltage at the terminals of the battery.
+    rated_power: float  # [W]  # INTERNAL BATTERY MODEL: the rated power output of the battery.
+    battery_capacity: float  # [Wh]  # INTERNAL BATTERY MODEL: the rated battery capacity of the battery.
+    round_trip_efficiency: float  # [pu]  # INTERNAL BATTERY MODEL: the round trip efficiency of the battery according to a full discharge/charge cycle.
+    state_of_charge: float  # [pu]  # INTERNAL BATTERY MODEL: the current state of charge of the battery.
+    battery_load: float  # [W]  # INTERNAL BATTERY MODEL: the current power output of the battery.
+    reserve_state_of_charge: float  # [pu]  # INTERNAL BATTERY MODEL: the reserve state of charge the battery can reach.
+
+
+class CentralDGControlControlMode(IntEnum):
+    PEAK_SHAVING = 2
+    CONSTANT_PF = 1
+    NO_CONTROL = 0
+
+
+class CentralDGControl:
+    controlled_dgs: str  # the group ID of the dg objects the controller controls.
+    feederhead_meter: object  # the name of the meter.
+    control_mode_0: CentralDGControlControlMode
+    control_mode_1: CentralDGControlControlMode
+    control_mode_2: CentralDGControlControlMode
+    control_mode_3: CentralDGControlControlMode
+    peak_S: float  # [W]
+    pf_low: float  # [unit]
+    pf_high: float  # [unit]
+
+
+class DCDCConverterDCDCConverterType(IntEnum):
+    BUCK_BOOST = 2
+    BOOST = 1
+    BUCK = 0
+
+
+class DCDCConverterGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 5
+    CONSTANT_PF = 4
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class Phases(IntEnum):
+    S = 112
+    N = 8
+    C = 4
+    B = 2
+    A = 1
+
+
+class DCDCConverter:
+    dc_dc_converter_type: DCDCConverterDCDCConverterType
+    generator_mode: DCDCConverterGeneratorMode
+    V_Out: complex  # [V]
+    I_Out: complex  # [A]
+    Vdc: complex  # [V]
+    VA_Out: complex  # [VA]
+    P_Out: float
+    Q_Out: float
+    service_ratio: float
+    V_In: complex  # [V]
+    I_In: complex  # [A]
+    VA_In: complex  # [VA]
+    phases: List[Phases]
+
+
+class DieselDGGenMode(IntEnum):
+    CONSTANTP = 2
+    CONSTANTPQ = 3
+    CONSTANTE = 1
+    UNKNOWN = 0
+
+
+class DieselDGGenStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+    UNKNOWN = 0
+
+
+class DieselDGGenType(IntEnum):
+    DYN_SYNCHRONOUS = 3
+    SYNCHRONOUS = 2
+    INDUCTION = 1
+
+
+class DieselDGGovernorType(IntEnum):
+    GGOV1 = 5
+    GGOV1_OLD = 4
+    GAST = 3
+    DEGOV1 = 2
+    NO_GOV = 1
+
+
+class DieselDGExciterType(IntEnum):
+    SEXS = 2
+    NO_EXC = 1
+
+
+class DieselDG:
+    Gen_mode: DieselDGGenMode
+    Gen_status: DieselDGGenStatus
+    Gen_type: DieselDGGenType  # Dynamics-capable implementation of synchronous diesel generator
+    pf: float  # desired power factor
+    GenElecEff: float  # calculated electrical efficiency of generator
+    TotalOutputPow: complex  # [VA]  # total complex power generated
+    TotalRealPow: float  # [W]  # total real power generated
+    TotalReacPow: float  # [VAr]  # total reactive power generated
+    speed: float  # [1/min]  # speed of an engine
+    cylinders: float  # Total number of cylinders in a diesel engine
+    stroke: float  # category of internal combustion engines
+    torque: float  # [N]  # Net brake load
+    pressure: float  # [N/m^2]
+    time_operation: float  # [min]  #
+    fuel: float  # [kg]  # fuel consumption
+    w_coolingwater: float  # [kg]  # weight of cooling water supplied per minute
+    inlet_temperature: float  # [degC]  # Inlet temperature of cooling water in degC
+    outlet_temperature: float  # [degC]  # outlet temperature of cooling water in degC
+    air_fuel: float  # [kg]  # Air used per kg fuel
+    room_temperature: float  # [degC]  # Room temperature in degC
+    exhaust_temperature: float  # [degC]  # exhaust gas temperature in degC
+    cylinder_length: float  # [m]  # length of the cylinder, used in efficiency calculations
+    cylinder_radius: float  # [m]  # inner radius of cylinder, used in efficiency calculations
+    brake_diameter: float  # [m]  # diameter of brake, used in efficiency calculations
+    calotific_fuel: float  # [kJ/kg]  # calorific value of fuel
+    steam_exhaust: float  # [kg]  # steam formed per kg of fuel in the exhaust
+    specific_heat_steam: float  # [kJ/kg/K]  # specific heat of steam in exhaust
+    specific_heat_dry: float  # [kJ/kg/K]  # specific heat of dry exhaust gases
+    indicated_hp: float  # [W]  # Indicated horse power is the power developed inside the cylinder
+    brake_hp: float  # [W]  # brake horse power is the output of the engine at the shaft measured by a dynamometer
+    thermal_efficiency: float  # thermal efficiency or mechanical efiiciency of the engine is efined as bp/ip
+    energy_supplied: float  # [kJ]  # energy supplied during the trail
+    heat_equivalent_ip: float  # [kJ]  # heat equivalent of IP in a given time of operation
+    energy_coolingwater: float  # [kJ]  # energy carried away by cooling water
+    mass_exhaustgas: float  # [kg]  # mass of dry exhaust gas
+    energy_exhaustgas: float  # [kJ]  # energy carried away by dry exhaust gases
+    energy_steam: float  # [kJ]  # energy carried away by steam
+    total_energy_exhaustgas: float  # [kJ]  # total energy carried away by dry exhaust gases is the sum of energy carried away bt steam and energy carried away by dry exhaust gases
+    unaccounted_energyloss: float  # [kJ]  # unaccounted for energy loss
+    Pconv: float  # [kW]  # Converted power = Mechanical input - (F & W loasses + Stray losses + Core losses)
+    Rated_V: float  # [V]  # nominal line-line voltage in Volts
+    Rated_VA: float  # [VA]  # nominal capacity in VA
+    power_out_A: complex  # [VA]  # Output power of phase A
+    power_out_B: complex  # [VA]  # Output power of phase B
+    power_out_C: complex  # [VA]  # Output power of phase C
+    Rs: float  # internal transient resistance in p.u.
+    Xs: float  # internal transient impedance in p.u.
+    Rg: float  # grounding resistance in p.u.
+    Xg: float  # grounding impedance in p.u.
+    voltage_A: complex  # [V]  # voltage at generator terminal, phase A
+    voltage_B: complex  # [V]  # voltage at generator terminal, phase B
+    voltage_C: complex  # [V]  # voltage at generator terminal, phase C
+    current_A: complex  # [A]  # current generated at generator terminal, phase A
+    current_B: complex  # [A]  # current generated at generator terminal, phase B
+    current_C: complex  # [A]  # current generated at generator terminal, phase C
+    EfA: complex  # [V]  # induced voltage on phase A
+    EfB: complex  # [V]  # induced voltage on phase B
+    EfC: complex  # [V]  # induced voltage on phase C
+    omega_ref: float  # [rad/s]  # Reference frequency of generator (rad/s)
+    inertia: float  # Inertial constant (H) of generator
+    damping: float  # Damping constant (D) of generator
+    number_poles: float  # Number of poles in the generator
+    Ra: float  # [pu]  # Stator resistance (p.u.)
+    Xd: float  # [pu]  # d-axis reactance (p.u.)
+    Xq: float  # [pu]  # q-axis reactance (p.u.)
+    Xdp: float  # [pu]  # d-axis transient reactance (p.u.)
+    Xqp: float  # [pu]  # q-axis transient reactance (p.u.)
+    Xdpp: float  # [pu]  # d-axis subtransient reactance (p.u.)
+    Xqpp: float  # [pu]  # q-axis subtransient reactance (p.u.)
+    Xl: float  # [pu]  # Leakage reactance (p.u.)
+    Tdp: float  # [s]  # d-axis short circuit time constant (s)
+    Tdop: float  # [s]  # d-axis open circuit time constant (s)
+    Tqop: float  # [s]  # q-axis open circuit time constant (s)
+    Tdopp: float  # [s]  # d-axis open circuit subtransient time constant (s)
+    Tqopp: float  # [s]  # q-axis open circuit subtransient time constant (s)
+    Ta: float  # [s]  # Armature short-circuit time constant (s)
+    X0: complex  # [pu]  # Zero sequence impedance (p.u.)
+    X2: complex  # [pu]  # Negative sequence impedance (p.u.)
+    rotor_speed_convergence: float  # [rad]  # Convergence criterion on rotor speed used to determine when to exit deltamode
+    rotor_angle: float  # [rad]  # rotor angle state variable
+    rotor_speed: float  # [rad/s]  # machine speed state variable
+    field_voltage: float  # [pu]  # machine field voltage state variable
+    flux1d: float  # [pu]  # machine transient flux on d-axis state variable
+    flux2q: float  # [pu]  # machine subtransient flux on q-axis state variable
+    EpRotated: complex  # [pu]  # d-q rotated E-prime internal voltage state variable
+    VintRotated: complex  # [pu]  # d-q rotated Vint voltage state variable
+    Eint_A: complex  # [V]  # Unrotated, unsequenced phase A internal voltage
+    Eint_B: complex  # [V]  # Unrotated, unsequenced phase B internal voltage
+    Eint_C: complex  # [V]  # Unrotated, unsequenced phase C internal voltage
+    Irotated: complex  # [pu]  # d-q rotated sequence current state variable
+    pwr_electric: complex  # [VA]  # Current electrical output of machine
+    pwr_mech: float  # [W]  # Current mechanical output of machine
+    torque_mech: float  # [N*m]  # Current mechanical torque of machine
+    torque_elec: float  # [N*m]  # Current electrical torque output of machine
+    Exciter_type: DieselDGExciterType  # Simplified Excitation System
+    KA: float  # [pu]  # Exciter gain (p.u.)
+    TA: float  # [s]  # Exciter time constant (seconds)
+    TB: float  # [s]  # Exciter transient gain reduction time constant (seconds)
+    TC: float  # [s]  # Exciter transient gain reduction time constant (seconds)
+    EMAX: float  # [pu]  # Exciter upper limit (p.u.)
+    EMIN: float  # [pu]  # Exciter lower limit (p.u.)
+    Vterm_max: float  # [pu]  # Upper voltage limit for super-second (p.u.)
+    Vterm_min: float  # [pu]  # Lower voltage limit for super-second (p.u.)
+    vset: float  # [pu]  # Exciter voltage set point variable
+    bias: float  # Exciter bias state variable
+    xe: float  # Exciter state variable
+    xb: float  # Exciter state variable
+    Governor_type: DieselDGGovernorType  # GGOV1 Governor Model
+    DEGOV1_R: float  # [pu]  # Governor droop constant (p.u.)
+    DEGOV1_T1: float  # [s]  # Governor electric control box time constant (s)
+    DEGOV1_T2: float  # [s]  # Governor electric control box time constant (s)
+    DEGOV1_T3: float  # [s]  # Governor electric control box time constant (s)
+    DEGOV1_T4: float  # [s]  # Governor actuator time constant (s)
+    DEGOV1_T5: float  # [s]  # Governor actuator time constant (s)
+    DEGOV1_T6: float  # [s]  # Governor actuator time constant (s)
+    DEGOV1_K: float  # [pu]  # Governor actuator gain
+    DEGOV1_TMAX: float  # [pu]  # Governor actuator upper limit (p.u.)
+    DEGOV1_TMIN: float  # [pu]  # Governor actuator lower limit (p.u.)
+    DEGOV1_TD: float  # [s]  # Governor combustion delay (s)
+    DEGOV1_wref: float  # [pu]  # Governor reference frequency state variable
+    DEGOV1_x1: float  # Governor electric box state variable
+    DEGOV1_x2: float  # Governor electric box state variable
+    DEGOV1_x4: float  # Governor electric box state variable
+    DEGOV1_x5: float  # Governor electric box state variable
+    DEGOV1_x6: float  # Governor electric box state variable
+    DEGOV1_throttle: float  # Governor electric box state variable
+    GAST_R: float  # [pu]  # Governor droop constant (p.u.)
+    GAST_T1: float  # [s]  # Governor electric control box time constant (s)
+    GAST_T2: float  # [s]  # Governor electric control box time constant (s)
+    GAST_T3: float  # [s]  # Governor temperature limiter time constant (s)
+    GAST_AT: float  # [s]  # Governor Ambient Temperature load limit (units)
+    GAST_KT: float  # [pu]  # Governor temperature control loop gain
+    GAST_VMAX: float  # [pu]  # Governor actuator upper limit (p.u.)
+    GAST_VMIN: float  # [pu]  # Governor actuator lower limit (p.u.)
+    GAST_x1: float  # Governor electric box state variable
+    GAST_x2: float  # Governor electric box state variable
+    GAST_x3: float  # Governor electric box state variable
+    GAST_throttle: float  # Governor electric box state variable
+    GGOV1_R: float  # [pu]  # Permanent droop, p.u.
+    GGOV1_Rselect: int  # Feedback signal for droop, = 1 selected electrical power, = 0 none (isochronous governor), = -1 fuel valve stroke ( true stroke),= -2 governor output ( requested stroke)
+    GGOV1_Tpelec: float  # [s]  # Electrical power transducer time constant, sec. (>0.)
+    GGOV1_maxerr: float  # Maximum value for speed error signal
+    GGOV1_minerr: float  # Minimum value for speed error signal
+    GGOV1_Kpgov: float  # Governor proportional gain
+    GGOV1_Kigov: float  # Governor integral gain
+    GGOV1_Kdgov: float  # Governor derivative gain
+    GGOV1_Tdgov: float  # [s]  # Governor derivative controller time constant, sec.
+    GGOV1_vmax: float  # Maximum valve position limit
+    GGOV1_vmin: float  # Minimum valve position limit
+    GGOV1_Tact: float  # Actuator time constant
+    GGOV1_Kturb: float  # Turbine gain (>0.)
+    GGOV1_wfnl: float  # [pu]  # No load fuel flow, p.u
+    GGOV1_Tb: float  # [s]  # Turbine lag time constant, sec. (>0.)
+    GGOV1_Tc: float  # [s]  # Turbine lead time constant, sec.
+    GGOV1_Fuel_lag: int  # Switch for fuel source characteristic, = 0 for fuel flow independent of speed, = 1 fuel flow proportional to speed
+    GGOV1_Teng: float  # Transport lag time constant for diesel engine
+    GGOV1_Tfload: float  # Load Limiter time constant, sec. (>0.)
+    GGOV1_Kpload: float  # Load limiter proportional gain for PI controller
+    GGOV1_Kiload: float  # Load limiter integral gain for PI controller
+    GGOV1_Ldref: float  # [pu]  # Load limiter reference value p.u.
+    GGOV1_Dm: float  # [pu]  # Speed sensitivity coefficient, p.u.
+    GGOV1_ropen: float  # [pu/s]  # Maximum valve opening rate, p.u./sec.
+    GGOV1_rclose: float  # [pu/s]  # Minimum valve closing rate, p.u./sec.
+    GGOV1_Kimw: float  # Power controller (reset) gain
+    GGOV1_Pmwset: float  # [MW]  # Power controller setpoint, MW
+    GGOV1_aset: float  # [pu/s]  # Acceleration limiter setpoint, p.u. / sec.
+    GGOV1_Ka: float  # Acceleration limiter Gain
+    GGOV1_Ta: float  # [s]  # Acceleration limiter time constant, sec. (>0.)
+    GGOV1_db: float  # Speed governor dead band
+    GGOV1_Tsa: float  # [s]  # Temperature detection lead time constant, sec.
+    GGOV1_Tsb: float  # [s]  # Temperature detection lag time constant, sec.
+    GGOV1_Load_Limit_enable: bool  # Enables/disables load limiter (fsrt) of low-value-select
+    GGOV1_Acceleration_Limit_enable: bool  # Enables/disables acceleration limiter (fsra) of low-value-select
+    GGOV1_PID_enable: bool  # Enables/disables PID controller (fsrn) of low-value-select
+    GGOV1_fsrt: float  # Load limiter block input to low-value-select
+    GGOV1_fsra: float  # Acceleration limiter block input to low-value-select
+    GGOV1_fsrn: float  # PID block input to low-value-select
+    GGOV1_speed_error: float  # [pu]  # Speed difference in per-unit for input to PID controller
+    GGOV1_x1: float
+    GGOV1_x2: float
+    GGOV1_x2a: float
+    GGOV1_x3: float
+    GGOV1_x3a: float
+    GGOV1_x4: float
+    GGOV1_x4a: float
+    GGOV1_x4b: float
+    GGOV1_x5: float
+    GGOV1_x5a: float
+    GGOV1_x5b: float
+    GGOV1_x6: float
+    GGOV1_x7: float
+    GGOV1_x7a: float
+    GGOV1_x8: float
+    GGOV1_x8a: float
+    GGOV1_x9: float
+    GGOV1_x9a: float
+    GGOV1_x10: float
+    GGOV1_x10a: float
+    GGOV1_x10b: float
+    GGOV1_ValveStroke: float
+    GGOV1_FuelFlow: float
+    GGOV1_GovOutPut: float
+    GGOV1_RselectValue: float
+    GGOV1_fsrtNoLim: float
+    GGOV1_err2: float
+    GGOV1_err2a: float
+    GGOV1_err3: float
+    GGOV1_err4: float
+    GGOV1_err7: float
+    GGOV1_LowValSelect1: float
+    GGOV1_LowValSelect: float
+    GGOV1_wref: float  # [pu]  # Frequency set point for GGOV1 - may be overwritten internally
+    GGOV1_pref: float  # [pu]  # Power out reference point for GGOV1 - may be overwritten internally
+    phases: List[Phases]  # Specifies which phases to connect to - currently not supported and assumes three-phase connection
+
+
+class EnergyStorageGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 4
+    CONSTANT_PF = 3
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class EnergyStorageGeneratorStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class EnergyStoragePowerType(IntEnum):
+    DC = 0
+    AC = 1
+
+
+class EnergyStorage:
+    generator_mode: EnergyStorageGeneratorMode
+    generator_status: EnergyStorageGeneratorStatus
+    power_type: EnergyStoragePowerType
+    Rinternal: float
+    V_Max: float  # [V]
+    I_Max: complex  # [A]
+    E_Max: float
+    Energy: float
+    efficiency: float
+    Rated_kVA: float  # [kVA]
+    V_Out: complex  # [V]
+    I_Out: complex  # [A]
+    VA_Out: complex  # [VA]
+    V_In: complex  # [V]
+    I_In: complex  # [A]
+    V_Internal: complex  # [V]
+    I_Internal: complex  # [A]
+    I_Prev: complex  # [A]
+    phases: List[Phases]
+
+
+class InverterInverterType(IntEnum):
+    FOUR_QUADRANT = 4
+    PWM = 3
+    TWELVE_PULSE = 2
+    SIX_PULSE = 1
+    TWO_PULSE = 0
+
+
+class InverterFourQuadrantControlMode(IntEnum):
+    GROUP_LOAD_FOLLOWING = 7
+    LOAD_FOLLOWING = 5
+    VOLT_VAR_FREQ_PWR = 8
+    VOLT_VAR = 4
+    CONSTANT_PF = 2
+    CONSTANT_PQ = 1
+    NONE = 0
+
+
+class InverterPfReg(IntEnum):
+    EXCLUDED = 2
+    INCLUDED_ALT = 3
+    INCLUDED = 1
+
+
+class InverterGeneratorStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class InverterGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 5
+    CONSTANT_PF = 4
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class InverterDynamicModelMode(IntEnum):
+    PI = 1
+    PID = 0
+
+
+class InverterIEEE1547Version(IntEnum):
+    IEEE1547A = 2
+    IEEE1547 = 1
+    NONE = 0
+
+
+class InverterInverterManufacturer(IntEnum):
+    XANTREX = 3
+    SMA = 2
+    FRONIUS = 1
+    NONE = 0
+
+
+class Inverter:
+    inverter_type: InverterInverterType  # LEGACY MODEL: Sets efficiencies and other parameters if using four_quadrant_control_mode, set this to FOUR_QUADRANT
+    four_quadrant_control_mode: InverterFourQuadrantControlMode  # FOUR QUADRANT MODEL: Activates various control modes
+    pf_reg: InverterPfReg  # Activate (or not) power factor regulation in four_quadrant_control_mode
+    generator_status: InverterGeneratorStatus  # describes whether the generator is online or offline
+    generator_mode: InverterGeneratorMode  # LEGACY MODEL: Selects generator control mode when using legacy model in non-legacy models, this should be SUPPLY_DRIVEN.
+    inverter_convergence_criterion: float  # The maximum change in error threshold for exitting deltamode.
+    V_In: complex  # [V]  # DC voltage
+    I_In: complex  # [A]  # DC current
+    VA_In: complex  # [VA]  # DC power
+    VA_Out: complex  # [VA]  # AC power
+    Vdc: float  # [V]  # LEGACY MODEL: DC voltage
+    phaseA_V_Out: complex  # [V]  # AC voltage on A phase in three-phase system 240-V connection on a triplex system
+    phaseB_V_Out: complex  # [V]  # AC voltage on B phase in three-phase system
+    phaseC_V_Out: complex  # [V]  # AC voltage on C phase in three-phase system
+    phaseA_I_Out: complex  # [V]  # AC current on A phase in three-phase system 240-V connection on a triplex system
+    phaseB_I_Out: complex  # [V]  # AC current on B phase in three-phase system
+    phaseC_I_Out: complex  # [V]  # AC current on C phase in three-phase system
+    power_A: complex  # [VA]  # AC power on A phase in three-phase system 240-V connection on a triplex system
+    power_B: complex  # [VA]  # AC power on B phase in three-phase system
+    power_C: complex  # [VA]  # AC power on C phase in three-phase system
+    P_Out: float  # [VA]  # FOUR QUADRANT MODEL: Scheduled real power out in CONSTANT_PQ control mode
+    Q_Out: float  # [VAr]  # FOUR QUADRANT MODEL: Schedule reactive power out in CONSTANT_PQ control mode
+    power_in: float  # [W]  # LEGACY MODEL: No longer used
+    rated_power: float  # [VA]  # FOUR QUADRANT MODEL: The rated power of the inverter
+    rated_battery_power: float  # [W]  # FOUR QUADRANT MODEL: The rated power of battery when battery is attached
+    inverter_efficiency: float  # FOUR QUADRANT MODEL: The efficiency of the inverter
+    battery_soc: float  # [pu]  # FOUR QUADRANT MODEL: The state of charge of an attached battery
+    soc_reserve: float  # [pu]  # FOUR QUADRANT MODEL: The reserve state of charge of an attached battery for islanding cases
+    power_factor: float  # [unit]  # FOUR QUADRANT MODEL: The power factor used for CONSTANT_PF control mode
+    islanded_state: bool  # FOUR QUADRANT MODEL: Boolean used to let control modes to act under island conditions
+    nominal_frequency: float  # [Hz]
+    Pref: float  # DELTAMODE: The real power reference.
+    Qref: float  # DELTAMODE: The reactive power reference.
+    kpd: float  # DELTAMODE: The d-axis integration gain for the current modulation PI controller.
+    kpq: float  # DELTAMODE: The q-axis integration gain for the current modulation PI controller.
+    kid: float  # DELTAMODE: The d-axis proportional gain for the current modulation PI controller.
+    kiq: float  # DELTAMODE: The q-axis proportional gain for the current modulation PI controller.
+    kdd: float  # DELTAMODE: The d-axis differentiator gain for the current modulation PID controller
+    kdq: float  # DELTAMODE: The q-axis differentiator gain for the current modulation PID controller
+    epA: float  # DELTAMODE: The real current error for phase A or triplex phase.
+    epB: float  # DELTAMODE: The real current error for phase B.
+    epC: float  # DELTAMODE: The real current error for phase C.
+    eqA: float  # DELTAMODE: The reactive current error for phase A or triplex phase.
+    eqB: float  # DELTAMODE: The reactive current error for phase B.
+    eqC: float  # DELTAMODE: The reactive current error for phase C.
+    delta_epA: float  # DELTAMODE: The change in real current error for phase A or triplex phase.
+    delta_epB: float  # DELTAMODE: The change in real current error for phase B.
+    delta_epC: float  # DELTAMODE: The change in real current error for phase C.
+    delta_eqA: float  # DELTAMODE: The change in reactive current error for phase A or triplex phase.
+    delta_eqB: float  # DELTAMODE: The change in reactive current error for phase B.
+    delta_eqC: float  # DELTAMODE: The change in reactive current error for phase C.
+    mdA: float  # DELTAMODE: The d-axis current modulation for phase A or triplex phase.
+    mdB: float  # DELTAMODE: The d-axis current modulation for phase B.
+    mdC: float  # DELTAMODE: The d-axis current modulation for phase C.
+    mqA: float  # DELTAMODE: The q-axis current modulation for phase A or triplex phase.
+    mqB: float  # DELTAMODE: The q-axis current modulation for phase B.
+    mqC: float  # DELTAMODE: The q-axis current modulation for phase C.
+    delta_mdA: float  # DELTAMODE: The change in d-axis current modulation for phase A or triplex phase.
+    delta_mdB: float  # DELTAMODE: The change in d-axis current modulation for phase B.
+    delta_mdC: float  # DELTAMODE: The change in d-axis current modulation for phase C.
+    delta_mqA: float  # DELTAMODE: The change in q-axis current modulation for phase A or triplex phase.
+    delta_mqB: float  # DELTAMODE: The change in q-axis current modulation for phase B.
+    delta_mqC: float  # DELTAMODE: The change in q-axis current modulation for phase C.
+    IdqA: complex  # DELTAMODE: The dq-axis current for phase A or triplex phase.
+    IdqB: complex  # DELTAMODE: The dq-axis current for phase B.
+    IdqC: complex  # DELTAMODE: The dq-axis current for phase C.
+    dynamic_model_mode: InverterDynamicModelMode  # DELTAMODE: Underlying model to use for deltamode control
+    enable_1547_checks: bool  # DELTAMODE: Enable IEEE 1547-2003 disconnect checking
+    reconnect_time: float  # [s]  # DELTAMODE: Time delay after IEEE 1547-2003 violation clears before resuming generation
+    inverter_1547_status: bool  # DELTAMODE: Indicator if the inverter is curtailed due to a 1547 violation or not
+    IEEE_1547_version: InverterIEEE1547Version  # DELTAMODE: Version of IEEE 1547 to use to populate defaults
+    over_freq_high_cutout: float  # [Hz]  # DELTAMODE: OF2 set point for IEEE 1547a
+    over_freq_high_disconenct_time: float  # [s]  # DELTAMODE: OF2 clearing time for IEEE1547a
+    over_freq_low_cutout: float  # [Hz]  # DELTAMODE: OF1 set point for IEEE 1547a
+    over_freq_low_disconenct_time: float  # [s]  # DELTAMODE: OF1 clearing time for IEEE 1547a
+    under_freq_high_cutout: float  # [Hz]  # DELTAMODE: UF2 set point for IEEE 1547a
+    under_freq_high_disconenct_time: float  # [s]  # DELTAMODE: UF2 clearing time for IEEE1547a
+    under_freq_low_cutout: float  # [Hz]  # DELTAMODE: UF1 set point for IEEE 1547a
+    under_freq_low_disconenct_time: float  # [s]  # DELTAMODE: UF1 clearing time for IEEE 1547a
+    under_voltage_low_cutout: float  # [pu]  # Lowest voltage threshold for undervoltage
+    under_voltage_middle_cutout: float  # [pu]  # Middle-lowest voltage threshold for undervoltage
+    under_voltage_high_cutout: float  # [pu]  # High value of low voltage threshold for undervoltage
+    over_voltage_low_cutout: float  # [pu]  # Lowest voltage value for overvoltage
+    over_voltage_high_cutout: float  # [pu]  # High voltage value for overvoltage
+    under_voltage_low_disconnect_time: float  # [s]  # Lowest voltage clearing time for undervoltage
+    under_voltage_middle_disconnect_time: float  # [s]  # Middle-lowest voltage clearing time for undervoltage
+    under_voltage_high_disconnect_time: float  # [s]  # Highest voltage clearing time for undervoltage
+    over_voltage_low_disconnect_time: float  # [s]  # Lowest voltage clearing time for overvoltage
+    over_voltage_high_disconnect_time: float  # [s]  # Highest voltage clearing time for overvoltage
+    phases: List[Phases]  # The phases the inverter is attached to
+    use_multipoint_efficiency: bool  # FOUR QUADRANT MODEL: boolean to used the multipoint efficiency curve for the inverter when solar is attached
+    inverter_manufacturer: InverterInverterManufacturer  # MULTIPOINT EFFICIENCY MODEL: the manufacturer of the inverter to setup up pre-existing efficiency curves
+    maximum_dc_power: float  # MULTIPOINT EFFICIENCY MODEL: the maximum dc power point for the efficiency curve
+    maximum_dc_voltage: float  # MULTIPOINT EFFICIENCY MODEL: the maximum dc voltage point for the efficiency curve
+    minimum_dc_power: float  # MULTIPOINT EFFICIENCY MODEL: the minimum dc power point for the efficiency curve
+    c_0: float  # MULTIPOINT EFFICIENCY MODEL: the first coefficient in the efficienty curve
+    c_1: float  # MULTIPOINT EFFICIENCY MODEL: the second coefficient in the efficienty curve
+    c_2: float  # MULTIPOINT EFFICIENCY MODEL: the third coefficient in the efficienty curve
+    c_3: float  # MULTIPOINT EFFICIENCY MODEL: the fourth coefficient in the efficienty curve
+    sense_object: object  # FOUR QUADRANT MODEL: name of the object the inverter is trying to mitigate the load on (node/link) in LOAD_FOLLOWING
+    max_charge_rate: float  # [W]  # FOUR QUADRANT MODEL: maximum rate the battery can be charged in LOAD_FOLLOWING
+    max_discharge_rate: float  # [W]  # FOUR QUADRANT MODEL: maximum rate the battery can be discharged in LOAD_FOLLOWING
+    charge_on_threshold: float  # [W]  # FOUR QUADRANT MODEL: power level at which the inverter should try charging the battery in LOAD_FOLLOWING
+    charge_off_threshold: float  # [W]  # FOUR QUADRANT MODEL: power level at which the inverter should cease charging the battery in LOAD_FOLLOWING
+    discharge_on_threshold: float  # [W]  # FOUR QUADRANT MODEL: power level at which the inverter should try discharging the battery in LOAD_FOLLOWING
+    discharge_off_threshold: float  # [W]  # FOUR QUADRANT MODEL: power level at which the inverter should cease discharging the battery in LOAD_FOLLOWING
+    excess_input_power: float  # [W]  # FOUR QUADRANT MODEL: Excess power at the input of the inverter that is otherwise just lost, or could be shunted to a battery
+    charge_lockout_time: float  # [s]  # FOUR QUADRANT MODEL: Lockout time when a charging operation occurs before another LOAD_FOLLOWING dispatch operation can occur
+    discharge_lockout_time: float  # [s]  # FOUR QUADRANT MODEL: Lockout time when a discharging operation occurs before another LOAD_FOLLOWING dispatch operation can occur
+    pf_reg_activate: float  # FOUR QUADRANT MODEL: Lowest acceptable power-factor level below which power-factor regulation will activate.
+    pf_reg_deactivate: float  # FOUR QUADRANT MODEL: Lowest acceptable power-factor above which no power-factor regulation is needed.
+    pf_target: float  # FOUR QUADRANT MODEL: Desired power-factor to maintain (signed) positive is inductive
+    pf_reg_high: float  # FOUR QUADRANT MODEL: Upper limit for power-factor - if exceeds, go full reverse reactive
+    pf_reg_low: float  # FOUR QUADRANT MODEL: Lower limit for power-factor - if exceeds, stop regulating - pf_target_var is below this
+    pf_reg_activate_lockout_time: float  # [s]  # FOUR QUADRANT MODEL: Mandatory pause between the deactivation of power-factor regulation and it reactivation
+    disable_volt_var_if_no_input_power: bool
+    delay_time: float  # [s]
+    max_var_slew_rate: float  # [VAr/s]
+    max_pwr_slew_rate: float  # [W/s]
+    volt_var_sched: str
+    freq_pwr_sched: str
+    charge_threshold: float  # [W]  # FOUR QUADRANT MODEL: Level at which all inverters in the group will begin charging attached batteries. Regulated minimum load level.
+    discharge_threshold: float  # [W]  # FOUR QUADRANT MODEL: Level at which all inverters in the group will begin discharging attached batteries. Regulated maximum load level.
+    group_max_charge_rate: float  # [W]  # FOUR QUADRANT MODEL: Sum of the charge rates of the batteries involved in the group load-following.
+    group_max_discharge_rate: float  # [W]  # FOUR QUADRANT MODEL: Sum of the discharge rates of the batteries involved in the group load-following.
+    group_rated_power: float  # [W]  # FOUR QUADRANT MODEL: Sum of the inverter power ratings of the inverters involved in the group power-factor regulation.
+    V_base: float  # [V]  # FOUR QUADRANT MODEL: The base voltage on the grid side of the inverter. Used in VOLT_VAR control mode.
+    V1: float  # [pu]  # FOUR QUADRANT MODEL: voltage point 1 in volt/var curve. Used in VOLT_VAR control mode.
+    Q1: float  # [pu]  # FOUR QUADRANT MODEL: VAR point 1 in volt/var curve. Used in VOLT_VAR control mode.
+    V2: float  # [pu]  # FOUR QUADRANT MODEL: voltage point 2 in volt/var curve. Used in VOLT_VAR control mode.
+    Q2: float  # [pu]  # FOUR QUADRANT MODEL: VAR point 2 in volt/var curve. Used in VOLT_VAR control mode.
+    V3: float  # [pu]  # FOUR QUADRANT MODEL: voltage point 3 in volt/var curve. Used in VOLT_VAR control mode.
+    Q3: float  # [pu]  # FOUR QUADRANT MODEL: VAR point 3 in volt/var curve. Used in VOLT_VAR control mode.
+    V4: float  # [pu]  # FOUR QUADRANT MODEL: voltage point 4 in volt/var curve. Used in VOLT_VAR control mode.
+    Q4: float  # [pu]  # FOUR QUADRANT MODEL: VAR point 4 in volt/var curve. Used in VOLT_VAR control mode.
+    volt_var_control_lockout: float  # [s]  # FOUR QUADRANT QUADRANT MODEL: the lockout time between volt/var actions.
+
+
+class MicroTurbineGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 5
+    CONSTANT_PF = 4
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class MicroTurbineGeneratorStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class MicroTurbinePowerType(IntEnum):
+    DC = 1
+    AC = 2
+
+
+class MicroTurbine:
+    generator_mode: MicroTurbineGeneratorMode
+    generator_status: MicroTurbineGeneratorStatus
+    power_type: MicroTurbinePowerType
+    Rinternal: float
+    Rload: float
+    V_Max: float  # [V]
+    I_Max: complex  # [A]
+    frequency: float  # [Hz]
+    Max_Frequency: float  # [Hz]
+    Min_Frequency: float  # [Hz]
+    Fuel_Used: float  # [kVA]
+    Heat_Out: float  # [kVA]
+    KV: float
+    Power_Angle: float
+    Max_P: float  # [kW]
+    Min_P: float  # [kW]
+    phaseA_V_Out: complex  # [kV]
+    phaseB_V_Out: complex  # [kV]
+    phaseC_V_Out: complex  # [kV]
+    phaseA_I_Out: complex  # [A]
+    phaseB_I_Out: complex  # [A]
+    phaseC_I_Out: complex  # [A]
+    power_A_Out: complex
+    power_B_Out: complex
+    power_C_Out: complex
+    VA_Out: complex
+    pf_Out: float
+    E_A_Internal: complex
+    E_B_Internal: complex
+    E_C_Internal: complex
+    efficiency: float
+    Rated_kVA: float  # [kVA]
+    phases: List[Phases]
+
+
+class PowerElectronicsGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 5
+    CONSTANT_PF = 4
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class PowerElectronicsGeneratorStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class PowerElectronicsConverterType(IntEnum):
+    CURRENT_SOURCED = 2
+    VOLTAGE_SOURCED = 1
+
+
+class PowerElectronicsSwitchType(IntEnum):
+    DARLINGTON = 7
+    IBJT = 6
+    JFET = 5
+    SCR = 4
+    MOSFET = 3
+    BJT = 2
+    IDEAL_SWITCH = 1
+
+
+class PowerElectronicsFilterType(IntEnum):
+    BAND_PASS = 4
+    BAND_STOP = 3
+    HIGH_PASS = 2
+    LOW_PASS = 1
+
+
+class PowerElectronicsFilterImplementation(IntEnum):
+    PARALLEL_RESONANT = 5
+    SERIES_RESONANT = 4
+    INDUCTIVE = 3
+    CAPACITVE = 2
+    IDEAL_FILTER = 1
+
+
+class PowerElectronicsFilterFrequency(IntEnum):
+    F240HZ = 3
+    F180HZ = 2
+    F120HZ = 1
+
+
+class PowerElectronicsPowerType(IntEnum):
+    DC = 1
+    AC = 2
+
+
+class PowerElectronics:
+    generator_mode: PowerElectronicsGeneratorMode
+    generator_status: PowerElectronicsGeneratorStatus
+    converter_type: PowerElectronicsConverterType
+    switch_type: PowerElectronicsSwitchType
+    filter_type: PowerElectronicsFilterType
+    filter_implementation: PowerElectronicsFilterImplementation
+    filter_frequency: PowerElectronicsFilterFrequency
+    power_type: PowerElectronicsPowerType
+    Rated_kW: float  # [kW]
+    Max_P: float  # [kW]
+    Min_P: float  # [kW]
+    Rated_kVA: float  # [kVA]
+    Rated_kV: float  # [kV]
+    phases: List[Phases]
+
+
+class RectifierRectifierType(IntEnum):
+    TWELVE_PULSE = 4
+    SIX_PULSE = 3
+    THREE_PULSE = 2
+    TWO_PULSE = 1
+    ONE_PULSE = 0
+
+
+class RectifierGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 5
+    CONSTANT_PF = 4
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class Rectifier:
+    rectifier_type: RectifierRectifierType
+    generator_mode: RectifierGeneratorMode
+    V_Out: complex  # [V]
+    V_Rated: float  # [V]
+    I_Out: complex  # [A]
+    VA_Out: complex  # [VA]
+    P_Out: float
+    Q_Out: float
+    Vdc: complex  # [V]
+    voltage_A: complex  # [V]
+    voltage_B: complex  # [V]
+    voltage_C: complex  # [V]
+    current_A: complex  # [V]
+    current_B: complex  # [V]
+    current_C: complex  # [V]
+    power_A_In: complex  # [VA]
+    power_B_In: complex  # [VA]
+    power_C_In: complex  # [VA]
+    phases: List[Phases]
+
+
+class SolarGeneratorMode(IntEnum):
+    SUPPLY_DRIVEN = 5
+    CONSTANT_PF = 4
+    CONSTANT_PQ = 2
+    CONSTANT_V = 1
+    UNKNOWN = 0
+
+
+class SolarGeneratorStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class SolarPanelType(IntEnum):
+    CONCENTRATOR = 5
+    THIN_FILM_GA_AS = 4
+    AMORPHOUS_SILICON = 3
+    MULTI_CRYSTAL_SILICON = 2
+    SINGLE_CRYSTAL_SILICON = 1
+
+
+class SolarPowerType(IntEnum):
+    DC = 1
+    AC = 2
+
+
+class SolarInstallationType(IntEnum):
+    GROUND_MOUNTED = 2
+    ROOF_MOUNTED = 1
+
+
+class SolarSolarTiltModel(IntEnum):
+    PLAYERVALUE = 2
+    SOLPOS = 1
+    DEFAULT = 0
+
+
+class SolarSolarPowerModel(IntEnum):
+    FLATPLATE = 1
+    DEFAULT = 0
+
+
+class SolarOrientation(IntEnum):
+    FIXED_AXIS = 1
+    DEFAULT = 0
+
+
+class Solar:
+    generator_mode: SolarGeneratorMode
+    generator_status: SolarGeneratorStatus
+    panel_type: SolarPanelType
+    power_type: SolarPowerType
+    INSTALLATION_TYPE: SolarInstallationType
+    SOLAR_TILT_MODEL: SolarSolarTiltModel  # solar tilt model used to compute insolation values
+    SOLAR_POWER_MODEL: SolarSolarPowerModel
+    a_coeff: float  # a coefficient for module temperature correction formula
+    b_coeff: float  # [s/m] # b coefficient for module temperature correction formula
+    dT_coeff: float  # [m*m*degC/kW] Temperature difference coefficient for module temperature correction formula
+    T_coeff: float  # [%/degC] Maximum power temperature coefficient for module temperature correction formula
+    NOCT: float  # [degF]
+    Tmodule: float  # [degF]
+    Tambient: float  # [degC]
+    wind_speed: float  # [mph]
+    ambient_temperature: float  # [degF]  # Current ambient temperature of air
+    Insolation: float  # [W/sf]
+    Rinternal: float  # [Ohm]
+    Rated_Insolation: float  # [W/sf]
+    Pmax_temp_coeff: float
+    Voc_temp_coeff: float
+    V_Max: complex  # [V]
+    Voc_Max: complex  # [V]
+    Voc: complex  # [V]
+    efficiency: float  # [unit]
+    area: float  # [sf]
+    soiling: float  # [pu]  # Soiling of array factor - representing dirt on array
+    derating: float  # [pu]  # Panel derating to account for manufacturing variances
+    Tcell: float  # [degC]
+    Rated_kVA: float  # [kVA]  # (DEPRECATED) This variable has issues with inconsistent handling in the code, so we will deprecate this in the future (VA maps to kVA, for example).
+    rated_power: float  # [W]  # Used to define the size of the solar panel in power rather than square footage.
+    P_Out: complex  # [kW]
+    V_Out: complex  # [V]
+    I_Out: complex  # [A]
+    VA_Out: complex  # [VA]
+    weather: object
+    shading_factor: float  # [pu]  # Shading factor for scaling solar power to the array
+    tilt_angle: float  # [deg]  # Tilt angle of PV array
+    orientation_azimuth: float  # [deg]  # Facing direction of the PV array
+    latitude_angle_fix: bool  # Fix tilt angle to installation latitude value
+    latitude: float  # [deg]  # The location of the array in degrees latitude
+    longitude: float  # [deg]  # The location of the array in degrees longitude
+    orientation: SolarOrientation
+    phases: List[Phases]
+
+
+class WindTurbDGGenStatus(IntEnum):
+    ONLINE = 2
+    OFFLINE = 1
+
+
+class WindTurbDGGenType(IntEnum):
+    SYNCHRONOUS = 2
+    INDUCTION = 1
+
+
+class WindTurbDGGenMode(IntEnum):
+    CONSTANTPQ = 3
+    CONSTANTP = 2
+    CONSTANTE = 1
+
+
+class WindTurbDGTurbineModel(IntEnum):
+    BERGEY_10kW = 9
+    GE_25MW = 8
+    VESTAS_V82 = 7
+    USER_DEFINED = 6
+    GENERIC_IND_LARGE = 5
+    GENERIC_IND_MID = 4
+    GENERIC_IND_SMALL = 3
+    GENERIC_SYNCH_LARGE = 2
+    GENERIC_SYNCH_MID = 1
+    GENERIC_SYNCH_SMALL = 0
+
+
+class WindTurbDG:
+    Gen_status: WindTurbDGGenStatus  # Generator is currently available to supply power
+    Gen_type: WindTurbDGGenType  # Standard synchronous generator is also used to 'fake' a doubly-fed induction generator for now
+    Gen_mode: WindTurbDGGenMode  # Maintains the real and reactive output at the terminals - currently unsupported
+    Turbine_Model: WindTurbDGTurbineModel  # Sets all defaults to represent the power output of a Bergey 10kW turbine
+    turbine_height: float  # [m]  # Describes the height of the wind turbine hub above the ground
+    roughness_length_factor: float  # European Wind Atlas unitless correction factor for adjusting wind speed at various heights above ground and terrain types, default=0.055
+    blade_diam: float  # [m]  # Diameter of blades
+    blade_diameter: float  # [m]  # Diameter of blades
+    cut_in_ws: float  # [m/s]  # Minimum wind speed for generator operation
+    cut_out_ws: float  # [m/s]  # Maximum wind speed for generator operation
+    ws_rated: float  # [m/s]  # Rated wind speed for generator operation
+    ws_maxcp: float  # [m/s]  # Wind speed at which generator reaches maximum Cp
+    Cp_max: float  # [pu]  # Maximum coefficient of performance
+    Cp_rated: float  # [pu]  # Rated coefficient of performance
+    Cp: float  # [pu]  # Calculated coefficient of performance
+    Rated_VA: float  # [VA]  # Rated generator power output
+    Rated_V: float  # [V]  # Rated generator terminal voltage
+    Pconv: float  # [W]  # Amount of electrical power converted from mechanical power delivered
+    P_converted: float  # [W]  # Amount of electrical power converted from mechanical power delivered
+    GenElecEff: float  # [%]  # Calculated generator electrical efficiency
+    generator_efficiency: float  # [%]  # Calculated generator electrical efficiency
+    TotalRealPow: float  # [W]  # Total real power output
+    total_real_power: float  # [W]  # Total real power output
+    TotalReacPow: float  # [VA]  # Total reactive power output
+    total_reactive_power: float  # [VA]  # Total reactive power output
+    power_A: complex  # [VA]  # Total complex power injected on phase A
+    power_B: complex  # [VA]  # Total complex power injected on phase B
+    power_C: complex  # [VA]  # Total complex power injected on phase C
+    WSadj: float  # [m/s]  # Speed of wind at hub height
+    wind_speed_adjusted: float  # [m/s]  # Speed of wind at hub height
+    Wind_Speed: float  # [m/s]  # Wind speed at 5-15m level (typical measurement height)
+    wind_speed: float  # [m/s]  # Wind speed at 5-15m level (typical measurement height)
+    air_density: float  # [kg/m^3]  # Estimated air density
+    R_stator: float  # [pu*Ohm]  # Induction generator primary stator resistance in p.u.
+    X_stator: float  # [pu*Ohm]  # Induction generator primary stator reactance in p.u.
+    R_rotor: float  # [pu*Ohm]  # Induction generator primary rotor resistance in p.u.
+    X_rotor: float  # [pu*Ohm]  # Induction generator primary rotor reactance in p.u.
+    R_core: float  # [pu*Ohm]  # Induction generator primary core resistance in p.u.
+    X_magnetic: float  # [pu*Ohm]  # Induction generator primary core reactance in p.u.
+    Max_Vrotor: float  # [pu*V]  # Induction generator maximum induced rotor voltage in p.u., e.g. 1.2
+    Min_Vrotor: float  # [pu*V]  # Induction generator minimum induced rotor voltage in p.u., e.g. 0.8
+    Rs: float  # [pu*Ohm]  # Synchronous generator primary stator resistance in p.u.
+    Xs: float  # [pu*Ohm]  # Synchronous generator primary stator reactance in p.u.
+    Rg: float  # [pu*Ohm]  # Synchronous generator grounding resistance in p.u.
+    Xg: float  # [pu*Ohm]  # Synchronous generator grounding reactance in p.u.
+    Max_Ef: float  # [pu*V]  # Synchronous generator maximum induced rotor voltage in p.u., e.g. 0.8
+    Min_Ef: float  # [pu*V]  # Synchronous generator minimum induced rotor voltage in p.u., e.g. 0.8
+    pf: float  # [pu]  # Desired power factor in CONSTANTP mode (can be modified over time)
+    power_factor: float  # [pu]  # Desired power factor in CONSTANTP mode (can be modified over time)
+    voltage_A: complex  # [V]  # Terminal voltage on phase A
+    voltage_B: complex  # [V]  # Terminal voltage on phase B
+    voltage_C: complex  # [V]  # Terminal voltage on phase C
+    current_A: complex  # [A]  # Calculated terminal current on phase A
+    current_B: complex  # [A]  # Calculated terminal current on phase B
+    current_C: complex  # [A]  # Calculated terminal current on phase C
+    EfA: complex  # [V]  # Synchronous generator induced voltage on phase A
+    EfB: complex  # [V]  # Synchronous generator induced voltage on phase B
+    EfC: complex  # [V]  # Synchronous generator induced voltage on phase C
+    Vrotor_A: complex  # [V]  # Induction generator induced voltage on phase A in p.u.
+    Vrotor_B: complex  # [V]  # Induction generator induced voltage on phase B in p.u.
+    Vrotor_C: complex  # [V]  # Induction generator induced voltage on phase C in p.u.
+    Irotor_A: complex  # [V]  # Induction generator induced current on phase A in p.u.
+    Irotor_B: complex  # [V]  # Induction generator induced current on phase B in p.u.
+    Irotor_C: complex  # [V]  # Induction generator induced current on phase C in p.u.
+    phases: List[Phases]  # Specifies which phases to connect to - currently not supported and assumes three-phase connection
+
+
+class ModuleConnection:
+    pass
+
+
+class NativeMode(IntEnum):
+    NONE = 0
+    CLIENT = 1
+    SERVER = 2
+
+
+class NativeTransport(IntEnum):
+    NONE = 0
+    TCP = 2
+    UDP = 1
+
+
+class Native:
+    mode: NativeMode  # connection mode
+    transport: NativeTransport  # connection transport
+    timestep: float  # [s]  # timestep between updates
+
+
+class Json(Native):
+    version: float  # json version
+
+
+class ModuleCommercial:
+    pass
+
+
+class MultiZone:
+    from_: object
+    to: object
+    ua: float
+
+
+class OfficeHvacMode(IntEnum):
+    OFF = 0
+    VENT = 5
+    ECON = 4
+    COOL = 3
+    AUX = 2
+    HEAT = 1
+
+
+class Office:
+    floor_area: float  # [sf]
+    floor_height: float  # [ft]
+    exterior_ua: float  # [Btu/degF/h]
+    interior_ua: float  # [Btu/degF/h]
+    interior_mass: float  # [Btu/degF]
+    glazing: float  # [sf]
+    glazing.north: float  # [sf]
+    glazing.northeast: float  # [sf]
+    glazing.east: float  # [sf]
+    glazing.southeast: float  # [sf]
+    glazing.south: float  # [sf]
+    glazing.southwest: float  # [sf]
+    glazing.west: float  # [sf]
+    glazing.northwest: float  # [sf]
+    glazing.horizontal: float  # [sf]
+    glazing.coefficient: float  # [pu]
+    occupancy: float
+    occupants: float
+    schedule: str
+    air_temperature: float  # [degF]
+    mass_temperature: float  # [degF]
+    temperature_change: float  # [degF/h]
+    outdoor_temperature: float  # [degF]
+    Qh: float  # [Btu/h]
+    Qs: float  # [Btu/h]
+    Qi: float  # [Btu/h]
+    Qz: float  # [Btu/h]
+    hvac_mode: OfficeHvacMode
+    hvac.cooling.balance_temperature: float  # [degF]
+    hvac.cooling.capacity: float  # [Btu/h]
+    hvac.cooling.capacity_perF: float  # [Btu/degF/h]
+    hvac.cooling.design_temperature: float  # [degF]
+    hvac.cooling.efficiency: float  # [pu]
+    hvac.cooling.cop: float  # [pu]
+    hvac.heating.balance_temperature: float  # [degF]
+    hvac.heating.capacity: float  # [Btu/h]
+    hvac.heating.capacity_perF: float  # [Btu/degF/h]
+    hvac.heating.design_temperature: float  # [degF]
+    hvac.heating.efficiency: float  # [pu]
+    hvac.heating.cop: float  # [pu]
+    lights.capacity: float  # [kW]
+    lights.fraction: float  # [pu]
+    plugs.capacity: float  # [kW]
+    plugs.fraction: float  # [pu]
+    demand: complex  # [kW]
+    total_load: complex  # [kW]
+    energy: complex  # [kWh]
+    power_factor: float
+    power: complex  # [kW]
+    current: complex  # [A]
+    admittance: complex  # [1/Ohm]
+    hvac.demand: complex  # [kW]
+    hvac.load: complex  # [kW]
+    hvac.energy: complex  # [kWh]
+    hvac.power_factor: float
+    lights.demand: complex  # [kW]
+    lights.load: complex  # [kW]
+    lights.energy: complex  # [kWh]
+    lights.power_factor: float
+    lights.heatgain_fraction: float
+    lights.heatgain: float  # [kW]
+    plugs.demand: complex  # [kW]
+    plugs.load: complex  # [kW]
+    plugs.energy: complex  # [kWh]
+    plugs.power_factor: float
+    plugs.heatgain_fraction: float
+    plugs.heatgain: float  # [kW]
+    cooling_setpoint: float  # [degF]
+    heating_setpoint: float  # [degF]
+    thermostat_deadband: float  # [degF]
+    control.ventilation_fraction: float
+    control.lighting_fraction: float
+    ACH: float
