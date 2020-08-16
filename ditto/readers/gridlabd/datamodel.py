@@ -2708,21 +2708,25 @@ class VoltDump:
     mode: VoltDumpMode  # dumps the voltages in either polar or rectangular notation
 
 
+@dataclass
 class ModuleMarket:
     bid_offset: float  # [$]  # the bid offset value that prevents bids from being wrongly triggered
 
 
+@unique
 class AuctionSpecialMode(IntEnum):
     BUYERS_ONLY = 2
     SELLERS_ONLY = 1
     NONE = 0
 
 
+@unique
 class AuctionStatisticMode(IntEnum):
     OFF = 1
     ON = 0
 
 
+@unique
 class AuctionCurrentMarketClearingType(IntEnum):
     NULL = 0
     FAILURE = 5
@@ -2732,6 +2736,7 @@ class AuctionCurrentMarketClearingType(IntEnum):
     MARGINAL_SELLER = 1
 
 
+@unique
 class AuctionNextMarketClearingType(IntEnum):
     NULL = 0
     FAILURE = 5
@@ -2741,6 +2746,7 @@ class AuctionNextMarketClearingType(IntEnum):
     MARGINAL_SELLER = 1
 
 
+@unique
 class AuctionPastMarketClearingType(IntEnum):
     NULL = 0
     FAILURE = 5
@@ -2750,27 +2756,32 @@ class AuctionPastMarketClearingType(IntEnum):
     MARGINAL_SELLER = 1
 
 
+@unique
 class AuctionMarginMode(IntEnum):
     PROB = 2
     DENY = 1
     NORMAL = 0
 
 
+@unique
 class AuctionIgnoreFailedMarket(IntEnum):
     TRUE = 1
     FALSE = 0
 
 
+@unique
 class AuctionIgnorePricecap(IntEnum):
     TRUE = 1
     FALSE = 0
 
 
+@unique
 class AuctionCurveLogInfo(IntEnum):
     EXTRA = 1
     NORMAL = 0
 
 
+@dataclass
 class Auction:
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
@@ -2843,6 +2854,7 @@ class Auction:
     curve_log_info: AuctionCurveLogInfo
 
 
+@unique
 class ControllerSimpleMode(IntEnum):
     DOUBLE_RAMP = 6
     WATERHEATER = 5
@@ -2853,34 +2865,40 @@ class ControllerSimpleMode(IntEnum):
     NONE = 0
 
 
+@unique
 class ControllerBidMode(IntEnum):
     PROXY = 2
     OFF = 0
     ON = 1
 
 
+@unique
 class ControllerUseOverride(IntEnum):
     ON = 1
     OFF = 0
 
 
+@unique
 class ControllerControlMode(IntEnum):
     DEV_LEVEL = 2
     DOUBLE_RAMP = 1
     RAMP = 0
 
 
+@unique
 class ControllerResolveMode(IntEnum):
     SLIDING = 1
     DEADBAND = 0
 
 
+@unique
 class ControllerProxyMarginMode(IntEnum):
     PROB = 2
     DENY = 1
     NORMAL = 0
 
 
+@unique
 class ControllerProxyClearingType(IntEnum):
     NULL = 0
     FAILURE = 5
@@ -2890,6 +2908,7 @@ class ControllerProxyClearingType(IntEnum):
     MARGINAL_SELLER = 1
 
 
+@dataclass
 class Controller:
     simple_mode: ControllerSimpleMode
     bid_mode: ControllerBidMode
@@ -2981,6 +3000,7 @@ class Controller:
     proxy_clearing_type2: ControllerProxyClearingType
 
 
+@unique
 class DoubleControllerThermostatMode(IntEnum):
     COOL = 3
     HEAT = 2
@@ -2988,6 +3008,7 @@ class DoubleControllerThermostatMode(IntEnum):
     INVALID = 0
 
 
+@unique
 class DoubleControllerLastMode(IntEnum):
     COOL = 3
     HEAT = 2
@@ -2995,22 +3016,26 @@ class DoubleControllerLastMode(IntEnum):
     INVALID = 0
 
 
+@unique
 class DoubleControllerResolveMode(IntEnum):
     STICKY = 2
     DEADBAND = 1
     NONE = 0
 
 
+@unique
 class DoubleControllerSetupMode(IntEnum):
     HOUSE = 1
     NONE = 0
 
 
+@unique
 class DoubleControllerBidMode(IntEnum):
     OFF = 0
     ON = 1
 
 
+@dataclass
 class DoubleController:
     thermostat_mode: DoubleControllerThermostatMode
     last_mode: DoubleControllerLastMode
@@ -3056,23 +3081,27 @@ class DoubleController:
     stdev_price: float
 
 
+@unique
 class GeneratorControllerGeneratorState(IntEnum):
     STARTING = 2
     RUNNING = 1
     OFF = 0
 
 
+@unique
 class GeneratorControllerAmortizationType(IntEnum):
     LINEAR_BID = 2
     LINEAR_COST = 1
     EXPONENTIAL = 0
 
 
+@unique
 class GeneratorControllerGeneratorAttachment(IntEnum):
     BUILDING = 1
     STANDALONE = 0
 
 
+@dataclass
 class GeneratorController:
     generator_state: GeneratorControllerGeneratorState  # Current generator state
     amortization_type: GeneratorControllerAmortizationType  # Amortization compounding method
@@ -3106,12 +3135,14 @@ class GeneratorController:
     bid_id: int
 
 
+@unique
 class PassiveControllerPFCMode(IntEnum):
     OVER_UNDER_FREQUENCY = 2
     UNDER_FREQUENCY = 1
     OVER_FREQUENCY = 0
 
 
+@unique
 class PassiveControllerPFCState(IntEnum):
     RELEASED_ON = 6
     RELEASED_OFF = 5
@@ -3122,12 +3153,14 @@ class PassiveControllerPFCState(IntEnum):
     FREE = 0
 
 
+@unique
 class PassiveControllerDistributionType(IntEnum):
     UNIFORM = 2
     EXPONENTIAL = 1
     NORMAL = 0
 
 
+@unique
 class PassiveControllerControlMode(IntEnum):
     PRIMARY_FREQUENCY_CONTROL = 8
     DIRECT_LOAD_CONTROL = 7
@@ -3138,11 +3171,13 @@ class PassiveControllerControlMode(IntEnum):
     NONE = 0
 
 
+@unique
 class PassiveControllerDLCMode(IntEnum):
     CYCLING = 1
     OFF = 0
 
 
+@dataclass
 class PassiveController:
     input_state: int
     input_setpoint: float
@@ -3224,11 +3259,13 @@ class PassiveController:
     cycle_length_on: float  # [s]
 
 
+@unique
 class StubBidderRole(IntEnum):
     SELLER = 1
     BUYER = 0
 
 
+@dataclass
 class StubBidder:
     bid_period: float  # [s]
     count: int
@@ -3239,11 +3276,13 @@ class StubBidder:
     bid_id: int
 
 
+@unique
 class StubAuctionControlMode(IntEnum):
     DISABLED = 1
     NORMAL = 0
 
 
+@dataclass
 class StubAuction:
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
@@ -3262,6 +3301,7 @@ class StubAuction:
     control_mode: StubAuctionControlMode  # the control mode to use for determining average and deviation calculations
 
 
+@unique
 class SupervisoryControlBidSortMode(IntEnum):
     VOLTAGE_EXTREMES = 4
     VOLTAGE_DEVIAION_FROM_NOMINAL = 3
@@ -3270,12 +3310,14 @@ class SupervisoryControlBidSortMode(IntEnum):
     NONE = 0
 
 
+@unique
 class SupervisoryControllerPFCMode(IntEnum):
     OVER_UNDER_FREQUENCY = 2
     UNDER_FREQUENCY = 1
     OVER_FREQUENCY = 0
 
 
+@dataclass
 class SupervisoryControl:
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
@@ -3287,6 +3329,7 @@ class SupervisoryControl:
     bid_sort_mode: SupervisoryControlBidSortMode  # Determines how the bids into the market is sorted to contruct the PF curve
 
 
+@dataclass
 class ModuleReliability:
     enable_subsecond_models: bool  # Flag to enable deltamode functionality in the reliability module
     maximum_event_length: float  # [s]  # Maximum duration of any faulting event
@@ -3294,6 +3337,7 @@ class ModuleReliability:
     deltamode_timestep: int  # Default timestep for reliability deltamode operations
 
 
+@dataclass
 class Metrics:
     report_file: str
     customer_group: str
@@ -3303,6 +3347,7 @@ class Metrics:
     report_interval: float  # [s]
 
 
+@unique
 class EventGenFailureDist(IntEnum):
     TRIANGLE = 10
     BETA = 9
@@ -3317,6 +3362,7 @@ class EventGenFailureDist(IntEnum):
     UNIFORM = 0
 
 
+@unique
 class EventGenRestorationDist(IntEnum):
     TRIANGLE = 10
     BETA = 9
@@ -3331,6 +3377,7 @@ class EventGenRestorationDist(IntEnum):
     UNIFORM = 0
 
 
+@dataclass
 class EventGen:
     target_group: str
     fault_type: str
@@ -3345,11 +3392,13 @@ class EventGen:
     max_simultaneous_faults: int
 
 
+@dataclass
 class ModuleGenerators:
     enable_subsecond_models: bool  # Enable deltamode capabilities within the powerflow module
     deltamode_timestep: float  # [ns]  # Desired minimum timestep for deltamode-related simulations
 
 
+@unique
 class BatteryGeneratorMode(IntEnum):
     POWER_VOLTAGE_HYBRID = 7
     VOLTAGE_CONTROLLED = 6
@@ -3361,16 +3410,19 @@ class BatteryGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class BatteryAdditionalControls(IntEnum):
     LINEAR_TEMPERATURE = 1
     NONE = 0
 
 
+@unique
 class BatteryGeneratorStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class BatteryRfbSize(IntEnum):
     LARGE = 4
     MED_HIGH_ENERGY = 3
@@ -3379,11 +3431,13 @@ class BatteryRfbSize(IntEnum):
     HOUSEHOLD = 5
 
 
+@unique
 class BatteryPowerType(IntEnum):
     DC = 1
     AC = 2
 
 
+@unique
 class BatteryBatteryState(IntEnum):
     CONFLICTED = 5
     EMPTY = 4
@@ -3393,12 +3447,14 @@ class BatteryBatteryState(IntEnum):
     CHARGING = 1
 
 
+@unique
 class BatteryBatteryType(IntEnum):
     LEAD_ACID = 2
     LI_ION = 1
     UNKNOWON = 0
 
 
+@dataclass
 class Battery:
     generator_mode: BatteryGeneratorMode  # LEGACY MODEL: Selects generator control mode when using legacy model in non-legacy models, this should be SUPPLY_DRIVEN.
     additional_controls: BatteryAdditionalControls  # LEGACY MODEL: In conjunction with POWER_DRIVEN, VOLTAGE_CONTROLLED, and POWER_VOLTAGE_HYBRID, this will activate control set points that adjust with temperature
@@ -3453,12 +3509,14 @@ class Battery:
     reserve_state_of_charge: float  # [pu]  # INTERNAL BATTERY MODEL: the reserve state of charge the battery can reach.
 
 
+@unique
 class CentralDGControlControlMode(IntEnum):
     PEAK_SHAVING = 2
     CONSTANT_PF = 1
     NO_CONTROL = 0
 
 
+@dataclass
 class CentralDGControl:
     controlled_dgs: str  # the group ID of the dg objects the controller controls.
     feederhead_meter: object  # the name of the meter.
@@ -3471,12 +3529,14 @@ class CentralDGControl:
     pf_high: float  # [unit]
 
 
+@unique
 class DCDCConverterDCDCConverterType(IntEnum):
     BUCK_BOOST = 2
     BOOST = 1
     BUCK = 0
 
 
+@unique
 class DCDCConverterGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 5
     CONSTANT_PF = 4
@@ -3485,6 +3545,7 @@ class DCDCConverterGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class Phases(IntEnum):
     S = 112
     N = 8
@@ -3493,6 +3554,7 @@ class Phases(IntEnum):
     A = 1
 
 
+@dataclass
 class DCDCConverter:
     dc_dc_converter_type: DCDCConverterDCDCConverterType
     generator_mode: DCDCConverterGeneratorMode
@@ -3509,6 +3571,7 @@ class DCDCConverter:
     phases: List[Phases]
 
 
+@unique
 class DieselDGGenMode(IntEnum):
     CONSTANTP = 2
     CONSTANTPQ = 3
@@ -3516,18 +3579,21 @@ class DieselDGGenMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class DieselDGGenStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
     UNKNOWN = 0
 
 
+@unique
 class DieselDGGenType(IntEnum):
     DYN_SYNCHRONOUS = 3
     SYNCHRONOUS = 2
     INDUCTION = 1
 
 
+@unique
 class DieselDGGovernorType(IntEnum):
     GGOV1 = 5
     GGOV1_OLD = 4
@@ -3536,11 +3602,13 @@ class DieselDGGovernorType(IntEnum):
     NO_GOV = 1
 
 
+@unique
 class DieselDGExciterType(IntEnum):
     SEXS = 2
     NO_EXC = 1
 
 
+@dataclass
 class DieselDG:
     Gen_mode: DieselDGGenMode
     Gen_status: DieselDGGenStatus
@@ -3758,6 +3826,7 @@ class DieselDG:
     phases: List[Phases]  # Specifies which phases to connect to - currently not supported and assumes three-phase connection
 
 
+@unique
 class EnergyStorageGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 4
     CONSTANT_PF = 3
@@ -3766,16 +3835,19 @@ class EnergyStorageGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class EnergyStorageGeneratorStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class EnergyStoragePowerType(IntEnum):
     DC = 0
     AC = 1
 
 
+@dataclass
 class EnergyStorage:
     generator_mode: EnergyStorageGeneratorMode
     generator_status: EnergyStorageGeneratorStatus
@@ -3798,6 +3870,7 @@ class EnergyStorage:
     phases: List[Phases]
 
 
+@unique
 class InverterInverterType(IntEnum):
     FOUR_QUADRANT = 4
     PWM = 3
@@ -3806,6 +3879,7 @@ class InverterInverterType(IntEnum):
     TWO_PULSE = 0
 
 
+@unique
 class InverterFourQuadrantControlMode(IntEnum):
     GROUP_LOAD_FOLLOWING = 7
     LOAD_FOLLOWING = 5
@@ -3816,17 +3890,20 @@ class InverterFourQuadrantControlMode(IntEnum):
     NONE = 0
 
 
+@unique
 class InverterPfReg(IntEnum):
     EXCLUDED = 2
     INCLUDED_ALT = 3
     INCLUDED = 1
 
 
+@unique
 class InverterGeneratorStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class InverterGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 5
     CONSTANT_PF = 4
@@ -3835,17 +3912,20 @@ class InverterGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class InverterDynamicModelMode(IntEnum):
     PI = 1
     PID = 0
 
 
+@unique
 class InverterIEEE1547Version(IntEnum):
     IEEE1547A = 2
     IEEE1547 = 1
     NONE = 0
 
 
+@unique
 class InverterInverterManufacturer(IntEnum):
     XANTREX = 3
     SMA = 2
@@ -3853,6 +3933,7 @@ class InverterInverterManufacturer(IntEnum):
     NONE = 0
 
 
+@dataclass
 class Inverter:
     inverter_type: InverterInverterType  # LEGACY MODEL: Sets efficiencies and other parameters if using four_quadrant_control_mode, set this to FOUR_QUADRANT
     four_quadrant_control_mode: InverterFourQuadrantControlMode  # FOUR QUADRANT MODEL: Activates various control modes
@@ -3992,6 +4073,7 @@ class Inverter:
     volt_var_control_lockout: float  # [s]  # FOUR QUADRANT QUADRANT MODEL: the lockout time between volt/var actions.
 
 
+@unique
 class MicroTurbineGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 5
     CONSTANT_PF = 4
@@ -4000,16 +4082,19 @@ class MicroTurbineGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class MicroTurbineGeneratorStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class MicroTurbinePowerType(IntEnum):
     DC = 1
     AC = 2
 
 
+@dataclass
 class MicroTurbine:
     generator_mode: MicroTurbineGeneratorMode
     generator_status: MicroTurbineGeneratorStatus
@@ -4046,6 +4131,7 @@ class MicroTurbine:
     phases: List[Phases]
 
 
+@unique
 class PowerElectronicsGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 5
     CONSTANT_PF = 4
@@ -4054,16 +4140,19 @@ class PowerElectronicsGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class PowerElectronicsGeneratorStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class PowerElectronicsConverterType(IntEnum):
     CURRENT_SOURCED = 2
     VOLTAGE_SOURCED = 1
 
 
+@unique
 class PowerElectronicsSwitchType(IntEnum):
     DARLINGTON = 7
     IBJT = 6
@@ -4074,6 +4163,7 @@ class PowerElectronicsSwitchType(IntEnum):
     IDEAL_SWITCH = 1
 
 
+@unique
 class PowerElectronicsFilterType(IntEnum):
     BAND_PASS = 4
     BAND_STOP = 3
@@ -4081,6 +4171,7 @@ class PowerElectronicsFilterType(IntEnum):
     LOW_PASS = 1
 
 
+@unique
 class PowerElectronicsFilterImplementation(IntEnum):
     PARALLEL_RESONANT = 5
     SERIES_RESONANT = 4
@@ -4089,17 +4180,20 @@ class PowerElectronicsFilterImplementation(IntEnum):
     IDEAL_FILTER = 1
 
 
+@unique
 class PowerElectronicsFilterFrequency(IntEnum):
     F240HZ = 3
     F180HZ = 2
     F120HZ = 1
 
 
+@unique
 class PowerElectronicsPowerType(IntEnum):
     DC = 1
     AC = 2
 
 
+@dataclass
 class PowerElectronics:
     generator_mode: PowerElectronicsGeneratorMode
     generator_status: PowerElectronicsGeneratorStatus
@@ -4117,6 +4211,7 @@ class PowerElectronics:
     phases: List[Phases]
 
 
+@unique
 class RectifierRectifierType(IntEnum):
     TWELVE_PULSE = 4
     SIX_PULSE = 3
@@ -4125,6 +4220,7 @@ class RectifierRectifierType(IntEnum):
     ONE_PULSE = 0
 
 
+@unique
 class RectifierGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 5
     CONSTANT_PF = 4
@@ -4133,6 +4229,7 @@ class RectifierGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@dataclass
 class Rectifier:
     rectifier_type: RectifierRectifierType
     generator_mode: RectifierGeneratorMode
@@ -4155,6 +4252,7 @@ class Rectifier:
     phases: List[Phases]
 
 
+@unique
 class SolarGeneratorMode(IntEnum):
     SUPPLY_DRIVEN = 5
     CONSTANT_PF = 4
@@ -4163,11 +4261,13 @@ class SolarGeneratorMode(IntEnum):
     UNKNOWN = 0
 
 
+@unique
 class SolarGeneratorStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class SolarPanelType(IntEnum):
     CONCENTRATOR = 5
     THIN_FILM_GA_AS = 4
@@ -4176,32 +4276,38 @@ class SolarPanelType(IntEnum):
     SINGLE_CRYSTAL_SILICON = 1
 
 
+@unique
 class SolarPowerType(IntEnum):
     DC = 1
     AC = 2
 
 
+@unique
 class SolarInstallationType(IntEnum):
     GROUND_MOUNTED = 2
     ROOF_MOUNTED = 1
 
 
+@unique
 class SolarSolarTiltModel(IntEnum):
     PLAYERVALUE = 2
     SOLPOS = 1
     DEFAULT = 0
 
 
+@unique
 class SolarSolarPowerModel(IntEnum):
     FLATPLATE = 1
     DEFAULT = 0
 
 
+@unique
 class SolarOrientation(IntEnum):
     FIXED_AXIS = 1
     DEFAULT = 0
 
 
+@dataclass
 class Solar:
     generator_mode: SolarGeneratorMode
     generator_status: SolarGeneratorStatus
@@ -4249,22 +4355,26 @@ class Solar:
     phases: List[Phases]
 
 
+@unique
 class WindTurbDGGenStatus(IntEnum):
     ONLINE = 2
     OFFLINE = 1
 
 
+@unique
 class WindTurbDGGenType(IntEnum):
     SYNCHRONOUS = 2
     INDUCTION = 1
 
 
+@unique
 class WindTurbDGGenMode(IntEnum):
     CONSTANTPQ = 3
     CONSTANTP = 2
     CONSTANTE = 1
 
 
+@unique
 class WindTurbDGTurbineModel(IntEnum):
     BERGEY_10kW = 9
     GE_25MW = 8
@@ -4278,6 +4388,7 @@ class WindTurbDGTurbineModel(IntEnum):
     GENERIC_SYNCH_SMALL = 0
 
 
+@dataclass
 class WindTurbDG:
     Gen_status: WindTurbDGGenStatus  # Generator is currently available to supply power
     Gen_type: WindTurbDGGenType  # Standard synchronous generator is also used to 'fake' a doubly-fed induction generator for now
@@ -4346,42 +4457,50 @@ class WindTurbDG:
     phases: List[Phases]  # Specifies which phases to connect to - currently not supported and assumes three-phase connection
 
 
+@dataclass
 class ModuleConnection:
     pass
 
 
+@unique
 class NativeMode(IntEnum):
     NONE = 0
     CLIENT = 1
     SERVER = 2
 
 
+@unique
 class NativeTransport(IntEnum):
     NONE = 0
     TCP = 2
     UDP = 1
 
 
+@dataclass
 class Native:
     mode: NativeMode  # connection mode
     transport: NativeTransport  # connection transport
     timestep: float  # [s]  # timestep between updates
 
 
+@dataclass
 class Json(Native):
     version: float  # json version
 
 
+@dataclass
 class ModuleCommercial:
     pass
 
 
+@dataclass
 class MultiZone:
     from_: object
     to: object
     ua: float
 
 
+@unique
 class OfficeHvacMode(IntEnum):
     OFF = 0
     VENT = 5
@@ -4391,6 +4510,7 @@ class OfficeHvacMode(IntEnum):
     HEAT = 1
 
 
+@dataclass
 class Office:
     floor_area: float  # [sf]
     floor_height: float  # [ft]
