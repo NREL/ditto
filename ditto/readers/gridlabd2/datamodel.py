@@ -1,7 +1,70 @@
 # -*- coding: utf-8 -*-
 from enum import IntEnum, unique
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import logging
+import re
 from typing import List
+
+import glm
+
+
+logger = logging.getLogger(__name__)
+
+
+def parse_file(filename):
+    """Parse all objects in the GLM file.
+
+    Parameters
+    ----------
+    filename : str
+
+    Returns
+    -------
+    dict
+        dataclass instances of GLM objects, keyed by object names
+
+    """
+    with open(filename) as f_in:
+        json_data = glm.load(f_in)
+
+    objects = {}
+    for object_data in json_data["objects"]:
+        try:
+            if "from" in object_data["attributes"]:
+                object_data["attributes"]["from_"] = object_data["attributes"]["from"]
+                object_data["attributes"].pop("from")
+            glm_wrapper = GlmWrapper(**object_data)
+        except InvalidConfiguration as exc:
+            logger.warning("no handling for %s", object_data["name"])
+            continue
+
+        obj = glm_wrapper.obj
+        objects[obj.name] = obj
+        # TODO: special names (overhead_line_conductor:100) and children?
+
+    return objects
+
+
+@dataclass
+class GlmWrapper:
+    """Wrapper for GLM object in JSON data"""
+    name: str
+    attributes: dict
+    children: list
+    obj: object = field(init=False)  # TODO: what should the type be?
+
+    def __post_init__(self):
+        cls = _CLASS_MAPPING.get(self.name)
+        if cls is None:
+            raise InvalidConfiguration(f"no class is mapped to {self.name}")
+
+        try:
+            self.obj = cls(**self.attributes)
+        except Exception:
+            logger.exception("Failed to instantiate %s: attributes=%s",
+                             cls, self.attributes)
+            raise
+
 
 # TODO: make this a type that understands timestamps
 timestamp = str
@@ -15,6 +78,8 @@ class ModuleTape:
     csv_keep_clean: int
     delta_mode_needed: timestamp
 
+    def __post_init__(self):
+        _convert_attrs(self)
 
 @unique
 class Unit(IntEnum):
@@ -52,6 +117,9 @@ class Recorder:
     header_units: Unit
     line_units: Unit
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Collector:
@@ -62,6 +130,9 @@ class Collector:
     group: str
     flush: int
     interval: float  # s
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -86,6 +157,9 @@ class group_recorder:
     limit: int
     complex_part: ComplexPart
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Histogram:
@@ -102,6 +176,9 @@ class Histogram:
     bin_count: int
     limit: int
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Player:
@@ -110,6 +187,9 @@ class Player:
     filetype: str
     mode: str
     loop: int
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
@@ -121,6 +201,9 @@ class Shaper:
     property: str
     magnitude: float
     events: float
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -168,6 +251,9 @@ class ViolationRecorder:
     inverter_v_chng_interval: float
     violation_flag: List[ViolationFlag]
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class Status(IntEnum):
@@ -196,14 +282,21 @@ class CsvReader:
     columns: str
     filename: str
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ModuleClimate:
     pass
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Weather:
+    name: str
     temperature: float  # degF
     humidity: float  # %
     solar_dir: float  # W/sf
@@ -223,6 +316,9 @@ class Weather:
     hour: int
     minute: int
     second: int
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -251,6 +347,7 @@ class ImplicitEndUse(IntEnum):
 
 @dataclass
 class ModuleResidential:
+    name: str
     default_line_voltage: complex  # [V]
     default_line_current: complex  # [A]
     default_outdoor_temperature: float  # [degF]
@@ -265,6 +362,9 @@ class ModuleResidential:
     thermostat_control_warning: float
     system_dwell_time: float  # [s]
     aux_cutin_temperature: float  # [degF]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -289,16 +389,23 @@ class ResidentialEndusePowerState(IntEnum):
 
 @dataclass
 class Loadshape:
-    pass
+    name: str
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class Enduse:
-    pass
+    name: str
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class ResidentialEnduse:
+    name: str
     shape: Loadshape
     load: Enduse
     energy: complex  # [kVAh]
@@ -320,15 +427,22 @@ class ResidentialEnduse:
     override: ResidentialEnduseOverride
     power_state: ResidentialEndusePowerState
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Appliance(ResidentialEnduse):
+    name: str
     powers: List[complex]
     impedances: List[complex]
     currents: List[complex]
     durations: List[float]
     transitions: List[float]
     heatgains: List[float]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -360,6 +474,7 @@ class ClotheswasherWashMode(IntEnum):
 
 @dataclass
 class Clotheswasher(ResidentialEnduse):
+    name: str
     motor_power: float  # [kW]
     circuit_split: float
     queue: float  # [unit]  # the total laundry accumulated
@@ -417,6 +532,9 @@ class Clotheswasher(ResidentialEnduse):
     spin_mode: ClotheswasherSpinMode
     wash_mode: ClotheswasherWashMode
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class DishwasherState(IntEnum):
@@ -432,6 +550,7 @@ class DishwasherState(IntEnum):
 
 @dataclass
 class Dishwasher(ResidentialEnduse):
+    name: str
     control_power: float  # [W]
     dishwasher_coil_power_1: float  # [W]
     dishwasher_coil_power_2: float  # [W]
@@ -510,9 +629,11 @@ class Dishwasher(ResidentialEnduse):
     motor_coil_on_off: float
     is_240: bool  # load is 220/240 V (across both phases)
 
+    def __post_init__(self):
+        _convert_attrs(self)
 
-@dataclass
-class DryerState:
+
+class DryerState(IntEnum):
     CONTROL_ONLY = 5
     MOTOR_COIL_ONLY = 3
     MOTOR_ONLY = 4
@@ -523,6 +644,7 @@ class DryerState:
 
 @dataclass
 class Dryer(ResidentialEnduse):
+    name: str
     motor_power: float  # [W]
     dryer_coil_power: float  # [W]
     controls_power: float  # [W]
@@ -572,6 +694,9 @@ class Dryer(ResidentialEnduse):
     motor_coil_on_off: float
     is_240: bool  # load is 220/240 V (across both phases)
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class EVChargerState(IntEnum):
@@ -595,6 +720,7 @@ class EVChargerVehicleType(IntEnum):
 
 @dataclass
 class EVCharger(ResidentialEnduse):
+    name: str
     charger_type: EVChargerChargerType
     vehicle_type: EVChargerVehicleType
     state: EVChargerState
@@ -610,6 +736,9 @@ class EVCharger(ResidentialEnduse):
     mileage_classification: float  # [mile]  # Miles expected range on battery only
     demand_profile: str
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class EVChargerDeterministicVehicleLocation(IntEnum):
@@ -622,6 +751,7 @@ class EVChargerDeterministicVehicleLocation(IntEnum):
 
 @dataclass
 class EVChargerDeterministic(ResidentialEnduse):
+    name: str
     charge_rate: float  # [W]  # Current demanded charge rate of the vehicle
     variation_mean: float  # [s]  # Mean of normal variation of schedule variation
     variation_std_dev: float  # [s]  # Standard deviation of normal variation of schedule times
@@ -644,6 +774,9 @@ class EVChargerDeterministic(ResidentialEnduse):
     maximum_charge_rate: float  # [W]  # Maximum output rate of charger in kW
     charging_efficiency: float  # [unit]  # Efficiency of charger (ratio) when charging
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class FreezerState(IntEnum):
@@ -653,6 +786,7 @@ class FreezerState(IntEnum):
 
 @dataclass
 class Freezer(ResidentialEnduse):
+    name: str
     size: float  # [cf]
     rated_capacity: float  # [Btu/h]
     temperature: float  # [degF]
@@ -663,6 +797,9 @@ class Freezer(ResidentialEnduse):
     event_temp: float
     UA: float  # [Btu/degF*h]
     state: FreezerState
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -752,7 +889,7 @@ class HouseHeatingSystemType(IntEnum):
 
 @unique
 class HouseCoolingSystemType(IntEnum):
-    HEAT_PUMP = 2
+    HEAT_PUMP = 3
     ELECTRIC = 2
     NONE = 1
 
@@ -789,7 +926,6 @@ class HouseGlassType(IntEnum):
     OTHER = 0
 
 
-@unique
 class HouseWindowFrame(IntEnum):
     INSULATED = 4
     WOOD = 3
@@ -848,7 +984,10 @@ class HouseThermostatControl(IntEnum):
 
 @dataclass
 class HousePanel:
-    pass
+    name: str
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
@@ -1013,6 +1152,9 @@ class House(ResidentialEnduse):
     hvac_duty_cycle: float
     thermostat_control: HouseThermostatControl  # determine level of internal thermostatic control
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class MicrowaveState(IntEnum):
@@ -1030,12 +1172,18 @@ class Microwave(ResidentialEnduse):
     runtime: float  # [s]  #
     state_time: float  # [s]  #
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class OccupantLoad(ResidentialEnduse):
     number_of_occupants: int
     occupancy_fraction: float  # [unit]
     heatgain_per_person: float  # [Btu/h]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
@@ -1044,6 +1192,9 @@ class PlugLoad(ResidentialEnduse):
     demand: float  # [unit]
     installed_power: float  # [kW]  # installed plugs capacity
     actual_power: complex  # [kVA]  # actual power demand
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1125,6 +1276,9 @@ class Range(ResidentialEnduse):
     actual_power: complex  # [kVA]  # the actual power based on the current voltage across the coils
     is_range_on: float  # simple logic output to determine state of range (1-on, 0-off)
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class RefrigeratorDefrostCriterion(IntEnum):
@@ -1186,6 +1340,9 @@ class Refrigerator(ResidentialEnduse):
     daily_door_opening: int
     state: RefrigeratorState
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class ThermalStorageDischargeScheduleType(IntEnum):
@@ -1214,6 +1371,9 @@ class ThermalStorage(ResidentialEnduse):
     discharge_rate: float  # [Btu/h]  # rating of discharge or cooling
     SOC: float  # [%] state of charge as percentage of total capacity
     k: float  # [W/m/K]  # coefficient of thermal conductivity (W/m/K)
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1292,10 +1452,16 @@ class WaterHeater(ResidentialEnduse):
     load_state: WaterHeaterLoadState
     re_override: WaterHeaterREOverride  # the override setting for the water heater
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ZIPLoad(ResidentialEnduse):
     pass
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1315,6 +1481,7 @@ class ModulePowerFlowNRMatrixOutputInterval(IntEnum):
 
 @dataclass
 class ModulePowerFlow:
+    name: str
     show_matrix_values: bool
     primary_voltage_ratio: float
     nominal_frequency: float
@@ -1354,6 +1521,9 @@ class ModulePowerFlow:
     enable_mesh_fault_current: bool  # Flag to enable mesh-based fault current calculations
     market_price_name: str
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class BillDumpMeterType(IntEnum):
@@ -1382,8 +1552,12 @@ class PowerFlowObjectPhases(IntEnum):
 
 @dataclass
 class PowerFlowObject:
-    phases: List[PowerFlowObjectPhases]
-    nominal_voltage: float  # [V]
+    name: str
+    phases: List[PowerFlowObjectPhases] = None
+    nominal_voltage: float = None  # [V]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1413,44 +1587,48 @@ class NodeServiceStatus(IntEnum):
     IN_SERVICE = 1
 
 
+@dataclass
 class Node(PowerFlowObject):
-    bustype: NodeBusType  # defines whether the node is a PQ, PV, or SWING node
-    busflags: List[NodeBusFlag]  # flag indicates node has a source for voltage, i.e. connects to the swing node
-    reference_bus: object  # reference bus from which frequency is defined
-    maximum_voltage_error: float  # [V]  # convergence voltage limit or convergence criteria
-    voltage_A: complex  # [V]  # bus voltage, Phase A to ground
-    voltage_B: complex  # [V]  # bus voltage, Phase B to ground
-    voltage_C: complex  # [V]  # bus voltage, Phase C to ground
-    voltage_AB: complex  # [V]  # line voltages, Phase AB
-    voltage_BC: complex  # [V]  # line voltages, Phase BC
-    voltage_CA: complex  # [V]  # line voltages, Phase CA
-    mean_repair_time: float  # [s]  # Time after a fault clears for the object to be back in service
-    frequency_measure_type: NodeFrequencyMeasureType  # PLL frequency measurement
-    sfm_T: float  # [s]  # Transducer time constant for simplified frequency measurement (seconds)
-    pll_Kp: float  # [pu]  # Proportional gain of PLL frequency measurement
-    pll_Ki: float  # [pu]  # Integration gain of PLL frequency measurement
-    measured_angle_A: float  # [rad]  # bus angle measurement, phase A
-    measured_frequency_A: float  # [Hz]  # frequency measurement, phase A
-    measured_angle_B: float  # [rad]  # bus angle measurement, phase B
-    measured_frequency_B: float  # [Hz]  # frequency measurement, phase B
-    measured_angle_C: float  # [rad]  # bus angle measurement, phase C
-    measured_frequency_C: float  # [Hz]  # frequency measurement, phase C
-    measured_frequency: float  # [Hz]  # frequency measurement - average of present phases
-    service_status: NodeServiceStatus  # In and out of service flag
-    service_status_double: float  # In and out of service flag - type float - will indiscriminately override service_status - useful for schedules
-    previous_uptime: float  # [min]  # Previous time between disconnects of node in minutes
-    current_uptime: float  # [min]  # Current time since last disconnect of node in minutes
-    Norton_dynamic: bool  # Flag to indicate a Norton-equivalent connection -- used for generators and deltamode
-    GFA_enable: bool  # Disable/Enable Grid Friendly Applicance(TM)-type functionality
-    GFA_freq_low_trip: float  # [Hz]  # Low frequency trip point for Grid Friendly Appliance(TM)-type functionality
-    GFA_freq_high_trip: float  # [Hz]  # High frequency trip point for Grid Friendly Appliance(TM)-type functionality
-    GFA_volt_low_trip: float  # [pu]  # Low voltage trip point for Grid Friendly Appliance(TM)-type functionality
-    GFA_volt_high_trip: float  # [pu]  # High voltage trip point for Grid Friendly Appliance(TM)-type functionality
-    GFA_reconnect_time: float  # [s]  # Reconnect time for Grid Friendly Appliance(TM)-type functionality
-    GFA_freq_disconnect_time: float  # [s]  # Frequency violation disconnect time for Grid Friendly Appliance(TM)-type functionality
-    GFA_volt_disconnect_time: float  # [s]  # Voltage violation disconnect time for Grid Friendly Appliance(TM)-type functionality
-    GFA_status: bool  # Low frequency trip point for Grid Friendly Appliance(TM)-type functionality
-    topological_parent: object  # topological parent as per GLM configuration
+    bustype: NodeBusType = None  # defines whether the node is a PQ, PV, or SWING node
+    busflags: List[NodeBusFlag] = None  # flag indicates node has a source for voltage, i.e. connects to the swing node
+    reference_bus: object = None  # reference bus from which frequency is defined
+    maximum_voltage_error: float = None  # [V]  # convergence voltage limit or convergence criteria
+    voltage_A: complex = None  # [V]  # bus voltage, Phase A to ground
+    voltage_B: complex = None  # [V]  # bus voltage, Phase B to ground
+    voltage_C: complex = None  # [V]  # bus voltage, Phase C to ground
+    voltage_AB: complex = None  # [V]  # line voltages, Phase AB
+    voltage_BC: complex = None  # [V]  # line voltages, Phase BC
+    voltage_CA: complex = None  # [V]  # line voltages, Phase CA
+    mean_repair_time: float = None  # [s]  # Time after a fault clears for the object to be back in service
+    frequency_measure_type: NodeFrequencyMeasureType = None  # PLL frequency measurement
+    sfm_T: float = None  # [s]  # Transducer time constant for simplified frequency measurement (seconds)
+    pll_Kp: float = None  # [pu]  # Proportional gain of PLL frequency measurement
+    pll_Ki: float = None  # [pu]  # Integration gain of PLL frequency measurement
+    measured_angle_A: float = None  # [rad]  # bus angle measurement, phase A
+    measured_frequency_A: float = None  # [Hz]  # frequency measurement, phase A
+    measured_angle_B: float = None  # [rad]  # bus angle measurement, phase B
+    measured_frequency_B: float = None  # [Hz]  # frequency measurement, phase B
+    measured_angle_C: float = None  # [rad]  # bus angle measurement, phase C
+    measured_frequency_C: float = None  # [Hz]  # frequency measurement, phase C
+    measured_frequency: float = None  # [Hz]  # frequency measurement - average of present phases
+    service_status: NodeServiceStatus = None  # In and out of service flag
+    service_status_double: float = None  # In and out of service flag - type float - will indiscriminately override service_status - useful for schedules
+    previous_uptime: float = None  # [min]  # Previous time between disconnects of node in minutes
+    current_uptime: float = None  # [min]  # Current time since last disconnect of node in minutes
+    Norton_dynamic: bool = None  # Flag to indicate a Norton-equivalent connection -- used for generators and deltamode
+    GFA_enable: bool = None  # Disable/Enable Grid Friendly Applicance(TM)-type functionality
+    GFA_freq_low_trip: float = None  # [Hz]  # Low frequency trip point for Grid Friendly Appliance(TM)-type functionality
+    GFA_freq_high_trip: float = None  # [Hz]  # High frequency trip point for Grid Friendly Appliance(TM)-type functionality
+    GFA_volt_low_trip: float = None  # [pu]  # Low voltage trip point for Grid Friendly Appliance(TM)-type functionality
+    GFA_volt_high_trip: float = None  # [pu]  # High voltage trip point for Grid Friendly Appliance(TM)-type functionality
+    GFA_reconnect_time: float = None  # [s]  # Reconnect time for Grid Friendly Appliance(TM)-type functionality
+    GFA_freq_disconnect_time: float = None  # [s]  # Frequency violation disconnect time for Grid Friendly Appliance(TM)-type functionality
+    GFA_volt_disconnect_time: float = None  # [s]  # Voltage violation disconnect time for Grid Friendly Appliance(TM)-type functionality
+    GFA_status: bool = None  # Low frequency trip point for Grid Friendly Appliance(TM)-type functionality
+    topological_parent: object = None  # topological parent as per GLM configuration
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1485,31 +1663,31 @@ class CapacitorControlLevel(IntEnum):
 
 @dataclass
 class Capacitor(Node):
-    pt_phase: List[CapacitorPhase]  # Phase(s) that the PT is on, used as measurement points for control
-    phases_connected: List[CapacitorPhase]  # phases capacitors connected to
-    switchA: CapacitorSwitch  # capacitor A switch open or close
-    switchB: CapacitorSwitch  # capacitor B switch open or close
-    switchC: CapacitorSwitch  # capacitor C switch open or close
-    control: CapacitorControl  # control operation strategy
-    cap_A_switch_count: float  # number of switch operations on Phase A
-    cap_B_switch_count: float  # number of switch operations on Phase B
-    cap_C_switch_count: float  # number of switch operations on Phase C
-    voltage_set_high: float  # [V]  # Turn off if voltage is above this set point
-    voltage_set_low: float  # [V]  # Turns on if voltage is below this set point
-    VAr_set_high: float  # [VAr]  # high VAR set point for VAR control (turn off)
-    VAr_set_low: float  # [VAr]  # low VAR set point for VAR control (turn on)
-    current_set_low: float  # [A]  # high current set point for current control mode (turn on)
-    current_set_high: float  # [A]  # low current set point for current control mode (turn off)
-    capacitor_A: float  # [VAr]  # Capacitance value for phase A or phase AB
-    capacitor_B: float  # [VAr]  # Capacitance value for phase B or phase BC
-    capacitor_C: float  # [VAr]  # Capacitance value for phase C or phase CA
-    cap_nominal_voltage: float  # [V]  # Nominal voltage for the capacitor. Used for calculation of capacitance value
-    time_delay: float  # [s]  # control time delay
-    dwell_time: float  # [s]  # Time for system to remain constant before a state change will be passed
-    lockout_time: float  # [s]  # Time for capacitor to remain locked out from further switching operations (VARVOLT control)
-    remote_sense: object  # Remote object for sensing values used for control schemes
-    remote_sense_B: object  # Secondary Remote object for sensing values used for control schemes (VARVOLT uses two)
-    control_level: CapacitorControlLevel  # define bank or individual control
+    pt_phase: List[CapacitorPhase] = None  # Phase(s) that the PT is on, used as measurement points for control
+    phases_connected: List[CapacitorPhase] = None  # phases capacitors connected to
+    switchA: CapacitorSwitch = None  # capacitor A switch open or close
+    switchB: CapacitorSwitch = None  # capacitor B switch open or close
+    switchC: CapacitorSwitch = None  # capacitor C switch open or close
+    control: CapacitorControl = None  # control operation strategy
+    cap_A_switch_count: float = None  # number of switch operations on Phase A
+    cap_B_switch_count: float = None  # number of switch operations on Phase B
+    cap_C_switch_count: float = None  # number of switch operations on Phase C
+    voltage_set_high: float = None  # [V]  # Turn off if voltage is above this set point
+    voltage_set_low: float = None  # [V]  # Turns on if voltage is below this set point
+    VAr_set_high: float = None  # [VAr]  # high VAR set point for VAR control (turn off)
+    VAr_set_low: float = None  # [VAr]  # low VAR set point for VAR control (turn on)
+    current_set_low: float = None  # [A]  # high current set point for current control mode (turn on)
+    current_set_high: float = None  # [A]  # low current set point for current control mode (turn off)
+    capacitor_A: float = None  # [VAr]  # Capacitance value for phase A or phase AB
+    capacitor_B: float = None  # [VAr]  # Capacitance value for phase B or phase BC
+    capacitor_C: float = None  # [VAr]  # Capacitance value for phase C or phase CA
+    cap_nominal_voltage: float = None  # [V]  # Nominal voltage for the capacitor. Used for calculation of capacitance value
+    time_delay: float = None  # [s]  # control time delay
+    dwell_time: float = None  # [s]  # Time for system to remain constant before a state change will be passed
+    lockout_time: float = None  # [s]  # Time for capacitor to remain locked out from further switching operations (VARVOLT control)
+    remote_sense: object = None  # Remote object for sensing values used for control schemes
+    remote_sense_B: object = None  # Secondary Remote object for sensing values used for control schemes (VARVOLT uses two)
+    control_level: CapacitorControlLevel = None  # define bank or individual control
 
 
 @unique
@@ -1517,18 +1695,26 @@ class CurrDumpMode(IntEnum):
     polar = 1
     rect = 0
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class CurrDump:
+    name: str
     group: str  # the group ID to output data for (all links if empty)
     runtime: timestamp  # the time to check current data
     filename: str  # the file to dump the current data into
     runcount: int  # the number of times the file has been written to
     mode: CurrDumpMode
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Emissions:
+    name: str
     Nuclear_Order: float
     Hydroelectric_Order: float
     Solarthermal_Order: float
@@ -1626,6 +1812,9 @@ class Emissions:
     Region: float
     cycle_interval: float  # [s]
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class FaultCheckCheckMode(IntEnum):
@@ -1636,6 +1825,7 @@ class FaultCheckCheckMode(IntEnum):
 
 @dataclass
 class FaultCheck:
+    name: str
     check_mode: FaultCheckCheckMode  # Frequency of fault checks
     output_filename: str  # Output filename for list of unsupported nodes
     reliability_mode: bool  # General flag indicating if fault_check is operating under faulting or restoration mode -- reliability set this
@@ -1643,6 +1833,9 @@ class FaultCheck:
     full_output_file: bool  # Flag to indicate if the output_filename report contains both supported and unsupported nodes -- if false, just does unsupported
     grid_association: bool  # Flag to indicate if multiple, distinct grids are allowed in a GLM, or if anything not attached to the master swing is removed
     eventgen_object: object  # Link to generic eventgen object to handle unexpected faults
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1653,6 +1846,7 @@ class FrequencyGeneratorFrequencyMode(IntEnum):
 
 @dataclass
 class FrequencyGenerator:
+    name: str
     Frequency_Mode: FrequencyGeneratorFrequencyMode  # Frequency object operations mode
     Frequency: float  # [Hz]  # Instantaneous frequency value
     FreqChange: float  # [Hz/s]  # Frequency change from last timestep
@@ -1672,6 +1866,9 @@ class FrequencyGenerator:
     avg168: float  # [Hz]  # Average of last 168 hourly instantaneous measurements
     std168: float  # [Hz]  # Standard deviation of last 168 hourly instantaneous measurements
     Num_Resp_Eqs: int  # Total number of equations the response can contain
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1696,39 +1893,42 @@ class LinkFlowDirection(IntEnum):
 
 @dataclass
 class Link(PowerFlowObject):
-    status: LinkStatus  #
-    from_: object  # from_node - source node
-    to: object  # to_node - load node
-    power_in: complex  # [VA]  # power flow in (w.r.t from node)
-    power_out: complex  # [VA]  # power flow out (w.r.t to node)
-    power_out_real: float  # [W]  # power flow out (w.r.t to node), real
-    power_losses: complex  # [VA]  # power losses
-    power_in_A: complex  # [VA]  # power flow in (w.r.t from node), phase A
-    power_in_B: complex  # [VA]  # power flow in (w.r.t from node), phase B
-    power_in_C: complex  # [VA]  # power flow in (w.r.t from node), phase C
-    power_out_A: complex  # [VA]  # power flow out (w.r.t to node), phase A
-    power_out_B: complex  # [VA]  # power flow out (w.r.t to node), phase B
-    power_out_C: complex  # [VA]  # power flow out (w.r.t to node), phase C
-    power_losses_A: complex  # [VA]  # power losses, phase A
-    power_losses_B: complex  # [VA]  # power losses, phase B
-    power_losses_C: complex  # [VA]  # power losses, phase C
-    current_out_A: complex  # [A]  # current flow out of link (w.r.t. to node), phase A
-    current_out_B: complex  # [A]  # current flow out of link (w.r.t. to node), phase B
-    current_out_C: complex  # [A]  # current flow out of link (w.r.t. to node), phase C
-    current_in_A: complex  # [A]  # current flow to link (w.r.t from node), phase A
-    current_in_B: complex  # [A]  # current flow to link (w.r.t from node), phase B
-    current_in_C: complex  # [A]  # current flow to link (w.r.t from node), phase C
-    fault_current_in_A: complex  # [A]  # fault current flowing in, phase A
-    fault_current_in_B: complex  # [A]  # fault current flowing in, phase B
-    fault_current_in_C: complex  # [A]  # fault current flowing in, phase C
-    fault_current_out_A: complex  # [A]  # fault current flowing out, phase A
-    fault_current_out_B: complex  # [A]  # fault current flowing out, phase B
-    fault_current_out_C: complex  # [A]  # fault current flowing out, phase C
-    flow_direction: List[LinkFlowDirection]  # flag used for describing direction of the flow of power
-    mean_repair_time: float  # [s]  # Time after a fault clears for the object to be back in service
-    continuous_rating: float  # [A]  # Continuous rating for this link object (set individual line segments
-    emergency_rating: float  # [A]  # Emergency rating for this link object (set individual line segments
-    inrush_convergence_value: float  # [V]  # Tolerance, as change in line voltage drop between iterations, for deltamode in-rush completion
+    status: LinkStatus = None  #
+    from_: object = None  # from_node - source node
+    to: object = None  # to_node - load node
+    power_in: complex = None  # [VA]  # power flow in (w.r.t from node)
+    power_out: complex = None  # [VA]  # power flow out (w.r.t to node)
+    power_out_real: float = None  # [W]  # power flow out (w.r.t to node), real
+    power_losses: complex = None  # [VA]  # power losses
+    power_in_A: complex = None  # [VA]  # power flow in (w.r.t from node), phase A
+    power_in_B: complex = None  # [VA]  # power flow in (w.r.t from node), phase B
+    power_in_C: complex = None  # [VA]  # power flow in (w.r.t from node), phase C
+    power_out_A: complex = None  # [VA]  # power flow out (w.r.t to node), phase A
+    power_out_B: complex = None  # [VA]  # power flow out (w.r.t to node), phase B
+    power_out_C: complex = None  # [VA]  # power flow out (w.r.t to node), phase C
+    power_losses_A: complex = None  # [VA]  # power losses, phase A
+    power_losses_B: complex = None  # [VA]  # power losses, phase B
+    power_losses_C: complex = None  # [VA]  # power losses, phase C
+    current_out_A: complex = None  # [A]  # current flow out of link (w.r.t. to node), phase A
+    current_out_B: complex = None  # [A]  # current flow out of link (w.r.t. to node), phase B
+    current_out_C: complex = None  # [A]  # current flow out of link (w.r.t. to node), phase C
+    current_in_A: complex = None  # [A]  # current flow to link (w.r.t from node), phase A
+    current_in_B: complex = None  # [A]  # current flow to link (w.r.t from node), phase B
+    current_in_C: complex = None  # [A]  # current flow to link (w.r.t from node), phase C
+    fault_current_in_A: complex = None  # [A]  # fault current flowing in, phase A
+    fault_current_in_B: complex = None  # [A]  # fault current flowing in, phase B
+    fault_current_in_C: complex = None  # [A]  # fault current flowing in, phase C
+    fault_current_out_A: complex = None  # [A]  # fault current flowing out, phase A
+    fault_current_out_B: complex = None  # [A]  # fault current flowing out, phase B
+    fault_current_out_C: complex = None  # [A]  # fault current flowing out, phase C
+    flow_direction: List[LinkFlowDirection] = None  # flag used for describing direction of the flow of power
+    mean_repair_time: float = None  # [s]  # Time after a fault clears for the object to be back in service
+    continuous_rating: float = None  # [A]  # Continuous rating for this link object (set individual line segments
+    emergency_rating: float = None  # [A]  # Emergency rating for this link object (set individual line segments
+    inrush_convergence_value: float = None  # [V]  # Tolerance, as change in line voltage drop between iterations, for deltamode in-rush completion
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1745,13 +1945,16 @@ class FuseRepairDistType(IntEnum):
 
 @dataclass
 class Fuse(Link):
-    phase_A_status: FusePhaseStatus
-    phase_B_status: FusePhaseStatus
-    phase_C_status: FusePhaseStatus
-    repair_dist_type: FuseRepairDistType
-    current_limit: float  # [A]
-    mean_replacement_time: float  # [s]
-    fuse_resistance: float  # [Ohm]  # The resistance value of the fuse when it is not blown.
+    phase_A_status: FusePhaseStatus = None
+    phase_B_status: FusePhaseStatus = None
+    phase_C_status: FusePhaseStatus = None
+    repair_dist_type: FuseRepairDistType = None
+    current_limit: float = None  # [A]
+    mean_replacement_time: float = None  # [s]
+    fuse_resistance: float = None  # [Ohm]  # The resistance value of the fuse when it is not blown.
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
@@ -1761,56 +1964,71 @@ class ImpedanceDump:
     runtime: timestamp  # the time to check voltage data
     runcount: int  # the number of times the file has been written to
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Line:
-    configuration: object
-    length: float  # [ft]
+    name: str = None
+    configuration: object = None
+    length: float = None  # [ft]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class LineConfiguration:
-    conductor_A: object
-    conductor_B: object
-    conductor_C: object
-    conductor_N: object
-    spacing: object
-    z11: complex  # [Ohm/mile]
-    z12: complex  # [Ohm/mile]
-    z13: complex  # [Ohm/mile]
-    z21: complex  # [Ohm/mile]
-    z22: complex  # [Ohm/mile]
-    z23: complex  # [Ohm/mile]
-    z31: complex  # [Ohm/mile]
-    z32: complex  # [Ohm/mile]
-    z33: complex  # [Ohm/mile]
-    c11: float  # [nF/mile]
-    c12: float  # [nF/mile]
-    c13: float  # [nF/mile]
-    c21: float  # [nF/mile]
-    c22: float  # [nF/mile]
-    c23: float  # [nF/mile]
-    c31: float  # [nF/mile]
-    c32: float  # [nF/mile]
-    c33: float  # [nF/mile]
-    rating_summer_continuous: float  # [A]  # amp rating in summer, continuous
-    rating_summer_emergency: float  # [A]  # amp rating in summer, short term
-    rating_winter_continuous: float  # [A]  # amp rating in winter, continuous
-    rating_winter_emergency: float  # [A]  # amp rating in winter, short term
+    name: str
+    conductor_A: object = None
+    conductor_B: object = None
+    conductor_C: object = None
+    conductor_N: object = None
+    spacing: object = None
+    z11: complex = None  # [Ohm/mile]
+    z12: complex = None  # [Ohm/mile]
+    z13: complex = None  # [Ohm/mile]
+    z21: complex = None  # [Ohm/mile]
+    z22: complex = None  # [Ohm/mile]
+    z23: complex = None  # [Ohm/mile]
+    z31: complex = None  # [Ohm/mile]
+    z32: complex = None  # [Ohm/mile]
+    z33: complex = None  # [Ohm/mile]
+    c11: float = None  # [nF/mile]
+    c12: float = None  # [nF/mile]
+    c13: float = None  # [nF/mile]
+    c21: float = None  # [nF/mile]
+    c22: float = None  # [nF/mile]
+    c23: float = None  # [nF/mile]
+    c31: float = None  # [nF/mile]
+    c32: float = None  # [nF/mile]
+    c33: float = None  # [nF/mile]
+    rating_summer_continuous: float = None  # [A]  # amp rating in summer, continuous
+    rating_summer_emergency: float = None  # [A]  # amp rating in summer, short term
+    rating_winter_continuous: float = None  # [A]  # amp rating in winter, continuous
+    rating_winter_emergency: float = None  # [A]  # amp rating in winter, short term
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class LineSpacing:
-    distance_AB: float  # [ft]
-    distance_BC: float  # [ft]
-    distance_AC: float  # [ft]
-    distance_AN: float  # [ft]
-    distance_BN: float  # [ft]
-    distance_CN: float  # [ft]
-    distance_AE: float  # [ft]  # distance between phase A wire and earth
-    distance_BE: float  # [ft]  # distance between phase B wire and earth
-    distance_CE: float  # [ft]  # distance between phase C wire and earth
-    distance_NE: float  # [ft]  # distance between neutral wire and earth
+    name: str
+    distance_AB: float = None  # [ft]
+    distance_BC: float = None  # [ft]
+    distance_AC: float = None  # [ft]
+    distance_AN: float = None  # [ft]
+    distance_BN: float = None  # [ft]
+    distance_CN: float = None  # [ft]
+    distance_AE: float = None  # [ft]  # distance between phase A wire and earth
+    distance_BE: float = None  # [ft]  # distance between phase B wire and earth
+    distance_CE: float = None  # [ft]  # distance between phase C wire and earth
+    distance_NE: float = None  # [ft]  # distance between neutral wire and earth
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1824,116 +2042,120 @@ class LoadLoadClass(IntEnum):
 
 @dataclass
 class Load(Node):
-    load_class: LoadLoadClass  # Flag to track load type, not currently used for anything except sorting
-    constant_power_A: complex  # [VA]  # constant power load on phase A, specified as VA
-    constant_power_B: complex  # [VA]  # constant power load on phase B, specified as VA
-    constant_power_C: complex  # [VA]  # constant power load on phase C, specified as VA
-    constant_power_A_real: float  # [W]  # constant power load on phase A, real only, specified as W
-    constant_power_B_real: float  # [W]  # constant power load on phase B, real only, specified as W
-    constant_power_C_real: float  # [W]  # constant power load on phase C, real only, specified as W
-    constant_power_A_reac: float  # [VAr]  # constant power load on phase A, imaginary only, specified as VAr
-    constant_power_B_reac: float  # [VAr]  # constant power load on phase B, imaginary only, specified as VAr
-    constant_power_C_reac: float  # [VAr]  # constant power load on phase C, imaginary only, specified as VAr
-    constant_current_A: complex  # [A]  # constant current load on phase A, specified as Amps
-    constant_current_B: complex  # [A]  # constant current load on phase B, specified as Amps
-    constant_current_C: complex  # [A]  # constant current load on phase C, specified as Amps
-    constant_current_A_real: float  # [A]  # constant current load on phase A, real only, specified as Amps
-    constant_current_B_real: float  # [A]  # constant current load on phase B, real only, specified as Amps
-    constant_current_C_real: float  # [A]  # constant current load on phase C, real only, specified as Amps
-    constant_current_A_reac: float  # [A]  # constant current load on phase A, imaginary only, specified as Amps
-    constant_current_B_reac: float  # [A]  # constant current load on phase B, imaginary only, specified as Amps
-    constant_current_C_reac: float  # [A]  # constant current load on phase C, imaginary only, specified as Amps
-    constant_impedance_A: complex  # [Ohm]  # constant impedance load on phase A, specified as Ohms
-    constant_impedance_B: complex  # [Ohm]  # constant impedance load on phase B, specified as Ohms
-    constant_impedance_C: complex  # [Ohm]  # constant impedance load on phase C, specified as Ohms
-    constant_impedance_A_real: float  # [Ohm]  # constant impedance load on phase A, real only, specified as Ohms
-    constant_impedance_B_real: float  # [Ohm]  # constant impedance load on phase B, real only, specified as Ohms
-    constant_impedance_C_real: float  # [Ohm]  # constant impedance load on phase C, real only, specified as Ohms
-    constant_impedance_A_reac: float  # [Ohm]  # constant impedance load on phase A, imaginary only, specified as Ohms
-    constant_impedance_B_reac: float  # [Ohm]  # constant impedance load on phase B, imaginary only, specified as Ohms
-    constant_impedance_C_reac: float  # [Ohm]  # constant impedance load on phase C, imaginary only, specified as Ohms
-    constant_power_AN: complex  # [VA]  # constant power wye-connected load on phase A, specified as VA
-    constant_power_BN: complex  # [VA]  # constant power wye-connected load on phase B, specified as VA
-    constant_power_CN: complex  # [VA]  # constant power wye-connected load on phase C, specified as VA
-    constant_power_AN_real: float  # [W]  # constant power wye-connected load on phase A, real only, specified as W
-    constant_power_BN_real: float  # [W]  # constant power wye-connected load on phase B, real only, specified as W
-    constant_power_CN_real: float  # [W]  # constant power wye-connected load on phase C, real only, specified as W
-    constant_power_AN_reac: float  # [VAr]  # constant power wye-connected load on phase A, imaginary only, specified as VAr
-    constant_power_BN_reac: float  # [VAr]  # constant power wye-connected load on phase B, imaginary only, specified as VAr
-    constant_power_CN_reac: float  # [VAr]  # constant power wye-connected load on phase C, imaginary only, specified as VAr
-    constant_current_AN: complex  # [A]  # constant current wye-connected load on phase A, specified as Amps
-    constant_current_BN: complex  # [A]  # constant current wye-connected load on phase B, specified as Amps
-    constant_current_CN: complex  # [A]  # constant current wye-connected load on phase C, specified as Amps
-    constant_current_AN_real: float  # [A]  # constant current wye-connected load on phase A, real only, specified as Amps
-    constant_current_BN_real: float  # [A]  # constant current wye-connected load on phase B, real only, specified as Amps
-    constant_current_CN_real: float  # [A]  # constant current wye-connected load on phase C, real only, specified as Amps
-    constant_current_AN_reac: float  # [A]  # constant current wye-connected load on phase A, imaginary only, specified as Amps
-    constant_current_BN_reac: float  # [A]  # constant current wye-connected load on phase B, imaginary only, specified as Amps
-    constant_current_CN_reac: float  # [A]  # constant current wye-connected load on phase C, imaginary only, specified as Amps
-    constant_impedance_AN: complex  # [Ohm]  # constant impedance wye-connected load on phase A, specified as Ohms
-    constant_impedance_BN: complex  # [Ohm]  # constant impedance wye-connected load on phase B, specified as Ohms
-    constant_impedance_CN: complex  # [Ohm]  # constant impedance wye-connected load on phase C, specified as Ohms
-    constant_impedance_AN_real: float  # [Ohm]  # constant impedance wye-connected load on phase A, real only, specified as Ohms
-    constant_impedance_BN_real: float  # [Ohm]  # constant impedance wye-connected load on phase B, real only, specified as Ohms
-    constant_impedance_CN_real: float  # [Ohm]  # constant impedance wye-connected load on phase C, real only, specified as Ohms
-    constant_impedance_AN_reac: float  # [Ohm]  # constant impedance wye-connected load on phase A, imaginary only, specified as Ohms
-    constant_impedance_BN_reac: float  # [Ohm]  # constant impedance wye-connected load on phase B, imaginary only, specified as Ohms
-    constant_impedance_CN_reac: float  # [Ohm]  # constant impedance wye-connected load on phase C, imaginary only, specified as Ohms
-    constant_power_AB: complex  # [VA]  # constant power delta-connected load on phase A, specified as VA
-    constant_power_BC: complex  # [VA]  # constant power delta-connected load on phase B, specified as VA
-    constant_power_CA: complex  # [VA]  # constant power delta-connected load on phase C, specified as VA
-    constant_power_AB_real: float  # [W]  # constant power delta-connected load on phase A, real only, specified as W
-    constant_power_BC_real: float  # [W]  # constant power delta-connected load on phase B, real only, specified as W
-    constant_power_CA_real: float  # [W]  # constant power delta-connected load on phase C, real only, specified as W
-    constant_power_AB_reac: float  # [VAr]  # constant power delta-connected load on phase A, imaginary only, specified as VAr
-    constant_power_BC_reac: float  # [VAr]  # constant power delta-connected load on phase B, imaginary only, specified as VAr
-    constant_power_CA_reac: float  # [VAr]  # constant power delta-connected load on phase C, imaginary only, specified as VAr
-    constant_current_AB: complex  # [A]  # constant current delta-connected load on phase A, specified as Amps
-    constant_current_BC: complex  # [A]  # constant current delta-connected load on phase B, specified as Amps
-    constant_current_CA: complex  # [A]  # constant current delta-connected load on phase C, specified as Amps
-    constant_current_AB_real: float  # [A]  # constant current delta-connected load on phase A, real only, specified as Amps
-    constant_current_BC_real: float  # [A]  # constant current delta-connected load on phase B, real only, specified as Amps
-    constant_current_CA_real: float  # [A]  # constant current delta-connected load on phase C, real only, specified as Amps
-    constant_current_AB_reac: float  # [A]  # constant current delta-connected load on phase A, imaginary only, specified as Amps
-    constant_current_BC_reac: float  # [A]  # constant current delta-connected load on phase B, imaginary only, specified as Amps
-    constant_current_CA_reac: float  # [A]  # constant current delta-connected load on phase C, imaginary only, specified as Amps
-    constant_impedance_AB: complex  # [Ohm]  # constant impedance delta-connected load on phase A, specified as Ohms
-    constant_impedance_BC: complex  # [Ohm]  # constant impedance delta-connected load on phase B, specified as Ohms
-    constant_impedance_CA: complex  # [Ohm]  # constant impedance delta-connected load on phase C, specified as Ohms
-    constant_impedance_AB_real: float  # [Ohm]  # constant impedance delta-connected load on phase A, real only, specified as Ohms
-    constant_impedance_BC_real: float  # [Ohm]  # constant impedance delta-connected load on phase B, real only, specified as Ohms
-    constant_impedance_CA_real: float  # [Ohm]  # constant impedance delta-connected load on phase C, real only, specified as Ohms
-    constant_impedance_AB_reac: float  # [Ohm]  # constant impedance delta-connected load on phase A, imaginary only, specified as Ohms
-    constant_impedance_BC_reac: float  # [Ohm]  # constant impedance delta-connected load on phase B, imaginary only, specified as Ohms
-    constant_impedance_CA_reac: float  # [Ohm]  # constant impedance delta-connected load on phase C, imaginary only, specified as Ohms
-    measured_voltage_A: complex  # current measured voltage on phase A
-    measured_voltage_B: complex  # current measured voltage on phase B
-    measured_voltage_C: complex  # current measured voltage on phase C
-    measured_voltage_AB: complex  # current measured voltage on phases AB
-    measured_voltage_BC: complex  # current measured voltage on phases BC
-    measured_voltage_CA: complex  # current measured voltage on phases CA
-    phase_loss_protection: bool  # Trip all three phases of the load if a fault occurs
-    base_power_A: float  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase A before applying ZIP fractions
-    base_power_B: float  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase B before applying ZIP fractions
-    base_power_C: float  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase C before applying ZIP fractions
-    power_pf_A: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase A constant power portion of load
-    current_pf_A: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase A constant current portion of load
-    impedance_pf_A: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase A constant impedance portion of load
-    power_pf_B: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase B constant power portion of load
-    current_pf_B: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase B constant current portion of load
-    impedance_pf_B: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase B constant impedance portion of load
-    power_pf_C: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase C constant power portion of load
-    current_pf_C: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase C constant current portion of load
-    impedance_pf_C: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase C constant impedance portion of load
-    power_fraction_A: float  # [pu]  # this is the constant power fraction of base power on phase A
-    current_fraction_A: float  # [pu]  # this is the constant current fraction of base power on phase A
-    impedance_fraction_A: float  # [pu]  # this is the constant impedance fraction of base power on phase A
-    power_fraction_B: float  # [pu]  # this is the constant power fraction of base power on phase B
-    current_fraction_B: float  # [pu]  # this is the constant current fraction of base power on phase B
-    impedance_fraction_B: float  # [pu]  # this is the constant impedance fraction of base power on phase B
-    power_fraction_C: float  # [pu]  # this is the constant power fraction of base power on phase C
-    current_fraction_C: float  # [pu]  # this is the constant current fraction of base power on phase C
-    impedance_fraction_C: float  # [pu]  # this is the constant impedance fraction of base power on phase C
+    load_class: LoadLoadClass = None  # Flag to track load type, not currently used for anything except sorting
+    constant_power_A: complex = None  # [VA]  # constant power load on phase A, specified as VA
+    constant_power_B: complex = None  # [VA]  # constant power load on phase B, specified as VA
+    constant_power_C: complex = None  # [VA]  # constant power load on phase C, specified as VA
+    constant_power_A_real: float = None  # [W]  # constant power load on phase A, real only, specified as W
+    constant_power_B_real: float = None  # [W]  # constant power load on phase B, real only, specified as W
+    constant_power_C_real: float = None  # [W]  # constant power load on phase C, real only, specified as W
+    constant_power_A_reac: float = None  # [VAr]  # constant power load on phase A, imaginary only, specified as VAr
+    constant_power_B_reac: float = None  # [VAr]  # constant power load on phase B, imaginary only, specified as VAr
+    constant_power_C_reac: float = None  # [VAr]  # constant power load on phase C, imaginary only, specified as VAr
+    constant_current_A: complex = None  # [A]  # constant current load on phase A, specified as Amps
+    constant_current_B: complex = None  # [A]  # constant current load on phase B, specified as Amps
+    constant_current_C: complex = None  # [A]  # constant current load on phase C, specified as Amps
+    constant_current_A_real: float = None  # [A]  # constant current load on phase A, real only, specified as Amps
+    constant_current_B_real: float = None  # [A]  # constant current load on phase B, real only, specified as Amps
+    constant_current_C_real: float = None  # [A]  # constant current load on phase C, real only, specified as Amps
+    constant_current_A_reac: float = None  # [A]  # constant current load on phase A, imaginary only, specified as Amps
+    constant_current_B_reac: float = None  # [A]  # constant current load on phase B, imaginary only, specified as Amps
+    constant_current_C_reac: float = None  # [A]  # constant current load on phase C, imaginary only, specified as Amps
+    constant_impedance_A: complex = None  # [Ohm]  # constant impedance load on phase A, specified as Ohms
+    constant_impedance_B: complex = None  # [Ohm]  # constant impedance load on phase B, specified as Ohms
+    constant_impedance_C: complex = None  # [Ohm]  # constant impedance load on phase C, specified as Ohms
+    constant_impedance_A_real: float = None  # [Ohm]  # constant impedance load on phase A, real only, specified as Ohms
+    constant_impedance_B_real: float = None  # [Ohm]  # constant impedance load on phase B, real only, specified as Ohms
+    constant_impedance_C_real: float = None  # [Ohm]  # constant impedance load on phase C, real only, specified as Ohms
+    constant_impedance_A_reac: float = None  # [Ohm]  # constant impedance load on phase A, imaginary only, specified as Ohms
+    constant_impedance_B_reac: float = None  # [Ohm]  # constant impedance load on phase B, imaginary only, specified as Ohms
+    constant_impedance_C_reac: float = None  # [Ohm]  # constant impedance load on phase C, imaginary only, specified as Ohms
+    constant_power_AN: complex = None  # [VA]  # constant power wye-connected load on phase A, specified as VA
+    constant_power_BN: complex = None  # [VA]  # constant power wye-connected load on phase B, specified as VA
+    constant_power_CN: complex = None  # [VA]  # constant power wye-connected load on phase C, specified as VA
+    constant_power_AN_real: float = None  # [W]  # constant power wye-connected load on phase A, real only, specified as W
+    constant_power_BN_real: float = None  # [W]  # constant power wye-connected load on phase B, real only, specified as W
+    constant_power_CN_real: float = None  # [W]  # constant power wye-connected load on phase C, real only, specified as W
+    constant_power_AN_reac: float = None  # [VAr]  # constant power wye-connected load on phase A, imaginary only, specified as VAr
+    constant_power_BN_reac: float = None  # [VAr]  # constant power wye-connected load on phase B, imaginary only, specified as VAr
+    constant_power_CN_reac: float = None  # [VAr]  # constant power wye-connected load on phase C, imaginary only, specified as VAr
+    constant_current_AN: complex = None  # [A]  # constant current wye-connected load on phase A, specified as Amps
+    constant_current_BN: complex = None  # [A]  # constant current wye-connected load on phase B, specified as Amps
+    constant_current_CN: complex = None  # [A]  # constant current wye-connected load on phase C, specified as Amps
+    constant_current_AN_real: float = None  # [A]  # constant current wye-connected load on phase A, real only, specified as Amps
+    constant_current_BN_real: float = None  # [A]  # constant current wye-connected load on phase B, real only, specified as Amps
+    constant_current_CN_real: float = None  # [A]  # constant current wye-connected load on phase C, real only, specified as Amps
+    constant_current_AN_reac: float = None  # [A]  # constant current wye-connected load on phase A, imaginary only, specified as Amps
+    constant_current_BN_reac: float = None  # [A]  # constant current wye-connected load on phase B, imaginary only, specified as Amps
+    constant_current_CN_reac: float = None  # [A]  # constant current wye-connected load on phase C, imaginary only, specified as Amps
+    constant_impedance_AN: complex = None  # [Ohm]  # constant impedance wye-connected load on phase A, specified as Ohms
+    constant_impedance_BN: complex = None  # [Ohm]  # constant impedance wye-connected load on phase B, specified as Ohms
+    constant_impedance_CN: complex = None  # [Ohm]  # constant impedance wye-connected load on phase C, specified as Ohms
+    constant_impedance_AN_real: float = None  # [Ohm]  # constant impedance wye-connected load on phase A, real only, specified as Ohms
+    constant_impedance_BN_real: float = None  # [Ohm]  # constant impedance wye-connected load on phase B, real only, specified as Ohms
+    constant_impedance_CN_real: float = None  # [Ohm]  # constant impedance wye-connected load on phase C, real only, specified as Ohms
+    constant_impedance_AN_reac: float = None  # [Ohm]  # constant impedance wye-connected load on phase A, imaginary only, specified as Ohms
+    constant_impedance_BN_reac: float = None  # [Ohm]  # constant impedance wye-connected load on phase B, imaginary only, specified as Ohms
+    constant_impedance_CN_reac: float = None  # [Ohm]  # constant impedance wye-connected load on phase C, imaginary only, specified as Ohms
+    constant_power_AB: complex = None  # [VA]  # constant power delta-connected load on phase A, specified as VA
+    constant_power_BC: complex = None  # [VA]  # constant power delta-connected load on phase B, specified as VA
+    constant_power_CA: complex = None  # [VA]  # constant power delta-connected load on phase C, specified as VA
+    constant_power_AB_real: float = None  # [W]  # constant power delta-connected load on phase A, real only, specified as W
+    constant_power_BC_real: float = None  # [W]  # constant power delta-connected load on phase B, real only, specified as W
+    constant_power_CA_real: float = None  # [W]  # constant power delta-connected load on phase C, real only, specified as W
+    constant_power_AB_reac: float = None  # [VAr]  # constant power delta-connected load on phase A, imaginary only, specified as VAr
+    constant_power_BC_reac: float = None  # [VAr]  # constant power delta-connected load on phase B, imaginary only, specified as VAr
+    constant_power_CA_reac: float = None  # [VAr]  # constant power delta-connected load on phase C, imaginary only, specified as VAr
+    constant_current_AB: complex = None  # [A]  # constant current delta-connected load on phase A, specified as Amps
+    constant_current_BC: complex = None  # [A]  # constant current delta-connected load on phase B, specified as Amps
+    constant_current_CA: complex = None  # [A]  # constant current delta-connected load on phase C, specified as Amps
+    constant_current_AB_real: float = None  # [A]  # constant current delta-connected load on phase A, real only, specified as Amps
+    constant_current_BC_real: float = None  # [A]  # constant current delta-connected load on phase B, real only, specified as Amps
+    constant_current_CA_real: float = None  # [A]  # constant current delta-connected load on phase C, real only, specified as Amps
+    constant_current_AB_reac: float = None  # [A]  # constant current delta-connected load on phase A, imaginary only, specified as Amps
+    constant_current_BC_reac: float = None  # [A]  # constant current delta-connected load on phase B, imaginary only, specified as Amps
+    constant_current_CA_reac: float = None  # [A]  # constant current delta-connected load on phase C, imaginary only, specified as Amps
+    constant_impedance_AB: complex = None  # [Ohm]  # constant impedance delta-connected load on phase A, specified as Ohms
+    constant_impedance_BC: complex = None  # [Ohm]  # constant impedance delta-connected load on phase B, specified as Ohms
+    constant_impedance_CA: complex = None  # [Ohm]  # constant impedance delta-connected load on phase C, specified as Ohms
+    constant_impedance_AB_real: float = None  # [Ohm]  # constant impedance delta-connected load on phase A, real only, specified as Ohms
+    constant_impedance_BC_real: float = None  # [Ohm]  # constant impedance delta-connected load on phase B, real only, specified as Ohms
+    constant_impedance_CA_real: float = None  # [Ohm]  # constant impedance delta-connected load on phase C, real only, specified as Ohms
+    constant_impedance_AB_reac: float = None  # [Ohm]  # constant impedance delta-connected load on phase A, imaginary only, specified as Ohms
+    constant_impedance_BC_reac: float = None  # [Ohm]  # constant impedance delta-connected load on phase B, imaginary only, specified as Ohms
+    constant_impedance_CA_reac: float = None  # [Ohm]  # constant impedance delta-connected load on phase C, imaginary only, specified as Ohms
+    measured_voltage_A: complex = None  # current measured voltage on phase A
+    measured_voltage_B: complex = None  # current measured voltage on phase B
+    measured_voltage_C: complex = None  # current measured voltage on phase C
+    measured_voltage_AB: complex = None  # current measured voltage on phases AB
+    measured_voltage_BC: complex = None  # current measured voltage on phases BC
+    measured_voltage_CA: complex = None  # current measured voltage on phases CA
+    phase_loss_protection: bool = None  # Trip all three phases of the load if a fault occurs
+    base_power_A: float = None  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase A before applying ZIP fractions
+    base_power_B: float = None  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase B before applying ZIP fractions
+    base_power_C: float = None  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase C before applying ZIP fractions
+    power_pf_A: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase A constant power portion of load
+    current_pf_A: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase A constant current portion of load
+    impedance_pf_A: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase A constant impedance portion of load
+    power_pf_B: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase B constant power portion of load
+    current_pf_B: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase B constant current portion of load
+    impedance_pf_B: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase B constant impedance portion of load
+    power_pf_C: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase C constant power portion of load
+    current_pf_C: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase C constant current portion of load
+    impedance_pf_C: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase C constant impedance portion of load
+    power_fraction_A: float = None  # [pu]  # this is the constant power fraction of base power on phase A
+    current_fraction_A: float = None  # [pu]  # this is the constant current fraction of base power on phase A
+    impedance_fraction_A: float = None  # [pu]  # this is the constant impedance fraction of base power on phase A
+    power_fraction_B: float = None  # [pu]  # this is the constant power fraction of base power on phase B
+    current_fraction_B: float = None  # [pu]  # this is the constant current fraction of base power on phase B
+    impedance_fraction_B: float = None  # [pu]  # this is the constant impedance fraction of base power on phase B
+    power_fraction_C: float = None  # [pu]  # this is the constant power fraction of base power on phase C
+    current_fraction_C: float = None  # [pu]  # this is the constant current fraction of base power on phase C
+    impedance_fraction_C: float = None  # [pu]  # this is the constant impedance fraction of base power on phase C
+    parent: str = None
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -1955,6 +2177,9 @@ class LoadTracker:
     damping: float  # load setpoint to track to
     output: float  # output scaling value
     feedback: float  # the feedback signal, for reference purposes
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2006,27 +2231,47 @@ class Meter:
     third_tier_price: float  # [$/kWh]  # price of electricity when energy usage exceeds third tier energy usage
     third_tier_energy: float  # [kWh]  # switching point between second tier price and third tier price
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Motor(Node):
     pass
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class OverheadLine(PowerFlowObject):
-    configuration: object
-    length: float  # [ft]
+    from_: str = None
+    to: str = None
+    configuration: object = None
+    length: float = None  # [ft]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class OverheadLineConductor:
+    name: str
     geometric_mean_radius: float  # [ft]  # radius of the conductor
     resistance: float  # [Ohm/mile]  # resistance in Ohms/mile of the conductor
-    diameter: float  # [in]  # Diameter of line for capacitance calculations
-    rating_summer_continuous: float  # [A]  # Continuous summer amp rating
-    rating_summer_emergency: float  # [A]  # Emergency summer amp rating
-    rating_winter_continuous: float  # [A]  # Continuous winter amp rating
-    rating_winter_emergency: float  # [A]  # Emergency winter amp rating
+    diameter: str  # [in]  # Diameter of line for capacitance calculations
+    rating_summer_continuous: float = None  # [A]  # Continuous summer amp rating
+    rating_summer_emergency: float = None  # [A]  # Emergency summer amp rating
+    rating_winter_continuous: float = None  # [A]  # Continuous winter amp rating
+    rating_winter_emergency: float = None  # [A]  # Emergency winter amp rating
+    diameter_cm: float = field(init=False)
+
+    def __post_init__(self):
+        _convert_attrs(self)
+        diameter, units = self.diameter.split()
+        assert units == "in"
+        # TODO DT: global conversion function
+        self.diameter_cm = float(diameter) * 2.54
 
 
 @dataclass
@@ -2043,66 +2288,75 @@ class PowerMetrics:
     MAIFI_int: float  # Displays MAIFI values over the period specified by base_time_value as per IEEE 1366-2003
     base_time_value: float  # [s]  # time period over which _int values are claculated
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class PowerFlowLibrary:
     pass
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class PQLoad(Load):
-    weather: object
-    T_nominal: float  # [degF]
-    Zp_T: float  # [ohm/degF]
-    Zp_H: float  # [ohm/%]
-    Zp_S: float  # [ohm*h/Btu]
-    Zp_W: float  # [ohm/mph]
-    Zp_R: float  # [ohm*h/in]
-    Zp: float  # [ohm]
-    Zq_T: float  # [F/degF]
-    Zq_H: float  # [F/%]
-    Zq_S: float  # [F*h/Btu]
-    Zq_W: float  # [F/mph]
-    Zq_R: float  # [F*h/in]
-    Zq: float  # [F]
-    Im_T: float  # [A/degF]
-    Im_H: float  # [A/%]
-    Im_S: float  # [A*h/Btu]
-    Im_W: float  # [A/mph]
-    Im_R: float  # [A*h/in]
-    Im: float  # [A]
-    Ia_T: float  # [deg/degF]
-    Ia_H: float  # [deg/%]
-    Ia_S: float  # [deg*h/Btu]
-    Ia_W: float  # [deg/mph]
-    Ia_R: float  # [deg*h/in]
-    Ia: float  # [deg]
-    Pp_T: float  # [W/degF]
-    Pp_H: float  # [W/%]
-    Pp_S: float  # [W*h/Btu]
-    Pp_W: float  # [W/mph]
-    Pp_R: float  # [W*h/in]
-    Pp: float  # [W]
-    Pq_T: float  # [VAr/degF]
-    Pq_H: float  # [VAr/%]
-    Pq_S: float  # [VAr*h/Btu]
-    Pq_W: float  # [VAr/mph]
-    Pq_R: float  # [VAr*h/in]
-    Pq: float  # [VAr]
-    input_temp: float  # [degF]
-    input_humid: float  # [%]
-    input_solar: float  # [Btu/h]
-    input_wind: float  # [mph]
-    input_rain: float  # [in/h]
-    output_imped_p: float  # [Ohm]
-    output_imped_q: float  # [Ohm]
-    output_current_m: float  # [A]
-    output_current_a: float  # [deg]
-    output_power_p: float  # [W]
-    output_power_q: float  # [VAr]
-    output_impedance: complex  # [ohm]
-    output_current: complex  # [A]
-    output_power: complex  # [VA]
+    weather: object = None
+    T_nominal: float = None  # [degF]
+    Zp_T: float = None  # [ohm/degF]
+    Zp_H: float = None  # [ohm/%]
+    Zp_S: float = None  # [ohm*h/Btu]
+    Zp_W: float = None  # [ohm/mph]
+    Zp_R: float = None  # [ohm*h/in]
+    Zp: float = None  # [ohm]
+    Zq_T: float = None  # [F/degF]
+    Zq_H: float = None  # [F/%]
+    Zq_S: float = None  # [F*h/Btu]
+    Zq_W: float = None  # [F/mph]
+    Zq_R: float = None  # [F*h/in]
+    Zq: float = None  # [F]
+    Im_T: float = None  # [A/degF]
+    Im_H: float = None  # [A/%]
+    Im_S: float = None  # [A*h/Btu]
+    Im_W: float = None  # [A/mph]
+    Im_R: float = None  # [A*h/in]
+    Im: float = None  # [A]
+    Ia_T: float = None  # [deg/degF]
+    Ia_H: float = None  # [deg/%]
+    Ia_S: float = None  # [deg*h/Btu]
+    Ia_W: float = None  # [deg/mph]
+    Ia_R: float = None  # [deg*h/in]
+    Ia: float = None  # [deg]
+    Pp_T: float = None  # [W/degF]
+    Pp_H: float = None  # [W/%]
+    Pp_S: float = None  # [W*h/Btu]
+    Pp_W: float = None  # [W/mph]
+    Pp_R: float = None  # [W*h/in]
+    Pp: float = None  # [W]
+    Pq_T: float = None  # [VAr/degF]
+    Pq_H: float = None  # [VAr/%]
+    Pq_S: float = None  # [VAr*h/Btu]
+    Pq_W: float = None  # [VAr/mph]
+    Pq_R: float = None  # [VAr*h/in]
+    Pq: float = None  # [VAr]
+    input_temp: float = None  # [degF]
+    input_humid: float = None  # [%]
+    input_solar: float = None  # [Btu/h]
+    input_wind: float = None  # [mph]
+    input_rain: float = None  # [in/h]
+    output_imped_p: float = None  # [Ohm]
+    output_imped_q: float = None  # [Ohm]
+    output_current_m: float = None  # [A]
+    output_current_a: float = None  # [deg]
+    output_power_p: float = None  # [W]
+    output_power_q: float = None  # [VAr]
+    output_impedance: complex = None  # [ohm]
+    output_current: complex = None  # [A]
+    output_power: complex = None  # [VA]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2119,31 +2373,40 @@ class SwitchOperatingMode(IntEnum):
 
 @dataclass
 class Switch(Link):
-    phase_A_state: SwitchPhaseState  # Defines the current state of the phase A switch
-    phase_B_state: SwitchPhaseState  # Defines the current state of the phase B switch
-    phase_C_state: SwitchPhaseState  # Defines the current state of the phase C switch
-    operating_mode: SwitchOperatingMode  # Defines whether the switch operates in a banked or per-phase control mode
-    switch_resistance: float  # [Ohm]  # The resistance value of the switch when it is not blown.
+    phase_A_state: SwitchPhaseState = None  # Defines the current state of the phase A switch
+    phase_B_state: SwitchPhaseState = None  # Defines the current state of the phase B switch
+    phase_C_state: SwitchPhaseState = None  # Defines the current state of the phase C switch
+    operating_mode: SwitchOperatingMode = None  # Defines whether the switch operates in a banked or per-phase control mode
+    switch_resistance: float = None  # [Ohm]  # The resistance value of the switch when it is not blown.
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class Recloser(Switch):
-    retry_time: float  # [s]  # the amount of time in seconds to wait before the recloser attempts to close
-    max_number_of_tries: float  # the number of times the recloser will try to close before permanently opening
-    number_of_tries: float  # Current number of tries recloser has attempted
+    retry_time: float = None  # [s]  # the amount of time in seconds to wait before the recloser attempts to close
+    max_number_of_tries: float = None  # the number of times the recloser will try to close before permanently opening
+    number_of_tries: float = None  # Current number of tries recloser has attempted
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class Regulator(Link):
-    configuration: object  # reference to the regulator_configuration object used to determine regulator properties
-    tap_A: int  # current tap position of tap A
-    tap_B: int  # current tap position of tap B
-    tap_C: int  # current tap position of tap C
-    tap_A_change_count: float  # count of all physical tap changes on phase A since beginning of simulation (plus initial value)
-    tap_B_change_count: float  # count of all physical tap changes on phase B since beginning of simulation (plus initial value)
-    tap_C_change_count: float  # count of all physical tap changes on phase C since beginning of simulation (plus initial value)
-    sense_node: object  # Node to be monitored for voltage control in remote sense mode
-    regulator_resistance: float  # [Ohm]  # The resistance value of the regulator when it is not blown.
+    configuration: object = None  # reference to the regulator_configuration object used to determine regulator properties
+    tap_A: int = None  # current tap position of tap A
+    tap_B: int = None  # current tap position of tap B
+    tap_C: int = None  # current tap position of tap C
+    tap_A_change_count: float = None  # count of all physical tap changes on phase A since beginning of simulation (plus initial value)
+    tap_B_change_count: float = None  # count of all physical tap changes on phase B since beginning of simulation (plus initial value)
+    tap_C_change_count: float = None  # count of all physical tap changes on phase C since beginning of simulation (plus initial value)
+    sense_node: object = None  # Node to be monitored for voltage control in remote sense mode
+    regulator_resistance: float = None  # [Ohm]  # The resistance value of the regulator when it is not blown.
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2192,35 +2455,40 @@ class RegulatorConfigurationPhase(IntEnum):
 
 @dataclass
 class RegulatorConfiguration:
-    connect_type: RegulatorConfigurationConnectType  # Designation of connection style
-    band_center: float  # [V]  # band center setting of regulator control
-    band_width: float  # [V]  # band width setting of regulator control
-    time_delay: float  # [s]  # mechanical time delay between tap changes
-    dwell_time: float  # [s]  # time delay before a control action of regulator control
-    raise_taps: int  # number of regulator raise taps, or the maximum raise voltage tap position
-    lower_taps: int  # number of regulator lower taps, or the minimum lower voltage tap position
-    current_transducer_ratio: float  # [pu]  # primary rating of current transformer
-    power_transducer_ratio: float  # [pu]  # potential transformer rating
-    compensator_r_setting_A: float  # [V]  # Line Drop Compensation R setting of regulator control (in volts) on Phase A
-    compensator_r_setting_B: float  # [V]  # Line Drop Compensation R setting of regulator control (in volts) on Phase B
-    compensator_r_setting_C: float  # [V]  # Line Drop Compensation R setting of regulator control (in volts) on Phase C
-    compensator_x_setting_A: float  # [V]  # Line Drop Compensation X setting of regulator control (in volts) on Phase A
-    compensator_x_setting_B: float  # [V]  # Line Drop Compensation X setting of regulator control (in volts) on Phase B
-    compensator_x_setting_C: float  # [V]  # Line Drop Compensation X setting of regulator control (in volts) on Phase C
-    CT_phase: RegulatorConfigurationPhase  # phase(s) monitored by CT
-    PT_phase: RegulatorConfigurationPhase  # phase(s) monitored by PT
-    regulation: float  # regulation of voltage regulator in %
-    control_level: RegulatorConfigurationControlLevel  # Designates whether control is on per-phase or banked level
-    control: RegulatorConfigurationControl  # Type of control used for regulating voltage
-    reverse_flow_control: RegulatorConfigurationReverseFlowControl  # Type of control used when power is flowing in reverse through the regulator
-    type: RegulatorConfigurationType  # Defines regulator type
-    tap_pos_A: int  # initial tap position of phase A
-    tap_pos_B: int  # initial tap position of phase B
-    tap_pos_C: int  # initial tap position of phase C
+    name: str
+    connect_type: RegulatorConfigurationConnectType = None  # Designation of connection style
+    band_center: float = None  # [V]  # band center setting of regulator control
+    band_width: float = None  # [V]  # band width setting of regulator control
+    time_delay: float = None  # [s]  # mechanical time delay between tap changes
+    dwell_time: float = None  # [s]  # time delay before a control action of regulator control
+    raise_taps: int = None  # number of regulator raise taps, or the maximum raise voltage tap position
+    lower_taps: int = None  # number of regulator lower taps, or the minimum lower voltage tap position
+    current_transducer_ratio: float = None  # [pu]  # primary rating of current transformer
+    power_transducer_ratio: float = None  # [pu]  # potential transformer rating
+    compensator_r_setting_A: float = None  # [V]  # Line Drop Compensation R setting of regulator control (in volts) on Phase A
+    compensator_r_setting_B: float = None  # [V]  # Line Drop Compensation R setting of regulator control (in volts) on Phase B
+    compensator_r_setting_C: float = None  # [V]  # Line Drop Compensation R setting of regulator control (in volts) on Phase C
+    compensator_x_setting_A: float = None  # [V]  # Line Drop Compensation X setting of regulator control (in volts) on Phase A
+    compensator_x_setting_B: float = None  # [V]  # Line Drop Compensation X setting of regulator control (in volts) on Phase B
+    compensator_x_setting_C: float = None  # [V]  # Line Drop Compensation X setting of regulator control (in volts) on Phase C
+    CT_phase: RegulatorConfigurationPhase = None  # phase(s) monitored by CT
+    PT_phase: RegulatorConfigurationPhase = None  # phase(s) monitored by PT
+    regulation: float = None  # regulation of voltage regulator in %
+    control_level: RegulatorConfigurationControlLevel = None  # Designates whether control is on per-phase or banked level
+    Control: RegulatorConfigurationControl = None  # Type of control used for regulating voltage
+    reverse_flow_control: RegulatorConfigurationReverseFlowControl = None  # Type of control used when power is flowing in reverse through the regulator
+    Type: RegulatorConfigurationType = None  # Defines regulator type
+    tap_pos_A: int = None  # initial tap position of phase A
+    tap_pos_B: int = None  # initial tap position of phase B
+    tap_pos_C: int = None  # initial tap position of phase C
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class Restoration:
+    name: str
     reconfig_attempts: int  # Number of reconfigurations/timestep to try before giving up
     reconfig_iteration_limit: int  # Number of iterations to let PF go before flagging this as a bad reconfiguration
     source_vertex: object  # Source vertex object for reconfiguration
@@ -2235,6 +2503,9 @@ class Restoration:
     upper_voltage_limit: float  # [pu]  # Upper voltage limit for the reconfiguration validity checks - per unit
     output_filename: str  # Output text file name to describe final or attempted switching operations
     generate_all_scenarios: bool  # Flag to determine if restoration reconfiguration and continues, or explores the full space
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2257,19 +2528,25 @@ class Sectionalizer(Switch):
     operating_mode: SectionalizerOperatingMode  # Defines whether the switch operates in a banked or per-phase control mode
     switch_resistance: float  # [Ohm]  # The resistance value of the switch when it is not blown.
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class SeriesReactor(Link):
-    phase_A_impedance: complex  # [Ohm]  # Series impedance of reactor on phase A
-    phase_A_resistance: float  # [Ohm]  # Resistive portion of phase A's impedance
-    phase_A_reactance: float  # [Ohm]  # Reactive portion of phase A's impedance
-    phase_B_impedance: complex  # [Ohm]  # Series impedance of reactor on phase B
-    phase_B_resistance: float  # [Ohm]  # Resistive portion of phase B's impedance
-    phase_B_reactance: float  # [Ohm]  # Reactive portion of phase B's impedance
-    phase_C_impedance: complex  # [Ohm]  # Series impedance of reactor on phase C
-    phase_C_resistance: float  # [Ohm]  # Resistive portion of phase C's impedance
-    phase_C_reactance: float  # [Ohm]  # Reactive portion of phase C's impedance
-    rated_current_limit: float  # [A]  # Rated current limit for the reactor
+    phase_A_impedance: complex = None  # [Ohm]  # Series impedance of reactor on phase A
+    phase_A_resistance: float = None  # [Ohm]  # Resistive portion of phase A's impedance
+    phase_A_reactance: float = None  # [Ohm]  # Reactive portion of phase A's impedance
+    phase_B_impedance: complex = None  # [Ohm]  # Series impedance of reactor on phase B
+    phase_B_resistance: float = None  # [Ohm]  # Resistive portion of phase B's impedance
+    phase_B_reactance: float = None  # [Ohm]  # Reactive portion of phase B's impedance
+    phase_C_impedance: complex = None  # [Ohm]  # Series impedance of reactor on phase C
+    phase_C_resistance: float = None  # [Ohm]  # Resistive portion of phase C's impedance
+    phase_C_reactance: float = None  # [Ohm]  # Reactive portion of phase C's impedance
+    rated_current_limit: float = None  # [A]  # Rated current limit for the reactor
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2281,49 +2558,55 @@ class SubstationReferencePhase(IntEnum):
 
 @dataclass
 class Substation(Node):
-    zero_sequence_voltage: complex  # [V]  # The zero sequence representation of the voltage for the substation object.
-    positive_sequence_voltage: complex  # [V]  # The positive sequence representation of the voltage for the substation object.
-    negative_sequence_voltage: complex  # [V]  # The negative sequence representation of the voltage for the substation object.
-    base_power: float  # [VA]  # The 3 phase VA power rating of the substation.
-    power_convergence_value: float  # [VA]  # Default convergence criterion before power is posted to pw_load objects if connected, otherwise ignored
-    reference_phase: SubstationReferencePhase  # The reference phase for the positive sequence voltage.
-    transmission_level_constant_power_load: complex  # [VA]  # the average constant power load to be posted directly to the pw_load object.
-    transmission_level_constant_current_load: complex  # [A]  # the average constant current load at nominal voltage to be posted directly to the pw_load object.
-    transmission_level_constant_impedance_load: complex  # [Ohm]  # the average constant impedance load at nominal voltage to be posted directly to the pw_load object.
-    average_distribution_load: complex  # [VA]  # The average of the loads on all three phases at the substation object.
-    distribution_power_A: complex  # [VA]
-    distribution_power_B: complex  # [VA]
-    distribution_power_C: complex  # [VA]
-    distribution_voltage_A: complex  # [V]
-    distribution_voltage_B: complex  # [V]
-    distribution_voltage_C: complex  # [V]
-    distribution_voltage_AB: complex  # [V]
-    distribution_voltage_BC: complex  # [V]
-    distribution_voltage_CA: complex  # [V]
-    distribution_current_A: complex  # [A]
-    distribution_current_B: complex  # [A]
-    distribution_current_C: complex  # [A]
-    distribution_real_energy: float  # [Wh]
+    zero_sequence_voltage: complex = None  # [V]  # The zero sequence representation of the voltage for the substation object.
+    positive_sequence_voltage: complex = None  # [V]  # The positive sequence representation of the voltage for the substation object.
+    negative_sequence_voltage: complex = None  # [V]  # The negative sequence representation of the voltage for the substation object.
+    base_power: float = None  # [VA]  # The 3 phase VA power rating of the substation.
+    power_convergence_value: float = None  # [VA]  # Default convergence criterion before power is posted to pw_load objects if connected, otherwise ignored
+    reference_phase: SubstationReferencePhase = None  # The reference phase for the positive sequence voltage.
+    transmission_level_constant_power_load: complex = None  # [VA]  # the average constant power load to be posted directly to the pw_load object.
+    transmission_level_constant_current_load: complex = None  # [A]  # the average constant current load at nominal voltage to be posted directly to the pw_load object.
+    transmission_level_constant_impedance_load: complex = None  # [Ohm]  # the average constant impedance load at nominal voltage to be posted directly to the pw_load object.
+    average_distribution_load: complex = None  # [VA]  # The average of the loads on all three phases at the substation object.
+    distribution_power_A: complex = None  # [VA]
+    distribution_power_B: complex = None  # [VA]
+    distribution_power_C: complex = None  # [VA]
+    distribution_voltage_A: complex = None  # [V]
+    distribution_voltage_B: complex = None  # [V]
+    distribution_voltage_C: complex = None  # [V]
+    distribution_voltage_AB: complex = None  # [V]
+    distribution_voltage_BC: complex = None  # [V]
+    distribution_voltage_CA: complex = None  # [V]
+    distribution_current_A: complex = None  # [A]
+    distribution_current_B: complex = None  # [A]
+    distribution_current_C: complex = None  # [A]
+    distribution_real_energy: float = None  # [Wh]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class Transformer(Link):
-    configuration: object  # Configuration library used for transformer setup
-    climate: object  # climate object used to describe thermal model ambient temperature
-    ambient_temperature: float  # [degC]  # ambient temperature in degrees C
-    top_oil_hot_spot_temperature: float  # [degC]  # top-oil hottest-spot temperature, degrees C
-    winding_hot_spot_temperature: float  # [degC]  # winding hottest-spot temperature, degrees C
-    percent_loss_of_life: float  # the percent loss of life
-    aging_constant: float  # the aging rate slope for the transformer insulation
-    use_thermal_model: bool  # boolean to enable use of thermal model
-    transformer_replacement_count: float  # counter of the number times the transformer has been replaced due to lifetime failure
-    aging_granularity: float  # [s]  # maximum timestep before updating thermal and aging model in seconds
-    phase_A_primary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase A on the primary side of the transformer during saturation calculations
-    phase_B_primary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase B on the primary side of the transformer during saturation calculations
-    phase_C_primary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase C on the primary side of the transformer during saturation calculations
-    phase_A_secondary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase A on the secondary side of the transformer during saturation calculations
-    phase_B_secondary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase B on the secondary side of the transformer during saturation calculations
-    phase_C_secondary_flux_value: float  # [Wb]  # instantaneous magnetic flux in phase C on the secondary side of the transformer during saturation calculations
+    configuration: object = None  # Configuration library used for transformer setup
+    climate: object = None  # climate object used to describe thermal model ambient temperature
+    ambient_temperature: float = None  # [degC]  # ambient temperature in degrees C
+    top_oil_hot_spot_temperature: float = None  # [degC]  # top-oil hottest-spot temperature, degrees C
+    winding_hot_spot_temperature: float = None  # [degC]  # winding hottest-spot temperature, degrees C
+    percent_loss_of_life: float = None  # the percent loss of life
+    aging_constant: float = None  # the aging rate slope for the transformer insulation
+    use_thermal_model: bool = None  # boolean to enable use of thermal model
+    transformer_replacement_count: float = None  # counter of the number times the transformer has been replaced due to lifetime failure
+    aging_granularity: float = None  # [s]  # maximum timestep before updating thermal and aging model in seconds
+    phase_A_primary_flux_value: float = None  # [Wb]  # instantaneous magnetic flux in phase A on the primary side of the transformer during saturation calculations
+    phase_B_primary_flux_value: float = None  # [Wb]  # instantaneous magnetic flux in phase B on the primary side of the transformer during saturation calculations
+    phase_C_primary_flux_value: float = None  # [Wb]  # instantaneous magnetic flux in phase C on the primary side of the transformer during saturation calculations
+    phase_A_secondary_flux_value: float = None  # [Wb]  # instantaneous magnetic flux in phase A on the secondary side of the transformer during saturation calculations
+    phase_B_secondary_flux_value: float = None  # [Wb]  # instantaneous magnetic flux in phase B on the secondary side of the transformer during saturation calculations
+    phase_C_secondary_flux_value: float = None  # [Wb]  # instantaneous magnetic flux in phase C on the secondary side of the transformer during saturation calculations
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2372,54 +2655,62 @@ class TransformerConfigurationMagnetizationLocation(IntEnum):
 
 @dataclass
 class TransformerConfiguration:
+    name: str
     connect_type: TransformerConfigurationConnectType  # connect type enum: Wye-Wye, single-phase, etc.
     install_type: TransformerConfigurationInstallType  # Defines location of the transformer installation
-    coolant_type: TransformerConfigurationCoolantType  # coolant type, used in life time model
-    cooling_type: TransformerConfigurationCoolingType  # type of coolant fluid used in life time model
-    primary_voltage: float  # [V]  # primary voltage level in L-L value kV
-    secondary_voltage: float  # [V]  # secondary voltage level kV
-    power_rating: float  # [kVA]  # kVA rating of transformer, total
-    powerA_rating: float  # [kVA]  # kVA rating of transformer, phase A
-    powerB_rating: float  # [kVA]  # kVA rating of transformer, phase B
-    powerC_rating: float  # [kVA]  # kVA rating of transformer, phase C
-    resistance: float  # [pu*Ohm]  # Series impedance, pu, real
-    reactance: float  # [pu*Ohm]  # Series impedance, pu, imag
-    impedance: complex  # [pu*Ohm]  # Series impedance, pu
-    resistance1: float  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, real
-    reactance1: float  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, imag
-    impedance1: complex  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu
-    resistance2: float  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, real
-    reactance2: float  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, imag
-    impedance2: complex  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu
-    shunt_resistance: float  # [pu*Ohm]  # Shunt impedance on primary side, pu, real
-    shunt_reactance: float  # [pu*Ohm]  # Shunt impedance on primary side, pu, imag
-    shunt_impedance: complex  # [pu*Ohm]  # Shunt impedance on primary side, pu
-    core_coil_weight: float  # [lb]  # The weight of the core and coil assembly in pounds
-    tank_fittings_weight: float  # [lb]  # The weight of the tank and fittings in pounds
-    oil_volume: float  # [gal]  # The number of gallons of oil in the transformer
-    rated_winding_time_constant: float  # [h]  # The rated winding time constant in hours
-    rated_winding_hot_spot_rise: float  # [degC]  # winding hottest-spot rise over ambient temperature at rated load, degrees C
-    rated_top_oil_rise: float  # [degC]  # top-oil hottest-spot rise over ambient temperature at rated load, degrees C
-    no_load_loss: float  # [pu]  # Another method of specifying transformer impedances, defined as per unit power values (shunt)
-    full_load_loss: float  # [pu]  # Another method of specifying transformer impedances, defined as per unit power values (shunt and series)
-    reactance_resistance_ratio: float  # the reactance to resistance ratio (X/R)
-    installed_insulation_life: float  # [h]  # the normal lifetime of the transformer insulation at rated load, hours
-    magnetization_location: TransformerConfigurationMagnetizationLocation  # winding to place magnetization influence for in-rush calculations
-    inrush_saturation_enabled: bool  # flag to include saturation effects during inrush calculations
-    L_A: float  # [pu]  # Air core inductance of transformer
-    phi_K: float  # [pu]  # Knee flux value where the air core inductance interstes the flux axis of the saturation curve
-    phi_M: float  # [pu]  # Peak magnetization flux at rated voltage of the saturation curve
-    I_M: float  # [pu]  # Peak magnetization current at rated voltage of the saturation curve
-    T_D: float  # Inrush decay time constant for inrush current
+    coolant_type: TransformerConfigurationCoolantType = None  # coolant type, used in life time model
+    cooling_type: TransformerConfigurationCoolingType = None  # type of coolant fluid used in life time model
+    primary_voltage: float = None  # [V]  # primary voltage level in L-L value kV
+    secondary_voltage: float = None  # [V]  # secondary voltage level kV
+    power_rating: float = None  # [kVA]  # kVA rating of transformer, total
+    powerA_rating: float = None  # [kVA]  # kVA rating of transformer, phase A
+    powerB_rating: float = None  # [kVA]  # kVA rating of transformer, phase B
+    powerC_rating: float = None  # [kVA]  # kVA rating of transformer, phase C
+    resistance: float = None  # [pu*Ohm]  # Series impedance, pu, real
+    reactance: float = None  # [pu*Ohm]  # Series impedance, pu, imag
+    impedance: complex = None  # [pu*Ohm]  # Series impedance, pu
+    resistance1: float = None  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, real
+    reactance1: float = None  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, imag
+    impedance1: complex = None  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu
+    resistance2: float = None  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, real
+    reactance2: float = None  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu, imag
+    impedance2: complex = None  # [pu*Ohm]  # Secondary series impedance (only used when you want to define each individual winding seperately, pu
+    shunt_resistance: float = None  # [pu*Ohm]  # Shunt impedance on primary side, pu, real
+    shunt_reactance: float = None  # [pu*Ohm]  # Shunt impedance on primary side, pu, imag
+    shunt_impedance: complex = None  # [pu*Ohm]  # Shunt impedance on primary side, pu
+    core_coil_weight: float = None  # [lb]  # The weight of the core and coil assembly in pounds
+    tank_fittings_weight: float = None  # [lb]  # The weight of the tank and fittings in pounds
+    oil_volume: float = None  # [gal]  # The number of gallons of oil in the transformer
+    rated_winding_time_constant: float = None  # [h]  # The rated winding time constant in hours
+    rated_winding_hot_spot_rise: float = None  # [degC]  # winding hottest-spot rise over ambient temperature at rated load, degrees C
+    rated_top_oil_rise: float = None  # [degC]  # top-oil hottest-spot rise over ambient temperature at rated load, degrees C
+    no_load_loss: float = None  # [pu]  # Another method of specifying transformer impedances, defined as per unit power values (shunt)
+    full_load_loss: float = None  # [pu]  # Another method of specifying transformer impedances, defined as per unit power values (shunt and series)
+    reactance_resistance_ratio: float = None  # the reactance to resistance ratio (X/R)
+    installed_insulation_life: float = None  # [h]  # the normal lifetime of the transformer insulation at rated load, hours
+    magnetization_location: TransformerConfigurationMagnetizationLocation = None  # winding to place magnetization influence for in-rush calculations
+    inrush_saturation_enabled: bool = None  # flag to include saturation effects during inrush calculations
+    L_A: float = None  # [pu]  # Air core inductance of transformer
+    phi_K: float = None  # [pu]  # Knee flux value where the air core inductance interstes the flux axis of the saturation curve
+    phi_M: float = None  # [pu]  # Peak magnetization flux at rated voltage of the saturation curve
+    I_M: float = None  # [pu]  # Peak magnetization current at rated voltage of the saturation curve
+    T_D: float = None  # Inrush decay time constant for inrush current
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class TriplexLine:
-    pass
+    name: str
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class TriplexLineConductor:
+    name: str
     resistance: float  # [Ohm/mile]  # resistance of cable in ohm/mile
     geometric_mean_radius: float  # [ft]  # geometric mean radius of the cable
     rating_summer_continuous: float  # [A]  # amp ratings for the cable during continuous operation in summer
@@ -2427,9 +2718,13 @@ class TriplexLineConductor:
     rating_winter_continuous: float  # [A]  # amp ratings for the cable during continuous operation in winter
     rating_winter_emergency: float  # [A]  # amp ratings for the cable during short term operation in winter
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class TriplexLineConfiguration:
+    name: str
     conductor_1: object  # conductor type for phase 1
     conductor_2: object  # conductor type for phase 2
     conductor_N: object  # conductor type for phase N
@@ -2444,6 +2739,9 @@ class TriplexLineConfiguration:
     rating_summer_emergency: float  # [A]  # amp rating in summer, short term
     rating_winter_continuous: float  # [A]  # amp rating in winter, continuous
     rating_winter_emergency: float  # [A]  # amp rating in winter, short term
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2468,55 +2766,58 @@ class TriplexNodeServiceStatus(IntEnum):
 
 @dataclass
 class TriplexNode(PowerFlowObject):
-    bustype: TriplexNodeBusType  # defines whether the node is a PQ, PV, or SWING node
-    busflags: List[TriplexNodeBusFlag]  # flag indicates node has a source for voltage, i.e. connects to the swing node
-    reference_bus: object  # reference bus from which frequency is defined
-    maximum_voltage_error: float  # [V]  # convergence voltage limit or convergence criteria
-    voltage_1: complex  # [V]  # bus voltage, phase 1 to ground
-    voltage_2: complex  # [V]  # bus voltage, phase 2 to ground
-    voltage_N: complex  # [V]  # bus voltage, phase N to ground
-    voltage_12: complex  # [V]  # bus voltage, phase 1 to 2
-    voltage_1N: complex  # [V]  # bus voltage, phase 1 to N
-    voltage_2N: complex  # [V]  # bus voltage, phase 2 to N
-    current_1: complex  # [A]  # constant current load on phase 1, also acts as accumulator
-    current_2: complex  # [A]  # constant current load on phase 2, also acts as accumulator
-    current_N: complex  # [A]  # constant current load on phase N, also acts as accumulator
-    current_1_real: float  # [A]  # constant current load on phase 1, real
-    current_2_real: float  # [A]  # constant current load on phase 2, real
-    current_N_real: float  # [A]  # constant current load on phase N, real
-    current_1_reac: float  # [A]  # constant current load on phase 1, imag
-    current_2_reac: float  # [A]  # constant current load on phase 2, imag
-    current_N_reac: float  # [A]  # constant current load on phase N, imag
-    current_12: complex  # [A]  # constant current load on phase 1 to 2
-    current_12_real: float  # [A]  # constant current load on phase 1 to 2, real
-    current_12_reac: float  # [A]  # constant current load on phase 1 to 2, imag
-    power_1: complex  # [VA]  # constant power on phase 1 (120V)
-    power_2: complex  # [VA]  # constant power on phase 2 (120V)
-    power_12: complex  # [VA]  # constant power on phase 1 to 2 (240V)
-    power_1_real: float  # [W]  # constant power on phase 1, real
-    power_2_real: float  # [W]  # constant power on phase 2, real
-    power_12_real: float  # [W]  # constant power on phase 1 to 2, real
-    power_1_reac: float  # [VAr]  # constant power on phase 1, imag
-    power_2_reac: float  # [VAr]  # constant power on phase 2, imag
-    power_12_reac: float  # [VAr]  # constant power on phase 1 to 2, imag
-    shunt_1: complex  # [S]  # constant shunt impedance on phase 1
-    shunt_2: complex  # [S]  # constant shunt impedance on phase 2
-    shunt_12: complex  # [S]  # constant shunt impedance on phase 1 to 2
-    impedance_1: complex  # [Ohm]  # constant series impedance on phase 1
-    impedance_2: complex  # [Ohm]  # constant series impedance on phase 2
-    impedance_12: complex  # [Ohm]  # constant series impedance on phase 1 to 2
-    impedance_1_real: float  # [Ohm]  # constant series impedance on phase 1, real
-    impedance_2_real: float  # [Ohm]  # constant series impedance on phase 2, real
-    impedance_12_real: float  # [Ohm]  # constant series impedance on phase 1 to 2, real
-    impedance_1_reac: float  # [Ohm]  # constant series impedance on phase 1, imag
-    impedance_2_reac: float  # [Ohm]  # constant series impedance on phase 2, imag
-    impedance_12_reac: float  # [Ohm]  # constant series impedance on phase 1 to 2, imag
-    house_present: bool  # boolean for detecting whether a house is attached, not an input
-    service_status: TriplexNodeServiceStatus  # In and out of service flag
-    service_status_double: float  # In and out of service flag - type float - will indiscriminately override service_status - useful for schedules
-    previous_uptime: float  # [min]  # Previous time between disconnects of node in minutes
-    current_uptime: float  # [min]  # Current time since last disconnect of node in minutes
-    topological_parent: object  # topological parent as per GLM: configuration
+    bustype: TriplexNodeBusType = None  # defines whether the node is a PQ, PV, or SWING node
+    busflags: List[TriplexNodeBusFlag] = None  # flag indicates node has a source for voltage, i.e. connects to the swing node
+    reference_bus: object = None  # reference bus from which frequency is defined
+    maximum_voltage_error: float = None  # [V]  # convergence voltage limit or convergence criteria
+    voltage_1: complex = None  # [V]  # bus voltage, phase 1 to ground
+    voltage_2: complex = None  # [V]  # bus voltage, phase 2 to ground
+    voltage_N: complex = None  # [V]  # bus voltage, phase N to ground
+    voltage_12: complex = None  # [V]  # bus voltage, phase 1 to 2
+    voltage_1N: complex = None  # [V]  # bus voltage, phase 1 to N
+    voltage_2N: complex = None  # [V]  # bus voltage, phase 2 to N
+    current_1: complex = None  # [A]  # constant current load on phase 1, also acts as accumulator
+    current_2: complex = None  # [A]  # constant current load on phase 2, also acts as accumulator
+    current_N: complex = None  # [A]  # constant current load on phase N, also acts as accumulator
+    current_1_real: float = None  # [A]  # constant current load on phase 1, real
+    current_2_real: float = None  # [A]  # constant current load on phase 2, real
+    current_N_real: float = None  # [A]  # constant current load on phase N, real
+    current_1_reac: float = None  # [A]  # constant current load on phase 1, imag
+    current_2_reac: float = None  # [A]  # constant current load on phase 2, imag
+    current_N_reac: float = None  # [A]  # constant current load on phase N, imag
+    current_12: complex = None  # [A]  # constant current load on phase 1 to 2
+    current_12_real: float = None  # [A]  # constant current load on phase 1 to 2, real
+    current_12_reac: float = None  # [A]  # constant current load on phase 1 to 2, imag
+    power_1: complex = None  # [VA]  # constant power on phase 1 (120V)
+    power_2: complex = None  # [VA]  # constant power on phase 2 (120V)
+    power_12: complex = None  # [VA]  # constant power on phase 1 to 2 (240V)
+    power_1_real: float = None  # [W]  # constant power on phase 1, real
+    power_2_real: float = None  # [W]  # constant power on phase 2, real
+    power_12_real: float = None  # [W]  # constant power on phase 1 to 2, real
+    power_1_reac: float = None  # [VAr]  # constant power on phase 1, imag
+    power_2_reac: float = None  # [VAr]  # constant power on phase 2, imag
+    power_12_reac: float = None  # [VAr]  # constant power on phase 1 to 2, imag
+    shunt_1: complex = None  # [S]  # constant shunt impedance on phase 1
+    shunt_2: complex = None  # [S]  # constant shunt impedance on phase 2
+    shunt_12: complex = None  # [S]  # constant shunt impedance on phase 1 to 2
+    impedance_1: complex = None  # [Ohm]  # constant series impedance on phase 1
+    impedance_2: complex = None  # [Ohm]  # constant series impedance on phase 2
+    impedance_12: complex = None  # [Ohm]  # constant series impedance on phase 1 to 2
+    impedance_1_real: float = None  # [Ohm]  # constant series impedance on phase 1, real
+    impedance_2_real: float = None  # [Ohm]  # constant series impedance on phase 2, real
+    impedance_12_real: float = None  # [Ohm]  # constant series impedance on phase 1 to 2, real
+    impedance_1_reac: float = None  # [Ohm]  # constant series impedance on phase 1, imag
+    impedance_2_reac: float = None  # [Ohm]  # constant series impedance on phase 2, imag
+    impedance_12_reac: float = None  # [Ohm]  # constant series impedance on phase 1 to 2, imag
+    house_present: bool = None  # boolean for detecting whether a house is attached, not an input
+    service_status: TriplexNodeServiceStatus = None  # In and out of service flag
+    service_status_double: float = None  # In and out of service flag - type float - will indiscriminately override service_status - useful for schedules
+    previous_uptime: float = None  # [min]  # Previous time between disconnects of node in minutes
+    current_uptime: float = None  # [min]  # Current time since last disconnect of node in minutes
+    topological_parent: object = None  # topological parent as per GLM: configuration
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2530,58 +2831,61 @@ class TriplexLoadLoadClass(IntEnum):
 
 @dataclass
 class TriplexLoad(TriplexNode):
-    load_class: TriplexLoadLoadClass  # Flag to track load type, not currently used for anything except sorting
-    constant_power_1: complex  # [VA]  # constant power load on split phase 1, specified as VA
-    constant_power_2: complex  # [VA]  # constant power load on split phase 2, specified as VA
-    constant_power_12: complex  # [VA]  # constant power load on split phase 12, specified as VA
-    constant_power_1_real: float  # [W]  # constant power load on spit phase 1, real only, specified as W
-    constant_power_2_real: float  # [W]  # constant power load on phase 2, real only, specified as W
-    constant_power_12_real: float  # [W]  # constant power load on phase 12, real only, specified as W
-    constant_power_1_reac: float  # [VAr]  # constant power load on phase 1, imaginary only, specified as VAr
-    constant_power_2_reac: float  # [VAr]  # constant power load on phase 2, imaginary only, specified as VAr
-    constant_power_12_reac: float  # [VAr]  # constant power load on phase 12, imaginary only, specified as VAr
-    constant_current_1: complex  # [A]  # constant current load on phase 1, specified as Amps
-    constant_current_2: complex  # [A]  # constant current load on phase 2, specified as Amps
-    constant_current_12: complex  # [A]  # constant current load on phase 12, specified as Amps
-    constant_current_1_real: float  # [A]  # constant current load on phase 1, real only, specified as Amps
-    constant_current_2_real: float  # [A]  # constant current load on phase 2, real only, specified as Amps
-    constant_current_12_real: float  # [A]  # constant current load on phase 12, real only, specified as Amps
-    constant_current_1_reac: float  # [A]  # constant current load on phase 1, imaginary only, specified as Amps
-    constant_current_2_reac: float  # [A]  # constant current load on phase 2, imaginary only, specified as Amps
-    constant_current_12_reac: float  # [A]  # constant current load on phase 12, imaginary only, specified as Amps
-    constant_impedance_1: complex  # [Ohm]  # constant impedance load on phase 1, specified as Ohms
-    constant_impedance_2: complex  # [Ohm]  # constant impedance load on phase 2, specified as Ohms
-    constant_impedance_12: complex  # [Ohm]  # constant impedance load on phase 12, specified as Ohms
-    constant_impedance_1_real: float  # [Ohm]  # constant impedance load on phase 1, real only, specified as Ohms
-    constant_impedance_2_real: float  # [Ohm]  # constant impedance load on phase 2, real only, specified as Ohms
-    constant_impedance_12_real: float  # [Ohm]  # constant impedance load on phase 12, real only, specified as Ohms
-    constant_impedance_1_reac: float  # [Ohm]  # constant impedance load on phase 1, imaginary only, specified as Ohms
-    constant_impedance_2_reac: float  # [Ohm]  # constant impedance load on phase 2, imaginary only, specified as Ohms
-    constant_impedance_12_reac: float  # [Ohm]  # constant impedance load on phase 12, imaginary only, specified as Ohms
-    measured_voltage_1: complex  # [V]  # measured voltage on phase 1
-    measured_voltage_2: complex  # [V]  # measured voltage on phase 2
-    measured_voltage_12: complex  # [V]  # measured voltage on phase 12
-    base_power_1: float  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase 1 before applying ZIP fractions
-    base_power_2: float  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase 2 before applying ZIP fractions
-    base_power_12: float  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase 12 before applying ZIP fractions
-    power_pf_1: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 1 constant power portion of load
-    current_pf_1: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 1 constant current portion of load
-    impedance_pf_1: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 1 constant impedance portion of load
-    power_pf_2: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 2 constant power portion of load
-    current_pf_2: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 2 constant current portion of load
-    impedance_pf_2: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 2 constant impedance portion of load
-    power_pf_12: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 12 constant power portion of load
-    current_pf_12: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 12 constant current portion of load
-    impedance_pf_12: float  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 12 constant impedance portion of load
-    power_fraction_1: float  # [pu]  # this is the constant power fraction of base power on phase 1
-    current_fraction_1: float  # [pu]  # this is the constant current fraction of base power on phase 1
-    impedance_fraction_1: float  # [pu]  # this is the constant impedance fraction of base power on phase 1
-    power_fraction_2: float  # [pu]  # this is the constant power fraction of base power on phase 2
-    current_fraction_2: float  # [pu]  # this is the constant current fraction of base power on phase 2
-    impedance_fraction_2: float  # [pu]  # this is the constant impedance fraction of base power on phase 2
-    power_fraction_12: float  # [pu]  # this is the constant power fraction of base power on phase 12
-    current_fraction_12: float  # [pu]  # this is the constant current fraction of base power on phase 12
-    impedance_fraction_12: float  # [pu]  # this is the constant impedance fraction of base power on phase 12
+    load_class: TriplexLoadLoadClass = None  # Flag to track load type, not currently used for anything except sorting
+    constant_power_1: complex = None  # [VA]  # constant power load on split phase 1, specified as VA
+    constant_power_2: complex = None  # [VA]  # constant power load on split phase 2, specified as VA
+    constant_power_12: complex = None  # [VA]  # constant power load on split phase 12, specified as VA
+    constant_power_1_real: float = None  # [W]  # constant power load on spit phase 1, real only, specified as W
+    constant_power_2_real: float = None  # [W]  # constant power load on phase 2, real only, specified as W
+    constant_power_12_real: float = None  # [W]  # constant power load on phase 12, real only, specified as W
+    constant_power_1_reac: float = None  # [VAr]  # constant power load on phase 1, imaginary only, specified as VAr
+    constant_power_2_reac: float = None  # [VAr]  # constant power load on phase 2, imaginary only, specified as VAr
+    constant_power_12_reac: float = None  # [VAr]  # constant power load on phase 12, imaginary only, specified as VAr
+    constant_current_1: complex = None  # [A]  # constant current load on phase 1, specified as Amps
+    constant_current_2: complex = None  # [A]  # constant current load on phase 2, specified as Amps
+    constant_current_12: complex = None  # [A]  # constant current load on phase 12, specified as Amps
+    constant_current_1_real: float = None  # [A]  # constant current load on phase 1, real only, specified as Amps
+    constant_current_2_real: float = None  # [A]  # constant current load on phase 2, real only, specified as Amps
+    constant_current_12_real: float = None  # [A]  # constant current load on phase 12, real only, specified as Amps
+    constant_current_1_reac: float = None  # [A]  # constant current load on phase 1, imaginary only, specified as Amps
+    constant_current_2_reac: float = None  # [A]  # constant current load on phase 2, imaginary only, specified as Amps
+    constant_current_12_reac: float = None  # [A]  # constant current load on phase 12, imaginary only, specified as Amps
+    constant_impedance_1: complex = None  # [Ohm]  # constant impedance load on phase 1, specified as Ohms
+    constant_impedance_2: complex = None  # [Ohm]  # constant impedance load on phase 2, specified as Ohms
+    constant_impedance_12: complex = None  # [Ohm]  # constant impedance load on phase 12, specified as Ohms
+    constant_impedance_1_real: float = None  # [Ohm]  # constant impedance load on phase 1, real only, specified as Ohms
+    constant_impedance_2_real: float = None  # [Ohm]  # constant impedance load on phase 2, real only, specified as Ohms
+    constant_impedance_12_real: float = None  # [Ohm]  # constant impedance load on phase 12, real only, specified as Ohms
+    constant_impedance_1_reac: float = None  # [Ohm]  # constant impedance load on phase 1, imaginary only, specified as Ohms
+    constant_impedance_2_reac: float = None  # [Ohm]  # constant impedance load on phase 2, imaginary only, specified as Ohms
+    constant_impedance_12_reac: float = None  # [Ohm]  # constant impedance load on phase 12, imaginary only, specified as Ohms
+    measured_voltage_1: complex = None  # [V]  # measured voltage on phase 1
+    measured_voltage_2: complex = None  # [V]  # measured voltage on phase 2
+    measured_voltage_12: complex = None  # [V]  # measured voltage on phase 12
+    base_power_1: float = None  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase 1 before applying ZIP fractions
+    base_power_2: float = None  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase 2 before applying ZIP fractions
+    base_power_12: float = None  # [VA]  # in similar format as ZIPload, this represents the nominal power on phase 12 before applying ZIP fractions
+    power_pf_1: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 1 constant power portion of load
+    current_pf_1: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 1 constant current portion of load
+    impedance_pf_1: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 1 constant impedance portion of load
+    power_pf_2: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 2 constant power portion of load
+    current_pf_2: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 2 constant current portion of load
+    impedance_pf_2: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 2 constant impedance portion of load
+    power_pf_12: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 12 constant power portion of load
+    current_pf_12: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 12 constant current portion of load
+    impedance_pf_12: float = None  # [pu]  # in similar format as ZIPload, this is the power factor of the phase 12 constant impedance portion of load
+    power_fraction_1: float = None  # [pu]  # this is the constant power fraction of base power on phase 1
+    current_fraction_1: float = None  # [pu]  # this is the constant current fraction of base power on phase 1
+    impedance_fraction_1: float = None  # [pu]  # this is the constant impedance fraction of base power on phase 1
+    power_fraction_2: float = None  # [pu]  # this is the constant power fraction of base power on phase 2
+    current_fraction_2: float = None  # [pu]  # this is the constant current fraction of base power on phase 2
+    impedance_fraction_2: float = None  # [pu]  # this is the constant impedance fraction of base power on phase 2
+    power_fraction_12: float = None  # [pu]  # this is the constant power fraction of base power on phase 12
+    current_fraction_12: float = None  # [pu]  # this is the constant current fraction of base power on phase 12
+    impedance_fraction_12: float = None  # [pu]  # this is the constant impedance fraction of base power on phase 12
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2595,49 +2899,59 @@ class TriplexMeterBillMode(IntEnum):
 
 @dataclass
 class TriplexMeter(TriplexNode):
-    measured_real_energy: float  # [Wh]  # metered real energy consumption
-    measured_reactive_energy: float  # [VAh]  # metered reactive energy consumption
-    measured_power: complex  # [VA]  # metered power
-    indiv_measured_power_1: complex  # [VA]  # metered power, phase 1
-    indiv_measured_power_2: complex  # [VA]  # metered power, phase 2
-    indiv_measured_power_N: complex  # [VA]  # metered power, phase N
-    measured_demand: float  # [W]  # metered demand (peak of power)
-    measured_real_power: float  # [W]  # metered real power
-    measured_reactive_power: float  # [VAr]  # metered reactive power
-    meter_power_consumption: complex  # [VA]  # power consumed by meter operation
-    measured_voltage_1: complex  # [V]  # measured voltage, phase 1 to ground
-    measured_voltage_2: complex  # [V]  # measured voltage, phase 2 to ground
-    measured_voltage_N: complex  # [V]  # measured voltage, phase N to ground
-    measured_current_1: complex  # [A]  # measured current, phase 1
-    measured_current_2: complex  # [A]  # measured current, phase 2
-    measured_current_N: complex  # [A]  # measured current, phase N
-    customer_interrupted: bool  # Reliability flag - goes active if the customer is in an interrupted state
-    customer_interrupted_secondary: bool  # Reliability flag - goes active if the customer is in a secondary interrupted state - i.e., momentary
-    monthly_bill: float  # [$]  # Accumulator for the current month's bill
-    previous_monthly_bill: float  # [$]  # Total monthly bill for the previous month
-    previous_monthly_energy: float  # [kWh]  #
-    monthly_fee: float  # [$]  # Total monthly energy for the previous month
-    monthly_energy: float  # [kWh]  # Accumulator for the current month's energy
-    bill_mode: TriplexMeterBillMode  # Designates the bill mode to be used
-    power_market: object  # Designates the auction object where prices are read from for bill mode
-    bill_day: int  # Day bill is to be processed (assumed to occur at midnight of that day)
-    price: float  # [$/kWh]  # Standard uniform pricing
-    price_base: float  # [$/kWh]  # Used only in TIERED_RTP mode to describe the price before the first tier
-    first_tier_price: float  # [$/kWh]  # first tier price of energy between first and second tier energy
-    first_tier_energy: float  # [kWh]  # price of energy on tier above price or price base
-    second_tier_price: float  # [$/kWh]  # first tier price of energy between second and third tier energy
-    second_tier_energy: float  # [kWh]  # price of energy on tier above first tier
-    third_tier_price: float  # [$/kWh]  # first tier price of energy greater than third tier energy
-    third_tier_energy: float  # [kWh]  # price of energy on tier above second tier
+    measured_real_energy: float = None  # [Wh]  # metered real energy consumption
+    measured_reactive_energy: float = None  # [VAh]  # metered reactive energy consumption
+    measured_power: complex = None  # [VA]  # metered power
+    indiv_measured_power_1: complex = None  # [VA]  # metered power, phase 1
+    indiv_measured_power_2: complex = None  # [VA]  # metered power, phase 2
+    indiv_measured_power_N: complex = None  # [VA]  # metered power, phase N
+    measured_demand: float = None  # [W]  # metered demand (peak of power)
+    measured_real_power: float = None  # [W]  # metered real power
+    measured_reactive_power: float = None  # [VAr]  # metered reactive power
+    meter_power_consumption: complex = None  # [VA]  # power consumed by meter operation
+    measured_voltage_1: complex = None  # [V]  # measured voltage, phase 1 to ground
+    measured_voltage_2: complex = None  # [V]  # measured voltage, phase 2 to ground
+    measured_voltage_N: complex = None  # [V]  # measured voltage, phase N to ground
+    measured_current_1: complex = None  # [A]  # measured current, phase 1
+    measured_current_2: complex = None  # [A]  # measured current, phase 2
+    measured_current_N: complex = None  # [A]  # measured current, phase N
+    customer_interrupted: bool = None  # Reliability flag - goes active if the customer is in an interrupted state
+    customer_interrupted_secondary: bool = None  # Reliability flag - goes active if the customer is in a secondary interrupted state - i.e., momentary
+    monthly_bill: float = None  # [$]  # Accumulator for the current month's bill
+    previous_monthly_bill: float = None  # [$]  # Total monthly bill for the previous month
+    previous_monthly_energy: float = None  # [kWh]  #
+    monthly_fee: float = None  # [$]  # Total monthly energy for the previous month
+    monthly_energy: float = None  # [kWh]  # Accumulator for the current month's energy
+    bill_mode: TriplexMeterBillMode = None  # Designates the bill mode to be used
+    power_market: object = None  # Designates the auction object where prices are read from for bill mode
+    bill_day: int = None  # Day bill is to be processed (assumed to occur at midnight of that day)
+    price: float = None  # [$/kWh]  # Standard uniform pricing
+    price_base: float = None  # [$/kWh]  # Used only in TIERED_RTP mode to describe the price before the first tier
+    first_tier_price: float = None  # [$/kWh]  # first tier price of energy between first and second tier energy
+    first_tier_energy: float = None  # [kWh]  # price of energy on tier above price or price base
+    second_tier_price: float = None  # [$/kWh]  # first tier price of energy between second and third tier energy
+    second_tier_energy: float = None  # [kWh]  # price of energy on tier above first tier
+    third_tier_price: float = None  # [$/kWh]  # first tier price of energy greater than third tier energy
+    third_tier_energy: float = None  # [kWh]  # price of energy on tier above second tier
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class UndergroundLine(Line):
-    pass
+    phases: str = None
+    name: str = None
+    from_: str = None
+    to: str = None
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class UndergroundLineConductor:
+    name: str
     outer_diameter: float  # [in]  # Outer diameter of conductor and sheath
     conductor_gmr: float  # [ft]  # Geometric mean radius of the conductor
     conductor_diameter: float  # [in]  # Diameter of conductor
@@ -2646,15 +2960,18 @@ class UndergroundLineConductor:
     neutral_diameter: float  # [in]  # Diameter of individual neutral conductor/strand of concentric neutral
     neutral_resistance: float  # [Ohm/mile]  # Resistance of an individual neutral conductor/strand in ohm/mile
     neutral_strands: int  # Number of cable strands in neutral conductor
-    shield_thickness: float  # [in]  # The thickness of Tape shield in inches
-    shield_diameter: float  # [in]  # The outside diameter of Tape shield in inches
-    insulation_relative_permitivitty: float  # [unit]  # Permitivitty of insulation, relative to air
-    shield_gmr: float  # [ft]  # Geometric mean radius of shielding sheath
-    shield_resistance: float  # [Ohm/mile]  # Resistance of shielding sheath in ohms/mile
-    rating_summer_continuous: float  # [A]  # amp rating in summer, continuous
-    rating_summer_emergency: float  # [A]  # amp rating in summer, short term
-    rating_winter_continuous: float  # [A]  # amp rating in winter, continuous
-    rating_winter_emergency: float  # [A]  # amp rating in winter, short term
+    shield_thickness: float = None  # [in]  # The thickness of Tape shield in inches
+    shield_diameter: float = None  # [in]  # The outside diameter of Tape shield in inches
+    insulation_relative_permitivitty: float = None  # [unit]  # Permitivitty of insulation, relative to air
+    shield_gmr: float = None  # [ft]  # Geometric mean radius of shielding sheath
+    shield_resistance: float = None  # [Ohm/mile]  # Resistance of shielding sheath in ohms/mile
+    rating_summer_continuous: float = None  # [A]  # amp rating in summer, continuous
+    rating_summer_emergency: float = None  # [A]  # amp rating in summer, short term
+    rating_winter_continuous: float = None  # [A]  # amp rating in winter, continuous
+    rating_winter_emergency: float = None  # [A]  # amp rating in winter, short term
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2672,6 +2989,7 @@ class VoltVarControlPhase(IntEnum):
 
 @dataclass
 class VoltVarControl:
+    name: str
     control_method: VoltVarControlControlMethod  # IVVC activated or in standby
     capacitor_delay: float  # [s]  # Default capacitor time delay - overridden by local defintions
     regulator_delay: float  # [s]  # Default regulator time delay - overriden by local definitions
@@ -2691,6 +3009,9 @@ class VoltVarControl:
     low_load_deadband: str  # Low loading case voltage deadband for each regulator, separated by commas
     pf_signed: bool  # Set to true to consider the sign on the power factor.  Otherwise, it just maintains the deadband of +/-desired_pf
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class VoltDumpMode(IntEnum):
@@ -2700,6 +3021,7 @@ class VoltDumpMode(IntEnum):
 
 @dataclass
 class VoltDump:
+    name: str
     group: str  # the group ID to output data for (all nodes if empty)
     runtime: timestamp  # the time to check voltage data
     filename: str  # the file to dump the voltage data into
@@ -2707,10 +3029,17 @@ class VoltDump:
     runcount: int  # the number of times the file has been written to
     mode: VoltDumpMode  # dumps the voltages in either polar or rectangular notation
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ModuleMarket:
+    name: str
     bid_offset: float  # [$]  # the bid offset value that prevents bids from being wrongly triggered
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -2783,6 +3112,7 @@ class AuctionCurveLogInfo(IntEnum):
 
 @dataclass
 class Auction:
+    name: str
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
     latency: float  # [s]  # latency between market clearing and delivery
@@ -2853,6 +3183,9 @@ class Auction:
     curve_log_limit: int
     curve_log_info: AuctionCurveLogInfo
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class ControllerSimpleMode(IntEnum):
@@ -2910,6 +3243,7 @@ class ControllerProxyClearingType(IntEnum):
 
 @dataclass
 class Controller:
+    name: str
     simple_mode: ControllerSimpleMode
     bid_mode: ControllerBidMode
     use_override: ControllerUseOverride
@@ -2999,6 +3333,9 @@ class Controller:
     proxy_clearing_type: ControllerProxyClearingType
     proxy_clearing_type2: ControllerProxyClearingType
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class DoubleControllerThermostatMode(IntEnum):
@@ -3037,6 +3374,7 @@ class DoubleControllerBidMode(IntEnum):
 
 @dataclass
 class DoubleController:
+    name: str
     thermostat_mode: DoubleControllerThermostatMode
     last_mode: DoubleControllerLastMode
     resolve_mode: DoubleControllerResolveMode
@@ -3080,6 +3418,9 @@ class DoubleController:
     avg_price: float
     stdev_price: float
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class GeneratorControllerGeneratorState(IntEnum):
@@ -3103,6 +3444,7 @@ class GeneratorControllerGeneratorAttachment(IntEnum):
 
 @dataclass
 class GeneratorController:
+    name: str
     generator_state: GeneratorControllerGeneratorState  # Current generator state
     amortization_type: GeneratorControllerAmortizationType  # Amortization compounding method
     generator_state_number: int  # Current generator state as numeric value
@@ -3120,7 +3462,7 @@ class GeneratorController:
     minimum_runtime: float  # [s]  # Minimum time the generator should run to avoid shutdown cost
     minimum_downtime: float  # [s]  # Minimum down time for the generator before it can bid again
     capacity_factor: float  # Calculation of generator's current capacity factor based on the market period
-    amortization_factor[1 / s]: float  # Exponential decay factor in 1/s for shutdown cost repayment
+    amortization_factor: float  # Exponential decay factor in 1/s for shutdown cost repayment
     bid_delay: float  # Time before a market closes to bid
     generator_attachment: GeneratorControllerGeneratorAttachment  # Generator attachment type - determines interactions
     building_load_curr: float  # Present building load value (if BUILDING attachment)
@@ -3133,6 +3475,9 @@ class GeneratorController:
     hours_in_year: float  # [h]  # Number of hours assumed for the total year
     op_and_maint_cost: float  # [$]  # Operation and maintenance cost per runtime year
     bid_id: int
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3179,6 +3524,7 @@ class PassiveControllerDLCMode(IntEnum):
 
 @dataclass
 class PassiveController:
+    name: str
     input_state: int
     input_setpoint: float
     input_chained: bool
@@ -3258,6 +3604,9 @@ class PassiveController:
     cycle_length_off: float  # [s]
     cycle_length_on: float  # [s]
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class StubBidderRole(IntEnum):
@@ -3267,6 +3616,7 @@ class StubBidderRole(IntEnum):
 
 @dataclass
 class StubBidder:
+    name: str
     bid_period: float  # [s]
     count: int
     market: object
@@ -3274,6 +3624,9 @@ class StubBidder:
     price: float
     quantity: float
     bid_id: int
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3284,6 +3637,7 @@ class StubAuctionControlMode(IntEnum):
 
 @dataclass
 class StubAuction:
+    name: str
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
     last_P: float  # last cleared price
@@ -3299,6 +3653,9 @@ class StubAuction:
     market_id: int  # unique identifier of market clearing
     verbose: bool  # enable verbose stubauction operations
     control_mode: StubAuctionControlMode  # the control mode to use for determining average and deviation calculations
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3319,6 +3676,7 @@ class SupervisoryControllerPFCMode(IntEnum):
 
 @dataclass
 class SupervisoryControl:
+    name: str
     unit: str  # unit of quantity
     period: float  # [s]  # interval of time between market clearings
     market_id: int  # unique identifier of market clearing
@@ -3328,23 +3686,34 @@ class SupervisoryControl:
     PFC_mode: SupervisoryControllerPFCMode  # operation mode of the primary frequency controller
     bid_sort_mode: SupervisoryControlBidSortMode  # Determines how the bids into the market is sorted to contruct the PF curve
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ModuleReliability:
+    name: str
     enable_subsecond_models: bool  # Flag to enable deltamode functionality in the reliability module
     maximum_event_length: float  # [s]  # Maximum duration of any faulting event
     report_event_log: bool  # Should the metrics object dump a logfile?
     deltamode_timestep: int  # Default timestep for reliability deltamode operations
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class Metrics:
+    name: str
     report_file: str
     customer_group: str
     module_metrics_object: object
     metrics_of_interest: str
     metric_interval: float  # [s]
     report_interval: float  # [s]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3379,6 +3748,7 @@ class EventGenRestorationDist(IntEnum):
 
 @dataclass
 class EventGen:
+    name: str
     target_group: str
     fault_type: str
     failure_dist: EventGenFailureDist
@@ -3391,11 +3761,18 @@ class EventGen:
     max_outage_length: float  # [s]
     max_simultaneous_faults: int
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ModuleGenerators:
+    name: str
     enable_subsecond_models: bool  # Enable deltamode capabilities within the powerflow module
     deltamode_timestep: float  # [ns]  # Desired minimum timestep for deltamode-related simulations
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3456,6 +3833,7 @@ class BatteryBatteryType(IntEnum):
 
 @dataclass
 class Battery:
+    name: str
     generator_mode: BatteryGeneratorMode  # LEGACY MODEL: Selects generator control mode when using legacy model in non-legacy models, this should be SUPPLY_DRIVEN.
     additional_controls: BatteryAdditionalControls  # LEGACY MODEL: In conjunction with POWER_DRIVEN, VOLTAGE_CONTROLLED, and POWER_VOLTAGE_HYBRID, this will activate control set points that adjust with temperature
     generator_status: BatteryGeneratorStatus  # describes whether the generator is online or offline
@@ -3508,6 +3886,9 @@ class Battery:
     battery_load: float  # [W]  # INTERNAL BATTERY MODEL: the current power output of the battery.
     reserve_state_of_charge: float  # [pu]  # INTERNAL BATTERY MODEL: the reserve state of charge the battery can reach.
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class CentralDGControlControlMode(IntEnum):
@@ -3518,6 +3899,7 @@ class CentralDGControlControlMode(IntEnum):
 
 @dataclass
 class CentralDGControl:
+    name: str
     controlled_dgs: str  # the group ID of the dg objects the controller controls.
     feederhead_meter: object  # the name of the meter.
     control_mode_0: CentralDGControlControlMode
@@ -3527,6 +3909,9 @@ class CentralDGControl:
     peak_S: float  # [W]
     pf_low: float  # [unit]
     pf_high: float  # [unit]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3556,6 +3941,7 @@ class Phases(IntEnum):
 
 @dataclass
 class DCDCConverter:
+    name: str
     dc_dc_converter_type: DCDCConverterDCDCConverterType
     generator_mode: DCDCConverterGeneratorMode
     V_Out: complex  # [V]
@@ -3569,6 +3955,9 @@ class DCDCConverter:
     I_In: complex  # [A]
     VA_In: complex  # [VA]
     phases: List[Phases]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3610,6 +3999,7 @@ class DieselDGExciterType(IntEnum):
 
 @dataclass
 class DieselDG:
+    name: str
     Gen_mode: DieselDGGenMode
     Gen_status: DieselDGGenStatus
     Gen_type: DieselDGGenType  # Dynamics-capable implementation of synchronous diesel generator
@@ -3825,6 +4215,9 @@ class DieselDG:
     GGOV1_pref: float  # [pu]  # Power out reference point for GGOV1 - may be overwritten internally
     phases: List[Phases]  # Specifies which phases to connect to - currently not supported and assumes three-phase connection
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class EnergyStorageGeneratorMode(IntEnum):
@@ -3849,6 +4242,7 @@ class EnergyStoragePowerType(IntEnum):
 
 @dataclass
 class EnergyStorage:
+    name: str
     generator_mode: EnergyStorageGeneratorMode
     generator_status: EnergyStorageGeneratorStatus
     power_type: EnergyStoragePowerType
@@ -3868,6 +4262,9 @@ class EnergyStorage:
     I_Internal: complex  # [A]
     I_Prev: complex  # [A]
     phases: List[Phases]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -3935,6 +4332,7 @@ class InverterInverterManufacturer(IntEnum):
 
 @dataclass
 class Inverter:
+    name: str
     inverter_type: InverterInverterType  # LEGACY MODEL: Sets efficiencies and other parameters if using four_quadrant_control_mode, set this to FOUR_QUADRANT
     four_quadrant_control_mode: InverterFourQuadrantControlMode  # FOUR QUADRANT MODEL: Activates various control modes
     pf_reg: InverterPfReg  # Activate (or not) power factor regulation in four_quadrant_control_mode
@@ -4072,6 +4470,9 @@ class Inverter:
     Q4: float  # [pu]  # FOUR QUADRANT MODEL: VAR point 4 in volt/var curve. Used in VOLT_VAR control mode.
     volt_var_control_lockout: float  # [s]  # FOUR QUADRANT QUADRANT MODEL: the lockout time between volt/var actions.
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class MicroTurbineGeneratorMode(IntEnum):
@@ -4096,6 +4497,7 @@ class MicroTurbinePowerType(IntEnum):
 
 @dataclass
 class MicroTurbine:
+    name: str
     generator_mode: MicroTurbineGeneratorMode
     generator_status: MicroTurbineGeneratorStatus
     power_type: MicroTurbinePowerType
@@ -4129,6 +4531,9 @@ class MicroTurbine:
     efficiency: float
     Rated_kVA: float  # [kVA]
     phases: List[Phases]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -4195,6 +4600,7 @@ class PowerElectronicsPowerType(IntEnum):
 
 @dataclass
 class PowerElectronics:
+    name: str
     generator_mode: PowerElectronicsGeneratorMode
     generator_status: PowerElectronicsGeneratorStatus
     converter_type: PowerElectronicsConverterType
@@ -4209,6 +4615,9 @@ class PowerElectronics:
     Rated_kVA: float  # [kVA]
     Rated_kV: float  # [kV]
     phases: List[Phases]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -4231,6 +4640,7 @@ class RectifierGeneratorMode(IntEnum):
 
 @dataclass
 class Rectifier:
+    name: str
     rectifier_type: RectifierRectifierType
     generator_mode: RectifierGeneratorMode
     V_Out: complex  # [V]
@@ -4250,6 +4660,9 @@ class Rectifier:
     power_B_In: complex  # [VA]
     power_C_In: complex  # [VA]
     phases: List[Phases]
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -4309,6 +4722,7 @@ class SolarOrientation(IntEnum):
 
 @dataclass
 class Solar:
+    name: str
     generator_mode: SolarGeneratorMode
     generator_status: SolarGeneratorStatus
     panel_type: SolarPanelType
@@ -4354,6 +4768,9 @@ class Solar:
     orientation: SolarOrientation
     phases: List[Phases]
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @unique
 class WindTurbDGGenStatus(IntEnum):
@@ -4390,6 +4807,7 @@ class WindTurbDGTurbineModel(IntEnum):
 
 @dataclass
 class WindTurbDG:
+    name: str
     Gen_status: WindTurbDGGenStatus  # Generator is currently available to supply power
     Gen_type: WindTurbDGGenType  # Standard synchronous generator is also used to 'fake' a doubly-fed induction generator for now
     Gen_mode: WindTurbDGGenMode  # Maintains the real and reactive output at the terminals - currently unsupported
@@ -4456,10 +4874,16 @@ class WindTurbDG:
     Irotor_C: complex  # [V]  # Induction generator induced current on phase C in p.u.
     phases: List[Phases]  # Specifies which phases to connect to - currently not supported and assumes three-phase connection
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ModuleConnection:
-    pass
+    name: str
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -4478,26 +4902,40 @@ class NativeTransport(IntEnum):
 
 @dataclass
 class Native:
+    name: str
     mode: NativeMode  # connection mode
     transport: NativeTransport  # connection transport
     timestep: float  # [s]  # timestep between updates
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class Json(Native):
     version: float  # json version
 
+    def __post_init__(self):
+        _convert_attrs(self)
+
 
 @dataclass
 class ModuleCommercial:
-    pass
+    name: str
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @dataclass
 class MultiZone:
+    name: str
     from_: object
     to: object
     ua: float
+
+    def __post_init__(self):
+        _convert_attrs(self)
 
 
 @unique
@@ -4512,6 +4950,7 @@ class OfficeHvacMode(IntEnum):
 
 @dataclass
 class Office:
+    name: str
     floor_area: float  # [sf]
     floor_height: float  # [ft]
     exterior_ua: float  # [Btu/degF/h]
@@ -4585,3 +5024,132 @@ class Office:
     control_ventilation_fraction: float
     control_lighting_fraction: float
     ACH: float
+
+    def __post_init__(self):
+        _convert_attrs(self)
+
+
+_CLASS_MAPPING = {
+    "module_tape": ModuleTape,
+    "recorder": Recorder,
+    "collector": Collector,
+    "group_recorder": group_recorder,
+    "histogram": Histogram,
+    "player": Player,
+    "shaper": Shaper,
+    "violation_recorder": ViolationRecorder,
+    "csv_reader": CsvReader,
+    "module_climate": ModuleClimate,
+    "weather": Weather,
+    "module_residential": ModuleResidential,
+    "load_shape": Loadshape,
+    "end_use": Enduse,
+    "residential_end_use": ResidentialEnduse,
+    "dryer_state": DryerState,
+    "house_panel": HousePanel,
+    "module_power_flow": ModulePowerFlow,
+    "node": Node,
+    "power_flow_object": PowerFlowObject,
+    "curr_dump": CurrDump,
+    "emissions": Emissions,
+    "fault_check": FaultCheck,
+    "frequency_generator": FrequencyGenerator,
+    "impedance_dump": ImpedanceDump,
+    "line": Line,
+    "line_configuration": LineConfiguration,
+    "line_spacing": LineSpacing,
+    "load": Load,
+    "pq_load": PQLoad,
+    "switch": Switch,
+    "reclose": Recloser,
+    "regulator": Regulator,
+    "load_tracker": LoadTracker,
+    "meter": Meter,
+    "overhead_line": OverheadLine,
+    "overhead_line_conductor": OverheadLineConductor,
+    "power_metrics": PowerMetrics,
+    "power_flow_library": PowerFlowLibrary,
+    "regulator_configuration": RegulatorConfiguration,
+    "restoration": Restoration,
+    "sectionalizer": Sectionalizer,
+    "series_reactor": SeriesReactor,
+    "substation": Substation,
+    "transformer": Transformer,
+    "transformer_configuration": TransformerConfiguration,
+    "triplex_line": TriplexLine,
+    "triplex_line_conductor": TriplexLineConductor,
+    "triplex_line_configuration": TriplexLineConfiguration,
+    "triplex_node": TriplexNode,
+    "triplex_load": TriplexLoad,
+    "triplex_meter": TriplexMeter,
+    "underground_line": UndergroundLine,
+    "underground_line_conductor": UndergroundLineConductor,
+    "volt_var_control": VoltVarControl,
+    "volt_dump": VoltDump,
+    "module_market": ModuleMarket,
+    "auction": Auction,
+    "controller": Controller,
+    "double_controller": DoubleController,
+    "generator_controller": GeneratorController,
+    "passive_controller": PassiveController,
+    "stub_bidder": StubBidder,
+    "stub_auction": StubAuction,
+    "supervisory_control": SupervisoryControl,
+    "module_reliability": ModuleReliability,
+    "metrics": Metrics,
+    "event_gen": EventGen,
+    "module_generators": ModuleGenerators,
+    "batter": Battery,
+    "central_dg_control": CentralDGControl,
+    "dc_dc_converter": DCDCConverter,
+    "diesel_dg": DieselDG,
+    "energy_storage": EnergyStorage,
+    "inverter": Inverter,
+    "micro_turbine": MicroTurbine,
+    "power_electronics": PowerElectronics,
+    "rectifier": Rectifier,
+    "solar": Solar,
+    "wind_turb_dg": WindTurbDG,
+    "module_connection": ModuleConnection,
+    "native": Native,
+    "module_commercial": ModuleCommercial,
+    "json_": Json,
+    "multi_zone": MultiZone,
+    "office": Office,
+}
+
+
+class InvalidConfiguration(Exception):
+    """Raised for an invalid configuration."""
+
+
+_REGEX_INT = re.compile(r"^\d+$")
+_REGEX_FLOAT = re.compile(r"^\d+\.\d+$")
+_REGEX_COMPLEX = re.compile(r"^-?[\d\.\+-]j$")
+
+
+def _convert_attrs(obj):  #, attrs, attr_type):
+    for attr, val in obj.__dict__.items():
+        # Note: __annotations__ doesn't contain supertype's fields
+        if val is None or obj.__annotations__.get(attr) == str:
+            continue
+
+        match = _REGEX_FLOAT.search(val)
+        if match:
+            attr_type = float
+        else:
+            match = _REGEX_COMPLEX.search(val)
+            if match:
+                attr_type = complex
+            else:
+                match = _REGEX_INT.search(val)
+                if match:
+                    attr_type = int
+                else:
+                    # Assume it's a string.
+                    continue
+        try:
+            setattr(obj, attr, attr_type(val))
+        except Exception:
+            logger.exception("Failed to setattr obj=%s val=%s type=%s", obj, val, attr_type)
+            raise
