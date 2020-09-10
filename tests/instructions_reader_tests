@@ -1,0 +1,10 @@
+for getting unverified properties comment first 3 tests of each components(node, load, line etc).
+
+Dependency:
+pip install pytest-soft-assertions
+
+
+syntax to run get unverified property test:
+py.test tests/test_gridlab-d_reader.py --soft-asserts -vv
+
+
