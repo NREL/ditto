@@ -176,15 +176,10 @@ class Store(object):
         ------
         DiTToHasTraits
 
-        Raises
-        ------
-        ElementNotFoundError
-            Raised if the element_type is not stored.
-
         """
         if element_type is not None:
             if element_type not in self._elements:
-                raise ElementNotFoundError(f"{element_type} is not stored")
+                return
             elements_containers = [self._elements[element_type]]
         else:
             elements_containers = self._elements.values()
@@ -211,11 +206,6 @@ class Store(object):
         -------
         list
             list of DiTToHasTraits
-
-        Raises
-        ------
-        ElementNotFoundError
-            Raised if the element_type is not stored.
 
         """
         return list(self.iter_elements(element_type=element_type, filter_func=filter_func))
