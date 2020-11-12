@@ -22,7 +22,6 @@ class DiTToHasTraits(T.HasTraits):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.build()
 
     def build(self, model):
         """Optional function to perform post-init construction after an element
