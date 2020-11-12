@@ -45,7 +45,6 @@ def test_opendss_to_json():
             ),
         )
         r.parse(m)
-        m.set_names()
         output_path = tempfile.TemporaryDirectory()
         w = Writer(output_path=output_path.name)
         w.write(m)
@@ -70,7 +69,6 @@ def test_cyme_to_json():
             )
         )
         r.parse(m)
-        m.set_names()
         output_path = tempfile.TemporaryDirectory()
         w = Writer(output_path=output_path.name)
         w.write(m)
@@ -110,12 +108,10 @@ def test_json_serialize_deserialize():
             ),
         )
         r.parse(m)
-        m.set_names()
         w = Writer(output_path="./")
         w.write(m)
         jr = json_reader(input_file="./Model.json")
         jr.parse(m)
-        jr.model.set_names()
 
         for obj in m.models:
             if hasattr(obj, "name"):

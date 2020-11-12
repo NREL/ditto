@@ -23,7 +23,6 @@ def test_transformer_kv():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_transformer_kv.dss"))
     r.parse(m)
-    m.set_names()
 
     # Reading OpenDSS default values
     d_v = Default_Values(

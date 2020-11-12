@@ -138,4 +138,3 @@ class reader:
                         parent_obj, layers[-1], dataframe.iloc[row_idx][column]
                     )  # The attribute is always the last element of layers
 
-        model.set_names()

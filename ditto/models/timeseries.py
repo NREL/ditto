@@ -44,6 +44,3 @@ class Timeseries(DiTToHasTraits):
     feeder_name = Unicode(
         help="""The name of the feeder the object is on.""",
     ).tag(default=None)
-
-    def build(self, model):
-        self._model = model

@@ -12,6 +12,7 @@ import math
 import pytest
 import numpy as np
 
+from ditto.models.power_source import PowerSource
 from ditto.store import Store
 from ditto.readers.opendss.read import Reader
 
@@ -25,21 +26,21 @@ def test_powersource():
         buscoordinates_file=os.path.join(current_directory, "buscoord.dss"),
     )
     r.parse(m)
-    m.set_names()
 
-    assert m["Vsource.source"].name == "Vsource.source"
-    assert m["Vsource.source"].nominal_voltage == 230.0 * 10 ** 3
-    assert m["Vsource.source"].per_unit == 0.99
-    assert m["Vsource.source"].is_sourcebus == 1
-    assert m["Vsource.source"].rated_power == 150000000.0
+    element = m.get_element(PowerSource, "Vsource.source")
+    assert element.name == "Vsource.source"
+    assert element.nominal_voltage == 230.0 * 10 ** 3
+    assert element.per_unit == 0.99
+    assert element.is_sourcebus == 1
+    assert element.rated_power == 150000000.0
     #  MVASc3 = baseKVA^2 / Z1 ; Z1 = sqrt( r1^2 + x1^2)
     emerg_power = int((230.0) ** 2 / math.sqrt(1.1208 ** 2 + 3.5169 ** 2)) * 10 ** 6
-    assert m["Vsource.source"].emergency_power == emerg_power
-    assert m["Vsource.source"].zero_sequence_impedance == 1.1208 + 3.5169j
-    assert m["Vsource.source"].positive_sequence_impedance == 1.1208 + 3.5169j
-    assert m["Vsource.source"].connecting_element == "sourcebus"
-    assert m["Vsource.source"].phases[0].default_value == "A"
-    assert m["Vsource.source"].phases[1].default_value == "B"
-    assert m["Vsource.source"].phases[2].default_value == "C"
-    assert (m["Vsource.source"].positions[0].long) == float(200)
-    assert (m["Vsource.source"].positions[0].lat) == float(400)
+    assert element.emergency_power == emerg_power
+    assert element.zero_sequence_impedance == 1.1208 + 3.5169j
+    assert element.positive_sequence_impedance == 1.1208 + 3.5169j
+    assert element.connecting_element == "sourcebus"
+    assert element.phases[0].default_value == "A"
+    assert element.phases[1].default_value == "B"
+    assert element.phases[2].default_value == "C"
+    assert element.positions[0].long == 200.0
+    assert element.positions[0].lat == 400.0

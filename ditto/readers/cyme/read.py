@@ -901,7 +901,6 @@ class Reader(AbstractReader):
         else:
             logger.info("Parsing the Headnodes...")
             self.parse_head_nodes(model)
-        model.set_names()
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
@@ -958,7 +957,6 @@ class Reader(AbstractReader):
         """Parse the subnetwork connections.
         These specify the interconnection points for a substation
         """
-        model.set_names()
         self.get_file_content("network")
         mapp_subnetwork_connections = {"nodeid": 1}
         self.subnetwork_connections = {}

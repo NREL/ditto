@@ -27,7 +27,6 @@ for (dirpath, dirname, files) in test_list:
             #Update with other tests if they get added to the persistence tests
             continue
         reader.parse(m)
-        m.set_names()
         output_path = tempfile.TemporaryDirectory()
         w = Writer(output_path=output_path.name, log_path=output_path)
         w.write(m)

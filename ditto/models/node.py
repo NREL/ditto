@@ -68,10 +68,7 @@ class Node(DiTToHasTraits):
         default_value=None,
     )
 
-    def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
-
-        self._model = model
-
+    #def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
 
 #        if ConnectivityNode is None:
 #            self._cn = self._model.env.ConnectivityNode()

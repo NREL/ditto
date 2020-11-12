@@ -24,7 +24,6 @@ def test_remove_opendss_default_values():
         remove_opendss_default_values_flag=True,
     )
     r.parse(m)
-    m.set_names()
 
     assert m["line1"].faultrate == None
     assert m["line1"].impedance_matrix == None

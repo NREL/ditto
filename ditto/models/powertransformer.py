@@ -94,10 +94,3 @@ class PowerTransformer(DiTToHasTraits):
         help="""The name of the substation to which the object is connected.""",
     )
     feeder_name = Unicode(help="""The name of the feeder the object is on.""",)
-
-    def build(self, model):
-        """
-        The high and low properties are used to creat windings which are added to the windings list
-        Winding data (e.g. high_ground_reactance) should be referenced thorugh the windings list
-        """
-        self._model = model

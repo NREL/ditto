@@ -25,6 +25,3 @@ class PhaseCapacitor(DiTToHasTraits):
         help="""The normal number of sections connected to this phase""",
         default_value=None,
     )
-
-    def build(self, model):
-        self._model = model

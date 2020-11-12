@@ -140,6 +140,3 @@ class Load(DiTToHasTraits):
         help="""Percentage of the load between active 1 and active 2. Should be a float between 0 and 1.""",
         default_value=None,
     )
-
-    def build(self, model):
-        self._model = model

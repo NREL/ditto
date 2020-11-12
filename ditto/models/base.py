@@ -20,26 +20,20 @@ class DiTToHasTraits(T.HasTraits):
 
     response = T.Any(allow_none=True, help="default trait for managing return values")
 
-    def __init__(self, model, *args, **kwargs):
-        model.model_store.append(self)
-        self.build(model)
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    def set_name(self, model):
-        try:
-            name = self.name
-            if name in model.model_names:
-                warnings.warn("Duplicate name %s being set. Object overwritten." % name)
-                logger.debug("Duplicate name %s being set. Object overwritten." % name)
-                logger.debug(model.model_names[name], self)
-            model.model_names[name] = self
-        except AttributeError:
-            pass
+        self.build()
 
     def build(self, model):
-        raise NotImplementedError(
-            "Build function must be implemented by derived classes"
-        )
+        """Optional function to perform post-init construction after an element
+        has been added to a model.
+
+        Parameters
+        ----------
+        model : Store
+
+        """
+        self._model = model
 
     def notify_access(self, bunch):
         if not isinstance(bunch, T.Bunch):

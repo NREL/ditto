@@ -260,7 +260,6 @@ class Reader(AbstractReader):
         Then loop over the objects and set the kv base using the connecting element.
         .. warning: This has to be called last in parse.
         """
-        model.set_names()
         AllBusNames = dss.Circuit.AllBusNames()
         for bus_name in AllBusNames:
             # Set the active bus
@@ -272,9 +271,8 @@ class Reader(AbstractReader):
                 )  # DiTTo in volts
             except:
                 print("Could not set nominal voltage for bus {b}".format(b=bus_name))
-                pass
 
-        for obj in model.models:
+        for obj in model.iter_elements():
             if hasattr(obj, "nominal_voltage") and obj.nominal_voltage is None:
                 # If the object has a connecting_element attribute
                 if hasattr(obj, "connecting_element"):
@@ -325,12 +323,13 @@ class Reader(AbstractReader):
                 substation_transformers[feed] = sub.lower().replace(".", "")
 
         for f_name, f_data in feeders.items():
-            api_feeder_metadata = Feeder_metadata(model)
+            api_feeder_metadata = Feeder_metadata()
             api_feeder_metadata.name = f_name
             if f_name in substation_transformers:
                 api_feeder_metadata.transformer = substation_transformers[f_name]
             if f_name in substations:
                 api_feeder_metadata.substation = substations[f_name]
+            model.add_element(api_feeder_metadata.name)
 
     @timeit
     def parse_power_source(self, model, **kwargs):
@@ -351,7 +350,7 @@ class Reader(AbstractReader):
 
             # Instanciate DiTTo PowerSource object
             try:
-                api_power_source = PowerSource(model)
+                api_power_source = PowerSource()
             except:
                 continue
 
@@ -492,7 +491,7 @@ class Reader(AbstractReader):
                         )
                         pass
 
-            powersource_pos = Position(model)
+            powersource_pos = Position()
             powersource_pos.long = X
             powersource_pos.lat = Y
             api_power_source.positions.append(powersource_pos)
@@ -505,11 +504,13 @@ class Reader(AbstractReader):
                 else:
                     api_power_source.connecting_element = source_data["bus1"]
                 self.source_name = api_power_source.connecting_element + "_src"
-                api_feeder_metadata = Feeder_metadata(model)
+                model.add_element(api_power_source)
+                api_feeder_metadata = Feeder_metadata()
                 api_feeder_metadata.name = self.source_name
                 api_feeder_metadata.headnode = api_power_source.connecting_element
                 api_feeder_metadata.substation = api_power_source.connecting_element
                 api_feeder_metadata.nominal_voltage = api_power_source.nominal_voltage
+                model.add_element(api_feeder_metadata)
             except:
                 pass
 
@@ -729,7 +730,7 @@ class Reader(AbstractReader):
         # Loop over the dictionary of nodes and create the DiTTo Node objects
         for name, data in buses.items():
 
-            api_node = Node(model)
+            api_node = Node()
 
             try:
                 api_node.name = name
@@ -737,7 +738,7 @@ class Reader(AbstractReader):
                 pass
 
             try:
-                node_pos = Position(model)
+                node_pos = Position()
                 node_pos.long = data["positions"][0]
                 node_pos.lat = data["positions"][1]
                 api_node.positions.append(node_pos)
@@ -754,6 +755,7 @@ class Reader(AbstractReader):
                 pass
 
             self._nodes.append(api_node)
+            model.add_element(api_node)
 
         return 1
 
@@ -801,7 +803,7 @@ class Reader(AbstractReader):
             if not data["Switch"] and not data["enabled"]:
                 continue
 
-            api_line = Line(model)
+            api_line = Line()
             api_line.feeder_name = self.source_name
 
             # Name
@@ -1107,7 +1109,7 @@ class Reader(AbstractReader):
             # Loop over the wires and create the Wire DiTTo objects one by one.
             for p in range(number_of_conductors):
 
-                wires.append(Wire(model))
+                wires.append(Wire())
 
                 # Initialize the wire nameclass with the linecode name
                 # This is just a best effort to get some information
@@ -1527,6 +1529,7 @@ class Reader(AbstractReader):
 
             api_line.wires = wires
             self._lines.append(api_line)
+            model.add_element(api_line)
 
         end = time.time()
         logger.debug("rest= {}".format(end - middle))
@@ -1551,7 +1554,7 @@ class Reader(AbstractReader):
             if not data["enabled"]:
                 continue
 
-            api_transformer = PowerTransformer(model)
+            api_transformer = PowerTransformer()
             api_transformer.feeder_name = self.source_name
 
             # Name
@@ -1715,7 +1718,7 @@ class Reader(AbstractReader):
 
             for w in range(N_windings):
 
-                windings.append(Winding(model))
+                windings.append(Winding())
 
                 # connection type
                 try:
@@ -1769,7 +1772,7 @@ class Reader(AbstractReader):
                 # need to use info from the bus since N_phases may not match number of connections
                 for p in range(len(b1_phases)):
 
-                    phase_windings.append(PhaseWinding(model))
+                    phase_windings.append(PhaseWinding())
 
                     # tap position
                     if "taps" in data:
@@ -1832,6 +1835,7 @@ class Reader(AbstractReader):
             for ww in windings:
                 api_transformer.windings.append(ww)
             self._transformers.append(api_transformer)
+            model.add_element(api_transformer)
         return 1
 
     @timeit
@@ -1853,7 +1857,7 @@ class Reader(AbstractReader):
             if not data["enabled"]:
                 continue
 
-            api_regulator = Regulator(model)
+            api_regulator = Regulator()
 
             api_regulator.feeder_name = self.source_name
 
@@ -1919,7 +1923,7 @@ class Reader(AbstractReader):
                     api_regulator.phase_shift = -30
 
                 # Initialize the list of Windings
-                api_regulator.windings = [Winding(model) for _ in range(N_windings)]
+                api_regulator.windings = [Winding() for _ in range(N_windings)]
 
                 # Connection type
                 for w in range(N_windings):
@@ -1996,7 +2000,7 @@ class Reader(AbstractReader):
                         phases = ["1", "2", "3"]
 
                     api_regulator.windings[w].phase_windings = [
-                        PhaseWinding(model) for _ in phases
+                        PhaseWinding() for _ in phases
                     ]
 
                     for p, phase in enumerate(phases):
@@ -2155,6 +2159,7 @@ class Reader(AbstractReader):
                 pass
 
             self._regulators.append(api_regulator)
+            model.add_element(api_regulator)
 
         return 1
 
@@ -2176,7 +2181,7 @@ class Reader(AbstractReader):
             if not data["enabled"]:
                 continue
 
-            api_capacitor = Capacitor(model)
+            api_capacitor = Capacitor()
 
             api_capacitor.feeder_name = self.source_name
 
@@ -2326,7 +2331,7 @@ class Reader(AbstractReader):
                 # Phase capacitors
                 phase_capacitors = []
                 for p, pha in enumerate(phases):
-                    phase_capacitors.append(PhaseCapacitor(model))
+                    phase_capacitors.append(PhaseCapacitor())
 
                     # phase
                     if (
@@ -2364,6 +2369,7 @@ class Reader(AbstractReader):
                 api_capacitor.phase_capacitors = phase_capacitors
 
             self._capacitors.append(api_capacitor)
+            model.add_element(api_capacitor)
 
         return 1
 
@@ -2385,7 +2391,7 @@ class Reader(AbstractReader):
             if not data["enabled"]:
                 continue
 
-            api_load = Load(model)
+            api_load = Load()
             api_load.feeder_name = self.source_name
 
             # Name
@@ -2530,7 +2536,7 @@ class Reader(AbstractReader):
 
             for i, p in enumerate(phases):
 
-                _phase_loads.append(PhaseLoad(model))
+                _phase_loads.append(PhaseLoad())
                 _phase_loads[i].phase = self.phase_mapping(p)
 
                 # Case one: KW and pf
@@ -2600,6 +2606,7 @@ class Reader(AbstractReader):
 
             api_load.phase_loads = _phase_loads
             self._loads.append(api_load)
+            model.add_element(api_load)
 
         return 1
 
@@ -2613,7 +2620,7 @@ class Reader(AbstractReader):
             if not data["enabled"]:
                 continue
 
-            api_storage = Storage(model)
+            api_storage = Storage()
             api_storage.feeder_name = self.source_name
 
             # Name
@@ -2744,7 +2751,7 @@ class Reader(AbstractReader):
 
             for phase in range(N_phases):
                 try:
-                    api_phase_storage = PhaseStorage(model)
+                    api_phase_storage = PhaseStorage()
                 except:
                     pass
 
@@ -2759,6 +2766,7 @@ class Reader(AbstractReader):
                     pass
 
                 api_storage.phase_storages.append(api_phase_storage)
+                model.add_element(api_storage)
 
 
 def _dss_class_to_dict(class_name):

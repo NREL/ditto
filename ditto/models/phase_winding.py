@@ -21,6 +21,3 @@ class PhaseWinding(DiTToHasTraits):
     compensator_x = Float(
         help="""The compensator reactance value for the phase""", default_value=None
     )
-
-    def build(self, model):
-        self._model = model

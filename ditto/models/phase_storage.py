@@ -11,9 +11,3 @@ class PhaseStorage(DiTToHasTraits):
         default_value=None,
     )
     q = Float(help="""Present var value. In vars.""", default_value=None)
-
-    def build(self, model):
-        """
-        TODO...
-        """
-        self._model = model

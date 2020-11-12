@@ -61,7 +61,3 @@ class Feeder_metadata(DiTToHasTraits):
         help="""Negative sequence reactance for the source equivalent.""",
         default_value=None,
     )
-
-    def build(self, model, Asset=None, ConnectivityNode=None, Location=None):
-
-        self._model = model

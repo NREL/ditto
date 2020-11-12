@@ -31,7 +31,6 @@ def test_lines_write():
         )
     )
     r.parse(m)
-    m.set_names()
 
     output_path = tempfile.gettempdir()
     jw = Json_Writer(output_path=output_path)
@@ -45,7 +44,6 @@ def test_lines_write():
 
     r_w = Reader(master_file=os.path.join(output_path, "Master.dss"))
     r_w.parse(m)
-    m.set_names()
 
     jw = Json_Writer(output_path="./")
     jw.write(m)
