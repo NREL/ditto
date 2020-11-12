@@ -322,30 +322,26 @@ class system_structure_modifier(Modifier):
             and x.connecting_element is not None
         )
         for obj in self.model.iter_elements(Load, filter_func):
-            if (
-                hasattr(obj, "connecting_element")
-                and obj.connecting_element is not None
-            ):
-                try:
-                    if (
-                        hasattr(self.model[obj.connecting_element], "position")
-                        and self.model[obj.connecting_element].position is not None
-                    ):
-                        position_obj = self.model[obj.connecting_element].positions
-                        obj.positions = []
-                        for po in position_obj:
-                            _long = po.long
-                            _lat = po.lat
-                            _elev = po.elevation
+            try:
+                if (
+                    hasattr(self.model[obj.connecting_element], "position")
+                    and self.model[obj.connecting_element].position is not None
+                ):
+                    position_obj = self.model[obj.connecting_element].positions
+                    obj.positions = []
+                    for po in position_obj:
+                        _long = po.long
+                        _lat = po.lat
+                        _elev = po.elevation
 
-                            load_position = Position()
-                            load_position.long = _long + delta_longitude
-                            load_position.lat = _lat + delta_latitude
-                            load_position.elevation = _elev + delta_elevation
+                        load_position = Position()
+                        load_position.long = _long + delta_longitude
+                        load_position.lat = _lat + delta_latitude
+                        load_position.elevation = _elev + delta_elevation
 
-                            obj.positions.append(load_position)
-                except:
-                    pass
+                        obj.positions.append(load_position)
+            except:
+                pass
 
     def feeder_preprocessing(self):
         """Performs the feeder cut pre-processing step.
