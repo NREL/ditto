@@ -187,30 +187,25 @@
 <h3 id="method-1-through-the-command-line">Method 1: Through the command line</h3>
 <h4 id="the-convert-command">The convert command</h4>
 <p>DiTTo supports a command line interface (CLI) to quickly convert a model. The command is simply:</p>
-<pre><code class="bash">$ ditto-cli convert
+<pre><code class="language-bash">$ ditto-cli convert
 </code></pre>
-
 <p>Help can be obtained using:</p>
-<pre><code class="bash">$ ditto-cli convert --help
+<pre><code class="language-bash">$ ditto-cli convert --help
 </code></pre>
-
 <h4 id="from-and-to">From and To</h4>
 <p>The options <code>—from</code> and <code>—to</code> are easy to understand, they just tell <code>ditto-cli convert</code> what format is expected for the input, and what format is desired for the output. If we want to convert from opendss to gridlabd, we can use:</p>
-<pre><code class="bash">$ ditto-cli convert --from opendss --to gridlabd
+<pre><code class="language-bash">$ ditto-cli convert --from opendss --to gridlabd
 </code></pre>
-
 <p>Note that, we can use short-cut names for the format like:</p>
-<pre><code class="bash">$ ditto-cli convert --from dss --to glm
+<pre><code class="language-bash">$ ditto-cli convert --from dss --to glm
 </code></pre>
-
 <h4 id="input">Input</h4>
 <p>In addition to the formats, we need to provide some input to DiTTo. The main issue here is that inputs are very different accross formats. It is common practice in OpenDSS for example to use master files to redirect all the other dss files, while a Cyme ASCII model is composed of three files: equipment, network, and loads.</p>
 <p>To be consistent, the CLI accepts only one file whatever the format. If we have a gridlabd model entirely stored in a file called <code>model.glm</code> we can use:</p>
-<pre><code class="bash">$ ditto-cli convert --from glm --input ./model.glm --to cyme
+<pre><code class="language-bash">$ ditto-cli convert --from glm --input ./model.glm --to cyme
 </code></pre>
-
 <p>For formats like Cyme where we need multiple input files, we need to write a simple JSON configuration file:</p>
-<pre><code class="json">!Content of config.json
+<pre><code class="language-json">!Content of config.json
 {
     &quot;data_folder_path&quot;: &quot;/home/cyme_models/ieee_13node/&quot;,
     &quot;network_filename&quot;: &quot;net.txt&quot;,
@@ -218,32 +213,27 @@
     &quot;load_filename&quot;: &quot;loads.txt&quot;
 }
 </code></pre>
-
 <p>Which results in the following command:</p>
-<pre><code class="bash">$ ditto-cli convert --from cyme --input ./config.json --to dss
+<pre><code class="language-bash">$ ditto-cli convert --from cyme --input ./config.json --to dss
 </code></pre>
-
 <h4 id="output">Output</h4>
 <p>Finally, we need to tell <code>ditto-cli convert</code> where to write the output. This is done with the <code>—output</code> option. Make sure to provide the path to the folder you want the files to be written in. For example, if we want to output in a folder named <code>./results</code> we do the following:</p>
-<pre><code class="bash">$ ditto-cli convert --from cyme --input ./config.json --to dss --output ./results/
+<pre><code class="language-bash">$ ditto-cli convert --from cyme --input ./config.json --to dss --output ./results/
 </code></pre>
-
 <h3 id="examples">Examples</h3>
 <h4 id="convert-the-ieee-4-node-from-gridlabd-to-opendss">Convert the IEEE 4 node from GridlabD to OpenDSS</h4>
 <p>Run the following command:</p>
-<pre><code class="bash">$ ditto-cli convert --input ../tests/data/gridlabd/4node.glm --from glm --to dss --output ./
+<pre><code class="language-bash">$ ditto-cli convert --input ../tests/data/gridlabd/4node.glm --from glm --to dss --output ./
 </code></pre>
-
 <h4 id="convert-the-ieee-13-node-from-opendss-to-cyme">Convert the IEEE 13 node from OpenDSS to CYME</h4>
 <p>Here, we use the configuration file: <code>ditto/examples/ieee_13node_opendss_input.json</code>:</p>
-<pre><code class="bash">$ ditto-cli convert --input ../examples/ieee_13node_opendss_input.json --from opendss --to cyme --output ./
+<pre><code class="language-bash">$ ditto-cli convert --input ../examples/ieee_13node_opendss_input.json --from opendss --to cyme --output ./
 </code></pre>
-
 <h3 id="method-2-writing-a-script">Method 2: Writing a script</h3>
 <p>This is a more advanced method which provides more flexibility and enable the user to access all the functionality of DiTTo. The basic conversion scripts usually go through the following steps:</p>
 <h4 id="step-1-import-the-required-modules">Step 1: Import the required modules</h4>
 <p>For basic conversion usage, we need to import a reader, a writer, and a <code>Store</code> object:</p>
-<pre><code class="python">#Import the reader
+<pre><code class="language-python">#Import the reader
 #...assuming we want to read from OpenDSS
 from ditto.readers.opendss.read import Reader
 
@@ -255,31 +245,26 @@ from ditto.writers.cyme.write import Writer
 #...this will always be the same
 from ditto.store import Store
 </code></pre>
-
 <h4 id="step-2-instanciate-an-empty-store">Step 2: Instanciate an empty store</h4>
 <p>This step is pretty straightforward:</p>
-<pre><code class="python">model = Store()
+<pre><code class="language-python">model = Store()
 </code></pre>
-
 <h4 id="step-3-instanciate-a-reader">Step 3: Instanciate a reader</h4>
 <p>This is probably the most delicate step because every reader is a bit different and expects various number of files. Refer to the documentation to know what needs to be provided. In this OpenDSS—&gt;Cyme example, we need to provide a master file and a buscoordinate file to the OpenDSS reader:</p>
-<pre><code class="python">dss_reader = Reader(master_file=&quot;./dss_models/ieee_13node/master.dss&quot;,
+<pre><code class="language-python">dss_reader = Reader(master_file=&quot;./dss_models/ieee_13node/master.dss&quot;,
                     buscoordinate_file=&quot;./dss_models/ieee_13node/buscoord.dss&quot;)
 </code></pre>
-
 <h4 id="step-4-parse">Step 4: Parse</h4>
 <p>This is also pretty simple. We just need to provide the emty <code>Store</code> object we created as an argument of the <code>parse</code> method. All readers implement a <code>parse</code> method:</p>
-<pre><code class="python">dss_reader.parse(model)
+<pre><code class="language-python">dss_reader.parse(model)
 </code></pre>
-
 <h4 id="step-5-instanciate-the-writer">Step 5: Instanciate the writer</h4>
 <p>All writers are instanciated in the same way. We only need to provide the path to the output folder:</p>
-<pre><code class="python">cyme_writer = Writer(output_path=&quot;/results/ieee_13node/&quot;)
+<pre><code class="language-python">cyme_writer = Writer(output_path=&quot;/results/ieee_13node/&quot;)
 </code></pre>
-
 <h4 id="step-6-write">Step 6: Write</h4>
 <p>Simply use the <code>write</code> method implemented by all ditto writers. We just need to provide, once again, the <code>Store</code> object as an argument:</p>
-<pre><code class="python">cyme_writer.write(model)
+<pre><code class="language-python">cyme_writer.write(model)
 </code></pre>
               
             </div>

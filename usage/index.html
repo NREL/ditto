@@ -145,40 +145,35 @@
 <ul>
 <li>Instanciate a store object which will store all the objects and attributes of your model</li>
 </ul>
-<pre><code class="python">from ditto.store import Store
+<pre><code class="language-python">from ditto.store import Store
 m=Store()
 </code></pre>
-
 <ul>
 <li>Instanciate a reader object with the required arguments. These arguments may vary depending on the format. For example, the OpenDSS reader expects a path for the master.dss file as well as a path for the buscoord.dss file.</li>
 </ul>
-<pre><code class="python">from ditto.readers.opendss.read import reader
+<pre><code class="language-python">from ditto.readers.opendss.read import reader
 opendss_reader=reader(master_file='/Users/johny_cash/IEEE_13_node/master.dss,
                       buscoordinates_file='/Users/johny_cash/IEEE_13_node/buscoords.dss')
 </code></pre>
-
 <ul>
 <li>Call the parse method of the reader with the store object as argument.</li>
 </ul>
-<pre><code class="python">opendss_reader.parse(m)
+<pre><code class="language-python">opendss_reader.parse(m)
 </code></pre>
-
 <ul>
 <li>Instanciate a writer object with the required arguments (output folder path…).</li>
 </ul>
-<pre><code class="python">from ditto.writers.cyme.write import writer
+<pre><code class="language-python">from ditto.writers.cyme.write import writer
 cyme_writer=writer(output_path='./', log_path='./')
 </code></pre>
-
 <ul>
 <li>Call the write method of the writer with the store object as argument.</li>
 </ul>
-<pre><code class="python">cyme_writer.write(m)
+<pre><code class="language-python">cyme_writer.write(m)
 </code></pre>
-
 <p><strong>How is the code structured?</strong></p>
 <p>Here is a simplified view of the code structure (only the key components are displayed):</p>
-<pre><code class="eval_rst">DiTTo
+<pre><code class="language-eval_rst">DiTTo
 │   README.md
 │   docs
 |   tests
@@ -203,22 +198,18 @@ cyme_writer=writer(output_path='./', log_path='./')
         └───opendss
                |   write.py
 </code></pre>
-
 <p>Most of the code is located in the ditto directory. The core structure responsible for storing the objects is implemented in the core folder. Readers are implemented in readers and writers in writers. These two folders then contain the different format in different subfolders.</p>
 <p><strong>Example 1:</strong> The OpenDSS reader is located in:</p>
-<pre><code class="bash">DiTTo/ditto/readers/opendss/read.py
+<pre><code class="language-bash">DiTTo/ditto/readers/opendss/read.py
 </code></pre>
-
 <p>And can be imported with:</p>
-<pre><code class="python">from ditto.readers.opendss.read import Reader
+<pre><code class="language-python">from ditto.readers.opendss.read import Reader
 </code></pre>
-
 <p><strong>Example 2:</strong> The CYME writer is located in:</p>
-<pre><code class="bash">DiTTo/ditto/writers/cyme/write.py
+<pre><code class="language-bash">DiTTo/ditto/writers/cyme/write.py
 </code></pre>
-
 <p>And can be imported with:</p>
-<pre><code class="python">from ditto.writers.cyme.write import Writer
+<pre><code class="language-python">from ditto.writers.cyme.write import Writer
 </code></pre>
               
             </div>
