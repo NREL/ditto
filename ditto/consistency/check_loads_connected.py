@@ -1,17 +1,23 @@
 
 import networkx as nx
-from ditto.netowrk import Network
+from ditto.network.network import Network
 from ditto.models.power_source import PowerSource
 from ditto.models.load import Load
 
 """
 This uses the DiTTo Network functionality to check that there is a path from a load to the source node. Considers switch states. Transformer consistency checked elsewhere
+Parameters: 
+    model: ditto.store.Store
+        The DiTTo storage object with the full network representation
+    verbose: boolean
+        Whether to print information about which nodes caused problems
 
 """
-def is_loads_connected(model):
+def check_loads_connected(model,verbose=True):
     all_sources = []
     all_loads = set()
     load_source_map = {}
+    result = True
 
     for i in model.models:
         if isinstance(i,PowerSource) and i.connecting_element is not None:
@@ -22,18 +28,15 @@ def is_loads_connected(model):
             all_loads.add(i)
             load_source_map[i.name] = []
 
-    if len(all_sources) > 1:
-        print('Warning - using first source to orient the network')
     if len(all_sources) == 0:
         print('Model does not contain any power source')
         return False
     
-    # TODO: Address issue in network.py where a single source is used to determine bfs order
-    ditto_graph = Network()
-    ditto_graph.build(model,sources[0].connecting_element)
-    ditto_graph.set_attributes(model)
-    ditto_graph.remove_open_switches(model) # This deletes the switches inside the networkx graph only
     for source in all_sources:
+        ditto_graph = Network()
+        ditto_graph.build(model,source.connecting_element)
+        ditto_graph.set_attributes(model)
+        ditto_graph.remove_open_switches(model) # This deletes the switches inside the networkx graph only
         source_name = source.connecting_element
         all_paths = nx.single_source_shortest_path(ditto_graph.graph,source_name)
         
@@ -55,25 +58,16 @@ def is_loads_connected(model):
             result = False 
             multi_source_loads[load.name] = load_source_map[load.name]
 
-    if len(sourceless_loads) > 0:
-        print('Loads missing sources:')
-        for load in sourceless_loads:
-            print(load)
+    if verbose:
+        if len(sourceless_loads) > 0:
+            print('Loads missing sources:')
+            for load in sourceless_loads:
+                print(load)
 
-    if len(multi_source_loads)> 0:
-        print('Loads with multiple sources:')
-        for load in multi_source_loads:
-            print(load+ ': ' multi_source_loads[load])
+        if len(multi_source_loads)> 0:
+            print('Loads with multiple sources:')
+            for load in multi_source_loads:
+                print(load+ ': ' +multi_source_loads[load])
 
-    print('Are loads connected = '+result)
     return result
-
-
-
-
-
-
-
-
-
 

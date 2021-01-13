@@ -5,18 +5,21 @@ from ditto.models.load import Load
 
 """
 This function sets all the switch states in networkx model and then sees if there are any loops in the resulting network
+
+Parameters: 
+    model: ditto.store.Store
+        The DiTTo storage object with the full network representation
+    verbose: boolean
+        Whether to print information about which nodes caused problems
 """
 
-def has_loops(model):
+def check_loops(model, verbose=True):
     all_sources = []
     for i in model.models:
         if isinstance(i,PowerSource) and i.connecting_element is not None:
             all_sources.append(i)
         elif isinstance(i,PowerSource):
             print('Warning - a PowerSource element has a None connecting element')
-
-    if len(all_sources) > 1:
-        print('Warning - using first source to orient the network')
 
     # TODO: Address issue in network.py where a single source is used to determine bfs order
     if len(all_sources) == 0:
@@ -32,10 +35,11 @@ def has_loops(model):
         loops = nx.cycle_basis(ditto_graph.graph)
         number_of_loops = len(loops)
         if number_of_loops > 0:
-            print('Loops found:')
-            print(loops)
+            if verbose:
+                print('Loops found:')
+                print(loops)
         if number_of_loops == 0:
-            return False
-    return True
+            return True
+    return False
 
 
