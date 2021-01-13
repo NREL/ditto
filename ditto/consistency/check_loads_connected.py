@@ -53,10 +53,10 @@ def check_loads_connected(model,verbose=True):
     for load in load_source_map:
         if len(load_source_map[load]) == 0:
             result = False 
-            sourceless_loads.append(load.name)
+            sourceless_loads.append(load)
         if len(load_source_map[load]) >1:
             result = False 
-            multi_source_loads[load.name] = load_source_map[load.name]
+            multi_source_loads[load.name] = load_source_map[load]
 
     if verbose:
         if len(sourceless_loads) > 0:

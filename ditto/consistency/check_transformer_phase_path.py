@@ -81,6 +81,9 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                         for trans in transformer_names:
                             print(trans)
 
+                if num_transformers == 1 and needs_transformers:
+                    print('Warning - transformer found for system where no transformers required between load and customer')
+
                 if num_transformers == 1:
                     low_phases = [phase_winding.phase for phase_winding in model[transformer_names[0]].windings[1].phase_windings]
                     high_phases = [phase_winding.phase for phase_winding in model[transformer_names[0]].windings[0].phase_windings]
