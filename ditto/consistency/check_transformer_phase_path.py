@@ -25,6 +25,7 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
     all_sources = []
     all_transformers = set()
     all_loads = set()
+    load_transformer_map = {} # Not used but provides a mapping from load to transformer
     result = True
 
     for i in model.models:
@@ -81,7 +82,7 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                         for trans in transformer_names:
                             print(trans)
 
-                if num_transformers == 1 and needs_transformers:
+                if num_transformers == 1 and not needs_transformers:
                     print('Warning - transformer found for system where no transformers required between load and customer')
 
                 if num_transformers == 1:
