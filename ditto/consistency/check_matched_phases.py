@@ -58,12 +58,12 @@ def check_matched_phases(model, verbose=True):
             high_phases = []
             low_phases = []
             low_phases2 = []
-            for phase_windings in transformer.windings[0]:
-                high_phases.add(phase_windings.phase)
-            for phase_windings in transformer.windings[1]:
-                low_phases.add(phase_windings.phase)
-            for phase_windings in transformer.windings[2]:
-                low_phases2.add(phase_windings.phase)
+            for phase_windings in transformer.windings[0].phase_windings:
+                high_phases.append(phase_windings.phase)
+            for phase_windings in transformer.windings[1].phase_windings:
+                low_phases.append(phase_windings.phase)
+            for phase_windings in transformer.windings[2].phase_windings:
+                low_phases2.append(phase_windings.phase)
 
             if low_phases2 != low_phases:
                 if verbose:
