@@ -81,9 +81,9 @@ class SynergiData():
         warehouse_input_file = kwargs.get('warehouse_input_file',None)
         input_file = kwargs.get('input_file',None)
 
-        if ware_house_input_file is not None:
-            ware_house_input_file = os.path.join(os.path.dirname(input_file), ware_house_input_file)
-            self.DatabaseData = DbParser(input_file, warehouse=ware_house_input_file)
+        if warehouse_input_file is not None:
+            warehouse_input_file = os.path.join(os.path.dirname(input_file), warehouse_input_file)
+            self.DatabaseData = DbParser(input_file, warehouse=warehouse_input_file)
         else:
             self.DatabaseData = DbParser(input_file)
 
@@ -435,6 +435,14 @@ class SynergiData():
 
 
     def set_all_mappings():
+
+        # create mapping between feeder IDs and substation IDs
+        self.feeder_substation_mapping = {}
+        for idx, id in enumerate(self.FeederId):
+            self.feeder_substation_mapping[ self.FeederId[idx].replace(" ", "_") ] = self.SubstationId[idx].replace(" ", "_")
+
+        #print(self.feeder_substation_mapping)
+
         # Create mapping between section IDs and Feeder Ids
         self.section_feeder_mapping = create_mapping( self.LineID, self.LineFeederId, remove_spaces=True)
 
@@ -522,63 +530,17 @@ class Reader(AbstractReader):
 
         # Can provide a ware house database seperated from the main database
         if "warehouse" in kwargs:
-            self.ware_house_input_file = kwargs["warehouse"]
+            self.warehouse_input_file = kwargs["warehouse"]
         else:
-            self.ware_house_input_file = "warehouse.mdb"
+            self.warehouse_input_file = "warehouse.mdb"
 
-        self.SynergiData = None
         self.node_nominal_voltage_mapping = dict()
-        self.feeder_substation_mapping = dict()
 
-    def get_data(self, key1, key2):
-        """
-        Helper function for parse.
+        # This is where all the data is stored
+        self.SynergiData = SynergiData(input_file=self.input_file,warehouse_file=self.warehouse_file)
 
-        **Inputs:**
-        - key1: <string>. Name of the table.
-        - key2: <string>. Name of the column.
-
-        **Output:**
-        None but update the SynergiData.SynergiDictionary attribute of the Reader.
-        """
-        if (
-            key1 in self.SynergiData.SynergiDictionary
-            and key2 in self.SynergiData.SynergiDictionary[key1]
-        ):
-            return self.SynergiData.SynergiDictionary[key1][key2]
-        else:
-            print("Could not retrieve data for <{k1}><{k2}>.".format(k1=key1, k2=key2))
-            return None
-
-    """
-        Create common variables that are used accross multiple element types:
-            - self.section_feeder_mapping
-            - self.section_from_to_mapping
-            - self.section_phase_mapping
-    """
-    def parse_perparation(self, model):
-
-        # Pull data from database about sections. Specifically SectionId, FeederId, FromNodeId, ToNodeId, SectionPhases
-        LineID = self.get_data("InstSection", "SectionId")
-        LineFeederId = self.get_data("InstSection", "FeederId")
-        FromNodeId = self.get_data("InstSection", "FromNodeId")
-        ToNodeId = self.get_data("InstSection", "ToNodeId")
-        SectionPhases = self.get_data("InstSection", "SectionPhases")
-
-        # Create mapping between section IDs and Feeder Ids
-        self.section_feeder_mapping = create_mapping(
-            LineID, LineFeederId, remove_spaces=True
-        )
-
-        # Create mapping between section ID and (FromNodeId, ToNodeID) tuple
-        self.section_from_to_mapping = {}
-        for idx, section in enumerate(LineID):
-            self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
-
-        # Create mapping between section ID and Section phases
-        self.section_phase_mapping = create_mapping(LineID, SectionPhases)
-
-    def parse_nodes(self,model):
+   
+   def parse_nodes(self,model):
         ####################################################################################
         #                                                                                  #
         #                                     NODES                                        #
@@ -586,11 +548,6 @@ class Reader(AbstractReader):
         ####################################################################################
         #
         print("--> Parsing Nodes...")
-
-        ## Node ###########
-        NodeID = self.get_data("Node", "NodeId")
-        NodeX = self.get_data("Node", "X")
-        NodeY = self.get_data("Node", "Y")
 
         for i, obj in enumerate(NodeID):
 
@@ -601,13 +558,11 @@ class Reader(AbstractReader):
             api_node.name = obj.lower().replace(" ", "_")
 
             # Set the feeder name if in mapping
-            if obj in self.section_feeder_mapping:
-                api_node.feeder_name = self.section_feeder_mapping[obj]
+            if obj in self.SynergiData.section_feeder_mapping:
+                api_node.feeder_name = self.SynergiData.section_feeder_mapping[obj]
 
-            if api_node.feeder_name in self.feeder_substation_mapping:
-                api_node.substation_name = self.feeder_substation_mapping[
-                    api_node.feeder_name
-                ]
+            if api_node.feeder_name in self.SynergiData.feeder_substation_mapping:
+                api_node.substation_name = self.SynergiData.feeder_substation_mapping[api_node.feeder_name]
 
             # Set the Position of the Node
             # Create a Position object
@@ -615,17 +570,17 @@ class Reader(AbstractReader):
             pos = Position(model)
 
             # Set the coordinates
-            pos.long = NodeY[i]
-            pos.lat = NodeX[i]
+            pos.long = self.SynergiData.NodeY[i]
+            pos.lat = self.SynergiData.NodeX[i]
 
             # Add the Position to the node's positions
             api_node.positions.append(pos)
 
             # Look for the phases at this node
             phases = set()
-            for section, t in self.section_from_to_mapping.items():
+            for section, t in self.SynergiData.section_from_to_mapping.items():
                 if obj == t[0] or obj == t[1]:
-                    phases.add(self.section_phase_mapping[section])
+                    phases.add(self.SynergiData.section_phase_mapping[section])
 
             # Convert to a list and sort to have the phases in the A, B, C order
             phases = sorted(list(phases))
@@ -639,24 +594,7 @@ class Reader(AbstractReader):
     def parse_lines(self,model):
         print("--> Parsing Lines...")
 
-        ########## Line #####################
-        LineID = self.get_data("InstSection", "SectionId")
-        LineLength = self.get_data("InstSection", "SectionLength_MUL")
-        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
-        LineNote_ = self.get_data("InstSection", "Note_")
-        PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
-        # PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
-        # PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
-        # wenbo added
-        PhaseConductor2Id = PhaseConductorID
-        PhaseConductor3Id = PhaseConductorID
-
-        NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
-        ConfigurationId = self.get_data("InstSection", "ConfigurationId")
-        SectionPhases = self.get_data("InstSection", "SectionPhases")
-        LineFeederId = self.get_data("InstSection", "FeederId")
-
-        for i, obj in enumerate(LineID):
+        for i, obj in enumerate(SynergiData.LineID):
 
             ## Do not parse sections with regulators or Transformers to Lines
             if obj in RegulatorSectionId.values or obj in TransformerSectionId.values:
