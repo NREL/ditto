@@ -112,7 +112,7 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                             break
                         if element['equipment'] == 'Line':
                             line_phases = [wire.phase for wire in element['wires'] if wire.phase != 'N'] #Neutral phases not included in the transformer
-                            if not set(high_phases) in set(line_phases): #MV phase line phase must be able to support transformer phase
+                            if not set(high_phases).issubset(set(line_phases)): #MV phase line phase must be able to support transformer phase
                                 if verbose:
                                     print('Load '+load.name+ ' has incorrect phases on high side of transformer for line '+element['name'])
                                 result = False
