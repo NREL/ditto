@@ -120,6 +120,93 @@ class Reader(AbstractReader):
             print("Could not retrieve data for <{k1}><{k2}>.".format(k1=key1, k2=key2))
             return None
 
+    """
+        Create common variables that are used accross multiple element types:
+            - self.section_feeder_mapping
+            - self.section_from_to_mapping
+            - self.section_phase_mapping
+    """
+    def parse_perparation(self, model):
+
+        # Pull data from database about sections. Specifically SectionId, FeederId, FromNodeId, ToNodeId, SectionPhases
+        LineID = self.get_data("InstSection", "SectionId")
+        LineFeederId = self.get_data("InstSection", "FeederId")
+        FromNodeId = self.get_data("InstSection", "FromNodeId")
+        ToNodeId = self.get_data("InstSection", "ToNodeId")
+        SectionPhases = self.get_data("InstSection", "SectionPhases")
+
+        # Create mapping between section IDs and Feeder Ids
+        self.section_feeder_mapping = create_mapping(
+            LineID, LineFeederId, remove_spaces=True
+        )
+
+        # Create mapping between section ID and (FromNodeId, ToNodeID) tuple
+        self.section_from_to_mapping = {}
+        for idx, section in enumerate(LineID):
+            self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
+
+        # Create mapping between section ID and Section phases
+        self.section_phase_mapping = create_mapping(LineID, SectionPhases)
+
+    def parse_nodes(self,model):
+        ####################################################################################
+        #                                                                                  #
+        #                                     NODES                                        #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Nodes...")
+
+        ## Node ###########
+        NodeID = self.get_data("Node", "NodeId")
+        NodeX = self.get_data("Node", "X")
+        NodeY = self.get_data("Node", "Y")
+
+        for i, obj in enumerate(NodeID):
+
+            # Create a DiTTo Node object
+            api_node = Node(model)
+
+            # Set the name
+            api_node.name = obj.lower().replace(" ", "_")
+
+            # Set the feeder name if in mapping
+            if obj in self.section_feeder_mapping:
+                api_node.feeder_name = self.section_feeder_mapping[obj]
+
+            if api_node.feeder_name in self.feeder_substation_mapping:
+                api_node.substation_name = self.feeder_substation_mapping[
+                    api_node.feeder_name
+                ]
+
+            # Set the Position of the Node
+            # Create a Position object
+            #
+            pos = Position(model)
+
+            # Set the coordinates
+            pos.long = NodeY[i]
+            pos.lat = NodeX[i]
+
+            # Add the Position to the node's positions
+            api_node.positions.append(pos)
+
+            # Look for the phases at this node
+            phases = set()
+            for section, t in self.section_from_to_mapping.items():
+                if obj == t[0] or obj == t[1]:
+                    phases.add(self.section_phase_mapping[section])
+
+            # Convert to a list and sort to have the phases in the A, B, C order
+            phases = sorted(list(phases))
+
+            # Set the phases for this node.
+            for phase in phases:
+                api_node.phases.append(phase.upper())
+
+ 
+
+
     def parse(self, model):
         """
         Synergi --> DiTTo parse method.
