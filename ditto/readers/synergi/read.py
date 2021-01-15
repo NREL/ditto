@@ -594,10 +594,11 @@ class Reader(AbstractReader):
     def parse_lines(self,model):
         print("--> Parsing Lines...")
 
-        for i, obj in enumerate(SynergiData.LineID):
+        # TODO: rename i to something more recognizable
+        for i, obj in enumerate(self.SynergiData.LineID):
 
             ## Do not parse sections with regulators or Transformers to Lines
-            if obj in RegulatorSectionId.values or obj in TransformerSectionId.values:
+            if obj in self.SynergiData.RegulatorSectionId.values or obj in self.SynergiData.TransformerSectionId.values:
                 continue
 
             # Create a DiTTo Line object
@@ -609,104 +610,89 @@ class Reader(AbstractReader):
             api_line.name = obj.lower().replace(" ", "_")
 
             # Set the feeder_name if it exists in the mapping
-            if obj in self.section_feeder_mapping:
-                api_line.feeder_name = self.section_feeder_mapping[obj]
+            if obj in self.SynergiData.section_feeder_mapping:
+                api_line.feeder_name = self.SynergiData.section_feeder_mapping[obj]
 
-            # wenbo added:
-            if api_line.feeder_name in self.feeder_substation_mapping:
-                api_line.substation_name = self.feeder_substation_mapping[
-                    api_line.feeder_name
-                ]
+            # Set substation name if feeder exists in feeder_substation_mapping
+            if api_line.feeder_name in self.SynergiData.feeder_substation_mapping:
+                api_line.substation_name = self.SynergiData.feeder_substation_mapping[ api_line.feeder_name ]
 
-            # Cache configuration
-            if ConfigurationId is not None:
+            # Save the configuration
+            if self.SynergiData.ConfigurationId is not None:
                 if (
-                    isinstance(ConfigurationId[i], str)
-                    and len(ConfigurationId[i]) > 0
-                    and ConfigurationId[i] in config_mapping
+                    isinstance(self.SynergiData.ConfigurationId[i], str)
+                    and len(self.SynergiData.ConfigurationId[i]) > 0
+                    and self.SynergiData.ConfigurationId[i] in self.SynergiData.config_mapping
                 ):
-                    config = config_mapping[ConfigurationId[i]]
+                    config = self.SynergiData.config_mapping[ConfigurationId[i]]
                 else:
                     config = {}
 
             # Assumes MUL is medium unit length and this is feets
             # Converts to meters then
             #
-            api_line.length = convert_length_unit(
-                LineLength[i], SynergiValueType.MUL, LengthUnits
-            )
+            api_line.length = convert_length_unit( self.SynergiData.LineLength[i], SynergiValueType.MUL, self.SynergiData.LengthUnits)
 
-            # wenbo add this
-            if LineNote_[i].lower() == "underground":
+            # Set overhead or underground from InstSection -> Note_ Table
+            if self.SynergiData.LineNote_[i].lower() == "underground":
                 api_line.line_type = "underground"
-            elif LineNote_[i].lower() == "overhead":
+            elif self.SynergiData.LineNote_[i].lower() == "overhead":
                 api_line.line_type = "overhead"
             else:
                 api_line.line_type = "swgearbus"
 
-            #            if LineHeight[i] < 0:
-            #                api_line.line_type = "underground"
-            #            else:
-            #                api_line.line_type = "overhead"
-
             # From element
             # Replace spaces with "_"
             #
-            api_line.from_element = FromNodeId[i].lower().replace(" ", "_")
+            api_line.from_element = self.SynergiData.FromNodeId[i].lower().replace(" ", "_")
 
             # To element
             # Replace spaces with "_"
             #
-            api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
+            api_line.to_element = self.SynergiData.ToNodeId[i].lower().replace(" ", "_")
 
-            # wenbo add this to get the line object nominal voltage
-            api_line.LineDescription = LineDescription[i]
-
-            api_line.nominal_voltage = (
-                float(LineDescription[i].rsplit("-", 1)[1]) * 10 ** 3
-            )
+            # Get the line object nominal voltage
+            api_line.nominal_voltage = float(self.SynergiData.LineDescription[i].rsplit("-", 1)[1]) * 10 ** 3
 
             # wenbo added, bus_nominal_voltage from line sections
 
             # Switching devices and network protection devices
             # Set ratings to Nones
-            #
+            
             eqt_rating = None
             eqt_interrupting_rating = None
             eqt_open = None
 
             # Recloser
-            if recloser_sectionID is not None and obj in recloser_sectionID.values:
-                idd = np.argwhere(recloser_sectionID.values == obj).flatten()
+            if self.SynergiData.recloser_sectionID is not None and obj in self.SynergiData.recloser_sectionID.values:
+                idd = np.argwhere(self.SynergiData.recloser_sectionID.values == obj).flatten()
 
                 # Set the is_recloser flag to True
                 api_line.is_recloser = 1
 
                 # Get the interrupting rating (to be used in the wires)
                 if len(idd) == 1:
-                    eqt_interrupting_rating = recloser_interrupting_rating[idd[0]]
-                    eqt_rating = recloser_rating[idd[0]]
-                    eqt_open = RecloserIsOpen[idd[0]]
+                    eqt_interrupting_rating = self.SynergiData.recloser_interrupting_rating[idd[0]]
+                    eqt_rating = self.SynergiData.recloser_rating[idd[0]]
+                    eqt_open = self.SynergiData.RecloserIsOpen[idd[0]]
 
             # Switch
-            if switch_sectionID is not None and obj in switch_sectionID.values:
-                idd_db = np.argwhere(switch_sectionID.values == obj).flatten()
+            if self.SynergiData.switch_sectionID is not None and obj in self.SynergiData.switch_sectionID.values:
+                idd_db = np.argwhere(self.SynergiData.switch_sectionID.values == obj).flatten()
 
                 # Set the is_switch flag to True
                 api_line.is_switch = 1
 
                 # Get the current ratings (to be used in the wires)
                 if len(idd_db) == 1:
-                    idd_warehouse = Switch_index_map[SwitchType[idd_db[0]]]
-                    eqt_rating = ContinuousCurrentRating_switch[idd_warehouse]
-                    eqt_interrupting_rating = EmergencyCurrentRating_switch[
-                        idd_warehouse
-                    ]
-                    eqt_open = SwitchIsOpen[idd_db[0]]
+                    idd_warehouse = self.SynergiData.Switch_index_map[SwitchType[idd_db[0]]]
+                    eqt_rating = self.SynergiData.ContinuousCurrentRating_switch[idd_warehouse]
+                    eqt_interrupting_rating = self.SynergiData.EmergencyCurrentRating_switch[ idd_warehouse ]
+                    eqt_open = self.SynergiData.SwitchIsOpen[idd_db[0]]
 
             # Fuse
-            if fuse_sectionID is not None and obj in fuse_sectionID.values:
-                idd = np.argwhere(fuse_sectionID.values == obj).flatten()
+            if self.SynergiData.fuse_sectionID is not None and obj in self.SynergiData.fuse_sectionID.values:
+                idd = np.argwhere(self.SynergiData.fuse_sectionID.values == obj).flatten()
 
                 # Set the is_fuse flag to True
                 api_line.is_fuse = True
@@ -714,32 +700,24 @@ class Reader(AbstractReader):
                 # Get the current ratings (to be used in the wires)
                 if len(idd) == 1:
                     eqt_rating = fuse_rating[idd[0]]
-                    eqt_interrupting_rating = fuse_blow_rating[idd[0]]
+                    eqt_interrupting_rating = self.SynergiData.fuse_blow_rating[idd[0]]
                     eqt_open = fuse_is_open[idd[0]]
 
             # Protection Devices
             if (
-                protective_device_sectionID is not None
-                and obj in protective_device_sectionID.values
+                self.SynergiData.protective_device_sectionID is not None
+                and obj in self.SynergiData.protective_device_sectionID.values
             ):
-                idd = np.argwhere(protective_device_sectionID.values == obj).flatten()
+                idd = np.argwhere(self.SynergiData.protective_device_sectionID.values == obj).flatten()
 
                 # Get the type of protector
                 if len(idd) == 1:
-
-                    if (
-                        protective_device_deviceID[idd[0]]
-                        in ProtectiveDeviceTypeName.values
-                    ):
-                        eqt_id = np.argwhere(
-                            ProtectiveDeviceTypeName.values
-                            == protective_device_deviceID[idd[0]]
-                        ).flatten()
+                    if self.SynergiData.protective_device_deviceID[idd[0]] in self.SynergiData.ProtectiveDeviceTypeName.values:
+                        eqt_id = np.argwhere( self.SynergiData.ProtectiveDeviceTypeName.values == self.SynergiData.protective_device_deviceID[idd[0]]).flatten()
 
                         if len(eqt_id) == 1:
-
                             # Get the type
-                            protect_type = ProtectiveDeviceType[eqt_id].lower()
+                            protect_type = self.SynergiData.ProtectiveDeviceType[eqt_id].lower()
 
                             # Try to map this type to one supported by DiTTo
                             if "fuse" in protect_type:
@@ -754,36 +732,30 @@ class Reader(AbstractReader):
                             else:
                                 api_line.is_network_protector = True
 
-                            eqt_rating = ContinuousCurrentRating[eqt_id]
-                            eqt_interrupting_rating = InterruptCurrentRating[eqt_id]
+                            eqt_rating = self.SynergiData.ContinuousCurrentRating[eqt_id]
+                            eqt_interrupting_rating = self.SynergiData.InterruptCurrentRating[eqt_id]
+                            if eqt_open is None:
+                                eqt_open = False
+                                print(f'Warning - no open state provided for {api_line.name}. Assuming closed')
 
-            ### Line Phases##################
+            ### Line Phases###
             #
             # Phases are given as a string "A B C N"
             # Convert this string to a list of characters
             #
-            SectionPhases_thisline1 = list(SectionPhases[i])
+            SectionPhases_thisline1 = list(self.SynergiData.SectionPhases[i])
 
             # Remove the spaces from the list
-            SectionPhases_thisline = [
-                s.upper() for s in SectionPhases_thisline1 if s != " "
-            ]
-            api_line.section_phases = SectionPhases_thisline
+            SectionPhases_thisline = [ s.upper() for s in SectionPhases_thisline1 if s != " " ]
+            section_phases = SectionPhases_thisline
 
-            # wenbo added: add section_phases to the dict self.node_nominal_voltage
-            self.node_nominal_voltage_mapping[api_line.from_element] = [
-                api_line.nominal_voltage
-            ]
-            self.node_nominal_voltage_mapping[api_line.from_element].append(
-                api_line.section_phases
-            )
+            # add section_phases to the dict self.node_nominal_voltage
+            # TODO: find a better way to structure the data instead of having a list of size 2
+            self.node_nominal_voltage_mapping[api_line.from_element] = [ api_line.nominal_voltage ]
+            self.node_nominal_voltage_mapping[api_line.from_element].append( section_phases)
 
-            self.node_nominal_voltage_mapping[api_line.to_element] = [
-                api_line.nominal_voltage
-            ]
-            self.node_nominal_voltage_mapping[api_line.to_element].append(
-                api_line.section_phases
-            )
+            self.node_nominal_voltage_mapping[api_line.to_element] = [ api_line.nominal_voltage ]
+            self.node_nominal_voltage_mapping[api_line.to_element].append( section_phases)
 
             # Get the number of phases as the length of this list
             # Warning: Neutral will be included in this number: this is not necessarily true - Wenbo
@@ -804,103 +776,19 @@ class Reader(AbstractReader):
                 # Set the phase
                 api_wire.phase = phase
 
-                # Is_recloser
-                if api_line.is_recloser == 1:
-
-                    # Set the flag to True if the line has been identified as a Recloser
-                    api_wire.is_recloser = 1
+                # Is protection device
+                if api_line.is_recloser or api_line.is_switch or api_line.is_fuse or api_line.is_sectionalizer or api_line.is_network_protector:
 
                     # Set the ampacity
-                    api_wire.ampacity = float(
-                        eqt_rating
-                    )  # Value should already be in amps
+                    api_wire.ampacity = float(eqt_rating)  # Value should already be in amps
+
+                    api_wire.emergency_ampacity = float(eqt_interrupting_rating)  # Value should already be in amps
 
                     # Set the interrupting rating
-                    api_wire.emergency_ampacity = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
-
-                    api_wire.interrupting_rating = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
+                    api_wire.interrupting_rating = float(eqt_interrupting_rating)  # Value should already be in amps
 
                     # Set the is_open flag
                     api_wire.is_open = int(eqt_open)
-
-                # Is_switch
-                if api_line.is_switch == 1:
-
-                    # Set the flag to True if the line has been identified as a Switch
-                    api_wire.is_switch = 1
-
-                    # Set the ampacity
-                    api_wire.ampacity = float(
-                        eqt_rating
-                    )  # Value should already be in amps
-
-                    # Set the emergency ampacity
-                    api_wire.emergency_ampacity = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
-
-                    # Set the is_open flag
-                    api_wire.is_open = int(eqt_open)
-
-                # Is_fuse
-                if api_line.is_fuse is True:
-
-                    # Set the flag to True if the line has been identified as a Fuse
-                    api_wire.is_fuse = True
-
-                    # Set the ampacity
-                    api_wire.ampacity = float(
-                        eqt_rating
-                    )  # Value should already be in amps
-
-                    # Set the emergency ampacity
-                    api_wire.emergency_ampacity = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
-
-                    # Set the interrupting_rating
-                    api_wire.interrupting_rating = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
-
-                    # Set the is_open flag
-                    api_wire.is_open = int(eqt_open)
-
-                # Is_sectionalizer
-                if api_line.is_sectionalizer is True:
-
-                    # Set the flag to True if the line has been identified as a sectionalizer
-                    api_wire.is_sectionalizer = True
-
-                    # Set the ampacity
-                    api_wire.ampacity = float(
-                        eqt_rating
-                    )  # Value should already be in amps
-
-                    # Set the emergency ampacity
-                    api_wire.emergency_ampacity = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
-
-                # Is_network_protector
-                if api_line.is_network_protector is True:
-
-                    # Set the flag to True if the line has been identified as a network protector
-                    api_wire.is_network_protector = True
-
-                    # Set the ampacity
-                    api_wire.ampacity = float(
-                        eqt_rating
-                    )  # Value should already be in amps
-
-                    # Set the emergency ampacity
-                    api_wire.emergency_ampacity = float(
-                        eqt_interrupting_rating
-                    )  # Value should already be in amps
 
                 # The Neutral will be handled seperately
                 if phase != "N":
