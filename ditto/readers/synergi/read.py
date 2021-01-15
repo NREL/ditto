@@ -56,6 +56,436 @@ def create_mapping(keys, values, remove_spaces=False):
     else:
         return {k: v for k, v in zip(keys, values)}
 
+class SynergiData():
+    def get_data(self, key1, key2):
+        """
+        Helper function for parse.
+
+        **Inputs:**
+        - key1: <string>. Name of the table.
+        - key2: <string>. Name of the column.
+
+        **Output:**
+        None but update the DatabaseData.SynergiDictionary attribute of the Reader.
+        """
+        if (
+            key1 in self.DatabaseData.SynergiDictionary
+            and key2 in self.DatabaseData.SynergiDictionary[key1]
+        ):
+            return self.DatabaseData.SynergiDictionary[key1][key2]
+        else:
+            print("Could not retrieve data for <{k1}><{k2}>.".format(k1=key1, k2=key2))
+            return None
+
+    def __init__(self,**kwargs):
+        warehouse_input_file = kwargs.get('warehouse_input_file',None)
+        input_file = kwargs.get('input_file',None)
+
+        if ware_house_input_file is not None:
+            ware_house_input_file = os.path.join(os.path.dirname(input_file), ware_house_input_file)
+            self.DatabaseData = DbParser(input_file, warehouse=ware_house_input_file)
+        else:
+            self.DatabaseData = DbParser(input_file)
+
+        set_all_data()
+        set_all_mappings()
+        pass
+
+    def set_all_data(self):
+
+        ## Feeder ID ##########
+        ## This is used to separate different feeders ##
+        self.FeederId = self.get_data("InstFeeders", "FeederId")
+        self.SubstationId = self.get_data("InstFeeders", "SubstationId")  # wenbo added
+        self.NominalKvll_src = self.get_data("InstFeeders", "NominalKvll")
+        self.ConnectionType_src = self.get_data("InstFeeders", "ConnectionType")
+        self.BusVoltageLevel = self.get_data("InstFeeders", "BusVoltageLevel")
+        self.PosSequenceResistance_src = self.get_data( "InstFeeders", "PosSequenceResistance")
+        self.PosSequenceReactance_src = self.get_data("InstFeeders", "PosSequenceReactance")
+        self.ZeroSequenceResistance_src = self.get_data("InstFeeders", "ZeroSequenceResistance")
+        self.ZeroSequenceReactance_src = self.get_data("InstFeeders", "ZeroSequenceReactance")
+        self.ByPhVoltDegPh1 = self.get_data("InstFeeders", "ByPhVoltDegPh1")
+
+        ## Node ###########
+        self.NodeID = self.get_data("Node", "NodeId")
+        self.NodeX = self.get_data("Node", "X")
+        self.NodeY = self.get_data("Node", "Y")
+
+        ## Preferences ########
+        self.LengthUnits = self.get_data("SAI_Equ_Control", "LengthUnits")
+        if self.LengthUnits is not None and len(LengthUnits) == 1:
+            self.LengthUnits = self.LengthUnits[0]
+
+        ########## Line #####################
+        self.LineID = self.get_data("InstSection", "SectionId")
+        self.LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        self.LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
+        self.LineNote_ = self.get_data("InstSection", "Note_")
+        self.PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
+
+        # PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
+        # PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
+        # wenbo added
+        self.PhaseConductor2Id = self.PhaseConductorID
+        self.PhaseConductor3Id = self.PhaseConductorID
+
+        self.NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
+        self.ConfigurationId = self.get_data("InstSection", "ConfigurationId")
+        self.SectionPhases = self.get_data("InstSection", "SectionPhases")
+        self.LineFeederId = self.get_data("InstSection", "FeederId")
+
+        # add subtrans to feeder ID
+        self.FeederId_subtrans = list(set(list(self.LineFeederId)) - set(self.FeederId))
+        self.FeederId = self.FeederId.append(pd.Series(FeederId_subtrans), ignore_index=True)
+
+        self.FromNodeId = self.get_data("InstSection", "FromNodeId")
+        self.ToNodeId = self.get_data("InstSection", "ToNodeId")
+        self.IsFromEndOpen = self.get_data("InstSection", "IsFromEndOpen")
+        self.IsToEndOpen = self.get_data("InstSection", "IsToEndOpen")
+        self.AmpRating = self.get_data("InstSection", "AmpRating")
+        self.AveHeightAboveGround_MUL = self.get_data( "InstSection", "AveHeightAboveGround_MUL")
+        # wenbo add this to get line voltage
+        self.LineDescription = self.get_data("InstSection", "Description")
+
+
+        ###### Transformer ##################
+        self.TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
+        self.TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
+        self.TransformerType = self.get_data("InstPrimaryTransformers", "TransformerType")
+
+        self.DTranId = self.get_data("InstDTrans", "DTranId")
+        self.DTransformerSectionId = self.get_data("InstDTrans", "SectionId")
+        self.HighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
+        self.LowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
+        self.ConnPhases = self.get_data("InstDTrans", "ConnPhases")
+
+        ## Substration Transformers ##
+        # wenbo added
+        self.SubstationTransformerV = self.get_data( "InstSubstationTransformers", "NominalKvll")
+
+        # wenbo added for subtransmission
+        self.NominalKvll_src = self.NominalKvll_src.append( self.SubstationTransformerV, ignore_index=True)
+
+        # wenbo added: BusVoltage level
+        self.SubstationTransformerVoltageLevel = self.get_data( "InstSubstationTransformers", "BusVoltageLevel")
+        self.BusVoltageLevel = self.BusVoltageLevel.append( self.SubstationTransformerVoltageLevel, ignore_index=True)
+
+        self.SubtransByPhVoltDegPh1 = self.get_data( "InstSubstationTransformers", "ByPhVoltDegPh1")
+        self.ByPhVoltDegPh1 = self.ByPhVoltDegPh1.append( self.SubtransByPhVoltDegPh1, ignore_index=True)
+
+        ## Transformer Setting ##
+
+        self.TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
+        self.HighSideRatedKv = self.get_data("DevTransformers", "HighSideRatedKv")
+        self.LowSideRatedKv = self.get_data("DevTransformers", "LowSideRatedKv")
+        self.TransformerRatedKva = self.get_data("DevTransformers", "TransformerRatedKva")
+        self.EmergencyKvaRating = self.get_data("DevTransformers", "EmergencyKvaRating")
+        self.IsThreePhaseUnit = self.get_data("DevTransformers", "IsThreePhaseUnit")
+        self.NoLoadLosses = self.get_data("DevTransformers", "NoLoadLosses")
+        self.PTRatio = self.get_data("DevTransformers", "PTRatio")
+        self.EnableTertiary = self.get_data("DevTransformers", "EnableTertiary")
+        self.TertiaryKva = self.get_data("DevTransformers", "TertiaryKva")
+        self.TertiaryRatedKv = self.get_data("DevTransformers", "TertiaryRatedKv")
+        self.PercentImpedance = self.get_data("DevTransformers", "PercentImpedance")
+        self.PercentResistance = self.get_data("DevTransformers", "PercentResistance")
+        self.ConnectedPhases = self.get_data("InstPrimaryTransformers", "ConnectedPhases")
+
+        self.TransformerHighSideNearFromNode = self.get_data( "InstPrimaryTransformers", "HighSideNearFromNode")
+
+        # NOTE: When the same information is given in the database and in the warehouse,
+        # both are stored and the priority will be given to the information from the
+        # network over the one form the warehouse
+        #
+        # TODO: Check that this is indeed how Synergi works...
+        #
+        # High side connection code from network
+        self.HighVoltageConnectionCode_N = self.get_data( "InstPrimaryTransformers", "HighSideConnectionCode")
+
+        # High side connection code from warehouse
+        self.HighVoltageConnectionCode_W = self.get_data( "DevTransformers", "HighVoltageConnectionCode")
+
+        # Low side connection code from network
+        self.LowVoltageConnectionCode_N = self.get_data( "InstPrimaryTransformers", "LowSideConnectionCode")
+
+        # Low side connection code from warehouse
+        self.LowVoltageConnectionCode_W = self.get_data( "DevTransformers", "LowVoltageConnectionCode")
+
+        # Tertiary connection code from network
+        self.TertConnectCode = self.get_data("InstPrimaryTransformers", "TertConnectCode")
+
+        # Tertiary connection code from warehouse
+        self.TertiaryConnectionCode = self.get_data( "DevTransformers", "TertiaryConnectionCode")
+
+
+        ## Reclosers #######
+        self.recloser_sectionID = self.get_data("InstReclosers", "SectionId")
+        self.recloser_deviceID = self.get_data("InstReclosers", "UniqueDeviceId")
+        self.recloser_rating = self.get_data("InstReclosers", "AmpRating")
+        self.RecloserIsOpen = self.get_data("InstReclosers", "RecloserIsOpen")
+        self.recloser_interrupting_rating = self.get_data( "InstReclosers", "InterruptRatingAmps")
+
+        ## Switches ########
+        self.switch_sectionID = self.get_data("InstSwitches", "SectionId")
+        self.switch_deviceID = self.get_data("InstSwitches", "UniqueDeviceId")
+        self.SwitchType = self.get_data("InstSwitches", "SwitchType")
+        self.SwitchIsOpen = self.get_data("InstSwitches", "SwitchIsOpen")
+        self.SwitchName = self.get_data("DevSwitches", "SwitchName")
+        self.ContinuousCurrentRating_switch = self.get_data( "DevSwitches", "ContinuousCurrentRating")
+        self.EmergencyCurrentRating_switch = self.get_data( "DevSwitches", "EmergencyCurrentRating")
+
+        ## Fuses #########
+        self.fuse_sectionID = self.get_data("InstFuses", "SectionId")
+        self.fuse_deviceID = self.get_data("InstFuses", "UniqueDeviceId")
+        self.fuse_rating = self.get_data("InstFuses", "AmpRating")
+        self.fuse_blow_rating = self.get_data("InstFuses", "CutoffAmps")
+        self.fuse_connected_phases = self.get_data("InstFuses", "ConnectedPhases")
+        self.fuse_is_open = self.get_data("InstFuses", "FuseIsOpen")
+
+        ## Protective devices ############
+        self.protective_device_sectionID = self.get_data( "InstProtectiveDevices", "SectionId")
+        self.protective_device_deviceID = self.get_data( "InstProtectiveDevices", "UniqueDeviceId")
+        self.protective_device_connected_phases = self.get_data( "InstProtectiveDevices", "ConnectedPhases")
+        self.ProtectiveDeviceTypeName = self.get_data( "DevProtectiveDevices", "ProtectiveDeviceTypeName")
+        self.ProtectiveDeviceType = self.get_data( "DevProtectiveDevices", "ProtectiveDeviceType")
+        self.protective_device_ContinuousCurrentRating = self.get_data( "DevProtectiveDevices", "ContinuousCurrentRating")
+        self.protective_device_EmergencyCurrentRating = self.get_data( "DevProtectiveDevices", "EmergencyCurrentRating")
+        self.protective_device_InterruptCurrentRating = self.get_data( "DevProtectiveDevices", "InterruptCurrentRating")
+
+        ## Configuration ########
+        self.ConfigName = self.get_data("DevConfig", "ConfigName")
+        self.Position1_X_MUL = self.get_data("DevConfig", "Position1_X_MUL")
+        self.Position1_Y_MUL = self.get_data("DevConfig", "Position1_Y_MUL")
+        self.Position2_X_MUL = self.get_data("DevConfig", "Position2_X_MUL")
+        self.Position2_Y_MUL = self.get_data("DevConfig", "Position2_Y_MUL")
+        self.Position3_X_MUL = self.get_data("DevConfig", "Position3_X_MUL")
+        self.Position3_Y_MUL = self.get_data("DevConfig", "Position3_Y_MUL")
+        self.Neutral_X_MUL = self.get_data("DevConfig", "Neutral_X_MUL")
+        self.Neutral_Y_MUL = self.get_data("DevConfig", "Neutral_Y_MUL")
+
+        ## Wires ###########
+        self.ActualImpedance = self.get_data( "DevConductors", "ActualImpedance")  # wenbo added this, to control using linegeometry or linecode
+        self.CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
+        self.CableDiamConductor = self.get_data( "DevConductors", "Diameter_SUL")  # wenbo changed
+        self.CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
+        self.ConductorName = self.get_data("DevConductors", "ConductorName")
+        self.PosSequenceResistance_PerLUL = self.get_data( "DevConductors", "PosSequenceResistance_PerLUL")
+        self.PosSequenceReactance_PerLUL = self.get_data( "DevConductors", "PosSequenceReactance_PerLUL")
+        self.ZeroSequenceResistance_PerLUL = self.get_data( "DevConductors", "ZeroSequenceResistance_PerLUL")
+        self.ZeroSequenceReactance_PerLUL = self.get_data( "DevConductors", "ZeroSequenceReactance_PerLUL")
+
+        self.PosSequenceAdmittance_PerLUL = self.get_data( "DevConductors", "PosSequenceAdmittance_PerLUL") # micro-seimens/mile 
+        self.ZeroSequenceAdmittance_PerLUL = self.get_data( "DevConductors", "ZeroSequenceAdmittance_PerLUL")
+        self.ContinuousCurrentRating = self.get_data( "DevConductors", "ContinuousCurrentRating")
+        self.InterruptCurrentRating = self.get_data( "DevConductors", "InterruptCurrentRating")
+
+        ### Concentric Neutral Data ###
+        self.CableConNeutStrandDiameter_SUL = self.get_data( "DevConductors", "CableConNeutStrandDiameter_SUL")
+        self.CableConNeutResistance_PerLUL = self.get_data( "DevConductors", "CableConNeutResistance_PerLUL")
+        self.CableConNeutStrandCount = self.get_data( "DevConductors", "CableConNeutStrandCount")
+        self.CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
+        self.CableDiamOverInsul = self.get_data("DevConductors", "CableDiamOverInsul_SUL")
+
+                
+        ## Loads #############
+        self.LoadName = self.get_data("Loads", "SectionId")
+        self.Phase1Kw = self.get_data("Loads", "Phase1Kw")
+        self.Phase2Kw = self.get_data("Loads", "Phase2Kw")
+        self.Phase3Kw = self.get_data("Loads", "Phase3Kw")
+        self.Phase1Kvar = self.get_data("Loads", "Phase1Kvar")
+        self.Phase2Kvar = self.get_data("Loads", "Phase2Kvar")
+        self.Phase3Kvar = self.get_data("Loads", "Phase3Kvar")
+
+        #        Phase1Kva = self.get_data("Loads", "Phase1Kva")
+        #        Phase2Kva = self.get_data("Loads", "Phase2Kva")
+        #        Phase3Kva = self.get_data("Loads", "Phase3Kva")
+
+        ## Capacitors ################
+        self.CapacitorSectionID = self.get_data("InstCapacitors", "SectionId")
+        self.CapacitorName = self.get_data("InstCapacitors", "UniqueDeviceId")
+        self.CapacitorVoltage = self.get_data("InstCapacitors", "RatedKv")
+        self.CapacitorConnectionType = self.get_data("InstCapacitors", "ConnectionType")
+        self.CapacitorTimeDelaySec = self.get_data("InstCapacitors", "TimeDelaySec")
+        self.CapacitorPrimaryControlMode = self.get_data( "InstCapacitors", "PrimaryControlMode")
+        self.CapacitorModule1CapSwitchCloseValue = self.get_data( "InstCapacitors", "Module1CapSwitchCloseValue")
+        self.CapacitorModule1CapSwitchTripValue = self.get_data( "InstCapacitors", "Module1CapSwitchTripValue")
+        self.CapacitorPTRatio = self.get_data("InstCapacitors", "CapacitorPTRatio")
+        self.CapacitorCTRating = self.get_data("InstCapacitors", "CapacitorCTRating")
+        self.CapacitorSectionId = self.get_data("InstCapacitors", "SectionId")
+        self.CapacitorFixedKvarPhase1 = self.get_data("InstCapacitors", "FixedKvarPhase1")
+        self.CapacitorFixedKvarPhase2 = self.get_data("InstCapacitors", "FixedKvarPhase2")
+        self.CapacitorFixedKvarPhase3 = self.get_data("InstCapacitors", "FixedKvarPhase3")
+        self.CapacitorModule1KvarPhase = self.get_data( "InstCapacitors", "Module1KvarPerPhase")
+        self.MeteringPhase = self.get_data("InstCapacitors", "MeteringPhase")
+        self.CapacitorConnectedPhases = self.get_data("InstCapacitors", "ConnectedPhases")
+
+        ## Regulators ###################
+        self.RegulatorId = self.get_data("InstRegulators", "UniqueDeviceId")
+        self.RegulatorTimeDelay = self.get_data("InstRegulators", "TimeDelaySec")
+        self.RegulatorTapLimiterHighSetting = self.get_data( "InstRegulators", "TapLimiterHighSetting")
+        self.RegulatorTapLimiterLowSetting = self.get_data( "InstRegulators", "TapLimiterLowSetting")
+        self.RegulatorTapLimiterLowSetting = self.get_data( "InstRegulators", "TapLimiterLowSetting")
+        self.RegulatrorForwardBWDialPhase1 = self.get_data( "InstRegulators", "ForwardBWDialPhase1")
+        self.RegulatrorForwardBWDialPhase2 = self.get_data( "InstRegulators", "ForwardBWDialPhase2")
+        self.RegulatrorForwardBWDialPhase3 = self.get_data( "InstRegulators", "ForwardBWDialPhase3")
+        self.RegulatrorForwardVoltageSettingPhase1 = self.get_data( "InstRegulators", "ForwardVoltageSettingPhase1")
+        self.RegulatrorForwardVoltageSettingPhase1 = self.get_data( "InstRegulators", "ForwardVoltageSettingPhase1")
+        self.RegulatrorForwardVoltageSettingPhase2 = self.get_data( "InstRegulators", "ForwardVoltageSettingPhase2")
+        self.RegulatrorForwardVoltageSettingPhase3 = self.get_data( "InstRegulators", "ForwardVoltageSettingPhase3")
+        self.RegulatorSectionId = self.get_data("InstRegulators", "SectionId")
+        self.RegulatorPhases = self.get_data("InstRegulators", "ConnectedPhases")
+        self.RegulatorTypes = self.get_data("InstRegulators", "RegulatorType")
+        self.RegulatorNames = self.get_data("DevRegulators", "RegulatorName")
+        self.RegulatorPTRatio = self.get_data("DevRegulators", "PTRatio")
+        self.RegulatorCTRating = self.get_data("DevRegulators", "CTRating")
+        self.RegulatorNearFromNode = self.get_data("InstRegulators", "NearFromNode")
+        self.RegulatorTapsNearFromNode = self.get_data( "InstRegulators", "TapsNearFromNode")  # wenbo added
+
+        self.RegulatorRatedVoltage = self.get_data("DevRegulators", "RegulatorRatedVoltage")
+        self.RegulatorRatedKva = self.get_data("DevRegulators", "RegulatorRatedKva")
+        self.RegulatorNoLoadLosses = self.get_data("DevRegulators", "NoLoadLosses")
+        self.RegulatorConnectionCode = self.get_data("DevRegulators", "ConnectionCode")
+
+        # wenbo added
+        self.RegulatorPercentZ = self.get_data("DevRegulators", "PercentZOnRegulatorBase")
+        self.RegulatorXRRatio = self.get_data("DevRegulators", "RegulatorXRRatio")
+
+        ##### PV Wenbo changed this##################################
+        self.LargeCustDeviceId = self.get_data("InstLargeCust", "UniqueDeviceId")
+
+        self.LargeCustSectionId = self.get_data("InstLargeCust", "SectionId")
+        self.LargeCustLoadPhase1Kw = self.get_data("InstLargeCust", "LoadPhase1Kw")
+        self.LargeCustLoadPhase2Kw = self.get_data("InstLargeCust", "LoadPhase2Kw")
+        self.LargeCustLoadPhase3Kw = self.get_data("InstLargeCust", "LoadPhase3Kw")
+        self.LargeCustLoadPhase1Kvar = self.get_data("InstLargeCust", "LoadPhase1Kvar")
+        self.LargeCustLoadPhase2Kvar = self.get_data("InstLargeCust", "LoadPhase2Kvar")
+        self.LargeCustLoadPhase3Kvar = self.get_data("InstLargeCust", "LoadPhase3Kvar")
+
+        self.PVUniqueDeviceId = self.get_data("InstLargeCust", "UniqueDeviceId")
+        self.PVSectionId = self.get_data("InstLargeCust", "SectionId")
+        self.PVGenType = self.get_data("InstLargeCust", "GenType")
+        self.PVGenPhase1Kw = self.get_data("InstLargeCust", "GenPhase1Kw")
+        self.PVGenPhase2Kw = self.get_data("InstLargeCust", "GenPhase2Kw")
+        self.PVGenPhase3Kw = self.get_data("InstLargeCust", "GenPhase3Kw")
+        self.PVGenPhase1Kvar = self.get_data("InstLargeCust", "GenPhase1Kvar")
+        self.PVGenPhase2Kvar = self.get_data("InstLargeCust", "GenPhase2Kvar")
+        self.PVGenPhase3Kvar = self.get_data("InstLargeCust", "GenPhase3Kvar")
+
+        # wenbo added: for large cust there there are 3 types (C = cogenerator; D= DG-PV; L=load)
+        self.LargeCustType = self.get_data("InstLargeCust", "Category")
+        for i, x in enumerate(self.LargeCustType):
+            if x.upper() == "L" or x.upper() == "C":
+                self.LoadName = self.LoadName.append( pd.Series(self.LargeCustDeviceId[i]), ignore_index=True)
+                self.Phase1Kw = self.Phase1Kw.append( pd.Series(self.LargeCustLoadPhase1Kw[i]), ignore_index=True)
+                self.Phase2Kw = self.Phase2Kw.append( pd.Series(self.LargeCustLoadPhase2Kw[i]), ignore_index=True)
+                self.Phase3Kw = self.Phase3Kw.append( pd.Series(self.LargeCustLoadPhase3Kw[i]), ignore_index=True)
+                self.Phase1Kvar = self.Phase1Kvar.append( pd.Series(self.LargeCustLoadPhase1Kvar[i]), ignore_index=True)
+                self.Phase2Kvar = self.Phase2Kvar.append( pd.Series(self.LargeCustLoadPhase2Kvar[i]), ignore_index=True)
+                self.Phase3Kvar = self.Phase3Kvar.append( pd.Series(self.LargeCustLoadPhase3Kvar[i]), ignore_index=True)
+
+        # drop 0 load
+        indx = []
+        for i, x in enumerate(self.LoadName):
+            if self.Phase1Kw[i] == 0 and self.Phase2Kw[i] == 0 and self.Phase3Kw[i] == 0:
+                indx.append(i)
+
+        self.LoadName = pd.Series(list(LoadName.drop(index=indx)))
+
+        self.Phase1Kw = pd.Series(list(Phase1Kw.drop(index=indx)))
+        self.Phase2Kw = pd.Series(list(Phase2Kw.drop(index=indx)))
+        self.Phase3Kw = pd.Series(list(Phase3Kw.drop(index=indx)))
+        self.Phase1Kvar = pd.Series(list(Phase1Kvar.drop(index=indx)))
+        self.Phase2Kvar = pd.Series(list(Phase2Kvar.drop(index=indx)))
+        self.Phase3Kvar = pd.Series(list(Phase3Kvar.drop(index=indx)))
+
+        ## Adding Distributed Gen PV ####
+
+        self.DSectionID = self.get_data("InstDGens", "SectionId")
+        self.DGeneratorType = self.get_data("InstDGens", "DGenType")
+        self.DGeneratorVoltageSetting = self.get_data("InstDGens", "DGenVoltSet")
+        self.DGeneratorPF = self.get_data("InstDGens", "SpecPowerFactorPct")
+        self.DGenPhase1Kw = self.get_data("InstDGens", "Phase1Kw")
+        self.DGenPhase1Kvar = self.get_data("InstDGens", "Phase1Kvar")
+        self.DGenPhase2Kw = self.get_data("InstDGens", "Phase2Kw")
+        self.DGenPhase2Kvar = self.get_data("InstDGens", "Phase2Kvar")
+        self.DGenPhase3Kw = self.get_data("InstDGens", "Phase3Kw")
+        self.DGenPhase3Kvar = self.get_data("InstDGens", "Phase3Kvar")
+
+        ## Generators ###############################
+        self.GeneratorSectionID = self.get_data("InstGenerators", "SectionId")
+        self.GeneratorID = self.get_data("InstGenerators", "UniqueDeviceId")
+        self.GeneratorConnectedPhases = self.get_data("InstGenerators", "ConnectedPhases")
+        self.GeneratorMeteringPhase = self.get_data("InstGenerators", "MeteringPhase")
+        self.GeneratorType = self.get_data("InstGenerators", "GeneratorType")
+        self.GeneratorVoltageSetting = self.get_data("InstGenerators", "VoltageSetting")
+        self.GeneratorPF = self.get_data("InstGenerators", "PQPowerFactorPercentage")
+        self.GenPhase1Kw = self.get_data("InstGenerators", "GenPhase1Kw")
+        self.GenPhase1Kvar = self.get_data("InstGenerators", "GenPhase1Kvar")
+        self.GenPhase2Kw = self.get_data("InstGenerators", "GenPhase2Kw")
+        self.GenPhase2Kvar = self.get_data("InstGenerators", "GenPhase2Kvar")
+        self.GenPhase3Kw = self.get_data("InstGenerators", "GenPhase3Kw")
+        self.GenPhase3Kvar = self.get_data("InstGenerators", "GenPhase3Kvar")
+
+        self.GeneratorName = self.get_data("DevGenerators", "GeneratorName")
+        self.GeneratorTypeDev = self.get_data("DevGenerators", "GeneratorType")
+        self.GeneratorKvRating = self.get_data("DevGenerators", "KvRating")
+        self.GeneratorKwRating = self.get_data("DevGenerators", "KwRating")
+        self.GeneratorPercentPFRating = self.get_data("DevGenerators", "PercentPFRating")
+
+
+
+
+    def set_all_mappings():
+        # Create mapping between section IDs and Feeder Ids
+        self.section_feeder_mapping = create_mapping( self.LineID, self.LineFeederId, remove_spaces=True)
+
+        # Create mapping between section IDs and section phases
+        self.section_phase_mapping = create_mapping(self.LineID, self.SectionPhases)
+
+        # Create mapping between section ids and (fromnode, tonode) tuple
+        self.section_from_to_mapping = {}
+        for idx, section in enumerate(self.LineID):
+            self.section_from_to_mapping[section] = (self.FromNodeId[idx], self.ToNodeId[idx])
+
+        # Create mapping between switches and their indices
+        self.Switch_index_map = {}
+        for i in range(len(self.SwitchName)):
+            self.Switch_index_map[self.SwitchName[i]] = i
+
+        # Create mapping between wire configuration name and position of the wires
+        self.config_mapping = {}
+        for idx, conf in enumerate(self.ConfigName):
+            self.config_mapping[conf] = {
+                "Position1_X_MUL": self.Position1_X_MUL[idx],
+                "Position1_Y_MUL": self.Position1_Y_MUL[idx],
+                "Position2_X_MUL": self.Position2_X_MUL[idx],
+                "Position2_Y_MUL": self.Position2_Y_MUL[idx],
+                "Position3_X_MUL": self.Position3_X_MUL[idx],
+                "Position3_Y_MUL": self.Position3_Y_MUL[idx],
+                "Neutral_X_MUL": self.Neutral_X_MUL[idx],
+                "Neutral_Y_MUL": self.Neutral_Y_MUL[idx],
+            }
+
+        # Create mapping between the underground conductor configuration name and the attributes of the cable
+        self.conductor_mapping = {}
+        for idx, cond in enumerate(self.ConductorName):
+            self.conductor_mapping[cond] = {
+                "CableGMR": self.CableGMR[idx],
+                "CableDiamConductor": self.CableDiamConductor[idx],
+                "CableResistance": self.CableResistance[idx],
+                "PosSequenceResistance_PerLUL": self.PosSequenceResistance_PerLUL[idx],
+                "PosSequenceReactance_PerLUL": self.PosSequenceReactance_PerLUL[idx],
+                "ZeroSequenceResistance_PerLUL": self.ZeroSequenceResistance_PerLUL[idx],
+                "ZeroSequenceReactance_PerLUL": self.ZeroSequenceReactance_PerLUL[idx],
+                "ContinuousCurrentRating": self.ContinuousCurrentRating[idx],
+                "InterruptCurrentRating": self.InterruptCurrentRating[idx],
+                "CableConNeutStrandDiameter_SUL": self.CableConNeutStrandDiameter_SUL[idx],
+                "CableConNeutResistance_PerLUL": self.CableConNeutResistance_PerLUL[idx],
+                "CableConNeutStrandCount": self.CableConNeutStrandCount[idx],
+                "CableDiamOutside": self.CableDiamOutside[idx],
+                "CableDiamOverInsul": self.CableDiamOverInsul[idx],
+            }
+
+
 
 class Reader(AbstractReader):
     """
@@ -205,6 +635,811 @@ class Reader(AbstractReader):
                 api_node.phases.append(phase.upper())
 
  
+
+    def parse_lines(self,model):
+        print("--> Parsing Lines...")
+
+        ########## Line #####################
+        LineID = self.get_data("InstSection", "SectionId")
+        LineLength = self.get_data("InstSection", "SectionLength_MUL")
+        LineHeight = self.get_data("InstSection", "AveHeightAboveGround_MUL")
+        LineNote_ = self.get_data("InstSection", "Note_")
+        PhaseConductorID = self.get_data("InstSection", "PhaseConductorId")
+        # PhaseConductor2Id = self.get_data("InstSection", "PhaseConductor2Id")
+        # PhaseConductor3Id = self.get_data("InstSection", "PhaseConductor3Id")
+        # wenbo added
+        PhaseConductor2Id = PhaseConductorID
+        PhaseConductor3Id = PhaseConductorID
+
+        NeutralConductorID = self.get_data("InstSection", "NeutralConductorId")
+        ConfigurationId = self.get_data("InstSection", "ConfigurationId")
+        SectionPhases = self.get_data("InstSection", "SectionPhases")
+        LineFeederId = self.get_data("InstSection", "FeederId")
+
+        for i, obj in enumerate(LineID):
+
+            ## Do not parse sections with regulators or Transformers to Lines
+            if obj in RegulatorSectionId.values or obj in TransformerSectionId.values:
+                continue
+
+            # Create a DiTTo Line object
+            api_line = Line(model)
+
+            # Set the name as the SectionID
+            # Since this could contain spaces, replace them with "_"
+            #
+            api_line.name = obj.lower().replace(" ", "_")
+
+            # Set the feeder_name if it exists in the mapping
+            if obj in self.section_feeder_mapping:
+                api_line.feeder_name = self.section_feeder_mapping[obj]
+
+            # wenbo added:
+            if api_line.feeder_name in self.feeder_substation_mapping:
+                api_line.substation_name = self.feeder_substation_mapping[
+                    api_line.feeder_name
+                ]
+
+            # Cache configuration
+            if ConfigurationId is not None:
+                if (
+                    isinstance(ConfigurationId[i], str)
+                    and len(ConfigurationId[i]) > 0
+                    and ConfigurationId[i] in config_mapping
+                ):
+                    config = config_mapping[ConfigurationId[i]]
+                else:
+                    config = {}
+
+            # Assumes MUL is medium unit length and this is feets
+            # Converts to meters then
+            #
+            api_line.length = convert_length_unit(
+                LineLength[i], SynergiValueType.MUL, LengthUnits
+            )
+
+            # wenbo add this
+            if LineNote_[i].lower() == "underground":
+                api_line.line_type = "underground"
+            elif LineNote_[i].lower() == "overhead":
+                api_line.line_type = "overhead"
+            else:
+                api_line.line_type = "swgearbus"
+
+            #            if LineHeight[i] < 0:
+            #                api_line.line_type = "underground"
+            #            else:
+            #                api_line.line_type = "overhead"
+
+            # From element
+            # Replace spaces with "_"
+            #
+            api_line.from_element = FromNodeId[i].lower().replace(" ", "_")
+
+            # To element
+            # Replace spaces with "_"
+            #
+            api_line.to_element = ToNodeId[i].lower().replace(" ", "_")
+
+            # wenbo add this to get the line object nominal voltage
+            api_line.LineDescription = LineDescription[i]
+
+            api_line.nominal_voltage = (
+                float(LineDescription[i].rsplit("-", 1)[1]) * 10 ** 3
+            )
+
+            # wenbo added, bus_nominal_voltage from line sections
+
+            # Switching devices and network protection devices
+            # Set ratings to Nones
+            #
+            eqt_rating = None
+            eqt_interrupting_rating = None
+            eqt_open = None
+
+            # Recloser
+            if recloser_sectionID is not None and obj in recloser_sectionID.values:
+                idd = np.argwhere(recloser_sectionID.values == obj).flatten()
+
+                # Set the is_recloser flag to True
+                api_line.is_recloser = 1
+
+                # Get the interrupting rating (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_interrupting_rating = recloser_interrupting_rating[idd[0]]
+                    eqt_rating = recloser_rating[idd[0]]
+                    eqt_open = RecloserIsOpen[idd[0]]
+
+            # Switch
+            if switch_sectionID is not None and obj in switch_sectionID.values:
+                idd_db = np.argwhere(switch_sectionID.values == obj).flatten()
+
+                # Set the is_switch flag to True
+                api_line.is_switch = 1
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd_db) == 1:
+                    idd_warehouse = Switch_index_map[SwitchType[idd_db[0]]]
+                    eqt_rating = ContinuousCurrentRating_switch[idd_warehouse]
+                    eqt_interrupting_rating = EmergencyCurrentRating_switch[
+                        idd_warehouse
+                    ]
+                    eqt_open = SwitchIsOpen[idd_db[0]]
+
+            # Fuse
+            if fuse_sectionID is not None and obj in fuse_sectionID.values:
+                idd = np.argwhere(fuse_sectionID.values == obj).flatten()
+
+                # Set the is_fuse flag to True
+                api_line.is_fuse = True
+
+                # Get the current ratings (to be used in the wires)
+                if len(idd) == 1:
+                    eqt_rating = fuse_rating[idd[0]]
+                    eqt_interrupting_rating = fuse_blow_rating[idd[0]]
+                    eqt_open = fuse_is_open[idd[0]]
+
+            # Protection Devices
+            if (
+                protective_device_sectionID is not None
+                and obj in protective_device_sectionID.values
+            ):
+                idd = np.argwhere(protective_device_sectionID.values == obj).flatten()
+
+                # Get the type of protector
+                if len(idd) == 1:
+
+                    if (
+                        protective_device_deviceID[idd[0]]
+                        in ProtectiveDeviceTypeName.values
+                    ):
+                        eqt_id = np.argwhere(
+                            ProtectiveDeviceTypeName.values
+                            == protective_device_deviceID[idd[0]]
+                        ).flatten()
+
+                        if len(eqt_id) == 1:
+
+                            # Get the type
+                            protect_type = ProtectiveDeviceType[eqt_id].lower()
+
+                            # Try to map this type to one supported by DiTTo
+                            if "fuse" in protect_type:
+                                api_line.is_fuse = True
+                            elif "sectionalizer" in protect_type:
+                                api_line.is_sectionalizer = True
+                            elif "breaker" in protect_type:
+                                api_line.is_breaker = True
+                            elif "recloser" in protect_type:
+                                api_line.is_recloser = True
+                            # If nothing more specific was found, map to a network protector
+                            else:
+                                api_line.is_network_protector = True
+
+                            eqt_rating = ContinuousCurrentRating[eqt_id]
+                            eqt_interrupting_rating = InterruptCurrentRating[eqt_id]
+
+            ### Line Phases##################
+            #
+            # Phases are given as a string "A B C N"
+            # Convert this string to a list of characters
+            #
+            SectionPhases_thisline1 = list(SectionPhases[i])
+
+            # Remove the spaces from the list
+            SectionPhases_thisline = [
+                s.upper() for s in SectionPhases_thisline1 if s != " "
+            ]
+            api_line.section_phases = SectionPhases_thisline
+
+            # wenbo added: add section_phases to the dict self.node_nominal_voltage
+            self.node_nominal_voltage_mapping[api_line.from_element] = [
+                api_line.nominal_voltage
+            ]
+            self.node_nominal_voltage_mapping[api_line.from_element].append(
+                api_line.section_phases
+            )
+
+            self.node_nominal_voltage_mapping[api_line.to_element] = [
+                api_line.nominal_voltage
+            ]
+            self.node_nominal_voltage_mapping[api_line.to_element].append(
+                api_line.section_phases
+            )
+
+            # Get the number of phases as the length of this list
+            # Warning: Neutral will be included in this number: this is not necessarily true - Wenbo
+            #
+            NPhase = len(SectionPhases_thisline)
+            # print(SectionPhases_thisline)
+
+            ############################################################
+            # BEGINING OF WIRES SECTION
+            ############################################################
+
+            # Create the Wire DiTTo objects
+            for idx, phase in enumerate(SectionPhases_thisline):
+
+                # Create a Wire DiTTo object
+                api_wire = Wire(model)
+
+                # Set the phase
+                api_wire.phase = phase
+
+                # Is_recloser
+                if api_line.is_recloser == 1:
+
+                    # Set the flag to True if the line has been identified as a Recloser
+                    api_wire.is_recloser = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the interrupting rating
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    api_wire.interrupting_rating = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_switch
+                if api_line.is_switch == 1:
+
+                    # Set the flag to True if the line has been identified as a Switch
+                    api_wire.is_switch = 1
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_fuse
+                if api_line.is_fuse is True:
+
+                    # Set the flag to True if the line has been identified as a Fuse
+                    api_wire.is_fuse = True
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the interrupting_rating
+                    api_wire.interrupting_rating = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                    # Set the is_open flag
+                    api_wire.is_open = int(eqt_open)
+
+                # Is_sectionalizer
+                if api_line.is_sectionalizer is True:
+
+                    # Set the flag to True if the line has been identified as a sectionalizer
+                    api_wire.is_sectionalizer = True
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                # Is_network_protector
+                if api_line.is_network_protector is True:
+
+                    # Set the flag to True if the line has been identified as a network protector
+                    api_wire.is_network_protector = True
+
+                    # Set the ampacity
+                    api_wire.ampacity = float(
+                        eqt_rating
+                    )  # Value should already be in amps
+
+                    # Set the emergency ampacity
+                    api_wire.emergency_ampacity = float(
+                        eqt_interrupting_rating
+                    )  # Value should already be in amps
+
+                # The Neutral will be handled seperately
+                if phase != "N":
+                    # Set the position of the first wire
+                    if (
+                        idx == 0
+                        and phase != "N"
+                        and "Position1_X_MUL" in config
+                        and "Position1_Y_MUL" in config
+                    ):
+                        # Set X
+                        #                        api_wire.X = convert_length_unit(
+                        #                            config["Position1_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        #                        )
+                        api_wire.X = config["Position1_X_MUL"]
+                        # Set Y
+                        # Add the reference height
+                        api_wire.Y = (
+                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"]
+                        )
+                    #                        api_wire.Y = convert_length_unit(
+                    #                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"],
+                    #                            SynergiValueType.MUL,
+                    #                            LengthUnits,
+                    #                        ) wenbo commented out, reason is define ft in opendss only is correct
+
+                    # Set the position of the second wire
+                    if (
+                        idx == 1
+                        and phase != "N"
+                        and "Position2_X_MUL" in config
+                        and "Position2_Y_MUL" in config
+                    ):
+                        # Set X
+                        #                        api_wire.X = convert_length_unit(
+                        #                            config["Position2_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        #                        )
+                        api_wire.X = config["Position2_X_MUL"]
+                        # Set Y
+                        # Add the reference height
+                        api_wire.Y = (
+                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"]
+                        )
+                    #                        api_wire.Y = convert_length_unit(
+                    #                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"],
+                    #                            SynergiValueType.MUL,
+                    #                            LengthUnits,
+                    #                        )
+
+                    # Set the position of the third wire
+                    if (
+                        idx == 2
+                        and phase != "N"
+                        and "Position3_X_MUL" in config
+                        and "Position3_Y_MUL" in config
+                    ):
+                        # Set X
+                        api_wire.X = config["Position3_X_MUL"]
+                        #                        api_wire.X = convert_length_unit(
+                        #                            config["Position3_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        #                        )
+
+                        # Set Y
+                        # Add the reference height
+                        api_wire.Y = (
+                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"]
+                        )
+                    #                        api_wire.Y = convert_length_unit(
+                    #                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"],
+                    #                            SynergiValueType.MUL,
+                    #                            LengthUnits,
+                    #                        )
+
+                    # Set the characteristics of the first wire. Use PhaseConductorID
+                    #
+                    # Cache the raw nameclass of the conductor in conductor_name_raw
+                    # api_wire.nameclass needs to be cleaned from spaces
+                    #
+                    conductor_name_raw = None
+
+                    if (
+                        idx == 0
+                        and PhaseConductorID is not None
+                        and isinstance(PhaseConductorID[i], str)
+                        and len(PhaseConductorID[i]) > 0
+                    ):
+                        # Set the Nameclass of the Wire
+                        # The name can contain spaces. Replace them with "_"
+                        #
+                        api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
+                        # Cache the conductor name
+                        conductor_name_raw = PhaseConductorID[i]
+
+                    # Set the characteristics of the second wire.
+                    # If PhaseConductor2Id is provided, use it
+                    # Otherwise, assume the phase wires are the same
+                    #
+                    if idx == 1:
+                        if (
+                            PhaseConductor2Id is not None
+                            and isinstance(PhaseConductor2Id[i], str)
+                            and len(PhaseConductor2Id[i]) > 0
+                            and PhaseConductor2Id[i].lower() != "unknown"
+                        ):
+                            # Set the nameclass
+                            # Replace spaces with "_"
+                            #
+                            api_wire.nameclass = PhaseConductor2Id[i].replace(" ", "_")
+
+                            # Cache the conductor name
+                            conductor_name_raw = PhaseConductor2Id[i]
+                        else:
+                            try:
+                                api_wire.nameclass = PhaseConductorID[i].replace(
+                                    " ", "_"
+                                )
+                                conductor_name_raw = PhaseConductorID[i]
+                            except:
+                                pass
+
+                    # Set the characteristics of the third wire in the same way
+                    if idx == 2:
+                        if (
+                            PhaseConductor3Id is not None
+                            and isinstance(PhaseConductor3Id[i], str)
+                            and len(PhaseConductor3Id[i]) > 0
+                            and PhaseConductor3Id[i].lower() != "unknown"
+                        ):
+                            # Set the nameclass
+                            # Replace spaces with "_"
+                            #
+                            api_wire.nameclass = PhaseConductor3Id[i].replace(" ", "_")
+
+                            # Cache the conductor name
+                            conductor_name_raw = PhaseConductor3Id[i]
+                        else:
+                            try:
+                                api_wire.nameclass = PhaseConductorID[i].replace(
+                                    " ", "_"
+                                )
+                                conductor_name_raw = PhaseConductorID[i]
+                            except:
+                                pass
+
+                if phase == "N":
+                    if (
+                        NeutralConductorID is not None
+                        and isinstance(NeutralConductorID[i], str)
+                        and len(NeutralConductorID[i]) > 0
+                    ):
+
+                        # Set the nameclass
+                        api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
+                        # Cache the conductor name
+                        conductor_name_raw = NeutralConductorID[i]
+
+                    # Set the Spacing of the neutral
+                    if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
+
+                        # Set X
+                        #                        api_wire.X = convert_length_unit(
+                        #                            config["Neutral_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        #                        )  # DiTTo is in meters
+                        api_wire.X = config["Neutral_X_MUL"]
+                        # Set Y
+                        # Add the reference height
+                        #                        api_wire.Y = convert_length_unit(
+                        #                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"],
+                        #                            SynergiValueType.MUL,
+                        #                            LengthUnits,
+                        #                        )
+                        api_wire.Y = (
+                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
+                        )
+                if api_line.line_type == "underground":
+                    api_wire.nameclass = "Cable_" + api_wire.nameclass
+                elif api_line.line_type == "swgearbus":
+                    api_wire.nameclass = "Swgearbus" + api_wire.nameclass
+                else:
+                    api_wire.nameclass = "Wire_" + api_wire.nameclass
+
+                # Set the characteristics of the wire:
+                # - GMR
+                # - Diameter
+                # - Ampacity
+                # - Emergency Ampacity
+                # - Resistance
+                #
+                if (
+                    conductor_name_raw is not None
+                    and conductor_name_raw in conductor_mapping
+                ):
+                    # Set the GMR of the conductor
+                    # DiTTo is in meters and GMR is assumed to be given in feets
+                    #
+                    api_wire.gmr = convert_length_unit(
+                        conductor_mapping[conductor_name_raw]["CableGMR"],
+                        SynergiValueType.MUL,
+                        LengthUnits,
+                    )
+
+                    # Set the Diameter of the conductor
+                    # Diameter is assumed to be given in inches and is converted to meters here
+                    #
+                    api_wire.diameter = convert_length_unit(
+                        conductor_mapping[conductor_name_raw]["CableDiamConductor"],
+                        SynergiValueType.SUL,
+                        LengthUnits,
+                    )
+
+                    # Set the Ampacity of the conductor
+                    #
+                    # If ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.ampacity is None:
+                        api_wire.ampacity = conductor_mapping[conductor_name_raw][
+                            "ContinuousCurrentRating"
+                        ]
+
+                    # Set the Emergency ampacity of the conductor
+                    #
+                    # If emergency ampacity is already set (if we have a switch for example), skip that
+                    if api_wire.emergency_ampacity is None:
+                        api_wire.emergency_ampacity = conductor_mapping[
+                            conductor_name_raw
+                        ]["InterruptCurrentRating"]
+
+                    # Set the resistance of the conductor
+                    # Represented in Ohms per meter
+                    #
+                    if api_line.length is not None:
+                        api_wire.resistance = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableResistance"],
+                            SynergiValueType.Per_LUL,
+                            LengthUnits,
+                        )
+
+                    # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
+                    if (
+                        conductor_mapping[conductor_name_raw]["CableDiamOutside"]
+                        > conductor_mapping[conductor_name_raw]["CableDiamConductor"]
+                    ):
+                        api_wire.concentric_neutral_resistance = (
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutResistance_PerLUL"
+                            ]
+                            / 160934
+                        )
+                        api_wire.concentric_neutral_diameter = (
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutStrandDiameter_SUL"
+                            ]
+                            * 0.0254
+                        )  # multiplied by short unit length scale
+                        api_wire.concentric_neutral_gmr = (
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutStrandDiameter_SUL"
+                            ]
+                            / 2.0
+                            * 0.7788
+                            * 0.0254
+                        )  # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
+                        api_wire.concentric_neutral_outside_diameter = (
+                            conductor_mapping[conductor_name_raw]["CableDiamOutside"]
+                            * 0.0254
+                        )  # multiplied by short unit length scale
+                        api_wire.concentric_neutral_nstrand = int(
+                            conductor_mapping[conductor_name_raw][
+                                "CableConNeutStrandCount"
+                            ]
+                        )
+                        api_wire.insulation_thickness = (
+                            (
+                                conductor_mapping[conductor_name_raw][
+                                    "CableDiamOverInsul"
+                                ]
+                                - conductor_mapping[conductor_name_raw][
+                                    "CableDiamConductor"
+                                ]
+                            )
+                            / 2.0
+                            * 0.0254
+                        )
+
+                # Add the new Wire to the line's list of wires
+                #
+                if api_line.line_type == "overhead":
+                    api_line.wires.append(api_wire)
+                if api_line.line_type == "swgearbus":
+                    api_line.wires.append(api_wire)
+                if api_line.line_type == "underground":
+                    if phase != "N":
+                        api_line.wires.append(api_wire)
+
+                ############################################################
+                # END OF WIRES SECTION
+                ############################################################
+
+            ## Calculating the impedance matrix of this line
+            #
+            # NOTE: If all information about the Wires, characteristics, and spacings are given,
+            # using geometries is prefered. This information will be stored in DiTTo and when
+            # writing out to another format, geometries will be used instead of linecodes if possible.
+            # We still compute the impedance matrix in case this possibility does not exist in the output format
+
+            # Use the Phase Conductor charateristics to build the matrix
+            #
+            Count = None
+            impedance_matrix = None
+
+            if ConductorName is not None:
+                for k, cond_obj in enumerate(ConductorName):
+                    if PhaseConductorID[i] == cond_obj:
+                        Count = k
+                        break
+
+            # Get sequence impedances
+            #
+            if Count is not None:
+                r1 = PosSequenceResistance_PerLUL[Count]
+                x1 = PosSequenceReactance_PerLUL[Count]
+                r0 = ZeroSequenceResistance_PerLUL[Count]
+                x0 = ZeroSequenceReactance_PerLUL[Count]
+
+                # wenbo added
+                B1 = PosSequenceAdmittance_PerLUL[Count]
+                B0 = ZeroSequenceAdmittance_PerLUL[Count]
+
+                # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
+                #         __________________________
+                #        | Z0+2*Z+  Z0-Z+   Z0-Z+   |
+                # Z= 1/3 | Z0-Z+    Z0+2*Z+ Z0-Z+   |
+                #        | Z0-Z+    Z0-Z+   Z0+2*Z+ |
+                #         --------------------------
+
+                r0 = convert_length_unit(r0, SynergiValueType.Per_LUL, LengthUnits) / 3
+                r1 = convert_length_unit(r1, SynergiValueType.Per_LUL, LengthUnits) / 3
+                x0 = convert_length_unit(x0, SynergiValueType.Per_LUL, LengthUnits) / 3
+                x1 = convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3
+                B1 = (
+                    convert_length_unit(B1, SynergiValueType.Per_LUL, LengthUnits)
+                    / 3
+                    / 376.9911
+                )
+                B0 = (
+                    convert_length_unit(B0, SynergiValueType.Per_LUL, LengthUnits)
+                    / 3
+                    / 376.9911
+                )
+
+                # One phase case (One phase + neutral):
+
+                if NPhase == 2:
+                    if SectionPhases_thisline[-1] != "N":
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+
+                        #                        if b1 < 0:
+                        #                            b1 = -b1
+                        #                        if b1 == 0:
+                        #                            b1 = float(r1)
+                        #                        if b2 < 0:
+                        #                            b2 = -b2
+                        #                        if b2 == 0:
+                        #                            b2 = float(x1)
+
+                        b = complex(b1, b2)
+
+                        a = complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+
+                        impedance_matrix = [[a, b], [b, a]]
+                        capacitance_matrix = [[2 * B1, -B1], [-B1, 2 * B1]]
+
+                    else:
+
+                        impedance_matrix = [
+                            [
+                                complex(
+                                    float(r0) + 2 * float(r1), float(x0) + 2 * float(x1)
+                                )
+                            ]
+                        ]
+                        capacitance_matrix = [[2 * B1]]
+
+                # Two phase case (Two phases + neutral)
+                #
+                if NPhase == 3:
+                    # print('SectionPhases_thisline[-1]={}'.format(SectionPhases_thisline[-1]))
+                    if SectionPhases_thisline[-1] != "N":
+
+                        a = complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+
+                        #                        if b1 < 0:
+                        #                            b1 = -b1
+                        #                        if b1 == 0:
+                        #                            b1 = float(r1)
+                        #                        if b2 < 0:
+                        #                            b2 = -b2
+                        #                        if b2 == 0:
+                        #                            b2 = float(x1)
+
+                        b = complex(b1, b2)
+
+                        impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
+
+                        capacitance_matrix = [
+                            [2 * B1, -B1, -B1],
+                            [-B1, 2 * B1, -B1],
+                            [-B1, -B1, 2 * B1],
+                        ]
+
+                    else:
+
+                        b1 = float(r0) - float(r1)
+                        b2 = float(x0) - float(x1)
+
+                        #                        if b1 < 0:
+                        #                            b1 = -b1
+                        #                        if b1 == 0:
+                        #                            b1 = float(r1)
+                        #                        if b2 < 0:
+                        #                            b2 = -b2
+                        #                        if b2 == 0:
+                        #                            b2 = float(x1)
+
+                        b = complex(b1, b2)
+
+                        a = complex(
+                            (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                        )
+
+                        impedance_matrix = [[a, b], [b, a]]
+                        capacitance_matrix = [[2 * B1, -B1], [-B1, 2 * B1]]
+
+                # Three phases case (Three phases + neutral)
+                #
+                if NPhase == 4:
+                    a = complex(
+                        (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
+                    )
+                    b1 = float(r0) - float(r1)
+                    b2 = float(x0) - float(x1)
+
+                    #                    if b1 < 0:
+                    #                        b1 = -b1
+                    #                    if b1 == 0:
+                    #                        b1 = float(r1)
+                    #                    if b2 < 0:
+                    #                        b2 = -b2
+                    #                    if b2 == 0:
+                    #                        b2 = float(x1)
+
+                    b = complex(b1, b2)
+
+                    impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
+                    capacitance_matrix = [
+                        [2 * B1, -B1, -B1],
+                        [-B1, 2 * B1, -B1],
+                        [-B1, -B1, 2 * B1],
+                    ]
+
+            if impedance_matrix is not None:
+                api_line.impedance_matrix = impedance_matrix
+            else:
+                print("No impedance matrix for line {}".format(api_line.name))
+
+            if capacitance_matrix is not None:
+                api_line.capacitance_matrix = capacitance_matrix
+            else:
+                print("No capacitance matrix for line {}".format(api_line.name))
+
+
 
 
     def parse(self, model):
