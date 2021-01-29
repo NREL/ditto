@@ -9,6 +9,7 @@ from ditto.models.powertransformer import PowerTransformer
 Check that every load has at least one transformer between it and the source node if needs_transformers is True
 Check that every load has at most one transformer between it and the source node
 Check that the phases on the low side of the transformer to the load are all the same
+Check that the low side of the transformer is connected to a line that leads to a load
 Check that the number of phases from the high side of the transformer (or from the load if there's no transformer) increase
 
 Parameters: 
@@ -64,13 +65,22 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                 transformer_names = []
 
                 ### check that only zero or one transformers are on the path from load to source (exclude regulators)
+                transformer_low_side = None
                 for i in range(len(path)-1,0,-1):
                     element = ditto_graph.graph[path[i]][path[i-1]]
                     if element['equipment'] == 'PowerTransformer' and not element['is_substation']: #TODO: check if the transformer is part of a regulator. Shouldn't be a problem but could be depending on how regulator defined 
                         transformer_names.append(element['name'])
                         num_transformers+=1
+                    if num_transformers == 0 and not element['equipment'] == 'PowerTransformer':
+                        transformer_low_side = path[i-1]
+
+                ### Check that the low side of the transformer is connected to a line that leads to a load
                 if num_transformers ==1:
                     load_transformer_map[load.name] = element['name']
+                    if model[transformer_names[0]].to_element != transformer_low_side:
+                        if verbose:
+                            print('Load '+load.name+' has connected transformer of '+transformer_names[0]+' incorrectly connected (likely backwards)')
+                        result = False
                 elif num_transformers == 0 and needs_transformers:
                     if verbose:
                         print('Load '+load.name+' has no transformers connected.')
