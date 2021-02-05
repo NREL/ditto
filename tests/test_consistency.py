@@ -3,20 +3,20 @@ from ditto.models.powertransformer import PowerTransformer
 from ditto.store import Store
 import os
 
-from check_loops import check_loops
-from check_loads_connected import check_loads_connected
-from check_unique_path import check_unique_path
-from check_matched_phases import check_matched_phases
-from check_transformer_phase_path import check_transformer_phase_path
+from ditto.consistency.check_loops import check_loops
+from ditto.consistency.check_loads_connected import check_loads_connected
+from ditto.consistency.check_unique_path import check_unique_path
+from ditto.consistency.check_matched_phases import check_matched_phases
+from ditto.consistency.check_transformer_phase_path import check_transformer_phase_path
 
-test_system_master = os.path.join('..','..','tests','data','small_cases','opendss','ieee_13node','master.dss')
-test_system_coords = os.path.join('..','..','tests','data','small_cases','opendss','ieee_13node','buscoords.dss')
-test_system_master = os.path.join('..','..','tests','data','small_cases','opendss_broken','ieee_13node_loop','master.dss')
-test_system_coords = os.path.join('..','..','tests','data','small_cases','opendss_broken','ieee_13node_loop','buscoords.dss')
-test_system_master = os.path.join('..','..','tests','data','small_cases','opendss_broken','ieee_13node_loads_disconnected','master.dss')
-test_system_coords = os.path.join('..','..','tests','data','small_cases','opendss_broken','ieee_13node_loads_disconnected','buscoords.dss')
-test_system_master = os.path.join('..','..','tests','data','small_cases','opendss_broken','ieee_13node_phases_off','master.dss')
-test_system_coords = os.path.join('..','..','tests','data','small_cases','opendss_broken','ieee_13node_phases_off','buscoords.dss')
+test_system_master = os.path.join('data','small_cases','opendss','ieee_13node','master.dss')
+test_system_coords = os.path.join('data','small_cases','opendss','ieee_13node','buscoords.dss')
+test_system_master = os.path.join('data','small_cases','opendss_broken','ieee_13node_loop','master.dss')
+test_system_coords = os.path.join('data','small_cases','opendss_broken','ieee_13node_loop','buscoords.dss')
+test_system_master = os.path.join('data','small_cases','opendss_broken','ieee_13node_loads_disconnected','master.dss')
+test_system_coords = os.path.join('data','small_cases','opendss_broken','ieee_13node_loads_disconnected','buscoords.dss')
+test_system_master = os.path.join('data','small_cases','opendss_broken','ieee_13node_phases_off','master.dss')
+test_system_coords = os.path.join('data','small_cases','opendss_broken','ieee_13node_phases_off','buscoords.dss')
 
 """
 Tests:
