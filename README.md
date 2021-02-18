@@ -1,8 +1,8 @@
 # DiTTo
 
-[![image](https://travis-ci.org/NREL/ditto.svg?branch=master)](https://travis-ci.org/NREL/ditto)
-[![image](https://badges.gitter.im/NREL/ditto.png)](https://gitter.im/NREL/ditto)
-[![image](https://img.shields.io/badge/docs-ready-blue.svg)](https://nrel.github.io/ditto)
+[![](https://travis-ci.org/NREL/ditto.svg?branch=master)](https://travis-ci.org/NREL/ditto)
+[![](https://badges.gitter.im/NREL/ditto.png)](https://gitter.im/NREL/ditto)
+[![](https://img.shields.io/badge/docs-ready-blue.svg)](https://nrel.github.io/ditto)
 [![codecov](https://codecov.io/gh/NREL/ditto/branch/master/graph/badge.svg)](https://codecov.io/gh/NREL/ditto)
 
 DiTTo is a _Distribution Transformation Tool_ that aims at providing an open source framework to convert various distribution systems modeling formats.
@@ -75,7 +75,7 @@ $ ls | grep .txt
 
 More documentation can be found [here](https://nrel.github.io/ditto).
 
-Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples.html). 
+Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples.html).
 
 ## Contributing
 DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bugfix, or a new parser you want to integrate, feel free to contribute.

@@ -24,7 +24,7 @@ with open("README.md", encoding="utf-8") as readme_file:
 with open(os.path.join(here, "ditto", "version.py"), encoding="utf-8") as f:
     version = f.read()
 
-version = version.split()[2].strip('"').strip("'")
+version = version.splitlines()[1].split()[2].strip('"').strip("'")
 
 test_requires = [
     "backports.tempfile",
@@ -61,7 +61,7 @@ class PostDevelopCommand(develop):
 
 
 setup(
-    name="ditto",
+    name="ditto.py",
     version=version,
     description="Distribution Feeder Conversion Tool",
     long_description=readme,
