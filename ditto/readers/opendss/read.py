@@ -785,6 +785,86 @@ class Reader(AbstractReader):
             d["MonitoredObj"].lower().split(".")[1] for name, d in reclosers.items()
         ]
 
+        # Read all reactors the same way we read lines
+        reactors = _dss_class_to_dict("Reactor")
+        for name, data in reactors.items():
+            api_reactor = Line(model)
+            api_reactor.feeder_name = self.source_name
+            reactor_name = name.split("eactor.")[1].lower()
+            if reactor_name not in self.all_object_names:
+                self.all_object_names.append(reactor_name)
+            else:
+                logger.warning(
+                    "Duplicate object Line {name}".format(name=reactor_name)
+                )
+            api_reactor.name = reactor_name
+
+            phases_bus1 = []
+            # from_element
+            if "." in data["bus1"]:
+                temp = data["bus1"].split(".")
+                api_reactor.from_element = temp[0]
+                phases_bus1 = list(map(int, temp[1:]))
+            else:
+                api_reactor.from_element = data["bus1"].strip()
+                phases_bus1 = [1, 2, 3]
+
+            phases_bus2 = []
+            # to_element
+            if "." in data["bus2"]:
+                temp = data["bus2"].split(".")
+                api_reactor.to_element = temp[0]
+                phases_bus2 = list(map(int, temp[1:]))
+            else:
+                api_reactor.to_element = data["bus2"].strip()
+                phases_bus2 = [1, 2, 3]
+
+            if phases_bus1 != phases_bus2:
+                logger.warning(
+                    "Phases do not match for line {name}. Bus1={b1}. Bus2={b2}".format(
+                        name=name, b1=data["bus1"], b2=data["bus2"]
+                    )
+                )
+            # impedance_matrix
+            # We have the Rmatrix and Xmatrix
+            if "rmatrix" in data and "xmatrix" in data:
+                Rmatrix = data["rmatrix"]
+                Xmatrix = data["xmatrix"]
+                impedance_matrix = [[0 for i in range(len(Rmatrix))] for j in range(len(Xmatrix))]
+                api_reactor.impedance_matrix = impedance_matrix
+
+            elif 'z1' in data and 'z0' in data:
+                pass #TODO
+            else:
+                if 'z' in data:
+                    reactor_r = data['z'][0]
+                    reactor_x = data['z'][1]
+                if 'r' in data and 'x' in data:
+                    reactor_r = data['r']
+                    reactor_x = data['x']
+                    impedance_matrix = [[0 for i in range(len(phases_bus1))] for j in range(len(phases_bus1))]
+                    for i in len(phases_bus1):
+                        impedance_matrix[i][i] = complex(reactor_r,reactor_x)
+                    api_reactor.impedance_matrix = impedance_matrix
+
+            try:
+                N_phases = int(data["phases"])
+            except:
+                N_phases = 3
+                pass
+            if N_phases != phases_bus1:
+                logger.warning( "Phases on node different from listed number of phases for line {name}. Bus1={b1}. Bus2={b2}".format( name=name, b1=data["bus1"], b2=data["bus2"]))
+            wires = []
+            for phase in phases_bus1:
+                api_wire = Wire(model)
+                api_wire.phase = self.phase_mapping(phase)
+                api_reactor.is_fuse = True
+                api_wire.is_fuse = True
+                wires.append(api_wire)
+            api_reactor.wires = wires
+
+
+
         start = time.time()
         lines = _dss_class_to_dict("Line")
 
