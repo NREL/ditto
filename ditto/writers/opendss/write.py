@@ -1303,7 +1303,7 @@ class Writer(AbstractWriter):
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
-                            txt += "." + str(self.phase_mapping(phase))
+                            txt += "." + str(self.phase_mapping(phase.default_value))
 
                 # Phases
                 if hasattr(i, "phases") and i.phases is not None:
