@@ -86,4 +86,25 @@ def fix_transformer_phase_path(model,needs_transformers=False,verbose=True):
                             print('Succeeded.')
                         else:
                             print('Failed.')
+
+
+
+                ### If there is a transformer, check that there phases on the high side are consistent with the transformer setting, and increase until the substation
+                if num_transformers == 1:
+                    high_phases = [phase_winding.phase for phase_winding in model[transformer_names[0]].windings[0].phase_windings]
+                    for i in range(len(path)-1):
+                        element = ditto_graph.graph[path[i]][path[i+1]]
+                        if element['equipment'] == 'PowerTransformer' and not element['is_substation']:
+                            break
+                        if element['equipment'] == 'Line':
+                            line_phases = [wire.phase for wire in element['wires'] if wire.phase != 'N'] #Neutral phases not included in the transformer
+                            if not set(high_phases).issubset(set(line_phases)): #MV phase line phase must be able to support transformer phase
+                                if len(set(high_phases)) == 1 and len(set(line_phases)) == 1:
+                                    print('Single phase transformer has incorrect phase of '+str(high_phases)+'. Setting to be '+str(line_phases))
+                                    high_phases = [phase_winding.phase for phase_winding in model[transformer_names[0]].windings[0].phase_windings]
+                                    model[transformer_names[0]].windings[0].phase_windings[0].phase = line_phases[0]
+                        elif element['equipment'] != 'Regulator':
+                            print('Warning: element of type '+element['equipment'] +' found on path to load '+load.name)
+
+
                 #TODO: Add other checks as well
