@@ -1039,6 +1039,7 @@ class Reader(AbstractReader):
                         "operatingangle1",
                         "operatingangle2",
                         "operatingangle3",
+                        "usesecondlevelimpedance", # TODO: add logic to look for this parameter and add secondlevel r & x in case it's selected
                         "positivesequenceresistance",
                         "positivesequencereactance",
                         "zerosequencereactance",
@@ -1046,10 +1047,15 @@ class Reader(AbstractReader):
                         "configuration",
                         "basemva",
                         "loadmodelname",
+                        "firstlevelr1",
+                        "firstlevelx1",
+                        "firstlevelr0",
+                        "firstlevelx0"
                     ],
                     mapp_source_equivalent,
                 )
             )
+
 
         self.get_file_content("equipment")
 
@@ -1112,20 +1118,30 @@ class Reader(AbstractReader):
                     pass
 
                 # try:
-                api_source.positive_sequence_impedance = complex(
-                    float(source_equivalent_data["positivesequenceresistance"]),
-                    float(source_equivalent_data["positivesequencereactance"]),
-                )
+                if "positivesequenceresistance" in source_equivalent_data:
+                    api_source.positive_sequence_impedance = complex(
+                        float(source_equivalent_data["positivesequenceresistance"]),
+                        float(source_equivalent_data["positivesequencereactance"]),
+                    )
+                else:
+                    api_source.positive_sequence_impedance = complex(
+                        float(source_equivalent_data["firstlevelr1"]),
+                        float(source_equivalent_data["firstlevelx1"]),
+                    )
+
                 # except:
                 # pass
 
-                try:
+                if "zerosequenceresistance" in source_equivalent_data:
                     api_source.zero_sequence_impedance = complex(
-                        source_equivalent_data["zerosequenceresistance"],
-                        source_equivalent_data["zerosequencereactance"],
+                        float(source_equivalent_data["zerosequenceresistance"]),
+                        float(source_equivalent_data["zerosequencereactance"]),
                     )
-                except:
-                    pass
+                else:
+                    api_source.zero_sequence_impedance = complex(
+                        float(source_equivalent_data["firstlevelr0"]),
+                        float(source_equivalent_data["firstlevelx0"]),
+                    )
 
                 try:
                     api_source.connecting_element = _from
@@ -1195,12 +1211,29 @@ class Reader(AbstractReader):
                         pass
 
                     # try:
-                    api_source.positive_sequence_impedance = complex(
-                        float(source_equivalent_data["positivesequenceresistance"]),
-                        float(source_equivalent_data["positivesequencereactance"]),
-                    )
+                    if "positivesequenceresistance" in source_equivalent_data:
+                        api_source.positive_sequence_impedance = complex(
+                            float(source_equivalent_data["positivesequenceresistance"]),
+                            float(source_equivalent_data["positivesequencereactance"]),
+                        )
+                    else:
+                        api_source.positive_sequence_impedance = complex(
+                            float(source_equivalent_data["firstlevelr1"]),
+                            float(source_equivalent_data["firstlevelx1"]),
+                        )
                     # except:
                     # pass
+                    if "zerosequenceresistance" in source_equivalent_data:
+                        api_source.zero_sequence_impedance = complex(
+                            float(source_equivalent_data["zerosequenceresistance"]),
+                            float(source_equivalent_data["zerosequencereactance"]),
+                        )
+                    else:
+                        api_source.zero_sequence_impedance = complex(
+                            float(source_equivalent_data["firstlevelr0"]),
+                            float(source_equivalent_data["firstlevelx0"]),
+                        )
+
 
                     try:
                         api_source.zero_sequence_impedance = complex(
@@ -2351,8 +2384,10 @@ class Reader(AbstractReader):
 
             # TODO: CLEAN THIS...
             if (
-                "load" in settings["fromnodeid"].lower()
-                or "load" in settings["tonodeid"].lower()
+                "fromnodeid" in settings and (
+                    "load" in settings["fromnodeid"].lower()
+                    or "load" in settings["tonodeid"].lower()
+                )
             ):
                 continue
 
