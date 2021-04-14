@@ -9,8 +9,8 @@ from ditto.models.powertransformer import PowerTransformer
 DON'T: Ensure every load has at least one transformer between it and the source node if needs_transformers is True
 DON'T: that every load has at most one transformer between it and the source node
 DO: Ensure that the phases on the low side of the transformer to the load are all the same
+DO: Ensure that if the number of phases from the high side of the transformer matches the number of line phases but they're different e.g. A on transformer vs B on line, adjust the transformer phase.
 TODO: Ensure that the low side of the transformer is connected to a line that leads to a load
-TODO: that the number of phases from the high side of the transformer (or from the load if there's no transformer) increase
 
 Parameters: 
     model: ditto.store.Store
