@@ -72,6 +72,3 @@ class PhaseLoad(DiTToHasTraits):
         help="""This is the portion of reactive power load modeled as constant impedance. Reactive portions of current, power and impedance should all add to 1. Used for ZIP models.""",
         default_value=None,
     )
-
-    def build(self, model):
-        self._model = model

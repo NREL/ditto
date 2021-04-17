@@ -34,7 +34,6 @@ def test_opendss_to_gridlabd():
             buscoordinates_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/buscoord.dss'.format(model=model))
         )
         r.parse(m)
-        m.set_names()
         #TODO: Log properly
         print('>OpenDSS model {model} red...'.format(model=model))
         t = tempfile.TemporaryDirectory()

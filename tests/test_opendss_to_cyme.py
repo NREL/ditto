@@ -35,7 +35,6 @@ def test_opendss_to_cyme():
             buscoordinates_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/buscoord.dss'.format(model=model))
         )
         r.parse(m)
-        m.set_names()
         #TODO: Log properly
         print('>OpenDSS model {model} read...'.format(model=model))
         output_path = tempfile.TemporaryDirectory()

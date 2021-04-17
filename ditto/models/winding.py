@@ -57,6 +57,3 @@ class Winding(DiTToHasTraits):
     emergency_power = Float(
         help="""The emergency power of the winding""", default_value=None
     )
-
-    def build(self, model):
-        self._model = model

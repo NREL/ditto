@@ -35,7 +35,6 @@ def test_opendss_to_ephasor():
             buscoordinates_file=os.path.join(current_directory, 'data/small_cases/opendss/{model}/buscoord.dss'.format(model=model))
         )
         r.parse(m)
-        m.set_names()
         m.build_networkx()
         m.direct_from_source()
         m.set_node_voltages()

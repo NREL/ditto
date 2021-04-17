@@ -141,21 +141,21 @@ class Line(DiTToHasTraits):
         default_value=None,
     )
 
-    def build(
-        self,
-        model,
-        Asset=None,
-        Line=None,
-        ACLineSegment=None,
-        PSRType=None,
-        baseVoltage=None,
-        wireSpacingInfo=None,
-        Location=None,
-        Terminal1=None,
-        Terminal2=None,
-    ):
+    #def build(
+    #    self,
+    #    model,
+    #    Asset=None,
+    #    Line=None,
+    #    ACLineSegment=None,
+    #    PSRType=None,
+    #    baseVoltage=None,
+    #    wireSpacingInfo=None,
+    #    Location=None,
+    #    Terminal1=None,
+    #    Terminal2=None,
+    #):
 
-        pass
+    #    pass
 
 
 #

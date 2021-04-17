@@ -20,6 +20,3 @@ class WeatherLayer(DiTToHasTraits):
         Instance(Position),
         help="""This parameter is a list of positional points describing the weather data. The positions are objects containing elements of long, lat and elevation (See Position object documentation).""",
     )
-
-    def build(self, model):
-        self._model = model

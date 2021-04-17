@@ -96,6 +96,3 @@ class PowerSource(DiTToHasTraits):
     zero_sequence_impedance = Complex(
         help="""Zero-sequence impedance of the source.""", default_value=None
     )
-
-    def build(self, model):
-        self._model = model

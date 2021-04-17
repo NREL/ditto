@@ -30,7 +30,6 @@ def test_linecodes():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_linecodes.dss"))
     r.parse(m)
-    m.set_names()
 
     # Reading OpenDSS default values
     d_v = Default_Values(

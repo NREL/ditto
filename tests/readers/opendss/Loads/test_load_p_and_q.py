@@ -22,7 +22,6 @@ def test_load_p_and_q():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_load_p_and_q.dss"))
     r.parse(m)
-    m.set_names()
 
     # P and Q values should be equally divided accross phase loads
     # Here we sum P and Q and check that the obtained values match the values in the DSS file

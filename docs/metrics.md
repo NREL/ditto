@@ -326,9 +326,6 @@ network_analyst.split_network_into_feeders()
 #Loop over the DiTTo objects and set the feeder_name attribute
 network_analyst.tag_objects()
 
-#Set the names
-network_analyst.model.set_names()
-
 #Compute the metrics per feeders
 network_analyst.compute_all_metrics_per_feeder()
 ```

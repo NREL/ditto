@@ -122,6 +122,3 @@ class Capacitor(DiTToHasTraits):
         help="""Flag that indicates wheter the element is inside a substation or not.""",
         default_value=False,
     )
-
-    def build(self, model):
-        self._model = model

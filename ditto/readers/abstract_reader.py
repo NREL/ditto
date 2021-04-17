@@ -921,7 +921,6 @@ class AbstractReader(object):
         setattr(obj, attr, value)
 
     def parse_default_values(self, model):
-        model.set_names()
         parsed_values = {}
         parsed_values.setdefault("Line", {})
         if self.DSS_file_names["default_values_file"]:

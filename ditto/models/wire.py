@@ -136,9 +136,9 @@ class Wire(DiTToHasTraits):
         default_value=None,
     )
 
-    def build(self, model):
-        self._model = model
-        pass
+#    def build(self, model):
+#        self._model = model
+#        pass
 
 
 #        self._wp = self._model.env.WirePosition()

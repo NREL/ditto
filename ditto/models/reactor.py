@@ -71,6 +71,3 @@ class Reactor(DiTToHasTraits):
     #
     # impedance_matrix = List(List(Complex),help='''This provides the matrix representation of the reactor impedance in complex form. Computed from the values of GMR and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.''')
     # capacitance_matrix = List(List(Complex),help='''This provides the matrix representation of the reactor capacitance in complex form. Computed from the values of diameters and distances of individual wires. Kron reduction is applied to make this a 3x3 matrix.''')
-
-    def build(self, model):
-        self._model = model

@@ -24,7 +24,6 @@ def test_default_values():
         default_values_file=os.path.join(current_directory, "test_default_values.json"),
     )
     r.parse(m)
-    m.set_names()
 
     assert m["line1"].faultrate == 0.2
 

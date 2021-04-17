@@ -37,7 +37,6 @@ def test_opendss_center_transformer():
     m = Store()
     r = Reader(master_file=master_file)
     r.parse(m)
-    m.set_names()
 
     for t in m.iter_models(type=PowerTransformer):
         assert len(t.windings) == 3
@@ -84,7 +83,6 @@ def test_opendss_transformer():
     m = Store()
     r = Reader(master_file=master_file,)
     r.parse(m)
-    m.set_names()
 
     for t in m.iter_models(type=PowerTransformer):
         assert len(t.windings) == 2

@@ -22,7 +22,6 @@ def test_capacitor_kvar():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_capacitor_kvar.dss"))
     r.parse(m)
-    m.set_names()
 
     assert len(m["cap1"].phase_capacitors) == 3  # Cap1 is a three phase capacitor
     assert sum(

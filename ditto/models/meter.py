@@ -20,6 +20,3 @@ class Meter(DiTToHasTraits):
         Instance(Unicode),
         help="""This parameter is a list of all the phases at the node. The Phases are Strings of  'A', 'B', 'C', 'N', 's1' or 's2' (for secondaries).""",
     )
-
-    def build(self, model):
-        self._model = model

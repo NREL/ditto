@@ -23,17 +23,21 @@ from builtins import super, range, zip, round, map
 import uuid
 import logging
 import types
+import warnings
+from collections import defaultdict, namedtuple
 from functools import partial
 from .network.network import Network
 
 from .core import DiTToBase, DiTToTypeError
 from .modify.modify import Modifier
+from .models.base import DiTToHasTraits
 from .models.node import Node
 
 logger = logging.getLogger(__name__)
 
 
 class Store(object):
+
     """The Store class holds all functions supported in the transformation.
 
     The Store stores all the instances of objects of different classes in a list
@@ -44,80 +48,189 @@ class Store(object):
     >>> M = ditto.Store()
 
     >>> M
-    <ditto.Store(elements=0, models=0)>
+    <ditto.Store(elements=0)>
 
     """
-
-    __store_factory = dict
-
     def __init__(self):
 
-        self._cim_store = self.__store_factory()
-        self._model_store = list()
-        self._model_names = {}
+        # Two-level dictionary where each elements of the same type are stored
+        # together.
+        # Names within each element type must be unique.
+        # {element_type: {name: element}}
+        self._elements = defaultdict(dict)
+
+        self._duplicate_element_names = set()
         self._network = Network()
 
     def __repr__(self):
-        return "<%s.%s(elements=%s, models=%s) object at %s>" % (
+        return "<{}.{}(elements={}) object at {}>".format(
             self.__class__.__module__,
             self.__class__.__name__,
-            len(self.elements),
-            len(self.models),
+            len(self._elements),
             hex(id(self)),
         )
 
-    def __getitem__(self, k):
-        return self._model_names[k]
+    def __getitem__(self, name):
+        warnings.warn(
+            "Store[name] is deprecated. Use Store.get_element(element_type, name) instead",
+            DeprecationWarning
+        )
+        element = None
+        for element_type, elements in self._elements.items():
+            if name in elements:
+                if element is not None:
+                    raise DuplicateNameError(
+                        f"Store[name] is not supported when the name is duplicate across element types"
+                    )
+                element = elements[name]
+
+        if element is None:
+            raise ElementNotFoundError
+
+        return element
 
     def __setitem__(self, k, v):
-        self._model_names[k] = v
+        warnings.warn(
+            "Store[name] = element is deprecated. Use Store.add_element(element) instead",
+            DeprecationWarning
+        )
 
-    def iter_elements(self, type=DiTToBase):
+        if v.name != k:
+            raise Exception(f"key={k} must be the element name")
 
-        if type == None:
-            type = DiTToBase
+        self.add_element(v)
 
-        if not issubclass(type, DiTToBase):
-            raise AttributeError("Unable to find {} in ditto.environment".format(type))
+    def _raise_if_not_found(self, element_type, name):
+        if element_type not in self._elements:
+            raise ElementNotFoundError(f"{element_type} is not stored")
 
-        for e in self.elements:
-            if isinstance(e, type):
-                yield e
-
-    def iter_models(self, type=None):
-
-        if type == None:
-            type = object
-
-        for m in self.models:
-            if isinstance(m, type):
-                yield m
-
-    @property
-    def elements(self):
-        return list(self.cim_store[k] for k in self.cim_store)
-
-    @property
-    def models(self):
-        return tuple(m for m in self.model_store)
-
-    def remove_element(self, element):
-        self._model_store.remove(element)
+        if name not in self._elements[element_type]:
+            raise ElementNotFoundError(f"{element_type}.{name} is not stored")
 
     def add_element(self, element):
-        if not isinstance(element, DiTToBase):
-            raise DiTToTypeError(
-                "element must be of type DiTToBase. Please check the documentation"
-            )
-        else:
-            element.link_model = self
-            self.cim_store[element.UUID] = element
+        """Add an element to the store.
 
-    def set_names(self):
-        """ All objects with a name field included in a dictionary which maps the name to the object. Set in set_name() on the object itself if the object has a name. The dictionary is reset to empty first"""
-        self._model_names = {}
-        for m in self.models:
-            m.set_name(self)
+        Raises
+        ------
+        DuplicateNameError
+            Raised if the element name is already stored.
+
+        """
+        if not isinstance(element, DiTToHasTraits):
+            raise InvalidElementType(f"type={type(element)} cannot be added")
+        if not hasattr(element, "name"):
+            raise InvalidElementType(
+                f"type={type(element)} cannot be added. Must define 'name' attribute."
+            )
+
+        element_type = type(element)
+        elements_by_type = self._elements[element_type]
+        if element.name in elements_by_type:
+            raise DuplicateNameError(f"{element.name} is already stored")
+
+        elements_by_type[element.name] = element
+        element.build(self)
+        logger.debug("Added %s.%s to store", element_type, element.name)
+
+    def clear_elements(self):
+        """Clear all stored elements."""
+        self._elements.clear()
+        logger.debug("Cleared all elements")
+
+    def get_element(self, element_type, name):
+        """Return the model.
+
+        Parameters
+        ----------
+        element_type : class
+            class for the requested model, such as Load
+        name : str
+            element name
+
+        Returns
+        -------
+        DiTToHasTraits
+
+        Raises
+        ------
+        ElementNotFoundError
+            Raised if the element_type is not stored.
+
+        """
+        self._raise_if_not_found(element_type, name)
+        return self._elements[element_type][name]
+
+    def iter_elements(self, element_type=None, filter_func=None):
+        """Iterate over all elements.
+
+        Parameters
+        ----------
+        element_type : class
+            If None, iterate over all elements. Otherwise, iterate over that
+            type.
+        filter_func : callable
+            If specified, call on element and only return elements that return
+            true.
+
+        Yields
+        ------
+        DiTToHasTraits
+
+        """
+        if element_type is not None:
+            if element_type not in self._elements:
+                return
+            elements_containers = [self._elements[element_type]]
+        else:
+            elements_containers = self._elements.values()
+
+        for elements in elements_containers:
+            for element in elements.values():
+                if filter_func is not None and not filter_func(element):
+                    logger.debug("skip %s.%s", type(element), element.name)
+                    continue
+                yield element
+
+    def list_elements(self, element_type=None, filter_func=None):
+        """Return a list of elements.
+
+        Parameters
+        ----------
+        element_type : class
+            If None, return all elements. Otherwise, return only that type.
+        filter_func : callable
+            If specified, call on element and only return elements that return
+            true.
+
+        Returns
+        -------
+        list
+            list of DiTToHasTraits
+
+        """
+        return list(self.iter_elements(element_type=element_type, filter_func=filter_func))
+
+    def remove_element(self, element):
+        """Remove the element from the store.
+
+        Parameters
+        ----------
+        element : DiTToHasTraits
+
+        Raises
+        ------
+        ElementNotFoundError
+            Raised if the element is not stored.
+
+        """
+        element_type = type(element)
+        self._raise_if_not_found(element_type, element.name)
+        self._elements[element_type].pop(element.name)
+        logger.debug("Removed %s.%s from store", element_type, element.name)
+
+        if not self._elements[element_type]:
+            self._elements.pop(element_type)
+            logger.debug("Removed %s from store", element_type)
 
     def build_networkx(self, source=None):
         if source is not None:
@@ -184,7 +297,6 @@ class Store(object):
         self.build_networkx()  # Should be redundant since the networkx graph is only build on connected elements
 
     def set_node_voltages(self):
-        self.set_names()
         for i in self.models:
             if isinstance(i, Node) and hasattr(i, "name") and i.name is not None:
                 upstream_transformer = self._network.get_upstream_transformer(
@@ -200,18 +312,6 @@ class Store(object):
 
     def get_internal_edges(self, nodeset):
         return self._network.find_internal_edges(nodeset)
-
-    @property
-    def cim_store(self):
-        return self._cim_store
-
-    @property
-    def model_store(self):
-        return self._model_store
-
-    @property
-    def model_names(self):
-        return self._model_names
 
 
 class EnvAttributeIntercepter(object):
@@ -281,3 +381,15 @@ def set_callback(self, name, value):
 
 def del_callback(self, name, obj):
     pass
+
+
+class DuplicateNameError(Exception):
+    """Raised when a duplicate name is detected."""
+
+
+class ElementNotFoundError(Exception):
+    """Raised when an element is not stored."""
+
+
+class InvalidElementType(Exception):
+    """Raised when an invalid type is used."""

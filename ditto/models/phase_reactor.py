@@ -42,6 +42,3 @@ class PhaseReactor(DiTToHasTraits):
     reactance = Float(
         help="""The total reactance of the phase reactor.""", default_value=None
     )
-
-    def build(self, model):
-        self._model = model

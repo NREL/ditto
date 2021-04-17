@@ -28,7 +28,6 @@ def test_gridlabd_to_ephasor():
         m = Store()
         r = Reader()
         r.parse(m)
-        m.set_names()
         #TODO: Log properly
         print('>Gridlab-D model {model} read...'.format(model=model))
         output_path = tempfile.TemporaryDirectory()
