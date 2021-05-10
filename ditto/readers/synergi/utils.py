@@ -10,7 +10,7 @@ tar_file_name = os.path.join(current_dir, "mdbtools.tar.gz")
 mdb_dir = os.path.join(current_dir, "mdbtools")
 
 if platform.system() == "Windows":
-    URL = "https://github.com/kdheepak/mdbtools/releases/download/download/mdbtools-windows.tar.gz"
+    URL = "https://github.com/kdheepak/mdbtools/releases/download/download/mdbtools-win.tar.gz"
 elif platform.system() == "Darwin":
     URL = "https://github.com/kdheepak/mdbtools/releases/download/download/mdbtools-osx.tar.gz"
 else:
