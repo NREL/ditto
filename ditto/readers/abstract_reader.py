@@ -427,63 +427,38 @@ class AbstractReader(object):
         """
 
         if neutrals is None:  # assume last row is neutral if nothing provided
-            self.logger.warning(
-                "Warning - last row assumed to be used for Kron reduction"
-            )
+            #self.logger.warning(
+            #    "Warning - last row assumed to be used for Kron reduction"
+            #)
             neutrals = [len(primitive_impedance_matrix) - 1]
 
-        dim_neutrals = len(neutrals)
-        dim_phase = len(primitive_impedance_matrix) - len(neutrals)
-        zij = [[None for i in range(dim_phase)] for j in range(dim_phase)]
-        znn = [[None for i in range(dim_neutrals)] for j in range(dim_neutrals)]
-        zin = [[None for i in range(dim_neutrals)] for j in range(dim_phase)]  # z[i][n]
-        znj = [[None for i in range(dim_phase)] for j in range(dim_neutrals)]  # z[n][j]
+        phases = [i for i in range(len(primitive_impedance_matrix)) if i not in neutrals]
 
-        cnts = {"zij": [0, 0], "zin": [0, 0], "znj": [0, 0], "znn": [0, 0]}
-        i_phase = 0
-        i_n = 0
-        j_phase = 0
-        j_n = 0
-        for i in range(len(primitive_impedance_matrix)):
-            changed_set = set()
-            for j in range(len(primitive_impedance_matrix)):
-                if i in neutrals and j in neutrals:
-                    i_loc = cnts["znn"][0]
-                    j_loc = cnts["znn"][1]
-                    znn[i_loc][j_loc] = primitive_impedance_matrix[i][j]
-                    cnts["znn"][0] += 1
-                    changed_set.add("znn")
-                elif (not i in neutrals) and (not j in neutrals):
-                    i_loc = cnts["zij"][0]
-                    j_loc = cnts["zij"][1]
-                    zij[i_loc][j_loc] = primitive_impedance_matrix[i][j]
-                    cnts["zij"][0] += 1
-                    changed_set.add("zij")
-                elif (not i in neutrals) and j in neutrals:
-                    i_loc = cnts["zin"][0]
-                    j_loc = cnts["zin"][1]
-                    zin[i_loc][j_loc] = primitive_impedance_matrix[i][j]
-                    cnts["zin"][0] += 1
-                    changed_set.add("zin")
-                elif i in neutrals and (not j in neutrals):
-                    i_loc = cnts["znj"][0]
-                    j_loc = cnts["znj"][1]
-                    znj[i_loc][j_loc] = primitive_impedance_matrix[i][j]
-                    cnts["znj"][0] += 1
-                    changed_set.add("znj")
+        zij = np.array(primitive_impedance_matrix)
+        znj = np.array(primitive_impedance_matrix)
+        zin = np.array(primitive_impedance_matrix)
+        znn = np.array(primitive_impedance_matrix)
 
-                else:
-                    raise ValueError("Kron reduction failed")
-            for zone in changed_set:
-                cnts[zone][0] = 0
-                cnts[zone][1] += 1
+        zij = np.delete(zij,neutrals,0)
+        zij = np.delete(zij,neutrals,1)
+
+        znn = np.delete(znn,phases,0)
+        znn = np.delete(znn,phases,1)
+
+        zin = np.delete(zin,neutrals,0) #TODO - check this is the right way around
+        zin = np.delete(zin,phases,1)
+
+        znj = np.delete(znj,phases,0) #TODO - check this is the right way around
+        znj = np.delete(znj,neutrals,1)
 
         # dim = len(primitive_impedance_matrix)
         # zij = primitive_impedance_matrix[: dim - 1, : dim - 1]
         # zin = primitive_impedance_matrix[: dim - 1, -1][:, np.newaxis]
         # znn = primitive_impedance_matrix[dim - 1, dim - 1]
         # znj = primitive_impedance_matrix[-1, : dim - 1]
-        return zij - np.dot(zin, np.dot(np.linalg.inv(znn), znj))
+
+        result = zij - np.dot(zin, np.dot(np.linalg.inv(znn), znj))
+        return result.tolist()
 
     def carson_equation_self(self, ri, GMRi):
         """Carson's equation for self impedance."""
