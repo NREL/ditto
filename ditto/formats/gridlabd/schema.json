@@ -1,5 +1,16 @@
 {
     "objects": {
+        "collector": {
+            "parent":"recorder",
+            "properties": [
+                {
+                    "description": "The grouping rule for creating the collection",
+                    "name": "group",
+                    "type": "object",
+                    "unit": "N/A"
+                }
+            ]
+        },
         "recorder": {
             "parent": null,
             "properties": [
@@ -925,7 +936,14 @@
                     "name": "impedance_fraction_C",
                     "type": "double",
                     "unit": "pu"
+                },
+                {
+                    "description": "Custom attribute added afterwards",
+                    "name": "phase_loss_protection",
+                    "type": "boolean",
+                    "unit": "N/A"
                 }
+
             ]
         },
         "meter": {
@@ -2265,6 +2283,13 @@
                     "type": "double",
                     "unit": "kilo-Volt-Amperes"
                 },
+                {
+                    "description": "Nominal power rating of windings associated with Neutral if wye-connected or CA if delta-connected.",
+                    "name": "powerN_rating",
+                    "type": "double",
+                    "unit": "kilo-Volt-Amperes"
+                },
+
                 {
                     "description": "De-referenced characteristic resistance of the transformer",
                     "name": "resistance",

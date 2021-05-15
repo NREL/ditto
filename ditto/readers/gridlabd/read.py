@@ -408,7 +408,7 @@ class Reader(AbstractReader):
 
     def compute_matrix(self, wire_list, freq=60, resistivity=100, kron_reduce=True):
         wire_map = {"A": 0, "B": 1, "C": 2, "N": 3}
-        matrix = [[0 for i in range(4)] for j in range(4)]
+        matrix = [[0 for i in range(len(wire_list))] for j in range(len(wire_list))]
         has_neutral = False
         for i in range(len(wire_list)):
             if wire_list[i].phase == "N":
@@ -434,7 +434,8 @@ class Reader(AbstractReader):
                         logger.debug("Warning: resistance or GMR is missing from wire")
 
                     if wire_list[i].phase is not None:
-                        index = wire_map[wire_list[i].phase]
+                        index = i
+                        #index = wire_map[wire_list[i].phase]
                         matrix[index][index] = z
                     else:
                         logger.debug("Warning: phase missing from wire")
@@ -469,47 +470,60 @@ class Reader(AbstractReader):
                         wire_list[i].phase is not None
                         and wire_list[j].phase is not None
                     ):
-                        index1 = wire_map[wire_list[i].phase]
-                        index2 = wire_map[wire_list[j].phase]
+                        index1 = i
+                        index2 = j
+                        #index1 = wire_map[wire_list[i].phase]
+                        #index2 = wire_map[wire_list[j].phase]
                         matrix[index1][index2] = z  # ohms per meter
                     else:
                         logger.debug("Warning: phase missing from wire")
 
         if kron_reduce and has_neutral:
+            matrix = self.kron_reduction(matrix)
+            """
             kron_matrix = [[0 for i in range(3)] for j in range(3)]
             for i in range(3):
                 for j in range(3):
-                    kron_matrix[i][j] = (
-                        matrix[i][j] - matrix[i][3] * 1 / matrix[3][3] * matrix[3][j]
-                    )
+                    try:
+                        kron_matrix[i][j] = (
+                            matrix[i][j] - matrix[i][3] * 1 / matrix[3][3] * matrix[3][j]
+                        )
+                    except:
+                        import pdb;pdb.set_trace()
 
             matrix = kron_matrix
+            """
         elif has_neutral == False:
-            matrix_reduced = [[0 for i in range(3)] for j in range(3)]
-            for i in range(3):
-                for j in range(3):
+            matrix_reduced = [[0 for i in range(len(wire_list))] for j in range(len(wire_list))]
+            for i in range(len(wire_list)):
+                for j in range(len(wire_list)):
                     matrix_reduced[i][j] = matrix[i][j]
             matrix = matrix_reduced
         return matrix
 
     def parse(self, model, origin_datetime="2017 Jun 1 2:00PM"):
+        self.all_gld_objects = {}
         origin_datetime = datetime.strptime(origin_datetime, "%Y %b %d %I:%M%p")
         delta_datetime = timedelta(minutes=1)
         sub_datetime = origin_datetime - delta_datetime
 
         inputfile = open(self.input_file, "r")
+        base_folder = os.path.dirname(self.input_file)
         all_rows = inputfile.readlines()
+        inputfile.close()
         curr_object = None
         curr_schedule = None
         ignore_elements = False
+        bracket_count = 0
         found_schedule = False
         all_includes = []
         all_schedules = {}
         for row in all_rows:
             if row[:8] == "#include":
                 entries = row.split()
-                location = entries[1].strip('"')
-                include_file = open(location, "r")
+                location = entries[1].strip(';')
+                location = location.strip('"')
+                include_file = open(os.path.join(base_folder,location), "r")
                 include_rows = include_file.readlines()
                 all_includes = all_includes + include_rows
         all_rows = all_rows + all_includes
@@ -535,6 +549,24 @@ class Reader(AbstractReader):
                         or obj_class == "tape.collector"
                         or obj_class == "tape.group_recorder"
                         or obj_class == "recorder"
+                        or obj_class == "group_recorder"
+                        or obj_class == "collector"
+                        or obj_class == "windturb_dg"
+                        or obj_class == "auction"
+                        or obj_class == "eventgen"
+                        or obj_class == "metrics"
+                        or obj_class == "power_metrics"
+                        or obj_class == "voltdump"
+                        or obj_class == "multi_recorder"
+                        or obj_class == "triplex_meter"
+                        or obj_class == "passive_controller"
+                        or obj_class == "stub_bidder"
+                        or obj_class == "evcharger_det"
+                        or obj_class == "battery"
+                        or obj_class == "diesel_dg"
+                        or obj_class == "currdump"
+                        or obj_class == "jsondump"
+                        or 'assert' in obj_class 
                     ):
                         continue
                     curr_object = getattr(gridlabd, obj_class)()
@@ -542,6 +574,10 @@ class Reader(AbstractReader):
                         curr_object["name"] = obj_class + ":" + obj[1]
                 else:
                     ignore_elements = True
+                    bracket_count+=1
+                    ignore_obj = entries[1].split(":")
+                    ignore_obj_class = ignore_obj[0]
+                    print('ignoring nested object '+ignore_obj_class)
 
             elif len(entries) > 0 and entries[0] == "schedule":
                 if curr_schedule is None:
@@ -554,7 +590,7 @@ class Reader(AbstractReader):
                     continue
                 if curr_object != None:
                     entries = row.split()
-                    if len(entries) > 1:
+                    if len(entries) > 1 and not ignore_elements:
                         element = entries[0]
                         value = entries[1]
                         if value[-1] == ";":
@@ -570,7 +606,10 @@ class Reader(AbstractReader):
 
                     if len(row) >= 1:
                         if row[-1] == "}" or row[-2:] == "};":
-                            if ignore_elements:  # Assumes only one layer of nesting
+                            bracket_count -=1
+                            if bracket_count < 0:
+                                bracket_count = 0
+                            if ignore_elements and bracket_count == 0:  # Check for multiple layers of nesting
                                 ignore_elements = False
                             else:
                                 try:
@@ -597,15 +636,16 @@ class Reader(AbstractReader):
                                         logger.debug("Warning object missing a name")
                                     curr_object = None
                 if curr_schedule != None:
-                    row = row.strip(";")
-                    entries = row.split()
-                    if len(entries) > 5 and not found_schedule:
-                        cron = " ".join(entries[:-1])
-                        value = entries[-1]
-                        iter = croniter(cron, sub_datetime)
-                        if iter.get_next(datetime) == origin_datetime:
-                            found_schedule = True
-                            all_schedules[curr_schedule] = value
+                    subrows = row.strip().split(';')
+                    for subrow in subrows:
+                        entries = subrow.split()
+                        if len(entries) > 5 and not found_schedule:
+                            cron = " ".join(entries[:-1])
+                            value = entries[-1]
+                            iter = croniter(cron, sub_datetime)
+                            if iter.get_next(datetime) == origin_datetime:
+                                found_schedule = True
+                                all_schedules[curr_schedule] = value
 
                     if len(row) >= 1:
                         if row[-1] == "}":
@@ -1611,7 +1651,11 @@ class Reader(AbstractReader):
                     impedance_matrix = self.compute_matrix(list(conductors.keys()))
                     for i in range(len(impedance_matrix)):
                         for j in range(len(impedance_matrix[0])):
-                            impedance_matrix[i][j] = impedance_matrix[i][j] / 1609.34
+                            impedance_matrix[i][j] = complex(impedance_matrix[i][j]) / 1609.34
+                else:
+                    for i in range(len(impedance_matrix)):
+                        for j in range(len(impedance_matrix[0])):
+                            impedance_matrix[i][j] = complex(impedance_matrix[i][j]) / 1609.34
 
                 api_line.impedance_matrix = impedance_matrix
                 api_line.wires = list(conductors.keys())
@@ -2262,7 +2306,7 @@ class Reader(AbstractReader):
                                         index = len(winding2.phase_windings) - 1
 
                                     winding2.phase_windings[index].tap_position = int(
-                                        tap
+                                        float(tap)
                                     )
 
                                 except AttributeError:
@@ -2370,12 +2414,12 @@ class Reader(AbstractReader):
                                 pass
 
                             try:
-                                api_regulator.highstep = int(config["raise_taps"])
+                                api_regulator.highstep = int(float(config["raise_taps"]))
                             except AttributeError:
                                 pass
 
                             try:
-                                api_regulator.lowstep = int(config["lower_taps"])
+                                api_regulator.lowstep = int(float(config["lower_taps"]))
                             except AttributeError:
                                 pass
 
