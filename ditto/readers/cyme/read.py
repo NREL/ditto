@@ -156,6 +156,10 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |                   'bess'                  |                     '[BESS]'               |
     +-------------------------------------------+--------------------------------------------+
+    |                               NETWORK EQUIVALENT PARSER                                |
+    +-------------------------------------------+--------------------------------------------+
+    |        'network_equivalent_setting'       |      '[NETWORK EQUIVALENT SETTING]'        |
+    +-------------------------------------------+--------------------------------------------+
     """
 
     register_names = ["cyme", "Cyme", "CYME"]
@@ -280,6 +284,8 @@ class Reader(AbstractReader):
             # SUBSTATIONS
             "substation": ["[SUBSTATION]"],
             "subnetwork_connections": ["[SUBNETWORK CONNECTIONS]"],
+            # NETWORK EQUIVALENT
+            "network_equivalent_setting": ["[NETWORK EQUIVALENT SETTING]"],
         }
 
     def update_header_mapping(self, update):
@@ -892,6 +898,9 @@ class Reader(AbstractReader):
 
         # Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
+
+        logger.info("Parsing the network equivalents...")
+        self.parse_network_equivalent(model)
 
         # The variable self.network_type is set in the parse_sections() function.
         # i.e. parse_sections
@@ -4703,10 +4712,18 @@ class Reader(AbstractReader):
                 Z0 = float(transformer_data["z0"])
                 XR = float(transformer_data["xr"])
                 XR0 = float(transformer_data["xr0"])
-                R1 = Z1 / math.sqrt(1 + XR * XR)
-                R0 = Z0 / math.sqrt(1 + XR0 * XR0)
-                X1 = Z1 / math.sqrt(1 + 1 / (XR * XR))
-                X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
+                if XR == 0:
+                    R1 = 0
+                    X1 = 0
+                else:
+                    R1 = Z1 / math.sqrt(1 + XR * XR)
+                    X1 = Z1 / math.sqrt(1 + 1 / (XR * XR))
+                if XR0 == 0:
+                    R0 = 0
+                    X0 = 0
+                else:
+                    R0 = Z0 / math.sqrt(1 + XR0 * XR0)
+                    X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
                 complex0 = complex(R0, X0)
                 complex1 = complex(R1, X1)
                 matrix = np.array(
@@ -5238,6 +5255,270 @@ class Reader(AbstractReader):
 
         return 1
 
+    def parse_network_equivalent(self, model):
+        """Parse Network equivalent objects from CYME into DiTTo.
+            Network Equivalent objects are elements which have been reduced by cyme (using its network reduction capabilities)
+            They encapsulate multiple loads, lines and transformers into one equivalent object
+            This function creates load and line objects to represent the network equivalent objects from CYME
+        """
+
+        self._network_equivalents = {}
+        mapp_section = {"sectionid": 0, "fromnodeid": 1, "tonodeid": 2, "phase": 3}
+        mapp_network_equivalents = { 
+                "sectionid":0,
+                "devicenumber": 2,
+                "coordx": 6,
+                "coordy": 7,
+                'zraa':9,
+                'zrab':10, 
+                'zrac':11,
+                'zrba': 12,
+                'zrbb':13,
+                'zrbc':14,
+                'zrca':15,
+                'zrcb':16,
+                'zrcc':17,
+                'zxaa':18,
+                'zxab':19,
+                'zxac':20,
+                'zxba':21,
+                'zxbb': 22,
+                'zxbc': 23,
+                'zxca':24,
+                'zxcb':25,
+                'zxcc':26,
+                'loadfromkwa': 27,
+                'loadfromkwb': 28,
+                'loadfromkwc':29,
+                'loadfromkvara': 30,
+                'loadfromkvarb':31,
+                'loadfromkvarc':32,
+                'loadtokwa':33,
+                'loadtokwb': 34,
+                'loadtokwc':35,
+                'loadtokvara':36,
+                'loadtokvarb':37,
+                'loadtokvarc':38,
+                'totallengtha':39,
+                'totallengthb': 40,
+                'totallengthc': 41,
+                }
+        # Open the network file
+        self.get_file_content("network")
+
+        # Loop over the network file
+        for line in self.content:
+            #########################################
+            #                                       #
+            #         NETWORK EQUIVALENTS.          #
+            #                                       #
+            #########################################
+            #
+            self.settings = self.update_dict(
+                self.settings,
+                self.parser_helper(
+                    line,
+                    ["network_equivalent_setting"],
+                    ['sectionid', 'devicenumber', 'coordx', 'coordy', 'zraa', 'zrab', 'zrac', 'zrba', 'zrbb', 'zrbc', 'zrca', 'zrcb', 'zrcc', 'zxaa', 'zxab', 'zxac', 'zxba', 'zxbb', 'zxbc', 'zxca', 'zxcb', 'zxcc', 'loadfromkwa', 'loadfromkwb', 'loadfromkwc', 'loadfromkvara', 'loadfromkvarb', 'loadfromkvarc', 'loadtokwa', 'loadtokwb', 'loadtokwc', 'loadtokvara', 'loadtokvarb', 'loadtokvarc', 'totallengtha', 'totallengthb', 'totallengthc'],
+
+                    mapp_network_equivalents,
+                    {"type": "network_equivalent"},
+                ),
+            )
+
+            #########################################
+            #                                       #
+            #              SECTIONS.                #
+            #                                       #
+            #########################################
+            #
+            self.settings = self.update_dict(
+                self.settings,
+                self.parser_helper(
+                    line,
+                    ["section"],
+                    ["sectionid", "fromnodeid", "tonodeid", "phase"],
+                    mapp_section,
+                ),
+            )
+
+        for sectionID, settings in self.settings.items():
+
+            sectionID = sectionID.strip("*").lower()
+            if 'type' in settings and settings['type'] == 'network_equivalent':
+
+
+                #### Create Line for Network equivalent  ###
+
+                api_line = Line(model)
+                api_line.from_element = self.section_phase_mapping[sectionID][ "fromnodeid" ]
+                api_line.to_element = self.section_phase_mapping[sectionID][ "tonodeid" ]
+                api_line.name = sectionID+'_ne_line'
+                # Set the connection index for the from_element (info is in the section)
+                try:
+                    api_line.from_element_connection_index = int( self.section_phase_mapping[sectionID]["fromnodeindex"])
+                except:
+                    pass
+    
+                # Set the connection index for the from_element (info is in the section)
+                try:
+                    api_line.to_element_connection_index = int( self.section_phase_mapping[sectionID]["tonodeindex"])
+                except:
+                    pass
+                
+                api_line.feeder_name = self.section_feeder_mapping[sectionID]
+                # Set the position
+                try:
+                    position = Position(model)
+                    position.long = float(settings["coordx"])
+                    position.lat = float(settings["coordy"])
+                    position.elevation = 0
+                    api_line.position = position
+                except:
+                    pass
+
+                # Set the line type
+                api_line.is_switch = False
+                api_line.is_fuse = False
+                api_line.is_recloser = False
+                api_line.is_breaker = False
+                api_line.is_sectionalizer = False
+                api_line.is_network_protector = False
+                if "eqid" in settings:
+                    api_line.nameclass = settings["eqid"]
+                api_line.line_type = 'overhead' #set all network equivalent lines to be overhead by default.
+
+
+                phases = []
+                if float(settings['zraa']) !=0:
+                    phases.append('A')
+                if float(settings['zrbb']) !=0:
+                    phases.append('B')
+                if float(settings['zrcc']) !=0:
+                    phases.append('C')
+
+                api_line.wires = []
+                for phase in phases:
+                    api_wire = Wire(model)
+                    api_wire.phase = phase
+                    api_line.wires.append(api_wire)
+
+                impedance_matrix = []
+                for phase1 in phases:
+                    impedance_matrix_inner = []
+                    for phase2 in phases:
+                        resistance_name = 'zr'+phase1.lower() +phase2.lower()
+                        reactance_name = 'zx'+phase1.lower() +phase2.lower()
+                        impedance_element = complex(float(settings[resistance_name]),float(settings[reactance_name]))
+                        impedance_matrix_inner.append(impedance_element)
+                    impedance_matrix.append(impedance_matrix_inner)
+                api_line.impedance_matrix = impedance_matrix
+
+
+                max_distance = max(float(settings['totallengtha']), float(settings['totallengthb']),float(settings['totallengthc']))
+                api_line.length = max_distance # outputs in SI units
+
+                ### Create load at from node
+                total_load_from = 0
+                total_load_from_kvar = 0
+                for ph in phases:
+                    total_load_from += float(settings['loadfromkw'+ph.lower()])
+                    total_load_from_kvar += float(settings['loadfromkvar'+ph.lower()])
+
+                if total_load_from > 0 and total_load_from_kvar > 0:
+                    api_load_from = Load(model)
+                    api_load_from.model=1
+                    api_load_from.connecting_element = self.section_phase_mapping[sectionID][ "fromnodeid" ]
+                    api_load_from.name = sectionID+'_ne_from_load'
+                    # Set the connection index for the from_element (info is in the section)
+                
+                    api_load_from.phase_loads = []
+                    api_load_from.feeder_name = self.section_feeder_mapping[sectionID]
+    
+                    for ph in phases:
+                        try:
+                            api_phase_load_from = PhaseLoad(model)
+                        except:
+                            raise ValueError(
+                                "Unable to instanciate PhaseLoad DiTTo object."
+                            )
+    
+                        try:
+                            api_phase_load_from.phase = ph
+                        except:
+                            pass
+    
+                        try:
+                            api_phase_load_from.p, api_phase_load_from.q = (
+                                10 ** 3 * float(settings['loadfromkw'+ph.lower()]),
+                                10 ** 3 * float(settings['loadfromkvar'+ph.lower()]),
+                            )
+                        except:
+                            pass
+    
+                        # TODO : use load_type_data
+                        api_phase_load_from.ppercentcurrent = 0
+                        api_phase_load_from.qpercentcurrent = 0
+                        api_phase_load_from.ppercentpower = 1
+                        api_phase_load_from.qpercentpower = 1
+                        api_phase_load_from.ppercentimpedance = 0
+                        api_phase_load_from.qpercentimpedance = 0
+    
+                        api_load_from.phase_loads.append(api_phase_load_from)
+
+                ### Create load at from node
+                total_load_to = 0
+                total_load_to_kvar = 0
+                for ph in phases:
+                    total_load_to += float(settings['loadtokw'+ph.lower()])
+                    total_load_to_kvar += float(settings['loadfromkvar'+ph.lower()])
+
+                if total_load_to > 0 and total_load_to_kvar > 0:
+                    api_load_to = Load(model)
+                    api_load_to.model=1
+                    api_load_to.connecting_element = self.section_phase_mapping[sectionID][ "tonodeid" ]
+                    api_load_to.name = sectionID+'_ne_to_load'
+                    # Set the connection index for the from_element (info is in the section)
+    
+                    api_load_to.phase_loads = []
+                
+                    api_load_to.feeder_name = self.section_feeder_mapping[sectionID]
+    
+                    for ph in phases:
+                        try:
+                            api_phase_load_to = PhaseLoad(model)
+                        except:
+                            raise ValueError(
+                                "Unable to instanciate PhaseLoad DiTTo object."
+                            )
+    
+                        try:
+                            api_phase_load_to.phase = ph
+                        except:
+                            pass
+    
+                        try:
+                            api_phase_load_to.p, api_phase_load_to.q = (
+                                10 ** 3 * float(settings['loadtokw'+ph.lower()]),
+                                10 ** 3 * float(settings['loadtokvar'+ph.lower()]),
+                            )
+                        except:
+                            pass
+    
+                        # TODO : use load_type_data
+                        api_phase_load_to.ppercentcurrent = 0
+                        api_phase_load_to.qpercentcurrent = 0
+                        api_phase_load_to.ppercentpower = 1
+                        api_phase_load_to.qpercentpower = 1
+                        api_phase_load_to.ppercentimpedance = 0
+                        api_phase_load_to.qpercentimpedance = 0
+    
+    
+                        api_load_to.phase_loads.append(api_phase_load_to)
+    
+
+
+
     def parse_loads(self, model):
         """Parse the loads from CYME to DiTTo."""
         # Instanciate the list in which we store the DiTTo load objects
@@ -5534,8 +5815,8 @@ class Reader(AbstractReader):
 
                         try:
                             api_phase_load.p, api_phase_load.q = (
-                                10 ** 3 * p,
-                                10 ** 3 * q,
+                                10 ** 3 * p / len(phases),
+                                10 ** 3 * q / len(phases),
                             )
                         except:
                             pass
