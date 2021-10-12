@@ -2039,7 +2039,7 @@ class Reader(AbstractReader):
                 self.parser_helper(
                     line,
                     ["sectionalizer_settings"],
-                    ["sectionid", "coordx", "coordy", "eqid"],
+                    ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_sectionalizer,
                     {"type": "sectionalizer"},
                 ),
