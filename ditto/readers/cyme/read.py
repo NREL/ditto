@@ -201,6 +201,9 @@ class Reader(AbstractReader):
         # Set the Network Type to be None. This is set in the parse_sections() function
         self.network_type = None
 
+        # dictionary of sections to components. Used for identifying elements which are  on the same section (which may cause parallel elements to be created)
+        self.section_duplicates = {}
+
         # Header_mapping.
         #
         # Modify this structure if the headers of your CYME version are not the default one.
@@ -910,10 +913,14 @@ class Reader(AbstractReader):
         else:
             logger.info("Parsing the Headnodes...")
             self.parse_head_nodes(model)
+
+        self.fix_section_overlaps(model)
+
         model.set_names()
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
+
 
     def parse_header(self):
         """
@@ -2563,6 +2570,9 @@ class Reader(AbstractReader):
                     api_line = Line(model)
                     for k, v in new_line.items():
                         setattr(api_line, k, v)
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    self.section_duplicates[sectionID].append(api_line)
                     continue
 
                 # Sectionalizer
@@ -2645,6 +2655,11 @@ class Reader(AbstractReader):
                     api_line = Line(model)
                     for k, v in new_line.items():
                         setattr(api_line, k, v)
+
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    self.section_duplicates[sectionID].append(api_line)
+
                     continue
 
                 # Fuse
@@ -2726,6 +2741,9 @@ class Reader(AbstractReader):
                     api_line = Line(model)
                     for k, v in new_line.items():
                         setattr(api_line, k, v)
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    self.section_duplicates[sectionID].append(api_line)
                     continue
 
                 # recloser
@@ -2808,6 +2826,10 @@ class Reader(AbstractReader):
                     api_line = Line(model)
                     for k, v in new_line.items():
                         setattr(api_line, k, v)
+
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    self.section_duplicates[sectionID].append(api_line)
                     continue
 
                 # breaker
@@ -2889,6 +2911,10 @@ class Reader(AbstractReader):
                     api_line = Line(model)
                     for k, v in new_line.items():
                         setattr(api_line, k, v)
+
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    self.section_duplicates[sectionID].append(api_line)
                     continue
 
                 # Network Protectors
@@ -2978,6 +3004,9 @@ class Reader(AbstractReader):
                     api_line = Line(model)
                     for k, v in new_line.items():
                         setattr(api_line, k, v)
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    self.section_duplicates[sectionID].append(api_line)
                     continue
 
             line_data = None
@@ -3792,6 +3821,9 @@ class Reader(AbstractReader):
 
             # Append the line DiTTo object to the list of DiTTo lines
             self._lines.append(api_line)
+            if not sectionID in self.section_duplicates:
+                self.section_duplicates[sectionID] = []
+            self.section_duplicates[sectionID].append(api_line)
 
         return 1
 
@@ -4125,6 +4157,9 @@ class Reader(AbstractReader):
                 api_capacitor.phase_capacitors.append(api_phaseCapacitor)
 
             self._capacitors.append(api_capacitor)
+            if not sectionID in self.section_duplicates:
+                self.section_duplicates[sectionID] = []
+            self.section_duplicates[sectionID].append(api_capacitor)
 
         return 1
 
@@ -4937,6 +4972,9 @@ class Reader(AbstractReader):
 
             # Add the transformer object to the list of transformers
             self._transformers.append(api_transformer)
+            if not sectionID in self.section_duplicates:
+                self.section_duplicates[sectionID] = []
+            self.section_duplicates[sectionID].append(api_transformer)
 
         return 1
 
@@ -5252,6 +5290,9 @@ class Reader(AbstractReader):
                     api_regulator.windings.append(api_winding)
 
                 self._regulators.append(api_regulator)
+                if not sectionID in self.section_duplicates:
+                    self.section_duplicates[sectionID] = []
+                self.section_duplicates[sectionID].append(api_regulator)
 
         return 1
 
@@ -5722,10 +5763,13 @@ class Reader(AbstractReader):
                     else:
                         phases = []
 
+
+                    fused = False
                     if sectionID in duplicate_loads:
                         fusion = True
                         if sectionID in self._loads:
                             api_load = self._loads[sectionID]
+                            fused = True
                         elif p != 0:
                             api_load = Load(model)
                     else:
@@ -5852,7 +5896,12 @@ class Reader(AbstractReader):
                         # if api_phase_load.p!=0 or api_phase_load.q!=0:
                         api_load.phase_loads.append(api_phase_load)
 
+
                     self._loads[sectionID] = api_load
+                    if not sectionID in self.section_duplicates:
+                        self.section_duplicates[sectionID] = []
+                    if not fused: #Because mutiple loads on different phases are joined into a single one
+                        self.section_duplicates[sectionID].append(api_load)
 
         return 1
 
@@ -6175,6 +6224,10 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            if not sectionID in self.section_duplicates:
+                self.section_duplicates[sectionID] = []
+            self.section_duplicates[sectionID].append(api_photovoltaic)
+
         for sectionID, settings in self.bess_settings.items():
             try:
                 api_bess = Storage(model)
@@ -6259,6 +6312,10 @@ class Reader(AbstractReader):
                 ]["fromnodeid"]
             except:
                 pass
+
+            if not sectionID in self.section_duplicates:
+                self.section_duplicates[sectionID] = []
+            self.section_duplicates[sectionID].append(api_bess)
 
         for deviceID, settings in self.dg_generation.items():
             deviceID = deviceID.strip(
@@ -6387,3 +6444,100 @@ class Reader(AbstractReader):
                     api_photovoltaic.power_factor = pf
                 except:
                     pass
+
+    def fix_section_overlaps(self, model, **kwargs):
+        """
+        Some sections will have multiple components included in them (e.g. a line, transformer and capacitor).
+        This function identifies the sections that have multiple components in them and creates intermediate nodes between them
+        so that they are not connected in parallel
+
+        Place components in series:
+            Regulator -> Transformer -> Line -> (Loads, PV, BESS, Capacitors)
+
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :param verbose: Set the verbose mode. Optional. Default=True
+        :type verbose: bool
+        """
+        model.set_names()
+        multiple_elements = {}
+        for i,j in self.section_duplicates.items():
+            if len(j)>1:
+                multiple_elements[i] = j
+
+        for sectionID in multiple_elements:
+            connectors = []
+            regulators = []
+            transformers = []
+            lines = [] #Warning - if multiple lines are used the names will be the same
+            loads = []
+            pvs = []
+            bess = []
+            capacitors = []
+
+            from_element = None
+            to_element = None
+            connector_count = 0
+
+            for element in multiple_elements[sectionID]:
+                if isinstance(element,Regulator):
+                    regulators.append(element)
+                    from_element = element.from_element
+                    to_element = element.to_element
+                    connector_count+=1
+                if isinstance(element,PowerTransformer):
+                    transformers.append(element)
+                    from_element = element.from_element
+                    to_element = element.to_element
+                    connector_count+=1
+                if isinstance(element,Line):
+                    lines.append(element)
+                    from_element = element.from_element
+                    to_element = element.to_element
+                    connector_count+=1
+                if isinstance(element,Load):
+                    loads.append(element)
+                if isinstance(element,Storage):
+                    bess.append(element)
+                if isinstance(element,Capacitor):
+                    capacitors.append(element)
+
+            connectors = [regulators,transformers,lines]
+            non_connectors = [loads,bess,pvs,capacitors]
+
+            if from_element is None or to_element is None: # i.e. just loads, pvs and caps so no problem
+                continue
+
+            original_from_element = from_element
+            original_from_node = model[from_element]
+            intermediate_count = 0
+            for connector in connectors:
+                for element in connector:
+                    if from_element != original_from_element:
+                        element.from_element = from_element
+
+                    # Regulators go between the same two nodes
+                    if isinstance(element,Regulator):
+                        from_element = original_from_element+'_reg'
+                    else:
+                        from_element = original_from_element+'_sec_'+str(intermediate_count)
+                    intermediate_count +=1
+                    if intermediate_count != connector_count:
+                        element.to_element = from_element
+                        api_node = Node(model)
+                        api_node.name = from_element
+                        if original_from_node.positions is not None:
+                            api_positions = []
+                            for position in original_from_node.positions:
+                                api_position = Position(model)
+                                api_position.long = position.long
+                                api_position.lat = position.lat
+                                api_positions.append(api_position)
+                            api_node.positions = api_positions #set the positions to be the same as in the original
+
+            # Assumes we have had at least one connecting element added
+            # Connect these all to the final to-node
+            for non_connector in non_connectors:
+                for element in non_connector:
+                    element.connecting_element = to_element
+
