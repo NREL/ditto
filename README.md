@@ -11,7 +11,7 @@ DiTTo is the _Distribution Transformation Tool_. It is an open source tool to co
 Flexible representations for power system components are defined in the ditto models defined [here](https://github.com/NREL/ditto/tree/master/ditto/models)
 DiTTo implements a _many-to-one-to-many_ parsing framework which makes it modular and robust. The [reader modules](https://github.com/NREL/ditto/tree/master/ditto/readers) parse data files of distribution system format (e.g. OpenDSS) and create an object for each electrical component. These objects are stored in a [Store](https://github.com/NREL/ditto/blob/master/ditto/store.py) instance. The [writer modules](https://github.com/NREL/ditto/tree/master/ditto/writers) are then used to export the data stored in memory to a selected output distribution system format (e.g. Gridlab-D) which are written to disk.
 
-Additional functionality can be found in the documentation: [](https://nrel.github.io/ditto).
+Additional functionality can be found in the documentation [here](https://nrel.github.io/ditto).
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ pip install ditto.py
 ### Basic Usage
 
 The most basic capability of DiTTo is the conversion of a distribution system from one format to another.
-To convert a cyme model represented in ASCII format with a network, equipment and load file, the following python 
+To convert a cyme model represented in ASCII format with network.txt, equipment.txt and load.txt files, the following python script can be run to perform the conversion
 
 ```python
 from ditto.store import Store
@@ -67,7 +67,7 @@ So to convert the cyme files described in the python program above, the followin
 $ ditto-cli convert --from cyme --input ./config.json --to dss
 ```
 
-Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples.html).
+Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples).
 
 ## Contributing
 DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bugfix, or a new parser you want to integrate, feel free to contribute.
