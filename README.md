@@ -5,77 +5,87 @@
 [![](https://img.shields.io/badge/docs-ready-blue.svg)](https://nrel.github.io/ditto)
 [![codecov](https://codecov.io/gh/NREL/ditto/branch/master/graph/badge.svg)](https://codecov.io/gh/NREL/ditto)
 
-DiTTo is a _Distribution Transformation Tool_ that aims at providing an open source framework to convert various distribution systems modeling formats.
-DiTTo implements a _many-to-one-to-many_ parsing framework which makes it modular and robust.
-Readers and writers are then implemented to perform the translation from a given format to the core representation, or the other way around.
+DiTTo is the _Distribution Transformation Tool_. It is an open source tool to convert and modify electrical distribution system models. The most common domain of electrical distribution systems is from substations to customers.
 
+## How it Works
+Flexible representations for power system components are defined in the ditto models defined [here](https://github.com/NREL/ditto/tree/master/ditto/models)
+DiTTo implements a _many-to-one-to-many_ parsing framework which makes it modular and robust. The [reader modules](https://github.com/NREL/ditto/tree/master/ditto/readers) parse data files of distribution system format (e.g. OpenDSS) and create an object for each electrical component. These objects are stored in a [Store](https://github.com/NREL/ditto/blob/master/ditto/store.py) instance. The [writer modules](https://github.com/NREL/ditto/tree/master/ditto/writers) are then used to export the data stored in memory to a selected output distribution system format (e.g. Gridlab-D) which are written to disk.
+
+Additional functionality can be found in the documentation [here](https://nrel.github.io/ditto).
 
 ## Quick Start
 
 ### Install DiTTo
 
 ```bash
-pip install git+https://github.com/NREL/ditto.git@v0.1.0#egg=ditto[all]
+pip install ditto.py
+```
+This will install the basic version of ditto with limited dependencies.
+Because ditto supports conversion between many multiple formats, dependencies can be specified during installation
+For example:
+
+```bash
+pip install "ditto.py[extras,opendss,gridlabd]"
+```
+will install the required dependencies to convert between opendss and gridlab-d
+
+To install the full dependency list run:
+
+```bash
+pip install "ditto.py[all]"
+```
+which is the same as
+```bash
+pip install "ditto.py[extras,opendss,cyme,dew,ephasor,synergi,gridlabd]" # same as `pip install "ditto.py[all]"`
 ```
 
 ### Basic Usage
 
-![Test4Node](./docs/img/Test4Node.jpg)
+The most basic capability of DiTTo is the conversion of a distribution system from one format to another.
+To convert a cyme model represented in ASCII format with network.txt, equipment.txt and load.txt files, the following python script can be run to perform the conversion
 
-source=http://sites.ieee.org/pes-testfeeders/resources/
+```python
+from ditto.store import Store
+from ditto.readers.cyme.read import Reader
+from ditto.writers.opendss.write import Writer
 
-The most basic capability of DiTTo is the conversion of a distribution system from one format to another. Let's say we have the IEEE 4 node feeder in OpenDSS format as a file called ```master.dss```:
+store = Store()
+reader = Reader(data_folder_path = '.', network_file='network.txt',equipment_file = 'equipment.txt', load_file = 'load.txt')
+reader.parse(store)
+writer = Writer(output_path='.')
+writer.write(store)
 
 ```
-clear
 
-new circuit.4BusYYbal basekV=12.47 phases=3
+The required input files for each reader format are defined in the folder of each reader
 
-!Wires definition
-new wiredata.conductor Runits=mi Rac=0.306 GMRunits=ft GMRac=0.0244  Radunits=in Diam=0.721
-new wiredata.neutral   Runits=mi Rac=0.592 GMRunits=ft GMRac=0.00814 Radunits=in Diam=0.563
+### Command Line Interface
 
-!LineGeometry definition
-new linegeometry.4wire nconds=4 nphases=3 reduce=yes cond=1 wire=conductor units=ft x=-4 h=28 cond=2 wire=conductor units=ft x=-1.5 h=28 cond=3 wire=conductor units=ft x=3 h=28 cond=4 wire=neutral units=ft x=0    h=24
-
-!Lines definition
-new line.line1 geometry=4wire length=2000 units=ft bus1=sourcebus bus2=n2
-new line.line2 bus1=n3 bus2=n4 geometry=4wire length=2500 units=ft
-
-!Transformer definition
-new transformer.t1 xhl=6 wdg=1 bus=n2 conn=wye kV=12.47 kVA=6000 %r=0.5 wdg=2 bus=n3 conn=wye kV=4.16  kVA=6000 %r=0.5
-
-!Load definiion
-new load.load1 phases=3 bus1=n4 conn=wye kV=4.16 kW=5400 pf=0.9  model=1 vminpu=0.75
-
-!Set voltage base and solve circuit
-set voltagebases=[12.47, 4.16]
-calcvoltagebases
-solve
-```
-
-To convert this system to another format, say CYME for example, the easiest way is to use the command line interface. From the directory where ```master.dss``` is located, run:
+Ditto can also be run as a command line tool to perform basic conversion.
+The CLI accepts only one input file whatever the format. If we have a gridlabd model entirely stored in a file called model.glm we can use:
 
 ```bash
-$ ditto-cli convert --from opendss --to cyme --input ./master.dss --output .
+$ ditto-cli convert --from glm --input ./model.glm --to cyme
 ```
 
-This command basically reads the OpenDSS input (```./master.dss```) into the DiTTo core representation and output the system to CYME (since the output is ".", the files will be written in the same folder).
+For formats like CYME where multiple input files are needed, a simple JSON configuration file is supplied:
 
-After running this command you should see the output in the current directory:
+```json
+{
+    "data_folder_path": ".",
+    "network_filename": "network.txt",
+    "equipment_filename": "equipment.txt",
+    "load_filename": "load.txt"
+}
+```
+A default configuration file is found each reader folder.
+So to convert the cyme files described in the python program above, the following command would be used:
 
 ```bash
-$ ls | grep .txt
-./equipment.txt
-./loads.txt
-./network.txt
+$ ditto-cli convert --from cyme --input ./config.json --to dss
 ```
 
-### Going further
-
-More documentation can be found [here](https://nrel.github.io/ditto).
-
-Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples.html).
+Documentation on converting other formats can be found [here](https://nrel.github.io/ditto/cli-examples).
 
 ## Contributing
 DiTTo is an open source project and contributions are welcome! Either for a simple typo, a bugfix, or a new parser you want to integrate, feel free to contribute.

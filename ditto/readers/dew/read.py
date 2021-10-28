@@ -47,10 +47,10 @@ class reader:
         else:
             self.input_file_path = "./input_file.dew"
 
-        if "databasepath" in kwargs:
-            self.databasepath = kwargs["databasepath"]
+        if "database_path" in kwargs:
+            self.databasepath = kwargs["database_path"]
         else:
-            self.databasepath = "./data_base.xlsx"
+            self.databasepath = "./database.xlsx"
 
     def parse(self, model, **kwargs):
         """DEW--->DiTTo parser.

@@ -1,0 +1,6 @@
+{
+    "data_folder_path": ".",
+    "network_filename": "network.txt",
+    "equipment_filename": "equipment.txt",
+    "load_filename": "load.txt"
+}
