@@ -20,6 +20,24 @@ Additional functionality can be found in the documentation [here](https://nrel.g
 ```bash
 pip install ditto.py
 ```
+This will install the basic version of ditto with limited dependencies.
+Because ditto supports conversion between many multiple formats, dependencies can be specified during installation
+For example:
+
+```bash
+pip install "ditto.py[extras,opendss,gridlabd]"
+```
+will install the required dependencies to convert between opendss and gridlab-d
+
+To install the full dependency list run:
+
+```bash
+pip install "ditto.py[all]"
+```
+which is the same as
+```bash
+pip install "ditto.py[extras,opendss,cyme,dew,ephasor,synergi,gridlabd]" # same as `pip install "ditto.py[all]"`
+```
 
 ### Basic Usage
 
