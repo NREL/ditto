@@ -5,7 +5,7 @@
 # docker run --rm -ti ditto --help
 
 # https://hub.docker.com/_/python
-FROM python:3.6-slim-bullseye
+FROM python:3.6-slim
 
 # Install latest version of ditto
 RUN apt-get update; apt-get install -y git
