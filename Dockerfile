@@ -8,9 +8,8 @@
 FROM python:3.6-slim
 
 # Install latest version of ditto
-RUN apt-get update; apt-get install -y git
-RUN git clone --depth 1 https://github.com/NREL/ditto.git
-WORKDIR ditto
+COPY ./ $HOME/ditto
+WORKDIR $HOME/ditto
 
 # Install ditto dependencies
 RUN python -m pip install --upgrade pip && \
