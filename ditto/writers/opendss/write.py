@@ -1475,7 +1475,7 @@ class Writer(AbstractWriter):
                         if (
                             hasattr(ts, "data_location")
                             and ts.data_location is not None
-                            and os.path.isfile(ts.data_location)
+                            and os.path.isfile(os.path.join(self.output_path,ts.data_location))
                         ):
                             filename = self.timeseries_datasets[
                                 substation_name + "_" + feeder_name
