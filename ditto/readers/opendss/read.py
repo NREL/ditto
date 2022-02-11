@@ -266,27 +266,27 @@ class Reader(AbstractReader):
             # Set the active bus
             dss.Circuit.SetActiveBus(bus_name)
             # Set the nominal voltage of the corresponding node in the DiTTo Model
-            try:
-                model[bus_name.lower()].nominal_voltage = (
-                    dss.Bus.kVBase() * math.sqrt(3) * 10 ** 3
-                )  # DiTTo in volts
-            except:
-                print("Could not set nominal voltage for bus {b}".format(b=bus_name))
-                pass
+            model[bus_name.lower()].nominal_voltage = (
+                dss.Bus.kVBase() * math.sqrt(3) * 10 ** 3
+            )  # DiTTo in volts
 
         for obj in model.models:
             if hasattr(obj, "nominal_voltage") and obj.nominal_voltage is None:
                 # If the object has a connecting_element attribute
                 if hasattr(obj, "connecting_element"):
                     try:
-                        obj.nominal_voltage = model[
-                            obj.connecting_element
-                        ].nominal_voltage
+                        if model[obj.connecting_element].nominal_voltage is not None:
+                            obj.nominal_voltage = model[
+                                obj.connecting_element
+                            ].nominal_voltage
                     except:
                         pass
                 elif hasattr(obj, "from_element"):
                     try:
-                        obj.nominal_voltage = model[obj.from_element].nominal_voltage
+                        if model[obj.from_element].nominal_voltage is not None:
+                            obj.nominal_voltage = model[
+                                obj.from_element
+                            ].nominal_voltage
                     except:
                         pass
             elif isinstance(obj, PowerTransformer) or isinstance(obj, Regulator):
@@ -301,9 +301,10 @@ class Reader(AbstractReader):
                         and obj.windings[x].nominal_voltage is None
                     ):
                         try:
-                            obj.windings[x].nominal_voltage = model[
-                                mapp[x]
-                            ].nominal_voltage
+                            if model[mapp[x]].nominal_voltage is not None:
+                                obj.windings[x].nominal_voltage = model[
+                                    mapp[x]
+                                ].nominal_voltage
                         except:
                             pass
 
@@ -585,6 +586,8 @@ class Reader(AbstractReader):
         # Loop over the lines to get the phases
         for name, data in lines.items():
 
+            if not data["enabled"]:
+                continue
             # Parse bus1 data
             if "." in data["bus1"]:
                 temp = data["bus1"].split(".")
@@ -798,9 +801,8 @@ class Reader(AbstractReader):
 
             # Skip Line object if disabled and not a switch
             # (Otherwise it could mean that the switch is open)
-            if not data["Switch"] and not data["enabled"]:
+            if not data["enabled"]:
                 continue
-
             api_line = Line(model)
             api_line.feeder_name = self.source_name
 
@@ -852,6 +854,7 @@ class Reader(AbstractReader):
                 pass
 
             if line_unit.lower() not in ["ft", "mi", "m", "km", "kft", "cm", "in"]:
+                raise NotImplementedError("OpenDSS line length is none")
                 line_unit = u"km"
 
             # length
@@ -940,76 +943,71 @@ class Reader(AbstractReader):
                 Rmatrix = None
                 Xmatrix = None
 
+            print(Rmatrix)
             # Matrices are in Ohms per some unit distance which is the unit defined in the line
             if line_unit is not None and Rmatrix is not None and Xmatrix is not None:
-                try:
-                    if (
-                        isinstance(Rmatrix, list)
-                        and len(Rmatrix) == 1
-                        and "|" in Rmatrix[0]
-                    ):
-                        rowsR = Rmatrix[0].split("|")
-                        rowsR = list(map(lambda x: x.strip(), rowsR))
-                        new_Rmatrix = []
-                        for rowR in rowsR:
-                            new_Rmatrix.append([])
-                            new_Rmatrix[-1] += list(
-                                map(
-                                    lambda x: self.convert_to_meters(
-                                        float(x.strip()), line_unit, inverse=True
-                                    ),
-                                    rowR.split(" "),
-                                )
-                            )
-                        new_Rmatrix = self.symmetrize(new_Rmatrix)
-                    else:
-                        new_Rmatrix = list(
+                if (
+                    isinstance(Rmatrix, list)
+                    and len(Rmatrix) == 1
+                    and "|" in Rmatrix[0]
+                ):
+                    rowsR = Rmatrix[0].split("|")
+                    rowsR = list(map(lambda x: x.strip(), rowsR))
+                    new_Rmatrix = []
+                    for rowR in rowsR:
+                        new_Rmatrix.append([])
+                        new_Rmatrix[-1] += list(
                             map(
-                                lambda x: self.convert_to_meters(
-                                    float(x), line_unit, inverse=True
-                                ),
-                                Rmatrix,
+                                lambda x: float(x.strip()),
+                                rowR.split(" "),
                             )
                         )
+                    new_Rmatrix = self.symmetrize(new_Rmatrix)
+                else:
+                    new_Rmatrix = list(
+                        map(
+                            lambda x: float(x.strip()),
+                            Rmatrix,
+                        )
+                    )
 
-                    if (
-                        isinstance(Xmatrix, list)
-                        and len(Xmatrix) == 1
-                        and "|" in Xmatrix[0]
-                    ):
-                        rowsX = Xmatrix[0].split("|")
-                        rowsX = list(map(lambda x: x.strip(), rowsX))
-                        new_Xmatrix = []
-                        for rowX in rowsX:
-                            new_Xmatrix.append([])
-                            new_Xmatrix[-1] += list(
-                                map(
-                                    lambda x: self.convert_to_meters(
-                                        float(x.strip()), line_unit, inverse=True
-                                    ),
-                                    rowX.split(" "),
-                                )
-                            )
-                        new_Xmatrix = self.symmetrize(new_Xmatrix)
-                    else:
-                        new_Xmatrix = list(
+                if (
+                    isinstance(Xmatrix, list)
+                    and len(Xmatrix) == 1
+                    and "|" in Xmatrix[0]
+                ):
+                    rowsX = Xmatrix[0].split("|")
+                    rowsX = list(map(lambda x: x.strip(), rowsX))
+                    new_Xmatrix = []
+                    for rowX in rowsX:
+                        new_Xmatrix.append([])
+                        new_Xmatrix[-1] += list(
                             map(
                                 lambda x: self.convert_to_meters(
-                                    float(x), line_unit, inverse=True
+                                    float(x.strip()), line_unit, inverse=True
                                 ),
-                                Xmatrix,
+                                rowX.split(" "),
                             )
                         )
-                    new_Rmatrix = np.array(new_Rmatrix)
-                    new_Xmatrix = np.array(new_Xmatrix)
-                    Z = new_Rmatrix + 1j * new_Xmatrix
-                    if Z.ndim == 1:
-                        Z = [Z.tolist()]
-                    else:
-                        Z = Z.tolist()
-                    api_line.impedance_matrix = Z
-                except:
-                    pass
+                    new_Xmatrix = self.symmetrize(new_Xmatrix)
+                else:
+                    new_Xmatrix = list(
+                        map(
+                            lambda x: self.convert_to_meters(
+                                float(x), line_unit, inverse=True
+                            ),
+                            Xmatrix,
+                        )
+                    )
+                new_Rmatrix = np.array(new_Rmatrix)
+                new_Xmatrix = np.array(new_Xmatrix)
+                Z = new_Rmatrix + 1j * new_Xmatrix
+                if Z.ndim == 1:
+                    Z = [Z.tolist()]
+                else:
+                    Z = Z.tolist()
+                print(new_Rmatrix)
+                api_line.impedance_matrix = Z
 
             if "cmatrix" in data:
                 Cmatrix = data["cmatrix"]
@@ -1784,10 +1782,7 @@ class Reader(AbstractReader):
                             pass
 
                     # phase
-                    try:
-                        phase_windings[p].phase = self.phase_mapping(b1_phases[p])
-                    except:
-                        pass
+                    phase_windings[p].phase = self.phase_mapping(b1_phases[p])
 
                     regulators = _dss_class_to_dict("RegControl")
                     for reg_name, reg_data in regulators.items():
@@ -2450,6 +2445,11 @@ class Reader(AbstractReader):
 
             # Get the actual phase numbers (in the connection data)
             try:
+                if ".0" in data["bus1"]:
+                    api_load.is_grounded = True
+                else:
+                    api_load.is_grounded = False
+
                 if "." in data["bus1"]:
                     temp = data["bus1"].split(".")
                     bus = temp[0]
@@ -2523,8 +2523,14 @@ class Reader(AbstractReader):
                 pass
 
             # Phase Loads
-            kW /= float(len(phases))  # Load assumed balanced
-            kva /= float(len(phases))  # Load assumed balanced
+            # TODO: is_grounded is required here
+
+            if api_load.is_grounded:
+                kW /= float(len(phases) - 1)  # Load assumed balanced
+                kva /= float(len(phases) - 1)  # Load assumed balanced
+            else:
+                kW /= float(len(phases))  # Load assumed balanced
+                kva /= float(len(phases))  # Load assumed balanced
 
             _phase_loads = []
 
@@ -2533,42 +2539,24 @@ class Reader(AbstractReader):
                 _phase_loads.append(PhaseLoad(model))
                 _phase_loads[i].phase = self.phase_mapping(p)
 
-                # Case one: KW and pf
-                if kW is not None and pf is not None:
+                # Try to get the model
+                if load_model is not None:
+                    _phase_loads[i].model = load_model
+
+                if load_model == 1:
+                    _phase_loads[i].p = kW * 10 ** 3  # DiTT0 in watts
+                    _phase_loads[i].q = (
+                        kW * 10 ** 3 * np.sqrt(1 - pf ** 2)
+                    ) / pf  # DiTT0 in var
+                elif kW is not None and pf is not None:
+                    # Case one: KW and pf
                     _phase_loads[i].p = kW * 10 ** 3  # DiTT0 in watts
                     _phase_loads[i].q = (
                         kW * 10 ** 3 * np.sqrt(1 - pf ** 2)
                     ) / pf  # DiTT0 in var
 
-                # Case two: kvar and pf
-                elif kva is not None and pf is not None:
-                    # Handle the special case where pf=1
-                    if pf == 1:
-                        # in this case, pure reactive power
-                        _phase_loads[i].p = 0.0
-                    else:
-                        _phase_loads[i].p = (pf * kvar * 10 ** 3) / np.sqrt(
-                            1 - pf ** 2
-                        )  # DiTT0 in watts
-                    _phase_loads[i].q = kva * 10 ** 3  # DiTT0 in var
-
-                # Case three kW and kvar
-                elif kW is not None and kva is not None:
-                    _phase_loads[i].p = kW * 10 ** 3  # DiTT0 in Watts
-                    _phase_loads[i].q = kvar * 10 ** 3  # DiTT0 in var
-
-                # Try to get the model
-                try:
-                    _model = int(data["model"])
-                except:
-                    _model = None
-                    pass
-
-                if load_model is not None:
-                    _phase_loads[i].model = load_model
-
                 # ZIPV model (model==8)
-                if _model == 8:
+                if load_model == 8:
                     # Try to get the ZIPV coefficients
                     try:
                         ZIPV = list(map(lambda x: float(x), data["ZIPV"].split()))

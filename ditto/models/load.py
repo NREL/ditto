@@ -124,6 +124,12 @@ class Load(DiTToHasTraits):
         default_value=False,
     )
 
+    # TODO: should this be in phase load
+    is_grounded = Bool(
+        help="""Flag that indicates whether load is grounded or not""",
+        default_value=False,
+    )
+
     # Modification: Nicolas (July 2018)
     is_center_tap = Bool(
         help="""Flag that indicates whether the element is a center tap load or not.""",

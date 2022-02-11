@@ -65,7 +65,7 @@ class system_structure_modifier(Modifier):
             if len(srcs) == 0:
                 raise ValueError("No PowerSource object found in the model.")
             elif len(srcs) > 1:
-                raise ValueError("Mupltiple sourcebus found: {srcs}".format(srcs=srcs))
+                raise ValueError("Multiple sourcebus found: {srcs}".format(srcs=srcs))
             else:
                 source = srcs[0]
 
@@ -840,24 +840,19 @@ class system_structure_modifier(Modifier):
             # Try to get the corresponding DiTTo object by name
             # Note: This should work if set_names() has been called before...
             # If it fails, raise an error...
-            try:
-                t_obj = self.model[t_name]
-                # Get the phases and clean
-                _phases = np.array(
+            t_obj = self.model[t_name]
+            # Get the phases and clean
+            _phases = np.array(
+                [
                     [
-                        [
-                            phase_winding.phase
-                            for phase_winding in winding.phase_windings
-                        ]
-                        for winding in t_obj.windings
+                        phase_winding.phase
+                        for phase_winding in winding.phase_windings
                     ]
-                )
-                _phases = np.unique(_phases.flatten())
-                phases.append(_phases)
-            except:
-                raise ValueError(
-                    "Unable to retrieve DiTTo object with name {}".format(t_name)
-                )
+                    for winding in t_obj.windings
+                ]
+            )
+            _phases = np.unique(_phases.flatten())
+            phases.append(_phases)
 
         # Now, we have all the transformers and their phases
         # The next step is to loop over the loads, modify their phases according to the upstream transformer phase

@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 import os
 import math
 import logging
-
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -282,12 +283,11 @@ class Writer(AbstractWriter):
 
             if hasattr(line, "name") and line.name is not None:
                 logger.debug("New Line." + line.name)
-                obj_dict["ID"][index] = line.name
+                obj_dict["ID"][index] = "line_" + line.name
             else:
                 obj_dict["ID"][index] = "None"
 
             units = "mi"
-            result = "temp "
             logger.debug("Type " + str(line.line_type))
 
             for wire in line.wires:
@@ -362,6 +362,7 @@ class Writer(AbstractWriter):
                 # Rmatrix, Xmatrix, and Cmatrix
                 # Can also be defined through the linecodes (check linecodes_flag)
             if hasattr(line, "impedance_matrix") and line.impedance_matrix is not None:
+                print("using impedance matrix")
                 # Use numpy arrays since it is much easier for complex numbers
                 try:
                     zz = line.impedance_matrix
@@ -375,7 +376,6 @@ class Writer(AbstractWriter):
                         )
                     )
 
-                result += "Rmatrix=("
                 logger.debug(R.shape)
 
                 for rc, row in enumerate(R):
@@ -384,41 +384,14 @@ class Writer(AbstractWriter):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = "r" + num_str + " (ohm/Mile)"
-                            obj_dict[name][index] = self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
-
-                result += "Xmatrix=("
+                            obj_dict[name][index] = np.real(elt)
 
                 for rc, row in enumerate(X):
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
                         if num_str in valid:
                             name = "x" + num_str + " (ohm/Mile)"
-                            obj_dict[name][index] = self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-
-                            # B = 1 /(np.real(R[rc,ec]) + np.imag(elt))
-                            # B = 1 / Z[rc,ec]
-                            # name = 'b' + num_str + ' (uS/Mile)'
-                            # obj_dict[name][index] = self.convert_from_meters(np.imag(B), units, inverse=False)
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
+                            obj_dict[name][index] = np.real(elt)
             else:
                 logger.debug("no matrix")
 
@@ -428,7 +401,6 @@ class Writer(AbstractWriter):
             ):
                 C = np.array(line.capacitance_matrix)
                 kf2mil = 0.189394
-                result += "Bmatrix=("
                 for rc, row in enumerate(C):  # Should only be a real matrix
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
@@ -443,17 +415,9 @@ class Writer(AbstractWriter):
                             # -.602 siemens per mile
                             # convet to micor se
                             B = 0
-                            # if np.imag(elt) != 0:
-                            #     B = 1 / self.convert_from_meters(
-                            #         np.imag(elt), units, inverse=True
-                            #     )*1e3*2*60*math.pi
                             if elt != 0:
                                 B = np.real(
-                                    self.convert_from_meters(elt, units, inverse=True)
-                                    * 1e-3
-                                    * 2
-                                    * 60
-                                    * math.pi
+                                    elt * 1e-3 * 2 * 60 * math.pi
                                 )
 
                             # import pdb;pdb.set_trace()
@@ -462,36 +426,7 @@ class Writer(AbstractWriter):
                             # B = np.imag(B) * 0.000621371 * 1e6
                             logger.debug("done", B)
 
-                            # B = self.convert_from_meters(np.imag(B), units, inverse=True)
-                            # print B
-                            # B = -np.real(elt) / (np.real(elt)**2 + np.imag(elt))
-                            # B = -np.imag(elt) / (np.real(elt)**2 + np.imag(elt)**2)
-                            # print self.convert_from_meters(B, units, inverse=True)
-                            # B = - np.imag(elt) / np.abs(elt)**2
-                            # print self.convert_from_meters(B, units, inverse=True)
-                            # B = - self.convert_from_meters(np.imag(elt), units, inverse=True) / self.convert_from_meters(np.abs(elt), units, inverse=True) ** 2
-                            # print B
-                            # B = self.convert_from_meters(B, units, inverse=True)
-                            # print name, self.convert_from_meters(B, units, inverse=False)
-                            # B= elt
-                            # B / kf2mil * 2.65
-                            # B = B/1000 * 2.65
-                            # obj_dict[name][index] = B
-                            # print B
-                            # print line.name
-                            # exit(0)
                         obj_dict[name][index] = B
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
-
-                result += "Cmatrix=("
                 for rc, row in enumerate(C):
                     for ec, elt in enumerate(row):
                         num_str = str(ec + 1) + str(rc + 1)
@@ -508,9 +443,7 @@ class Writer(AbstractWriter):
 
                             B = np.real(elt) * line.length
                             logger.debug("line units ", B)
-                            B = self.convert_from_meters(
-                                np.real(B), units, inverse=False
-                            )
+                            B = np.real(B)
                             B = B * 1e6
                             # print "Siemens line units ", B /(2.6526)
                             # obj_dict[name][index] = B /(2.6526)
@@ -529,25 +462,6 @@ class Writer(AbstractWriter):
                             # print line.name
                             # exit(0)
 
-                            # obj_dict[name][index]=self.convert_from_meters(np.real(elt), units, inverse=True) * 2.65
-                        result += "{e} ".format(
-                            e=self.convert_from_meters(
-                                np.real(elt), units, inverse=True
-                            )
-                        )
-                    result += "| "
-                result = result[:-2]  # Remove the last "| " since we do not need it
-                result += ") "
-
-            # # Ampacity
-            # if hasattr(line.wires[0], 'ampacity') and line.wires[0].ampacity is not None:
-            #     result += ' normamps={na}'.format(na=line.wires[0].ampacity)
-            #
-            # # Emergency ampacity
-            # if hasattr(line.wires[0], 'ampacity_emergency') and line.wires[0].ampacity_emergency is not None:
-            #     result += ' emergamps={emer}'.format(emer=line.wires[0].ampacity_emergency)
-
-            logger.debug(result)
         df1 = pd.DataFrame(obj_dict)
         df1 = df1[
             [
@@ -600,38 +514,41 @@ class Writer(AbstractWriter):
         :rtype: dataframe
 
         """
-        obj_dict = {
-            "ID": [],
-            "Num Phases": [],
-            "W1Bus A": [],
-            "W1Bus B": [],
-            "W1Bus C": [],
-            "W1V (kV)": [],
-            "W1S_base (kVA)": [],
-            "W1R (pu)": [],
-            "W1Conn. type": [],
-            "W2Bus A": [],
-            "W2Bus B": [],
-            "W2Bus C": [],
-            "W2V (kV)": [],
-            "W2S_base (kVA)": [],
-            "W2R (pu)": [],
-            "W2Conn. type": [],
-            "Mutual Impedance": [],
-            "Tap A": [],
-            "Tap B": [],
-            "Tap C": [],
-            "Lowest Tap": [],
-            "Highest Tap": [],
-            "Min Range (%)": [],
-            "Max Range (%)": [],
-            "X (pu)": [],
-            "Z0 leakage(pu)": [],
-            "Z1 leakage(pu)": [],
-            "X0/R0": [],
-            "X1/R1": [],
-            "No Load Loss(kW)": [],
-        }
+
+        column_names = [
+            "ID",
+            "Num Phases",
+            "W1Bus A",
+            "W1Bus B",
+            "W1Bus C",
+            "W1V (kV)",
+            "W1S_base (kVA)",
+            "W1R (pu)",
+            "W1Conn. type",
+            "W2Bus A",
+            "W2Bus B",
+            "W2Bus C",
+            "W2V (kV)",
+            "W2S_base (kVA)",
+            "W2R (pu)",
+            "W2Conn. type",
+            "Mutual Impedance",
+            "Tap A",
+            "Tap B",
+            "Tap C",
+            "Lowest Tap",
+            "Highest Tap",
+            "Min Range (%)",
+            "Max Range (%)",
+            "X (pu)",
+            "Z0 leakage(pu)",
+            "Z1 leakage(pu)",
+            "X0/R0",
+            "X1/R1",
+            "No Load Loss(kW)",
+        ]
+
+        obj_dict = {c: [] for c in column_names}
 
         ### Check for a sperated 3 phase transformer. Line to netural or whatever
         index = -1
@@ -664,7 +581,7 @@ class Writer(AbstractWriter):
                         "name": i.name,
                         "i": index,
                         "kv1": i.windings[0].nominal_voltage,
-                        "Tap " + pp: i.windings[0].phase_windings[0].tap_position,
+                        "Tap " + pp: 0,  # i.windings[0].phase_windings[0].tap_position,
                         "kva": i.windings[0].rated_power,
                     }
             else:
@@ -697,7 +614,7 @@ class Writer(AbstractWriter):
             logger.debug(index)
             if hasattr(i, "name") and i.name is not None:
                 logger.debug("New Transformer." + i.name)
-                obj_dict["ID"][index] = i.name
+                obj_dict["ID"][index] = "transformer_" + i.name
             else:
                 obj_dict["ID"][index] = "None"
 
@@ -712,7 +629,7 @@ class Writer(AbstractWriter):
                 logger.debug("here", i.reactances, i.reactances[0], i.name)
                 obj_dict["X (pu)"][index] = i.reactances[
                     0
-                ]  # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
+                ] / 100 # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
                 if hasattr(i, "windings") and i.windings is not None:
                     N_phases = []
                     for winding_num, winding in enumerate(i.windings):
@@ -774,6 +691,8 @@ class Writer(AbstractWriter):
                             phases = ["A", "B", "C"]
                             N_phases.append(len(winding.phase_windings))
                             for pw in winding.phase_windings:
+                                if pw.phase is None:
+                                    continue
                                 if winding_num == 0:
                                     obj_dict["W1Bus " + phases[phase_cnt]][index] = (
                                         i.from_element + "_" + pw.phase.lower()
@@ -832,51 +751,57 @@ class Writer(AbstractWriter):
             obj_dict["Min Range (%)"][index] = 10
             obj_dict["Max Range (%)"][index] = 10
             obj_dict["Mutual Impedance"][index] = int(0)
-            obj_dict["Num Phases"][index] = int(N_phases[0])
-            obj_dict["Z0 leakage(pu)"][index] = int(0)
-            obj_dict["Z1 leakage(pu)"][index] = int(0)
-            obj_dict["X0/R0"][index] = int(0)
-            obj_dict["X1/R1"][index] = int(0)
-            obj_dict["No Load Loss(kW)"][index] = int(0)
+            if int(N_phases[0]) != 1:
+                obj_dict["Num Phases"][index] = 3
+            else:
+                obj_dict["Num Phases"][index] = 1
+            obj_dict["Z0 leakage(pu)"][index] = None
+            obj_dict["Z1 leakage(pu)"][index] = None
+            obj_dict["X0/R0"][index] = None
+            obj_dict["X1/R1"][index] = None
+            obj_dict["No Load Loss(kW)"][index] = None
 
         df4 = pd.DataFrame(obj_dict)
         logger.debug("df4")
         logger.debug(df4)
 
-        df4 = df4[
-            [
-                "ID",
-                "Num Phases",
-                "W1Bus A",
-                "W1Bus B",
-                "W1Bus C",
-                "W1V (kV)",
-                "W1S_base (kVA)",
-                "W1R (pu)",
-                "W1Conn. type",
-                "W2Bus A",
-                "W2Bus B",
-                "W2Bus C",
-                "W2V (kV)",
-                "W2S_base (kVA)",
-                "W2R (pu)",
-                "W2Conn. type",
-                "Mutual Impedance",
-                "Tap A",
-                "Tap B",
-                "Tap C",
-                "Lowest Tap",
-                "Highest Tap",
-                "Min Range (%)",
-                "Max Range (%)",
-                "X (pu)",
-                "Z0 leakage(pu)",
-                "Z1 leakage(pu)",
-                "X0/R0",
-                "X1/R1",
-                "No Load Loss(kW)",
-            ]
-        ]
+        df4 = df4[column_names]
+
+        # df4.columns = [
+        #     [
+        #         "",
+        #         "",
+        #         "winding From",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "winding To",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         " ",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #         "",
+        #     ],
+        #     column_names,
+        # ]
 
         return df4
 
@@ -932,7 +857,7 @@ class Writer(AbstractWriter):
             #                        transformer.to_element + "_" + pw.phase.lower()
             #                    )
             #           else:  # just a powersource object
-            obj_dict["ID"][index] = i.name
+            obj_dict["ID"][index] = "powersource_" + i.name
             obj_dict["Angle (deg)"][index] = i.phase_angle
             obj_dict["V (kV)"][index] = i.nominal_voltage / 1000
             if i.emergency_power is not None:
@@ -1027,13 +952,12 @@ class Writer(AbstractWriter):
                             )  # PAG No generators so all nodes are PQ buses
                         else:
                             obj_dict["Type"].append("PQ")
-
                 if "a" in letter_phases:
                     obj_dict["Angle (deg)"].append(0)
                 if "b" in letter_phases:
-                    obj_dict["Angle (deg)"].append(120)
-                if "c" in letter_phases:
                     obj_dict["Angle (deg)"].append(-120)
+                if "c" in letter_phases:
+                    obj_dict["Angle (deg)"].append(120)
 
                 #                if len(letter_phases) == 1:
                 #                    obj_dict["Angle (deg)"].append(0)
@@ -1077,6 +1001,48 @@ class Writer(AbstractWriter):
         df9 = df9[["Bus", "BaseVoltage", "Voltage (V)", "Angle (deg)", "Type"]]
         logger.debug(obj_dict)
         return df9
+
+    def capacitor(self):
+        """
+        Create capacitors
+        """
+        obj_dict = {
+            "Bus1": [],
+            "Bus2": [],
+            "Bus3": [],
+            "ID": [],
+            "P1(kW)": [],
+            "Q1(kVAr)": [],
+            "P2 (kW)": [],
+            "Q2 (kVAr)": [],
+            "P3(kW)": [],
+            "Q3 (kVAr)": [],
+            "kV (ph-gr RMS)": [],
+            "Status1": [],
+            "Status2": [],
+            "Status3": [],
+        }
+        for i, capacitor in enumerate(self._capacitors):
+            capacitor
+
+        # df3 = pd.DataFrame(obj_dict)
+        # df3 = df3[[
+        #     "Bus1"
+        #     "Bus2"
+        #     "Bus3"
+        #     "ID"
+        #     "P1(kW)"
+        #     "Q1(kVAr)"
+        #     "P2 (kW)"
+        #     "Q2 (kVAr)"
+        #     "P3(kW)"
+        #     "Q3 (kVAr)"
+        #     "kV (ph-gr RMS)"
+        #     "Status1"
+        #     "Status2"
+        #     "Status3"
+        # ]]
+        # return df3
 
     def load(self):
         """Create loads
@@ -1132,17 +1098,15 @@ class Writer(AbstractWriter):
                     or i.name[-1].lower() == "b"
                     or i.name[-1].lower() == "c"
                 ):
-                    n_name = i.name[0:-1]
-                    if not n_name in load_dict:
+                    n_name = i.name
+                    if n_name not in load_dict:
                         for key, value in obj_dict.items():
                             value.append(None)
                         index += 1
                         load_dict[n_name] = index
-                        if "load_" == n_name[0:5]:
-                            obj_dict["ID"][index] = n_name[5:]
-                        else:
-                            obj_dict["ID"][index] = n_name
-
+                        if not n_name.startswith("load_"):
+                            n_name = f"load_{n_name}"
+                        obj_dict["ID"][index] = n_name
                     else:
                         index = load_dict[n_name]
                 else:
@@ -1150,15 +1114,22 @@ class Writer(AbstractWriter):
                         value.append(None)
                     index += 1
                     if "load_" == i.name[0:5]:
-                        obj_dict["ID"][index] = i.name[5:]
+                        obj_dict["ID"][index] = "load_" + i.name[5:]
                     else:
-                        obj_dict["ID"][index] = i.name
+                        obj_dict["ID"][index] = "load_" + i.name
 
             if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                 # logger.debug('    nominal_voltage {nv};'.format(nv=i.nominal_voltage))
-                obj_dict["V (kV)"][index] = (
-                    i.nominal_voltage / 1000.0
-                )  # template 1_6 says L-L kV
+                # ephasorsim only accepts phase to phase values
+                # opendss reader reads this value incorrectly if there are three phases
+                if i.connection_type == "Y" and len(i.phase_loads) <= 2:
+                    obj_dict["V (kV)"][index] = (
+                        i.nominal_voltage / 1000.0 * math.sqrt(3)
+                    )  # template 1_6 says L-L kV
+                else:
+                    obj_dict["V (kV)"][index] = (
+                        i.nominal_voltage / 1000.0
+                    )  # template 1_6 says L-L kV
 
             phase_cnt = 1
             if hasattr(i, "phase_loads") and i.phase_loads is not None:
@@ -1293,7 +1264,7 @@ class Writer(AbstractWriter):
                                     obj_dict["Type"][index] = "ZIP"
                         phase_cnt += 1
 
-            obj_dict["Bandwidth (pu)"][index] = 0.02  # this doesn't work right
+            obj_dict["Bandwidth (pu)"][index] = 0.2  # this doesn't work right
 
             if i.connection_type == "Y":
                 obj_dict["Conn. type"][index] = "wye"
@@ -1359,56 +1330,109 @@ class Writer(AbstractWriter):
         self._powersources = [i for i in self.m.models if isinstance(i, PowerSource)]
         self._photovoltaics = [i for i in self.m.models if isinstance(i, Photovoltaic)]
 
-        modifier = system_structure_modifier(self.m)
-        modifier.terminals_to_phases()
+        # modifier = system_structure_modifier(self.m)
+        # modifier.terminals_to_phases()
 
         df7 = self.source()
         df1 = self.line()
         df2 = self.switch()
         df3 = self.load()
         df4 = self.transformer()
+        df5 = self.capacitor()
         df9 = self.bus()
 
-        writer = pd.ExcelWriter(
-            os.path.join(self.output_path, self.output_name + ".xlsx"),
-            engine="xlsxwriter",
+        excel_file_name = os.path.join(self.output_path, self.output_name + ".xlsx")
+        shutil.copy(
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "Template.xlsx"),
+            excel_file_name,
         )
 
-        df7.to_excel(writer, "Vsource 3-phase", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Vsource 3-phase"]
-        worksheet.set_column(0, 25, 16)
+        append_df_to_excel(excel_file_name, df9, sheet_name="Bus")
+        append_df_to_excel(excel_file_name, df7, sheet_name="Vsource 3-phase")
+        append_df_to_excel(excel_file_name, df1, sheet_name="Multiphase Line")
+        append_df_to_excel(excel_file_name, df2, sheet_name="Switch")
+        append_df_to_excel(excel_file_name, df4, sheet_name="Multiphase Transformer")
+        append_df_to_excel(excel_file_name, df3, sheet_name="Multiphase Load")
 
-        df9.to_excel(writer, "Bus", index=False)
-        workbook = writer.book
-        worksheet = writer.sheets["Bus"]
 
-        worksheet.set_column(0, 3, 16)
+# https://stackoverflow.com/questions/20219254/how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
+def append_df_to_excel(
+    filename,
+    df,
+    sheet_name="Sheet1",
+    startrow=None,
+    truncate_sheet=False,
+    index=False,
+    **to_excel_kwargs,
+):
+    """
+    Append a DataFrame [df] to existing Excel file [filename]
+    into [sheet_name] Sheet.
+    If [filename] doesn't exist, then this function will create it.
 
-        df1.to_excel(writer, "Multiphase Line", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Multiphase Line"]
+    Parameters:
+      filename : File path or existing ExcelWriter
+                 (Example: '/path/to/file.xlsx')
+      df : dataframe to save to workbook
+      sheet_name : Name of sheet which will contain DataFrame.
+                   (default: 'Sheet1')
+      startrow : upper left cell row to dump data frame.
+                 Per default (startrow=None) calculate the last row
+                 in the existing DF and write to the next row...
+      truncate_sheet : truncate (remove and recreate) [sheet_name]
+                       before writing DataFrame to Excel file
+      to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
+                        [can be dictionary]
 
-        worksheet.set_column(0, 25, 16)
-        df2.to_excel(writer, "Switch", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Switch"]
+    Returns: None
+    """
+    from openpyxl import load_workbook
 
-        worksheet.set_column(0, 25, 16)
+    # ignore [engine] parameter if it was passed
+    if "engine" in to_excel_kwargs:
+        to_excel_kwargs.pop("engine")
 
-        df4.to_excel(writer, "Multiphase Transformer", index=False)
-        # workbook  = writer.book
-        worksheet = writer.sheets["Multiphase Transformer"]
+    writer = pd.ExcelWriter(filename, engine="openpyxl")
 
-        worksheet.set_column(0, 19, 16)
+    try:
+        # try to open an existing workbook
+        writer.book = load_workbook(filename)
 
-        df3.to_excel(writer, "Multiphase Load", index=False)
-        # workbook = writer.book
-        worksheet = writer.sheets["Multiphase Load"]
+        # get the last row in the existing Excel sheet
+        # if it was not specified explicitly
+        if startrow is None and sheet_name in writer.book.sheetnames:
+            startrow = writer.book[sheet_name].max_row
 
-        worksheet.set_column(0, 19, 16)
+        # truncate sheet
+        if truncate_sheet and sheet_name in writer.book.sheetnames:
+            # index of [sheet_name] sheet
+            idx = writer.book.sheetnames.index(sheet_name)
+            # remove [sheet_name]
+            writer.book.remove(writer.book.worksheets[idx])
+            # create an empty sheet [sheet_name] using old index
+            writer.book.create_sheet(sheet_name, idx)
 
-        writer.save()
+        # copy existing sheets
+        writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
+    except FileNotFoundError:
+        # file does not exist yet, we will create it
+        pass
+
+    if startrow is None:
+        startrow = 0
+
+    # write out the new sheet
+    df.to_excel(
+        writer,
+        sheet_name,
+        startrow=startrow,
+        header=False,
+        index=index,
+        **to_excel_kwargs,
+    )
+
+    # save the workbook
+    writer.save()
 
 
 if __name__ == "__main__":

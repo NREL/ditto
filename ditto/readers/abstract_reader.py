@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
@@ -149,9 +149,9 @@ class AbstractReader(object):
 
         if unit.lower() == "mi":
             if inverse:
-                return quantity / 1609.34
+                return quantity / 1609.344
             else:
-                return 1609.34 * quantity
+                return 1609.344 * quantity
 
         elif unit.lower() == "km":
             if inverse:
@@ -258,9 +258,9 @@ class AbstractReader(object):
 
         if unit.lower() == "mi":
             if inverse:
-                return quantity / 0.000621371
+                return quantity * 1609.344
             else:
-                return 0.000621371 * quantity
+                return quantity / 1609.344
 
         elif unit.lower() == "km":
             if inverse:
@@ -658,9 +658,7 @@ class AbstractReader(object):
                     ].concentric_neutral_outside_diameter
 
                 if wire_list[i].concentric_neutral_resistance is None:
-                    concentric_neutral_resistance_meters = (
-                        0.000269
-                    )  # Aluminium wire resistivity per meter for 4/0 wire (Nexans)
+                    concentric_neutral_resistance_meters = 0.000269  # Aluminium wire resistivity per meter for 4/0 wire (Nexans)
                     self.logger.warning(
                         "Warning - using default concentric_neutral_resistance of "
                         + str(concentric_neutral_resistance_meters)
@@ -671,9 +669,7 @@ class AbstractReader(object):
                     ].concentric_neutral_resistance
 
                 if wire_list[i].resistance is None:
-                    resistance_meters = (
-                        0.000269
-                    )  # Aluminium wire resistivity per meter for 4/0 wire (Nexans)
+                    resistance_meters = 0.000269  # Aluminium wire resistivity per meter for 4/0 wire (Nexans)
                     self.logger.warning(
                         "Warning - using default resistance of "
                         + str(resistance_meters)
