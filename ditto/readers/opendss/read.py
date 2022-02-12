@@ -859,7 +859,7 @@ class Reader(AbstractReader):
                 pass
 
             if line_unit.lower() not in ["ft", "mi", "m", "km", "kft", "cm", "in"]:
-                raise NotImplementedError("OpenDSS line length is none")
+                # raise NotImplementedError("OpenDSS line length is none")
                 line_unit = u"km"
 
             # length
@@ -948,7 +948,7 @@ class Reader(AbstractReader):
                 Rmatrix = None
                 Xmatrix = None
 
-            print(Rmatrix)
+            # print(Rmatrix)
             # Matrices are in Ohms per some unit distance which is the unit defined in the line
             if line_unit is not None and Rmatrix is not None and Xmatrix is not None:
                 if (
@@ -1011,7 +1011,7 @@ class Reader(AbstractReader):
                     Z = [Z.tolist()]
                 else:
                     Z = Z.tolist()
-                print(new_Rmatrix)
+                # print(new_Rmatrix)
                 api_line.impedance_matrix = Z
 
             if "cmatrix" in data:

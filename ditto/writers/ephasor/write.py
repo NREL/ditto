@@ -416,9 +416,7 @@ class Writer(AbstractWriter):
                             # convet to micor se
                             B = 0
                             if elt != 0:
-                                B = np.real(
-                                    elt * 1e-3 * 2 * 60 * math.pi
-                                )
+                                B = np.real(elt * 1e-3 * 2 * 60 * math.pi)
 
                             # import pdb;pdb.set_trace()
                             logger.debug("Siemens line units ", B)
@@ -627,9 +625,9 @@ class Writer(AbstractWriter):
             if len(i.windings) >= 2:
 
                 logger.debug("here", i.reactances, i.reactances[0], i.name)
-                obj_dict["X (pu)"][index] = i.reactances[
-                    0
-                ] / 100 # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
+                obj_dict["X (pu)"][index] = (
+                    i.reactances[0] / 100
+                )  # TODO check currently opendss reads in reactances is defined as [value1, value2, ...] for each winding type. May need to change.
                 if hasattr(i, "windings") and i.windings is not None:
                     N_phases = []
                     for winding_num, winding in enumerate(i.windings):
@@ -1308,7 +1306,7 @@ class Writer(AbstractWriter):
         return df3
 
     def write(self, m, **kwargs):
-        """ Write model to file
+        """Write model to file
 
         >>> write, model
 
@@ -1343,15 +1341,21 @@ class Writer(AbstractWriter):
 
         excel_file_name = os.path.join(self.output_path, self.output_name + ".xlsx")
         shutil.copy(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "Template.xlsx"),
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "template.xlsx"),
             excel_file_name,
         )
 
+        # print("Running bus")
         append_df_to_excel(excel_file_name, df9, sheet_name="Bus")
+        # print("Running vsource")
         append_df_to_excel(excel_file_name, df7, sheet_name="Vsource 3-phase")
+        # print("Running Multiphase")
         append_df_to_excel(excel_file_name, df1, sheet_name="Multiphase Line")
+        # print("Running Switch")
         append_df_to_excel(excel_file_name, df2, sheet_name="Switch")
+        # print("Running Multiphase")
         append_df_to_excel(excel_file_name, df4, sheet_name="Multiphase Transformer")
+        # print("Running Load")
         append_df_to_excel(excel_file_name, df3, sheet_name="Multiphase Load")
 
 
@@ -1360,10 +1364,6 @@ def append_df_to_excel(
     filename,
     df,
     sheet_name="Sheet1",
-    startrow=None,
-    truncate_sheet=False,
-    index=False,
-    **to_excel_kwargs,
 ):
     """
     Append a DataFrame [df] to existing Excel file [filename]
@@ -1376,63 +1376,16 @@ def append_df_to_excel(
       df : dataframe to save to workbook
       sheet_name : Name of sheet which will contain DataFrame.
                    (default: 'Sheet1')
-      startrow : upper left cell row to dump data frame.
-                 Per default (startrow=None) calculate the last row
-                 in the existing DF and write to the next row...
-      truncate_sheet : truncate (remove and recreate) [sheet_name]
-                       before writing DataFrame to Excel file
-      to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
-                        [can be dictionary]
 
     Returns: None
     """
-    from openpyxl import load_workbook
-
-    # ignore [engine] parameter if it was passed
-    if "engine" in to_excel_kwargs:
-        to_excel_kwargs.pop("engine")
-
-    writer = pd.ExcelWriter(filename, engine="openpyxl")
-
-    try:
-        # try to open an existing workbook
-        writer.book = load_workbook(filename)
-
-        # get the last row in the existing Excel sheet
-        # if it was not specified explicitly
-        if startrow is None and sheet_name in writer.book.sheetnames:
-            startrow = writer.book[sheet_name].max_row
-
-        # truncate sheet
-        if truncate_sheet and sheet_name in writer.book.sheetnames:
-            # index of [sheet_name] sheet
-            idx = writer.book.sheetnames.index(sheet_name)
-            # remove [sheet_name]
-            writer.book.remove(writer.book.worksheets[idx])
-            # create an empty sheet [sheet_name] using old index
-            writer.book.create_sheet(sheet_name, idx)
-
-        # copy existing sheets
-        writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
-    except FileNotFoundError:
-        # file does not exist yet, we will create it
-        pass
-
-    if startrow is None:
-        startrow = 0
-
-    # write out the new sheet
-    df.to_excel(
-        writer,
-        sheet_name,
-        startrow=startrow,
-        header=False,
-        index=index,
-        **to_excel_kwargs,
-    )
-
-    # save the workbook
-    writer.save()
+    with pd.ExcelWriter(
+        filename,
+        mode="a",
+        engine="openpyxl",
+        if_sheet_exists="replace",
+    ) as writer:
+        df.to_excel(writer, sheet_name=sheet_name)
 
 
 if __name__ == "__main__":

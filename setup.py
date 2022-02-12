@@ -24,7 +24,7 @@ with open("README.md", encoding="utf-8") as readme_file:
 with open(os.path.join(here, "ditto", "version.py"), encoding="utf-8") as f:
     version = f.read()
 
-version = version.split()[2].strip('"').strip("'")
+version = "0.2.0"
 
 test_requires = [
     "backports.tempfile",
@@ -109,7 +109,14 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=["click", "future", "networkx", "six", "traitlets", "json_tricks"],
+    install_requires=[
+        "click",
+        "future",
+        "networkx",
+        "six",
+        "traitlets==4.3.3",
+        "json_tricks",
+    ],
     extras_require={
         "all": extras_requires
         + opendss_requires
