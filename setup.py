@@ -44,7 +44,7 @@ opendss_requires = ["OpenDSSDirect.py>=0.3.3", "pandas", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd"]
 gridlabd_requires = ["croniter", numpy_dependency]
 cyme_requires = [numpy_dependency]
-ephasor_requires = [numpy_dependency, "pandas"]
+ephasor_requires = [numpy_dependency, "pandas", "openpxyl"]
 synergi_requires = [
     numpy_dependency,
     "pandas_access",
@@ -118,13 +118,7 @@ setup(
         "json_tricks",
     ],
     extras_require={
-        "all": extras_requires
-        + opendss_requires
-        + dew_requires
-        + gridlabd_requires
-        + ephasor_requires
-        + cyme_requires
-        + synergi_requires,
+        "all": extras_requires + opendss_requires + dew_requires + gridlabd_requires + ephasor_requires + cyme_requires + synergi_requires,
         "extras": extras_requires,
         "cyme": cyme_requires,
         "dew": dew_requires,
