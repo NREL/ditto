@@ -839,6 +839,13 @@ class AbstractReader(object):
         if self.verbose and s != -1:
             self.logger.info("Succesful!")
 
+        # Parse PVsystems
+        if self.verbose:
+            self.logger.info("Parsing the pvsystems...")
+        s = self.parse_pv(model)
+        if self.verbose and s != -1:
+            self.logger.info("Succesful!")
+
         if self.verbose:
             self.logger.info("Parsing done.")
 
@@ -893,6 +900,12 @@ class AbstractReader(object):
 
     def parse_dg(self, model):
         """Parse the distributed generation (e.g. PV).
+        .. note:: Has to be implemented in subclasses.
+        """
+        pass
+
+    def parse_pv(self, model):
+        """Parse the pvsystems.
         .. note:: Has to be implemented in subclasses.
         """
         pass

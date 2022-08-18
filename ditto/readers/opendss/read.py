@@ -38,6 +38,8 @@ from ditto.models.position import Position
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
 
+from ditto.models.photovoltaic import Photovoltaic
+
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
@@ -2760,6 +2762,197 @@ class Reader(AbstractReader):
 
                 api_storage.phase_storages.append(api_phase_storage)
 
+
+    @timeit
+    def parse_pv(self, model):
+        """pvsystems.
+        """
+        pvsystem = _dss_class_to_dict("pvsystem")
+
+        print(pvsystem)
+
+        self._pvsystems = []
+
+        for name, data in pvsystem.items():
+            
+            api_pvsystem = Photovoltaic(model)
+            
+            #name
+            try:
+                api_pvsystem.name = name.lower()
+            except:
+                pass
+
+            # nominal voltage
+            try:
+                api_pvsystem.nominal_voltage = float(data["kv"]) * 10 **3
+            except:
+                pass
+
+            # phases
+            try:
+                api_pvsystem.phases = list(
+                    map(lambda x: Unicode(self.phase_mapping(x)), data["phases"])
+                )
+            except:
+                pass
+
+            # positions
+            '''try:
+                api_pvsystem.positions = ???? no position field
+            except:
+                pass'''
+
+            # rated_power
+            try:
+                api_pvsystem.rated_power = float(data["kVA"]) * 10 ** 3
+            except:
+                pass
+
+            # control type
+            # TODO correct field?????
+            try:
+                api_pvsystem.control_type = data["conn"]
+            except:
+                pass
+
+            # active rating
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.active_rating = ???? no field
+            except:
+                pass'''
+
+            # reactive rating
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.reactive_rating = ???? no field
+            except:
+                pass'''
+
+            # connecting element
+            try:
+                api_pvsystem.connecting_element = data["bus1"]
+            except:
+                pass
+
+            # min power factor
+            # TODO correct field?????
+            try:
+                api_pvsystem.min_power_factor = float(data["%PminNoVars"])
+            except:
+                pass
+
+            # cutout percent
+            try:
+                api_pvsystem.cutout_percent = float(data["%Cutout"])
+            except:
+                pass
+
+            # cutin percent
+            try:
+                api_pvsystem.cutin_percent = float(data["%Cutin"])
+            except:
+                pass
+
+            # temperature
+            try:
+                api_pvsystem.temperature = float(data["Temperature"])
+            except:
+                pass
+
+            # resistance
+            try:
+                api_pvsystem.resistance = float(data["%R"])
+            except:
+                pass
+
+            # reactance
+            try:
+                api_pvsystem.reactance = float(data["%X"])
+            except:
+                pass
+
+            # v max pu
+            try:
+                api_pvsystem.v_max_pu = float(data["Vmaxpu"])
+            except:
+                pass
+            
+            # v min pu
+            try:
+                api_pvsystem.v_min_pu = float(data["Vminpu"])
+            except:
+                pass
+
+            # rise limit
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.rise_limit = ???? no field
+            except:
+                pass'''
+
+            # fall limit
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.fall_limit = ???? no field
+            except:
+                pass'''
+
+            # power factor
+            # TODO correct field?????
+            try:
+                api_pvsystem.power_factor = float(data["%PminkvarMax"])
+            except:
+                pass
+
+            # voltvar_curve
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.voltvar_curve = ???? no field
+            except:
+                pass'''
+
+            # wattpowerfactor_curve
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.wattpowerfactor_curve = ???? no field
+            except:
+                pass'''
+
+            # voltwatt_curve
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.voltwatt_curve = ???? no field
+            except:
+                pass'''
+
+            # var_injection
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.var_injection = ???? no field
+            except:
+                pass'''
+
+            # timeseries
+            # TODO correct field?????
+            '''try:
+                api_pvsystem.timeseries = ???? no field
+            except:
+                pass'''
+
+            # feeder name
+            try:
+                api_pvsystem.feeder_name = self.source_name
+            except:
+                pass
+
+
+
+            self._pvsystems.append(api_pvsystem)
+
+
+        return 1
 
 def _dss_class_to_dict(class_name):
     return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")
