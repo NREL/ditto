@@ -25,18 +25,6 @@ def test_pvsystem():
     r.parse(m)
     m.set_names()
 
-    # Reading OpenDSS default values
-    '''d_v = Default_Values(
-        os.path.join(
-            current_directory,
-            "../../../../ditto/default_values/opendss_default_values.json",
-        )
-    )
-
-
-    parsed_values = d_v.parse()'''
-
-
     assert m["pvsystem.pv680"].name == "pvsystem.pv680"
     assert m["pvsystem.pv680"].connecting_element == "trafo_pv_680"
     assert m["pvsystem.pv680"].nominal_voltage == 0.48 * 10 ** 3

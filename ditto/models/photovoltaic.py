@@ -53,7 +53,6 @@ class Photovoltaic(DiTToHasTraits):
     min_power_factor = Float(
         help="""The minimum power factor for the inverter""", default_value=None
     )
-
     cutout_percent = Float(
         help="""The cutout percentage. If  the per-unit power drops below this value the power source turns off""",
         default_value=None,
@@ -78,7 +77,6 @@ class Photovoltaic(DiTToHasTraits):
         help="""The per-unit minimum voltage. Below this, constant impedance model is applied""",
         default_value=None,
     )
-
     rise_limit = Float(help="""The % rise per minute""", default_value=None)
     fall_limit = Float(help="""The % fall per minute""", default_value=None)
 

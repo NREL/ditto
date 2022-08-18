@@ -2947,10 +2947,7 @@ class Reader(AbstractReader):
             except:
                 pass
 
-
-
             self._pvsystems.append(api_pvsystem)
-
 
         return 1
 
