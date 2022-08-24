@@ -2768,6 +2768,11 @@ class Reader(AbstractReader):
     @timeit
     def parse_pv(self, model):
         """pvsystems
+
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
         """
         pvsystem = _dss_class_to_dict("pvsystem")
 
@@ -2804,7 +2809,9 @@ class Reader(AbstractReader):
 
             # rated_power
             try:
-                api_pvsystem.rated_power = float(data["kVA"]) * 10 ** 3
+                api_pvsystem.rated_power = float(
+                    data["kVA"] * 10 ** 3
+                )
             except:
                 pass
 
@@ -2955,6 +2962,11 @@ class Reader(AbstractReader):
     @timeit
     def parse_reactor(self, model):
         """reactors
+
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
         """
         reactor = _dss_class_to_dict("generator")
 
