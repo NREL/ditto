@@ -1,0 +1,9 @@
+Clear
+
+New Circuit.test_reactor bus1=sourcebus pu=0.99 basekV=12.47 R1=1.1208 X1=3.5169 R0=1.1208 X0=3.5169
+
+New Transformer.PV_633 phases=3 xhl=5.750000
+~ wdg=1 bus=633 kV=4.16 kVA=400 conn=wye
+~ wdg=2 bus=pv_633 kV=0.48 kVA=400 conn=wye
+New Generator.PV633_1 bus1=pv_633.1.2.3 conn=wye phases=3 kV=0.48 kW=200 kVA=200 pf=1
+New Generator.PV633_2 bus1=pv_633.1.2.3 conn=wye phases=3 kV=0.48 kW=200 kVA=200 pf=1

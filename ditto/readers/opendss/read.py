@@ -9,6 +9,9 @@ import sys
 import os
 import json
 
+from click import echo
+from ditto.models.phase_reactor import PhaseReactor
+
 import numpy as np
 
 import logging
@@ -37,9 +40,8 @@ from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
-
 from ditto.models.photovoltaic import Photovoltaic
-
+from ditto.models.reactor import Reactor
 
 from ditto.models.feeder_metadata import Feeder_metadata
 
@@ -2765,11 +2767,9 @@ class Reader(AbstractReader):
 
     @timeit
     def parse_pv(self, model):
-        """pvsystems.
+        """pvsystems
         """
         pvsystem = _dss_class_to_dict("pvsystem")
-
-        print(pvsystem)
 
         self._pvsystems = []
 
@@ -2791,9 +2791,8 @@ class Reader(AbstractReader):
 
             # phases
             try:
-                api_pvsystem.phases = list(
-                    map(lambda x: Unicode(self.phase_mapping(x)), data["phases"])
-                )
+                for ph in range(int(data["phases"])):
+                    api_pvsystem.phases.append(self.phase_mapping(ph+1))
             except:
                 pass
 
@@ -2947,9 +2946,132 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            # TODO irradiance field?????
+
             self._pvsystems.append(api_pvsystem)
 
         return 1
+
+    @timeit
+    def parse_reactor(self, model):
+        """reactors
+        """
+        reactor = _dss_class_to_dict("generator")
+
+        self._reactor = []
+
+        for name, data in reactor.items():
+
+            api_reactor = Reactor(model)
+
+            # name
+            try:
+                api_reactor.name = name.lower()
+            except:
+                pass
+
+            # nominal voltage
+            try:
+                api_reactor.nominal_voltage = (
+                    float(data["kv"]) * 10 ** 3
+                )
+            except:
+                pass
+
+            # from element
+            try:
+                if "." in data["bus1"]:
+                    temp = data["bus1"].split(".")
+                    api_reactor.from_element = temp[0]
+                else:
+                    api_reactor.from_element = data["bus1"].strip()
+            except:
+                pass
+
+            # to element
+            # TODO from field???
+            '''try:
+                if "." in data["bus2"]:
+                    temp = data["bus2"].split(".")
+                    api_reactor.from_element = temp[0]
+                else:
+                    api_reactor.from_element = data["bus2"].strip()
+            except:
+                pass'''
+
+            # positions
+            # TODO position field????
+            '''try:
+                api_reactor.positions = ???? no position field
+            except:
+                pass'''
+
+            # connection_type
+            try:
+                conn = data["conn"]
+                if conn.lower() == "wye":
+                    api_reactor.connection_type = "Y"
+                elif conn.lower() == "delta":
+                    api_reactor.connection_type = "D"
+            except:
+                pass
+
+            # substation name
+            # TODO substation name field
+            '''try:
+                api_reactor.substation_name = ??? field name
+            except:
+                pass'''
+
+            # feeder name
+            try:
+                api_reactor.feeder_name = self.source_name
+            except:
+                pass
+
+            # is substation
+            # TODO is substation field
+            '''try:
+                api_reactor.is_substation = ???? field
+            except:
+                pass'''
+
+            # faultrate
+            # TODO faultrate
+            '''try:
+                api_reactor = ???? field
+            except:
+                pass'''
+
+            # phase reactor
+            # N_phases
+            try:
+                N_phases = int(data["phases"])
+            except:
+                N_phases = None
+                pass
+
+            if N_phases == 3:
+                phases = [1, 2, 3]
+
+            if N_phases is None:
+                N_phases = 1
+
+            if phases is not None and N_phases is not None:
+                # phase reactors
+                phase_reactors = []
+                for p, phr in enumerate(phases):
+                    phase_reactors.append(PhaseReactor(model))
+                    #phase
+                    phase_reactors[p].phase = self.phase_mapping(phr)
+                    
+                api_reactor.phase_reactors = phase_reactors
+
+            self._reactor.append(api_reactor)
+        
+        return 1
+
+
 
 def _dss_class_to_dict(class_name):
     return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")

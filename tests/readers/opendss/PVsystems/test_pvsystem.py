@@ -18,7 +18,6 @@ from ditto.default_values.default_values_json import Default_Values
 
 current_directory = os.path.realpath(os.path.dirname(__file__))
 
-
 def test_pvsystem():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_pvsystem.dss"))
@@ -29,7 +28,9 @@ def test_pvsystem():
     assert m["pvsystem.pv680"].connecting_element == "trafo_pv_680"
     assert m["pvsystem.pv680"].nominal_voltage == 0.48 * 10 ** 3
     assert m["pvsystem.pv680"].rated_power == 500.0 * 10 ** 3
-    assert m["pvsystem.pv680"].phases[0].default_value == 'C'
+    assert m["pvsystem.pv680"].phases[0] == "A"
+    assert m["pvsystem.pv680"].phases[1] == "B"
+    assert m["pvsystem.pv680"].phases[2] == "C"
     assert m["pvsystem.pv680"].control_type == "wye"
     assert m["pvsystem.pv680"].resistance == 50.0
     assert m["pvsystem.pv680"].reactance == 0.0
