@@ -1387,7 +1387,7 @@ class Writer(AbstractWriter):
                     )  # DiTTo in watts
 
                 if hasattr(i, "reactive_rating") and i.reactive_rating is not None:
-                    txt += " kvarlimit={kvar}".format(
+                    txt += " kvarmax={kvar}".format(
                         kvar=i.reactive_rating
                         * 10
                         ** -3  # Set the inverter to be oversized by 10% if active rating not specified
