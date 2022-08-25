@@ -169,7 +169,6 @@ class Writer(AbstractWriter):
             self.separate_substations = False
 
         # Write the bus coordinates
-        logger.info("Writing the bus coordinates...")
         if self.verbose:
             logger.debug("Writing the bus coordinates...")
         s = self.write_bus_coordinates(model)
@@ -177,7 +176,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the transformers
-        logger.info("Writing the transformers...")
         if self.verbose:
             logger.debug("Writing the transformers...")
         s = self.write_transformers(model)
@@ -185,7 +183,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the regulators
-        logger.info("Writing the regulators...")
         if self.verbose:
             logger.debug("Writing the regulators...")
         s = self.write_regulators(model)
@@ -193,7 +190,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # write the timeseries
-        logger.info("Writing the timeseries...")
         if self.verbose:
             logger.debug("Writing the timeseries...")
         s = self.write_timeseries(model)
@@ -201,7 +197,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # write the loads
-        logger.info("Writing the loads...")
         if self.verbose:
             logger.debug("Writing the loads...")
         s = self.write_loads(model)
@@ -209,7 +204,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the lines
-        logger.info("Writting the lines...")
         if self.verbose:
             logger.debug("Writting the lines...")
         s = self.write_lines(model)
@@ -217,7 +211,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the capacitors
-        self.logger.info("Writing the capacitors...")
         if self.verbose:
             logger.debug("Writing the capacitors...")
         s = self.write_capacitors(model)
@@ -225,7 +218,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the storage elements
-        logger.info("Writting the storage devices...")
         if self.verbose:
             logger.debug("Writting the storage devices...")
         s = self.write_storages(model)
@@ -233,7 +225,6 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the PV
-        logger.info("Writting the PVs...")
         if self.verbose:
             logger.debug("Writting the PVs...")
         s = self.write_PVs(model)
@@ -241,14 +232,12 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         # Write the Master file
-        logger.info("Writting the master file...")
         if self.verbose:
             logger.debug("Writting the master file...")
         s = self.write_master_file(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
-        logger.info("Done.")
         if self.verbose:
             logger.debug("Writting done.")
 
