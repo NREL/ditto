@@ -3024,7 +3024,6 @@ class Reader(AbstractReader):
                     line_data = self.concentric_neutral_cable[settings["linecableid"]]
                     line_data["type"] = "balanced_line"
                 if settings["linecableid"] in self.cables:
-                    logger.debug("cables {}".format(sectionID))
                     line_data = self.cables[settings["linecableid"]]
                     line_data["type"] = "balanced_line"
 
