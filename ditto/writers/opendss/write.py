@@ -138,6 +138,9 @@ class Writer(AbstractWriter):
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
 
+        Note: .replace(".","_").replace(" ", "_") are used to fix node/bus names for OpenDSS, 
+            which uses dots for phase designation and spaces for paramater delimiters.
+
         :param model: DiTTo model
         :type model: DiTTo model
         :param verbose: Set verbose mode. Optional. Default=False
@@ -239,7 +242,7 @@ class Writer(AbstractWriter):
             logger.debug("Succesful!")
 
         if self.verbose:
-            logger.debug("Writting done.")
+            logger.debug("Writing done.")
 
         return 1
 
@@ -341,7 +344,7 @@ class Writer(AbstractWriter):
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
 
                     txt += "{name} {X} {Y}\n".format(
-                        name=i.name.lower(), X=i.positions[0].long, Y=i.positions[0].lat
+                        name=i.name.lower().replace(".","_").replace(" ", "_"), X=i.positions[0].long, Y=i.positions[0].lat
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
@@ -678,7 +681,7 @@ class Writer(AbstractWriter):
 
                                 if buses is not None:
                                     bus = buses[cnt]
-                                    txt += " bus={bus}".format(bus=str(bus))
+                                    txt += " bus={bus}".format(bus=str(bus).replace(".","_").replace(" ", "_"))
 
                                 if len(winding.phase_windings) != 3:
 
@@ -781,9 +784,9 @@ class Writer(AbstractWriter):
                             if buses is not None:
 
                                 if cnt == 0 or cnt == 1:
-                                    txt += " bus={b}".format(b=buses[cnt])
+                                    txt += " bus={b}".format(b=buses[cnt].replace(".","_").replace(" ", "_"))
                                 elif cnt == 2:
-                                    txt += " bus={b}".format(b=buses[cnt - 1])
+                                    txt += " bus={b}".format(b=buses[cnt - 1].replace(".","_").replace(" ", "_"))
 
                                 # These are the configurations for center tap transformers
                                 if cnt == 0:
@@ -1072,7 +1075,7 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " Bus1={elt}".format(elt=i.connecting_element)
+                    txt += " Bus1={elt}".format(elt=i.connecting_element.replace(".", "_").replace(" ", "_"))
                     if (
                         hasattr(i, "phase_storages")
                         and i.phase_storages is not None
@@ -1290,7 +1293,7 @@ class Writer(AbstractWriter):
                     and i.connecting_element is not None
                 ):
                     txt += " bus1={connecting_elt}".format(
-                        connecting_elt=i.connecting_element
+                        connecting_elt=i.connecting_element.replace(".", "_").replace(" ", "_")
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
@@ -1816,7 +1819,7 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " bus1={bus}".format(bus=i.connecting_element)
+                    txt += " bus1={bus}".format(bus=i.connecting_element.replace(".", "_").replace(" ", "_"))
                     if hasattr(i, "phase_loads") and i.phase_loads is not None:
                         for phase_load in i.phase_loads:
                             if (
@@ -2093,7 +2096,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "connected_transformer"):
 
                     # If we have a valid connected_transformer then job's easy...
-                    if i.connected_transformer is not None:
+                    if i.connected_transformer is not None:  # not setting the connected_transformer in reader parse_regulators
                         txt += " transformer={trans}".format(
                             trans=i.connected_transformer
                         )
@@ -2147,7 +2150,7 @@ class Writer(AbstractWriter):
                             and i.to_element is not None
                         ):
                             transfo_creation_string += " buses=({b1}.{p},{b2}.{p})".format(
-                                b1=i.from_element, b2=i.to_element, p=phase_string
+                                b1=i.from_element.replace(".","_").replace(" ", "_"), b2=i.to_element.replace(".","_").replace(" ", "_"), p=phase_string
                             )
 
                         # Conns
@@ -2249,8 +2252,8 @@ class Writer(AbstractWriter):
                                 )
                                 pass
                             # XLT:
-                            try:
-                                if isinstance(i.reactances[1], (int, float)):
+                            try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
+                                if isinstance(i.reactances[1], (int, float)):  
                                     transfo_creation_string += " XLT={}".format(
                                         i.reactances[1]
                                     )
@@ -2262,7 +2265,7 @@ class Writer(AbstractWriter):
                                 )
                                 pass
                             # XHT:
-                            try:
+                            try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
                                 if isinstance(i.reactances[2], (int, float)):
                                     transfo_creation_string += " XHT={}".format(
                                         i.reactances[2]
@@ -2500,7 +2503,7 @@ class Writer(AbstractWriter):
 
                 # Connecting element
                 if i.connecting_element is not None:
-                    txt += " Bus1=" + i.connecting_element
+                    txt += " Bus1=" + i.connecting_element.replace(".", "_").replace(" ", "_")
 
                     # For a 3-phase capbank we don't add any suffixes to the output.
                     if (
@@ -2838,7 +2841,7 @@ class Writer(AbstractWriter):
 
                 # from_element
                 if hasattr(i, "from_element") and i.from_element is not None:
-                    txt += " bus1={from_el}".format(from_el=i.from_element)
+                    txt += " bus1={from_el}".format(from_el=i.from_element.replace(".", "_").replace(" ", "_"))
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2850,7 +2853,7 @@ class Writer(AbstractWriter):
 
                 # to_element
                 if hasattr(i, "to_element") and i.to_element is not None:
-                    txt += " bus2={to_el}".format(to_el=i.to_element)
+                    txt += " bus2={to_el}".format(to_el=i.to_element.replace(".", "_").replace(" ", "_"))
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2913,7 +2916,7 @@ class Writer(AbstractWriter):
                 if i in lines_to_geometrify:
                     txt += " geometry={g}".format(g=i.nameclass)
                 elif i in lines_to_linecodify:
-                    txt += " Linecode={c}".format(c=i.nameclass)
+                    txt += " Linecode={c}".format(c=i.nameclass.replace(".","_").replace(" ", "_"))
 
                 txt += "\n\n"
                 if fuse_line != "":
@@ -3446,7 +3449,7 @@ class Writer(AbstractWriter):
                     )
 
                     for linecode_name, linecode_data in txt.items():
-                        fp.write("New Linecode.{name}".format(name=linecode_name))
+                        fp.write("New Linecode.{name}".format(name=linecode_name.replace(".","_").replace(" ", "_")))
                         for k, v in linecode_data.items():
                             fp.write(" {k}={v}".format(k=k, v=v))
                         fp.write("\n\n")
@@ -3753,7 +3756,7 @@ class Writer(AbstractWriter):
         with open(
             os.path.join(self.output_path, self.output_filenames["master"]), "w"
         ) as fp:
-            fp.write("Clear\n\nNew Circuit.Full_Network ")
+            fp.write("Clear\n\nNew Circuit.Full_Network ")  # not reached for PPL model? it is but gets overwritten?
             for obj in model.models:
                 if (
                     isinstance(obj, PowerSource) and obj.is_sourcebus == 1
@@ -3768,7 +3771,7 @@ class Writer(AbstractWriter):
                     ):
                         fp.write(
                             "bus1={name} pu={pu}".format(
-                                name=obj.connecting_element, pu=obj.per_unit
+                                name=obj.connecting_element.replace(".", "_").replace(" ", "_"), pu=obj.per_unit
                             )
                         )
                     else:
@@ -3779,7 +3782,7 @@ class Writer(AbstractWriter):
                         )
                         fp.write(
                             "bus1={name} pu={pu}".format(
-                                name=cleaned_name, pu=obj.per_unit
+                                name=cleaned_name.replace(".", "_").replace(" ", "_"), pu=obj.per_unit
                             )
                         )
 
@@ -3878,6 +3881,10 @@ class Writer(AbstractWriter):
                 )  # The buscoords are also written to base folder as well as the subfolders
 
             fp.write("\nSolve")
+
+        # return # below is opening Master.dss again !?
+
+
         for i in model.models:
             if isinstance(i, Node) and i.is_substation_connection:
                 feeder_name = i.feeder_name
@@ -3886,7 +3893,7 @@ class Writer(AbstractWriter):
                 substation_name = substation_name.replace(">", "-")
                 # Note that subtransmission has no substation_connection and hence doesn't have a master file, even though it does have other .dss files
                 if (
-                    feeder_name == "" and i.nominal_voltage < 30000
+                    feeder_name == "" #and i.nominal_voltage < 30000
                 ):  # A hack to deal with dangling feeders. TODO: Fix this in layerstack
                     continue
                 with open(
@@ -3918,7 +3925,7 @@ class Writer(AbstractWriter):
                         fp.write(
                             "Clear\n\nNew Circuit.feeder_{name} ".format(name=i.name)
                         )
-                    fp.write("bus1={name} pu={pu}".format(name=i.name, pu=i.setpoint))
+                    fp.write("bus1={name} pu={pu}".format(name=i.name.replace(".", "_").replace(" ", "_"), pu=i.setpoint))
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         fp.write(
                             " basekV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
@@ -3953,7 +3960,7 @@ class Writer(AbstractWriter):
                             ]
                         )
                     else:
-                        _baseKV_list_ = []
+                        _baseKV_list_ = []  # getting here?
                     _baseKV_list_ = sorted(_baseKV_list_)
                     fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 
