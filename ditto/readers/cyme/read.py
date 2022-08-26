@@ -5714,9 +5714,7 @@ class Reader(AbstractReader):
                     try:
                         p, q = float(settings["value1"]), float(settings["value2"])
                     except:
-                        logger.warning(
-                            "WARNING:: Skipping load on section {}".format(sectionID)
-                        )
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=0 (P,Q). value1={settings['value1']}  value2={settings['value2']}")
                         continue
                 elif value_type == 1:  # KVA and PF are given
                     try:
@@ -5729,9 +5727,7 @@ class Reader(AbstractReader):
                         p = kva * PF
                         q = math.sqrt(kva ** 2 - p ** 2)
                     except:
-                        logger.warning(
-                            "WARNING:: Skipping load on section {}".format(sectionID)
-                        )
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=1 (kVa, PF). value1={settings['value1']}  value2={settings['value2']}")
                         continue
                 elif value_type == 2:  # P and PF are given
 
@@ -5743,16 +5739,15 @@ class Reader(AbstractReader):
                             PF /= 100.0
                             q = p * math.sqrt((1 - PF ** 2) / PF ** 2)
                         else:
-                            logger.warning("problem with PF")
-                            logger.warning(PF)
+                            logger.warning(f"Problem with load on section {sectionID} with value_type=2 (P, PF). value1={settings['value1']}  value2={settings['value2']}")
                     except:
-                        logger.warning("Skipping load on section {}".format(sectionID))
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=2 (P, PF). value1={settings['value1']}  value2={settings['value2']}")
                         continue
 
                 elif value_type == 3:  # AMP and PF are given
                     # TODO
                     logger.warning(
-                        "WARNING:: Skipping load on section {}".format(sectionID)
+                        "WARNING:: Skipping load on section {} because value_type=3 (AMP and PF)".format(sectionID)
                     )
                     continue
 
