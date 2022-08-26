@@ -758,7 +758,7 @@ class Reader(AbstractReader):
         """
         .. warning:: This is a helper function for the parsers. Do not use directly.
 
-        Takes as input the  object we want to parse (eg. "section" maps to "[SECTION]") 
+        Takes as input the object we want to parse (eg. "section" maps to "[SECTION]") 
         as well as the list of attributes we want to extract (eg. ["sectionid", "fromnodeid", "tonodeid", "phase"]).
         Also takes the default positions of the attributes (mapping), which is overwritten if "format" is found in the lines.
         The function returns a dictionary of dictionaries, where each sub-dictionary contains the values of the desired attributes of a CYME object.
@@ -807,7 +807,7 @@ class Reader(AbstractReader):
                             idx2 = temp[0]
                             mapping[attribute_list[idx2]] = idx
                 except:
-                    pass
+                    logger.warn(f"Unable to parse CYME line FORMAT for {obj} in {next_line}")
 
                 next_line = next(self.content)
 
@@ -860,10 +860,7 @@ class Reader(AbstractReader):
                         attribute_list = additional_attributes
                         additional_attributes = []
                     except:
-                        logger.warning(
-                            "Attempted to apply additional attributes but failed"
-                        )
-                        pass
+                        logger.warn(f"Unable to parse additional CYME line FORMAT for {obj} in {next_line}")
 
                 try:
                     next_line = next(self.content)
