@@ -5733,7 +5733,9 @@ class Reader(AbstractReader):
 
                     try:
                         p, PF = float(settings["value1"]), float(settings["value2"])
-                        if 0 <= PF <= 1:
+                        if PF == 0:
+                            q = 0
+                        elif 0 < PF <= 1:
                             q = p * math.sqrt((1 - PF ** 2) / PF ** 2)
                         elif 1 < PF <= 100:
                             PF /= 100.0
