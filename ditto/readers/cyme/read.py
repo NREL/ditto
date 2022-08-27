@@ -198,6 +198,11 @@ class Reader(AbstractReader):
         else:
             self.load_filename = "load.txt"
 
+        # optional load_model_id will parse only the loads with the corresponding LoadModelID (value in [CUSTOMER LOADS])
+        self.load_model_id = None
+        if "load_model_id" in kwargs.keys():
+            self.load_model_id = int(kwargs["load_model_id"])
+        
         # Set the Network Type to be None. This is set in the parse_sections() function
         self.network_type = None
 
@@ -915,7 +920,6 @@ class Reader(AbstractReader):
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
-
 
     def parse_header(self):
         """
@@ -5551,9 +5555,6 @@ class Reader(AbstractReader):
     
                         api_load_to.phase_loads.append(api_phase_load_to)
     
-
-
-
     def parse_loads(self, model):
         """Parse the loads from CYME to DiTTo."""
         # Instanciate the list in which we store the DiTTo load objects
@@ -5680,12 +5681,27 @@ class Reader(AbstractReader):
         for sectionID in self.customer_loads.keys():
             if sectionID.endswith("*"):
                 duplicate_loads.add(sectionID.lower().strip("*"))
+        
         for sectionID, settings in self.customer_loads.items():
+
+            """
+            if more than one loadmodelid is in Loads.txt then all of the loadmodels get added together in one Load object.
+            for example, four differnt loadmodelids on a phase Cresults in 4 loads on busName.3.3.3.3 added together :/
+            However, if the Reader is instantiated with a load_model_id then we only parse the loads with that load_model_id.
+            """
+            if self.load_model_id is not None and "loadmodelid" in settings:
+                # we only want to create a load if it has the matching LoadModelID
+                try:
+                    if self.load_model_id != int(settings["loadmodelid"]):
+                        continue
+                except ValueError:
+                    logger.warn(f"Cannot convert LoadModelID {settings['loadmodelid']} for {sectionID} to integer.")
 
             sectionID = sectionID.strip("*").lower()
 
             if sectionID in self.loads:
-                load_data = self.loads[sectionID]
+                # FORMAT_LOADS=SectionID,DeviceNumber,DeviceStage,Flags,LoadType,Connection,Location
+                load_data = self.loads[sectionID]  
             else:
                 load_data = {}
 
@@ -5747,7 +5763,7 @@ class Reader(AbstractReader):
                     )
                     continue
 
-                if p >= 0 or q >= 0:
+                if p >= 0 or q >= 0:  # then a Load is created
 
                     if "loadphase" in settings:
                         phases = settings["loadphase"]
