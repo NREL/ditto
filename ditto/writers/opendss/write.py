@@ -7,6 +7,7 @@ import os
 import math
 import logging
 import decimal
+import re
 
 import numpy as np
 import pandas as pd
@@ -138,7 +139,7 @@ class Writer(AbstractWriter):
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
 
-        Note: .replace(".","_").replace(" ", "_") are used to fix node/bus names for OpenDSS, 
+        Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS, 
             which uses dots for phase designation and spaces for paramater delimiters.
 
         :param model: DiTTo model
@@ -344,7 +345,7 @@ class Writer(AbstractWriter):
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
 
                     txt += "{name} {X} {Y}\n".format(
-                        name=i.name.lower().replace(".","_").replace(" ", "_"), X=i.positions[0].long, Y=i.positions[0].lat
+                        name=re.sub('[^0-9a-zA-Z]+', '_', i.name.lower()), X=i.positions[0].long, Y=i.positions[0].lat
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
@@ -681,7 +682,7 @@ class Writer(AbstractWriter):
 
                                 if buses is not None:
                                     bus = buses[cnt]
-                                    txt += " bus={bus}".format(bus=str(bus).replace(".","_").replace(" ", "_"))
+                                    txt += " bus={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', str(bus)))
 
                                 if len(winding.phase_windings) != 3:
 
@@ -784,9 +785,9 @@ class Writer(AbstractWriter):
                             if buses is not None:
 
                                 if cnt == 0 or cnt == 1:
-                                    txt += " bus={b}".format(b=buses[cnt].replace(".","_").replace(" ", "_"))
+                                    txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt]))
                                 elif cnt == 2:
-                                    txt += " bus={b}".format(b=buses[cnt - 1].replace(".","_").replace(" ", "_"))
+                                    txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt - 1]))
 
                                 # These are the configurations for center tap transformers
                                 if cnt == 0:
@@ -1075,7 +1076,7 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " Bus1={elt}".format(elt=i.connecting_element.replace(".", "_").replace(" ", "_"))
+                    txt += " Bus1={elt}".format(elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
                     if (
                         hasattr(i, "phase_storages")
                         and i.phase_storages is not None
@@ -1293,7 +1294,7 @@ class Writer(AbstractWriter):
                     and i.connecting_element is not None
                 ):
                     txt += " bus1={connecting_elt}".format(
-                        connecting_elt=i.connecting_element.replace(".", "_").replace(" ", "_")
+                        connecting_elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element)
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
@@ -1797,6 +1798,7 @@ class Writer(AbstractWriter):
                     substation_text_map[substation_name] = set([feeder_name])
                 else:
                     substation_text_map[substation_name].add(feeder_name)
+
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
@@ -1819,7 +1821,7 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " bus1={bus}".format(bus=i.connecting_element.replace(".", "_").replace(" ", "_"))
+                    txt += " bus1={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
                     if hasattr(i, "phase_loads") and i.phase_loads is not None:
                         for phase_load in i.phase_loads:
                             if (
@@ -1985,6 +1987,7 @@ class Writer(AbstractWriter):
 
                 txt += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
+        
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
@@ -2150,7 +2153,7 @@ class Writer(AbstractWriter):
                             and i.to_element is not None
                         ):
                             transfo_creation_string += " buses=({b1}.{p},{b2}.{p})".format(
-                                b1=i.from_element.replace(".","_").replace(" ", "_"), b2=i.to_element.replace(".","_").replace(" ", "_"), p=phase_string
+                                b1=re.sub('[^0-9a-zA-Z]+', '_', i.from_element), b2=re.sub('[^0-9a-zA-Z]+', '_', i.to_element), p=phase_string
                             )
 
                         # Conns
@@ -2503,7 +2506,7 @@ class Writer(AbstractWriter):
 
                 # Connecting element
                 if i.connecting_element is not None:
-                    txt += " Bus1=" + i.connecting_element.replace(".", "_").replace(" ", "_")
+                    txt += " Bus1=" + re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element)
 
                     # For a 3-phase capbank we don't add any suffixes to the output.
                     if (
@@ -2841,7 +2844,7 @@ class Writer(AbstractWriter):
 
                 # from_element
                 if hasattr(i, "from_element") and i.from_element is not None:
-                    txt += " bus1={from_el}".format(from_el=i.from_element.replace(".", "_").replace(" ", "_"))
+                    txt += " bus1={from_el}".format(from_el=re.sub('[^0-9a-zA-Z]+', '_', i.from_element)
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2853,7 +2856,7 @@ class Writer(AbstractWriter):
 
                 # to_element
                 if hasattr(i, "to_element") and i.to_element is not None:
-                    txt += " bus2={to_el}".format(to_el=i.to_element.replace(".", "_").replace(" ", "_"))
+                    txt += " bus2={to_el}".format(to_el=re.sub('[^0-9a-zA-Z]+', '_', i.to_element)
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2916,7 +2919,7 @@ class Writer(AbstractWriter):
                 if i in lines_to_geometrify:
                     txt += " geometry={g}".format(g=i.nameclass)
                 elif i in lines_to_linecodify:
-                    txt += " Linecode={c}".format(c=i.nameclass.replace(".","_").replace(" ", "_"))
+                    txt += " Linecode={c}".format(c=re.sub('[^0-9a-zA-Z]+', '_', i.nameclass)
 
                 txt += "\n\n"
                 if fuse_line != "":
@@ -3449,7 +3452,7 @@ class Writer(AbstractWriter):
                     )
 
                     for linecode_name, linecode_data in txt.items():
-                        fp.write("New Linecode.{name}".format(name=linecode_name.replace(".","_").replace(" ", "_")))
+                        fp.write("New Linecode.{name}".format(name=re.sub('[^0-9a-zA-Z]+', '_', linecode_name)))
                         for k, v in linecode_data.items():
                             fp.write(" {k}={v}".format(k=k, v=v))
                         fp.write("\n\n")
@@ -3771,7 +3774,7 @@ class Writer(AbstractWriter):
                     ):
                         fp.write(
                             "bus1={name} pu={pu}".format(
-                                name=obj.connecting_element.replace(".", "_").replace(" ", "_"), pu=obj.per_unit
+                                name=re.sub('[^0-9a-zA-Z]+', '_', obj.connecting_element), pu=obj.per_unit
                             )
                         )
                     else:
@@ -3782,7 +3785,7 @@ class Writer(AbstractWriter):
                         )
                         fp.write(
                             "bus1={name} pu={pu}".format(
-                                name=cleaned_name.replace(".", "_").replace(" ", "_"), pu=obj.per_unit
+                                name=re.sub('[^0-9a-zA-Z]+', '_', cleaned_name), pu=obj.per_unit
                             )
                         )
 
@@ -3925,7 +3928,7 @@ class Writer(AbstractWriter):
                         fp.write(
                             "Clear\n\nNew Circuit.feeder_{name} ".format(name=i.name)
                         )
-                    fp.write("bus1={name} pu={pu}".format(name=i.name.replace(".", "_").replace(" ", "_"), pu=i.setpoint))
+                    fp.write("bus1={name} pu={pu}".format(name=re.sub('[^0-9a-zA-Z]+', '_', i.name), pu=i.setpoint))
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         fp.write(
                             " basekV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
