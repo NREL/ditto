@@ -2844,7 +2844,7 @@ class Writer(AbstractWriter):
 
                 # from_element
                 if hasattr(i, "from_element") and i.from_element is not None:
-                    txt += " bus1={from_el}".format(from_el=re.sub('[^0-9a-zA-Z]+', '_', i.from_element)
+                    txt += " bus1={from_el}".format(from_el=re.sub('[^0-9a-zA-Z]+', '_', i.from_element))
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2856,7 +2856,7 @@ class Writer(AbstractWriter):
 
                 # to_element
                 if hasattr(i, "to_element") and i.to_element is not None:
-                    txt += " bus2={to_el}".format(to_el=re.sub('[^0-9a-zA-Z]+', '_', i.to_element)
+                    txt += " bus2={to_el}".format(to_el=re.sub('[^0-9a-zA-Z]+', '_', i.to_element))
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2919,7 +2919,7 @@ class Writer(AbstractWriter):
                 if i in lines_to_geometrify:
                     txt += " geometry={g}".format(g=i.nameclass)
                 elif i in lines_to_linecodify:
-                    txt += " Linecode={c}".format(c=re.sub('[^0-9a-zA-Z]+', '_', i.nameclass)
+                    txt += " Linecode={c}".format(c=re.sub('[^0-9a-zA-Z]+', '_', i.nameclass))
 
                 txt += "\n\n"
                 if fuse_line != "":
