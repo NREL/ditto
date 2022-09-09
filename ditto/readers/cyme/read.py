@@ -4214,7 +4214,52 @@ class Reader(AbstractReader):
         return 1
 
     def parse_transformers(self, model):
-        """Parse the transformers from CYME to DiTTo. Since substation transformer can have LTCs attached, when parsing a transformer, we may also create a regulator. LTCs are represented as regulators."""
+        """
+        Parse the transformers from CYME to DiTTo. 
+        Since substation transformer can have LTCs attached, when parsing a transformer, 
+        we may also create a regulator. LTCs are represented as regulators.
+
+        The [TRANSFORMER] section specifies generic transformers that can be place in the 
+        network via other section specifications. For example, 
+        [TRANSFORMER BYPHASE SETTING] contains columns for 
+        PhaseTransformerID1, PhaseTransformerID2, and PhaseTransformerID3
+        which must have at least one (string) value that corresponds to [TRANSFORMER] ID
+
+        List of sections parsed:
+
+        # network.txt
+        NOTE: When parsing the network values the "type" key is set to the corresponding
+        equipment.txt name by passing {"type": "grounding_transformer"} for example
+        to `parser_helper` when parsing "grounding_transformer_settings".
+
+        NOTE: seems like the SETTING values have required SectionID and EqID fields but
+        it may not be consistent (for example PHOTOVOLTAIC SETTINGS has a required
+        EquipmentID field and a rewquired DeviceNumber field)
+
+        NOTE: all of these SETTING sections start with SectionID (but there are exceptions
+        for other SETTING sections such as [CONVERTER CONTROL SETTING] that starts with DeviceNumber)
+
+        - [AUTO TRANSFORMER SETTING]
+        - [GROUNDINGTRANSFORMER SETTINGS]
+        - [THREE WINDING AUTO TRANSFORMER SETTING]
+        - [THREE WINDING TRANSFORMER SETTING]
+        - [TRANSFORMER SETTING]
+        - [TRANSFORMER BYPHASE SETTING]
+        - [PHASE SHIFTER TRANSFORMER SETTING]
+
+        # equipment.txt
+        NOTE: all equipment sections start with ID (not SectionID)
+        - [AUTO TRANSFORMER]
+        - [GROUNDING TRANSFORMER]
+        - [THREE WINDING AUTO TRANSFORMER]
+        - [THREE WINDING TRANSFORMER]
+        - [TRANSFORMER]
+        - TODO add [PHASE SHIFTER TRANSFORMER]
+
+        NOTE: it appears that all BYPHASE values are only SETTINGs (no BYPHASE equipment) and so
+        TRANSFORMER BYPHASE SETTING defines values for a TRANSFORMER (there are also 
+        REGULATOR BYHPASE SETTING and OVERHEAD BYPHASE SETTING)
+        """
         # Instanciate the list in which we store the DiTTo transformer objects
         self._transformers = []
 
