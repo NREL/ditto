@@ -113,6 +113,8 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |             'transformer_settings'        |              '[TRANSFORMER SETTING]'       |
     +-------------------------------------------+--------------------------------------------+
+    |       'transformer_byphase_settings'      |        '[TRANSFORMER BYPHASE SETTING]'     |
+    +-------------------------------------------+--------------------------------------------+
     |               'auto_transformer'          |                '[AUTO TRANSFORMER]'        |
     +-------------------------------------------+--------------------------------------------+
     |             'grounding_transformer'       |               '[GROUNDING TRANSFORMER]'    |
@@ -259,6 +261,7 @@ class Reader(AbstractReader):
                 "[THREE WINDING TRANSFORMER SETTING]"
             ],
             "transformer_settings": ["[TRANSFORMER SETTING]"],
+            "transformer_byphase_settings": ["[TRANSFORMER BYPHASE SETTING]"],
             "phase_shifter_transformer_settings": [
                 "[PHASE SHIFTER TRANSFORMER SETTING]"
             ],
@@ -4280,6 +4283,13 @@ class Reader(AbstractReader):
             "eqid": 2,
             "coordx": 10,
             "coordy": 11,
+        }
+        mapp_transformer_byphase_settings = {
+            "sectionid": 0,
+            "PhaseTransformerID1": 8, # maps to TRANSFORMER ID
+            "PhaseTransformerID2": 9,
+            "PhaseTransformerID3": 10,
+            "FeedingNode": 16
         }
 
         self.auto_transformers = {}
