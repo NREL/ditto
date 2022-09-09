@@ -4402,12 +4402,12 @@ class Reader(AbstractReader):
         # Open the network file
         self.get_file_content("network")
 
-        # Loop over the network file
+        # Loop over the network file to get the SETTINGS
         for line in self.content:
 
             #########################################
             #                                       #
-            #             AUTO TRANSFORMER          #
+            #       AUTO TRANSFORMER SETTINGS       #
             #                                       #
             #########################################
             #
@@ -4444,11 +4444,11 @@ class Reader(AbstractReader):
                 )
             )
 
-            #########################################
-            #                                       #
-            #   THREE WINDING AUTO TRANSFORMER      #
-            #                                       #
-            #########################################
+            ###########################################
+            #                                         #
+            # THREE WINDING AUTO TRANSFORMER SETTINGS #
+            #                                         #
+            ###########################################
             #
             self.settings.update(
                 self.parser_helper(
@@ -4584,7 +4584,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #         GROUNDING TRANSFORMER         #
+            #    GROUNDING TRANSFORMER SETTINGS     #
             #                                       #
             #########################################
             #
@@ -4624,7 +4624,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #      THREE WINDING TRANSFORMER        #
+            #   THREE WINDING TRANSFORMER SETTINGS  #
             #                                       #
             #########################################
             #
@@ -4649,7 +4649,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #             TRANSFORMER               #
+            #          TRANSFORMER SETTINGS         #
             #                                       #
             #########################################
             #
@@ -4679,6 +4679,7 @@ class Reader(AbstractReader):
                 )
             )
 
+        # for each line in a SETTING section define a PowerTransformer
         for sectionID, settings in self.settings.items():
 
             sectionID = sectionID.strip("*").lower()
