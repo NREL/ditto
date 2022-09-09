@@ -762,23 +762,72 @@ class Reader(AbstractReader):
 
         return np.any([x in line for x in self.header_mapping[obj]])
 
-    def parser_helper(self, line, obj, attribute_list, mapping: dict, *args, **kwargs) -> dict:
+    def parser_helper(self, line, obj: str, attribute_list, mapping: dict, *args, **kwargs) -> dict:
         """
         .. warning:: This is a helper function for the parsers. Do not use directly.
 
         Takes as input the object we want to parse (eg. "section" maps to "[SECTION]") 
         as well as the list of attributes we want to extract (eg. ["sectionid", "fromnodeid", "tonodeid", "phase"]).
-        Also takes the default positions of the attributes (mapping), which is overwritten if "format" is found in the lines.
+        Also takes the default positions of the attributes (mapping), which is overwritten if "format" is found in the line after `obj` is found.
         The function returns a dictionary of dictionaries, where each sub-dictionary contains the values of the desired attributes of a CYME object.
+
+        The first and only top-level key in the returned dictionary is set to the first comma separated value in the line 
+        after the "format" line. For example, given 
+
+        - line="[TRANSFORMER]" 
+        - obj="transformer" 
+        - attribute_list=["kva", "kvllprim", "kvllsec"]
+        - args={"type": "transformer"}
+        
+        the following (truncated) example lines in network.txt:
+
+            [TRANSFORMER]
+            FORMAT_TRANSFORMER=ID,Type,WindingType,KVA,VoltageUnit,KVLLprim,KVLLsec, ...
+            1P_7.2KV/120/240V_25KVA,1,1,25.000000,0,12.470000,0.240000, ...
+            1P_7.2KV/240/120V_50KVA,1,1,50.000000,0,12.470000,0.240000, ...
+
+        will result in a returned dictionary like:
+
+            {
+                "type": "transformer",
+
+                "1P_7.2KV/120/240V_25KVA": {
+                    "kva": 25.000000,
+                    "kvllprim": 12.470000,
+                    "kvllsec": 0.240000
+                },
+
+                "1P_7.2KV/240/120V_50KVA": {
+                    "kva": 50.000000,
+                    "kvllprim": 12.470000,
+                    "kvllsec": 0.240000
+                },
+            }
+
+        Note that the `mapping` argument is not used in the above example because there is a "FORMAT_TRANSFORMER="
+        line after the section header, which is used to define the `mapping`.
+        
+
+        TODO is this case handled?!: (i.e. when the format is only temporary?)
+        [SECTION]
+        FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,ZoneID,SubNetworkId
+        FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,Group4,Group5,Group6,North,South,East,West,AreaFilter,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version
+        FEEDER=60803,SOURCE_60803,1,1662563223,,0,1.000000,0.150000,Lancaster,UNK,,,,,225423.609616,194367.254874,2452036.118000,2423405.968000,217563134,NULL,,,,,,,,,,,,,,,-1
+        43044S21249-L,2430449.596_212244.46,0,43044S21249-L,0,C,,
+        43936S21443-L,2439387.172_214373.799,0,43936S21443-L,0,A,,
+        ...
+
+
         """
         if isinstance(attribute_list, list):
-            attribute_list = np.array(attribute_list)
+            attribute_list = np.array(attribute_list)  # why do we need an numpy array?
 
         if not isinstance(attribute_list, np.ndarray):
             raise ValueError("Could not cast attribute list to Numpy array.")
 
         if args and isinstance(args[0], dict):
-            additional_information = args[0]
+            additional_information = args[0]  # typically {"type": "same-string-as-obj-arg"}, which gets added to the returned dict
+            # TODO make this update explicit if this is all that it is used for
         else:
             additional_information = {}
 
