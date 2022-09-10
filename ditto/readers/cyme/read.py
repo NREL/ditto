@@ -4274,10 +4274,10 @@ class Reader(AbstractReader):
         }
         mapp_transformer_byphase_settings = {
             "sectionid": 0,
-            "PhaseTransformerID1": 8, # maps to TRANSFORMER ID
-            "PhaseTransformerID2": 9,
-            "PhaseTransformerID3": 10,
-            "FeedingNode": 16
+            "phasetransformerid1": 8, # maps to TRANSFORMER ID
+            "phasetransformerid2": 9,
+            "phasetransformerid3": 10,
+            "feedingnode": 16
         }
 
         self.auto_transformers = {}
@@ -4324,7 +4324,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #         GROUNDING TRANSFORMER         #
+            #    GROUNDING TRANSFORMER SETTINGS     #
             #                                       #
             #########################################
             #
@@ -4367,7 +4367,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #      THREE WINDING TRANSFORMER        #
+            #   THREE WINDING TRANSFORMER SETTINGS  #
             #                                       #
             #########################################
             #
@@ -4394,7 +4394,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #             TRANSFORMER               #
+            #          TRANSFORMER SETTINGS         #
             #                                       #
             #########################################
             #
@@ -4426,7 +4426,23 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #    PHASE SHIFTER TRANSFORMER          #
+            #       TRANSFORMER BYPHASE SETTING     #
+            #                                       #
+            #########################################
+            
+            self.settings.update(  # why self.settings? (and not a local dict?)
+                self.parser_helper(
+                    line,
+                    "transformer_byphase_settings",
+                    list(mapp_transformer_byphase_settings.keys()),  # why a list of keys to parse separate from the mapp dict?
+                    mapp_transformer_byphase_settings,
+                    {"type": "transformer_byphase"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #    PHASE SHIFTER TRANSFORMER SETTINGS #
             #                                       #
             #########################################
             #
@@ -4478,7 +4494,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #    GROUNDING TRANSFORMER SETTINGS     #
+            #         GROUNDING TRANSFORMER         #
             #                                       #
             #########################################
             #
@@ -4518,7 +4534,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #   THREE WINDING TRANSFORMER SETTINGS  #
+            #      THREE WINDING TRANSFORMER        #
             #                                       #
             #########################################
             #
@@ -4543,7 +4559,7 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #          TRANSFORMER SETTINGS         #
+            #             TRANSFORMER               #
             #                                       #
             #########################################
             #
@@ -4594,6 +4610,7 @@ class Reader(AbstractReader):
 
             try:
                 phases = self.section_phase_mapping[sectionID]["phase"]
+                # phases is a string of length 1-3 with any combination of "A", "B", "C"
             except:
                 raise ValueError("Empty phases for transformer {}.".format(sectionID))
 
@@ -4866,6 +4883,27 @@ class Reader(AbstractReader):
 
                     # Add the winding object to the transformer
                     api_transformer.windings.append(api_winding)
+
+            if settings["type"] == "transformer_byphase":
+                # at least one PhaseTransformerID is required, which corresponds
+                # with a self.transformers key
+                
+                trfx_id = None
+                for phs in [1,2,3]:
+                    k = "phasetransformerid"+str(phs)
+                    if (
+                        k in settings.keys() and
+                        len(settings[k]) > 1
+                    ):
+                        trfx_id = settings[k]
+                        break
+                    # TODO is it possible for TRANSFORMER BYPHASE SETTING to have more than one PhaseTransformerID?
+                
+                if trfx_id is not None and trfx_id in self.transformers.keys():
+                    transformer_data = self.transformers[trfx_id]
+                    xhl, R_perc = get_transformer_xhl_Rpercent(transformer_data)
+                    api_transformer.reactances = [float(xhl)]
+                    add_two_windings(api_transformer, transformer_data, model, phases, R_perc)
 
             # Add the transformer object to the list of transformers
             self._transformers.append(api_transformer)
