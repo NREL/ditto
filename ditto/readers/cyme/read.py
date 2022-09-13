@@ -28,7 +28,7 @@ from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
-from ditto.readers.cyme.utils import get_transformer_xhl_Rpercent, transformer_connection_configuration_mapping
+from ditto.readers.cyme.utils import get_transformer_xhl_Rpercent, add_two_windings
 
 from ditto.models.base import Unicode
 from ditto.modify.system_structure import system_structure_modifier
