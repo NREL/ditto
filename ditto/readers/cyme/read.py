@@ -28,6 +28,7 @@ from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
+from ditto.readers.cyme.utils import get_transformer_xhl_Rpercent, transformer_connection_configuration_mapping
 
 from ditto.models.base import Unicode
 from ditto.modify.system_structure import system_structure_modifier
@@ -161,6 +162,47 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |        'network_equivalent_setting'       |      '[NETWORK EQUIVALENT SETTING]'        |
     +-------------------------------------------+--------------------------------------------+
+
+    (nlaws fall 2022)
+    The CYME import/export manual is essentially a list of the section headers and the column names
+    for each section. Most of the following has been deducted from actual CYME models and their
+    ASCII exports.
+
+    An attempt at describing the CYME modeling concepts in CYME 9.0:
+
+    The highest level ID (abstract object) appears to be a StructureID, 
+    which can be found in:
+    - [HEADNODES], [STRUCTUREUDD], [UNCONNECTED NODES]
+    However, there can probably be more than one structure in a network, so 
+    perhaps the NetworkID is the highest level ID.
+    It appears that a NetworkID is one to one with a substation or feeder.
+
+    [HEADNODES]
+    - two mandatory fields: NodeID, NetworkID
+    - it appears that the NodeID in HEADNODES serve as the source nodes for each network
+    - source nodes should correspond to a substation or feeder (just like NetworkID)
+
+    [SOURCE (EQUIVALENT)]
+    - I do not have an example of CYME export with a SOURCE section
+    - so using the SOURCE EQUIVALENT SECTION, the only mandatory field is NodeID
+    - in the examples that I have the [HEADNODES].NodeID are 1:1 with [SOURCE EQUIVALENT].NodeID
+
+    [SECTION]
+    - the rest of the network connections are specified in the [SECTION] block
+    - the [SECTION] block is peculiar compared to the other object blocks because it can contain
+     more than one "TOPO", where a TOPO line starts with FORMAT_OBJNAME, for example:
+        - FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,ZoneID,SubNetworkId
+        - FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,Group4,Group5,Group6,North,South,East,West,AreaFilter,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version
+        - FORMAT_SUBSTATION=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,Group4,Group5,Group6,North,South,East,West,AreaFilter,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version
+    - with the exception of FORMAT_SECTION, any data line that uses FORMAT_OBJNAME must start with OBJNAME=
+        - for example, a feeder specification will look like:
+        - FEEDER=1234,SOURCE_1234,1, ...
+    - SectionID's tend to correspond to line specifications, but could also be a load or any piece of equipment (I think)
+    - perhaps the biggest gotcha in CYME is that more than one object can be in a section (i.e. between two nodes)
+        - for example, a node-transformer-line-node specification looks like:
+            - in [OVERHEADLINE SETTING] SectionID=sec1, DeviceNumber=dev1, LineCableID=lin1
+            - in [TRANSFORMER SETTING]  SectionID=sec1, FromNodeID=nd1
+            - in [SECTION]              SectionID=sec1, FromNodeID=nd1, ToNodeID=nd2
     """
 
     register_names = ["cyme", "Cyme", "CYME"]
@@ -1501,8 +1543,8 @@ class Reader(AbstractReader):
         ...
 
         [SECTION]
-        FORMAT_section=sectionid,fromnodeid,tonodeid,phase 
-        FORMAT_Feeder=networkid,headnodeid
+        FORMAT_section=sectionid,fromnodeid,...,tonodeid,...,phase 
+        FORMAT_Feeder=networkid,headnodeid,...
         Feeder=feeder_1,head_feeder_1
         section_1_feeder_1,node_1,node_2,ABC
         ...
@@ -1510,6 +1552,8 @@ class Reader(AbstractReader):
         Feeder=feeder_2,head_feeder_2
         section_1_feeder_2,node_1,node_2,ABC
         ...
+        FORMAT_SUBSTATION=NetworkID,HeadNodeID
+        SUBSTATION=substation_name,substation_node_id,
         ...
 
         **What is done in this function:**
@@ -4111,7 +4155,10 @@ class Reader(AbstractReader):
         """
         Parse the transformers from CYME to DiTTo. 
         Since substation transformer can have LTCs attached, when parsing a transformer, 
-        we may also create a regulator. LTCs are represented as regulators.
+        we also create a regulator if "isltc" column is true. (LTCs are represented as regulators.)
+        CYME equipment that have "isltc" column include:
+        - TRANSFORMER
+        - AUTOTRANSFORMER
 
         The [TRANSFORMER] section specifies generic transformers that can be place in the 
         network via other section specifications. For example, 
@@ -4157,6 +4204,7 @@ class Reader(AbstractReader):
         # Instanciate the list in which we store the DiTTo transformer objects
         self._transformers = []
 
+        # maps of object column names to indices
         mapp_auto_transformer_settings = {
             "sectionid": 0,
             "eqid": 2,
@@ -4280,6 +4328,7 @@ class Reader(AbstractReader):
             "feedingnode": 16
         }
 
+        # empty dicts to fill from txt files
         self.auto_transformers = {}
         self.grounding_transformers = {}
         self.three_winding_auto_transformers = {}
