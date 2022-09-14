@@ -136,7 +136,7 @@ class Writer(AbstractWriter):
         d1 = ctx.create_decimal(repr(f))
         return format(d1, "f")
 
-    def write(self, model, **kwargs):
+    def write(self, model, write_taps=False, **kwargs):
         """General writing function responsible for calling the sub-functions.
 
         Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS, 
@@ -157,10 +157,7 @@ class Writer(AbstractWriter):
         else:
             self.verbose = False
 
-        if "write_taps" in kwargs:
-            self.write_taps = kwargs["write_taps"]
-        else:
-            self.write_taps = False
+        self.write_taps = write_taps
 
         if "separate_feeders" in kwargs:
             self.separate_feeders = kwargs["separate_feeders"]
@@ -764,8 +761,9 @@ class Writer(AbstractWriter):
 
                         for cnt, winding in enumerate(i.windings):
 
-                            txt += " wdg={N}".format(N=cnt + 1)
+                            txt += f" wdg={cnt+1}"
 
+                            # conn = wye or delta
                             if (
                                 hasattr(winding, "connection_type")
                                 and winding.connection_type is not None
