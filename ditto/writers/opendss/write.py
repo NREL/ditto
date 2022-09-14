@@ -3794,6 +3794,7 @@ class Writer(AbstractWriter):
                         fp.write(
                             " basekV={volt}".format(volt=obj.nominal_voltage * 10 ** -3)
                         )  # DiTTo in volts
+                        self._baseKV_.add(obj.nominal_voltage * 10 ** -3)
 
                     if (
                         hasattr(obj, "positive_sequence_impedance")
