@@ -173,14 +173,9 @@ def add_two_windings(
 
         # Set the rated power
         try:
-            if w == 0:
-                api_winding.rated_power = (
-                    float(trfx_data["kva"]) * 10 ** 3
-                )  # DiTTo in volt ampere
-            if w == 1:
-                api_winding.rated_power = (
-                    float(trfx_data["kva"]) * 10 ** 3
-                )  # DiTTo in volt ampere
+            api_winding.rated_power = (
+                float(trfx_data["kva"]) * 10 ** 3
+            )  # DiTTo in volt ampere
         except:
             pass
 
