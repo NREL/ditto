@@ -25,11 +25,12 @@ def test_reactor():
     r.parse(m)
     m.set_names()
 
-    assert m["generator.pv633_1"].name == "generator.pv633_1"
-    assert m["generator.pv633_1"].nominal_voltage == 0.48 * 10 ** 3
-    assert m["generator.pv633_1"].from_element == "pv_633"
-    assert m["generator.pv633_1"].connection_type == 'Y'
-    assert m["generator.pv633_1"].feeder_name == "sourcebus_src"
-    assert m["generator.pv633_1"].phase_reactors[0].phase == "A"
-    assert m["generator.pv633_1"].phase_reactors[1].phase == "B"
-    assert m["generator.pv633_1"].phase_reactors[2].phase == "C"
+    assert m["reactor.714"].name == "reactor.714"
+    assert m["reactor.714"].nominal_voltage == 12.47 * 10 **3
+    assert m["reactor.714"].to_element == "714"
+    assert m["reactor.714"].from_element == "700t1"
+    assert m["reactor.714"].connection_type == "Y"
+    assert m["reactor.714"].faultrate == 0.0005
+    assert m["reactor.714"].phase_reactors[0].phase == "A"
+    assert m["reactor.714"].phase_reactors[1].phase == "B"
+    assert m["reactor.714"].phase_reactors[2].phase == "C"

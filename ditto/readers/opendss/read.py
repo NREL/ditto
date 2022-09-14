@@ -2810,7 +2810,7 @@ class Reader(AbstractReader):
             # rated_power
             try:
                 api_pvsystem.rated_power = float(
-                    data["kVA"] * 10 ** 3
+                    float(data["kVA"]) * 10 ** 3
                 )
             except:
                 pass
@@ -2968,7 +2968,7 @@ class Reader(AbstractReader):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        reactor = _dss_class_to_dict("generator")
+        reactor = _dss_class_to_dict("reactor")
 
         self._reactor = []
 
@@ -3002,14 +3002,14 @@ class Reader(AbstractReader):
 
             # to element
             # TODO from field???
-            '''try:
+            try:
                 if "." in data["bus2"]:
                     temp = data["bus2"].split(".")
-                    api_reactor.from_element = temp[0]
+                    api_reactor.to_element = temp[0]
                 else:
-                    api_reactor.from_element = data["bus2"].strip()
+                    api_reactor.to_element = data["bus2"].strip()
             except:
-                pass'''
+                pass
 
             # positions
             # TODO position field????
@@ -3049,11 +3049,10 @@ class Reader(AbstractReader):
                 pass'''
 
             # faultrate
-            # TODO faultrate
-            '''try:
-                api_reactor = ???? field
+            try:
+                api_reactor.faultrate = float(data["faultrate"])
             except:
-                pass'''
+                pass
 
             # phase reactor
             # N_phases
