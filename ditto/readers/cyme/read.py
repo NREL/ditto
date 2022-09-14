@@ -4853,7 +4853,7 @@ class Reader(AbstractReader):
                     pass
 
                 # Here we know that we have two windings...
-                add_two_windings(api_transformer, transformer_data, model, phases, R_perc)
+                add_two_windings(api_transformer, transformer_data, settings, model, phases, R_perc)
             
             # Handle Grounding transformers
             if settings["type"] == "grounding_transformer":
@@ -4950,7 +4950,7 @@ class Reader(AbstractReader):
                     transformer_data = self.transformers[trfx_id]
                     xhl, R_perc = get_transformer_xhl_Rpercent(transformer_data)
                     api_transformer.reactances = [float(xhl)]
-                    add_two_windings(api_transformer, transformer_data, model, phases, R_perc)
+                    add_two_windings(api_transformer, transformer_data, settings, model, phases, R_perc)
 
             # Add the transformer object to the list of transformers
             self._transformers.append(api_transformer)

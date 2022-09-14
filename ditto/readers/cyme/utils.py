@@ -148,10 +148,18 @@ def transformer_connection_configuration_mapping(value, winding):
     return res[winding]
 
 
-def add_two_windings(api_transformer: PowerTransformer, trfx_data: dict, model: Store, phases: str, R_perc: float) -> None:
+def add_two_windings(
+    api_transformer: PowerTransformer, 
+    trfx_data: dict, 
+    settings: dict,
+    model: Store, 
+    phases: str, 
+    R_perc: float
+    ) -> None:
     """
     Add Winding and PhaseWinding objects to PowerTransformer
     using `trfx_data` from the [TRANSFORMER] section
+    and `settings` from either [TRANFORMER SETTINGS] or [TRANSFORMER BYPHASE SETTINGS]
     """
 
     # Here we know that we have two windings...
@@ -213,12 +221,19 @@ def add_two_windings(api_transformer: PowerTransformer, trfx_data: dict, model: 
                 raise ValueError(
                     "Unable to instanciate PhaseWinding DiTTo object."
                 )
-
             # Set the phase
             try:
                 api_phase_winding.phase = p
             except:
                 pass
+
+            # set tap
+            tapkey = "primtap" if w == 0 else "secondarytap"
+            if (
+                tapkey in settings.keys() and
+                settings[tapkey] is not None
+            ):
+                api_phase_winding.tap_position = float(settings[tapkey]) / 100
 
             # Add the phase winding object to the winding
             api_winding.phase_windings.append(api_phase_winding)
