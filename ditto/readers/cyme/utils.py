@@ -192,6 +192,20 @@ def add_two_windings(
         except:
             pass
 
+        # Set base voltage
+        try:
+            if w == 0:
+                api_winding.base_voltage = (
+                    float(settings["primarybasevoltage"]) * 10 ** 3
+                )  # DiTTo in volt
+            if w == 1:
+                api_winding.base_voltage = (
+                    float(settings["secondarybasevoltage"]) * 10 ** 3
+                )  # DiTTo in volt
+        except:
+            pass
+        
+
         # Connection configuration
         try:
             api_winding.connection_type = transformer_connection_configuration_mapping(
