@@ -5263,7 +5263,7 @@ class Reader(AbstractReader):
 
                     # Set the nominal voltage
                     try:
-                        api_winding.nominal_voltage = float(regulator_data["kvln"])
+                        api_winding.nominal_voltage = float(regulator_data["kvln"]) * 10 ** 3
                     except:
                         pass
 
