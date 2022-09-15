@@ -203,6 +203,7 @@ class Reader(AbstractReader):
             - in [OVERHEADLINE SETTING] SectionID=sec1, DeviceNumber=dev1, LineCableID=lin1
             - in [TRANSFORMER SETTING]  SectionID=sec1, FromNodeID=nd1
             - in [SECTION]              SectionID=sec1, FromNodeID=nd1, ToNodeID=nd2
+        - these issues are fixed in fix_section_overlaps
     """
 
     register_names = ["cyme", "Cyme", "CYME"]
@@ -880,27 +881,24 @@ class Reader(AbstractReader):
             logger.info("Parsing the header...")
 
         self.parse_header()
+        
+        logger.info("Parsing the Headnodes...")
+        self.parse_head_nodes(model)
 
         logger.info("Parsing the sections...")
         self.parse_sections(model)
 
-        logger.info("Parsing the sources...")
-        self.parse_sources(model)
-
         # Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
 
+        logger.info("Parsing the subnetwork connections...")
+        self.parse_subnetwork_connections(model)
+
+        logger.info("Parsing the sources...")
+        self.parse_sources(model)
+
         logger.info("Parsing the network equivalents...")
         self.parse_network_equivalent(model)
-
-        # The variable self.network_type is set in the parse_sections() function.
-        # i.e. parse_sections
-        if self.network_type == "substation":
-            logger.info("Parsing the subnetwork connections...")
-            self.parse_subnetwork_connections(model)
-        else:
-            logger.info("Parsing the Headnodes...")
-            self.parse_head_nodes(model)
 
         self.fix_section_overlaps(model)
 
@@ -981,7 +979,11 @@ class Reader(AbstractReader):
             ].is_substation_connection = True
 
     def parse_head_nodes(self, model):
-        """ This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes"""
+        """ 
+        This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes
+        HEADNODES maps NodeID <-> NetworkID
+        and NetworkID is used to identify SUBSTATION and FEEDER in [SECTION]
+        """
         # Open the network file
         self.get_file_content("network")
         mapp = {
@@ -993,11 +995,13 @@ class Reader(AbstractReader):
             headnodes.update(
                 self.parser_helper(line, "headnodes", ["nodeid", "networkid"], mapp)
             )
+        self.headnodes = headnodes
 
-        for sid, headnode in headnodes.items():
-            feeder_metadata = Feeder_metadata(model)
-            feeder_metadata.name = headnode["networkid"].strip().lower()
-            feeder_metadata.headnode = headnode["nodeid"].strip().lower()
+        # for sid, headnode in headnodes.items():
+        #     feeder_metadata = Feeder_metadata(model)
+        #     feeder_metadata.name = headnode["networkid"].strip().lower()
+        #     feeder_metadata.headnode = headnode["nodeid"].strip().lower()
+        
 
     def parse_sources(self, model):
         """Parse the sources."""
@@ -1085,11 +1089,8 @@ class Reader(AbstractReader):
                         _from = v["tonodeid"]
                         _to = v["fromnodeid"]
                         phases = list(v["phase"])
-                try:
-                    api_source = PowerSource(model)
-                except:
-                    pass
 
+                api_source = PowerSource(model)
                 api_source.name = _from + "_src"
 
                 try:
@@ -1103,8 +1104,18 @@ class Reader(AbstractReader):
                     api_source.phases = phases
                 except:
                     pass
-
-                api_source.is_sourcebus = True
+                
+                # If there is a substation then it should be the source bus not a feeder
+                # Or if there is only one source
+                # TODO multiple substations are multiple feeders without a substation?
+                if len(source_equivalent_data) == 1:
+                    api_source.is_sourcebus = True
+                else:
+                    if _from in self.headnodes.keys():
+                        if "type" in self.headnodes[_from]:
+                            if self.headnodes[_from]["type"] == "substation":
+                                api_source.is_sourcebus = True
+                
 
                 try:
                     api_source.rated_power = 10 ** 3 * float(
@@ -1556,6 +1567,7 @@ class Reader(AbstractReader):
         SUBSTATION=substation_name,substation_node_id,
         ...
 
+
         **What is done in this function:**
 
         - We need to create a clear and fast mapping between feeders and sectionids
@@ -1641,8 +1653,12 @@ class Reader(AbstractReader):
                             or line[:15].lower() == "generalnetwork="
                         ):
                             self.network_type = "feeder"
+                            network_type = "feeder"
                         if line[:11].lower() == "substation=":
                             self.network_type = "substation"
+                            network_type = "substation"
+                            # all sections parsed after this line are in a substation with the NetworkID
+                            # from SUBSTATION=THE_NTWK_ID (until a new FORMAT is found)
 
                         # We should have a format for sections and feeders,
                         # otherwise, raise an error...
@@ -1689,7 +1705,7 @@ class Reader(AbstractReader):
                             self.network_data[_netID][key] = value
 
                         # Then, we create a new entry in feeder_section_mapping
-                        self.feeder_section_mapping[_netID] = []
+                        self.feeder_section_mapping[_netID] = []  # never filled in ?
 
                     # Otherwise, we should have a new section...
                     else:
@@ -1723,9 +1739,14 @@ class Reader(AbstractReader):
                         # Populate this new entry
                         for key, value in zip(format_section, section_data):
                             self.section_phase_mapping[_sectionID][key] = value
+                            if key == "fromnodeid":
+                                if value in self.headnodes.keys():
+                                    self.headnodes[value]["type"] = network_type
 
                         # And finally, add a new entry to section_feeder_mapping
                         self.section_feeder_mapping[_sectionID] = _netID
+                        # section_feeder_mapping should be section_network_mapping
+                        # b/c network can be feeder or substation 
 
                     # Finally, move on to next line
                     line = next(self.content)
