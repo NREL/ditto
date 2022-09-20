@@ -346,7 +346,7 @@ class Network:
                     if self.digraph.has_edge(m.to_element, m.from_element):
                         self.digraph.remove_edge(m.to_element, m.from_element)
 
-    def get_upstream_transformer(self, model, node):
+    def get_upstream_transformer(self, node):
 
         curr_node = node
         curr = list(self.digraph.predecessors(node))
