@@ -462,14 +462,6 @@ class Writer(AbstractWriter):
                         ):
                             N_phases.append(len(winding.phase_windings))
 
-# Doesn't apply to center-tap transformers. REMOVE?
-#                    if len(np.unique(N_phases)) != 1:
-#                        logger.error(
-#                            "Did not find the same number of phases accross windings of transformer {name}".format(
-#                                name=i.name
-#                            )
-#                        )
-
                     try:
                         # phase-phase connection defined with phase=1 even though it's two phase.
                         if (
