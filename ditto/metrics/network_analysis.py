@@ -465,7 +465,7 @@ class NetworkAnalyzer(object):
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
                                 and prev_obj.feeder_name is not None
-                                and prev_obj.feeder_name is not ""
+                                and prev_obj.feeder_name != ""
                                 and prev_obj.name
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
@@ -498,7 +498,7 @@ class NetworkAnalyzer(object):
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
                                 and prev_obj.feeder_name is not None
-                                and prev_obj.feeder_name is not ""
+                                and prev_obj.feeder_name != ""
                                 and prev_obj.name
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
@@ -525,7 +525,7 @@ class NetworkAnalyzer(object):
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
                                 and prev_obj.feeder_name is not None
-                                and prev_obj.feeder_name is not ""
+                                and prev_obj.feeder_name != ""
                                 and prev_obj.name
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
