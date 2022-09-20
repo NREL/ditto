@@ -5240,10 +5240,7 @@ class Reader(AbstractReader):
                 for w in range(2):
 
                     # Instanciate a Winding DiTTo object
-                    try:
-                        api_winding = Winding(model)
-                    except:
-                        raise ValueError("Unable to instanciate Winding DiTTo object.")
+                    api_winding = Winding(model)
 
                     # Set the rated power
                     try:
@@ -6524,11 +6521,11 @@ class Reader(AbstractReader):
                         element.from_element = from_element
 
                     # Regulators go between the same two nodes
-                    if isinstance(element,Regulator):
+                    if isinstance(element, Regulator):
                         from_element = original_from_element+'_reg'
                     else:
                         from_element = original_from_element+'_sec_'+str(intermediate_count)
-                    intermediate_count +=1
+                    intermediate_count += 1
                     if intermediate_count != connector_count:
                         element.to_element = from_element
                         api_node = Node(model)
