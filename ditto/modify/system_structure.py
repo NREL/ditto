@@ -252,7 +252,9 @@ class system_structure_modifier(Modifier):
             new_value = voltage
         
         if hasattr(self.model[node], "nominal_voltage"):
-            self.model[node].nominal_voltage = new_value
+            if new_value != self.model[node].nominal_voltage:
+                logger.debug(f"Setting node {node} nominal voltage to {new_value} from {self.model[node].nominal_voltage}")
+                self.model[node].nominal_voltage = new_value
         for child in self.G.digraph.successors(node):
             self.set_nominal_voltages_recur(child, new_value, node)
 
