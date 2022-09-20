@@ -363,21 +363,19 @@ class Network:
         model.set_names()
 
         # Checking that the network is already built
-        # TODO: Log instead of printing...
         if not self.is_built:
-            logger.debug(
+            logger.warn(
                 "Warning. Trying to use Network model without building the network."
             )
-            logger.debug("Calling build() with source={}".format(source))
+            logger.warn("Calling build() with source={}".format(source))
             self.build(model, source=source)
 
         # Checking that the attributes have been set
-        # TODO: Log instead of printing...
         if not self.attributes_set:
-            logger.debug(
+            logger.warn(
                 "Warning. Trying to use Network model without setting the attributes first."
             )
-            logger.debug("Setting the attributes...")
+            logger.warn("Setting the attributes...")
             self.set_attributes(model)
 
         # Run the dfs or die trying...
