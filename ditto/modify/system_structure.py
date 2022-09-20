@@ -224,9 +224,10 @@ class system_structure_modifier(Modifier):
             previous = self.source
         else:
             node, voltage, previous = args
-        if (previous, node) in self.edge_equipment and self.edge_equipment[
-            (previous, node)
-        ] == "PowerTransformer":
+        if (
+            (previous, node) in self.edge_equipment and 
+            self.edge_equipment[(previous, node)] == "PowerTransformer"
+        ):
             trans_name = self.edge_equipment_name[(previous, node)]
             new_value = min(
                 [
@@ -235,9 +236,10 @@ class system_structure_modifier(Modifier):
                     if w.nominal_voltage is not None
                 ]
             )
-        elif (node, previous) in self.edge_equipment and self.edge_equipment[
-            (node, previous)
-        ] == "PowerTransformer":
+        elif (
+            (node, previous) in self.edge_equipment and 
+            self.edge_equipment[(node, previous)] == "PowerTransformer"
+        ):
             trans_name = self.edge_equipment_name[(node, previous)]
             new_value = min(
                 [
@@ -248,6 +250,7 @@ class system_structure_modifier(Modifier):
             )
         else:
             new_value = voltage
+        
         if hasattr(self.model[node], "nominal_voltage"):
             self.model[node].nominal_voltage = new_value
         for child in self.G.digraph.successors(node):
