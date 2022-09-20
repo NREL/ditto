@@ -415,539 +415,532 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
 
         # Loop over the DiTTo objects
-        for i in model.models:
-            # If we get a transformer object...
-            if isinstance(i, PowerTransformer):
-                # Write the data in the file
-                # Name
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
-                else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
-                else:
-                    substation_name = "DEFAULT"
+        for i in model.iter_models(PowerTransformer):
+            # Write the data in the file
+            # Name
+            feeder_name = "DEFAULT"
+            if (
+                self.separate_feeders
+                and hasattr(i, "feeder_name")
+                and i.feeder_name is not None
+            ):
+                feeder_name = i.feeder_name
+                
+            substation_name = "DEFAULT"
+            if (
+                self.separate_substations
+                and hasattr(i, "substation_name")
+                and i.substation_name is not None
+            ):
+                substation_name = i.substation_name
 
-                if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
-                else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+            if not substation_name in substation_text_map:
+                substation_text_map[substation_name] = set([feeder_name])
+            else:
+                substation_text_map[substation_name].add(feeder_name)
 
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Transformer." + i.name
-                else:
-                    # If we do not have a valid name, do not even try
-                    # to write anything for this transformer....
-                    continue
+            txt = ""
+            if substation_name + "_" + feeder_name in feeder_text_map:
+                txt = feeder_text_map[substation_name + "_" + feeder_name]
 
-                # Number of phases and windings
-                if hasattr(i, "windings") and i.windings is not None:
-                    N_phases = []
-                    for winding in i.windings:
-                        if (
-                            hasattr(winding, "phase_windings")
-                            and winding.phase_windings is not None
-                        ):
-                            N_phases.append(len(winding.phase_windings))
+            if hasattr(i, "name") and i.name is not None:
+                txt += "New Transformer." + i.name
+            else:
+                # If we do not have a valid name, do not even try
+                # to write anything for this transformer....
+                continue
 
-                    try:
-                        # phase-phase connection defined with phase=1 even though it's two phase.
-                        if (
-                            len(i.windings) == 3
-                            and i.windings[0].connection_type is not None
-                            and i.windings[0].connection_type == "D"
-                        ):
-                            txt += " phases={Np}".format(Np=N_phases[0] - 1)
-                        else:
-                            txt += " phases={Np}".format(Np=N_phases[0])
-                        txt += " windings={N}".format(N=len(i.windings))
-                    except:
-                        logger.error(
-                            "Could not write the number of phases for transformer {name}".format(
-                                name=i.name
-                            )
-                        )
+            # Number of phases and windings
+            if hasattr(i, "windings") and i.windings is not None:
+                N_phases = []
+                for winding in i.windings:
+                    if (
+                        hasattr(winding, "phase_windings")
+                        and winding.phase_windings is not None
+                    ):
+                        N_phases.append(len(winding.phase_windings))
 
-                # Connection
-                if hasattr(i, "from_element") and i.from_element is not None:
-                    bus1 = i.from_element
-                else:
-                    bus1 = None
-                if hasattr(i, "to_element") and i.to_element is not None:
-                    bus2 = i.to_element
-                else:
-                    bus2 = None
+                try:
+                    # phase-phase connection defined with phase=1 even though it's two phase.
+                    if (
+                        len(i.windings) == 3
+                        and i.windings[0].connection_type is not None
+                        and i.windings[0].connection_type == "D"
+                    ):
+                        txt += " phases={Np}".format(Np=N_phases[0] - 1)
+                    else:
+                        txt += " phases={Np}".format(Np=N_phases[0])
+                    txt += " windings={N}".format(N=len(i.windings))
+                except:
+                    logger.error(f"Could not write the number of phases for transformer {i.name}")
 
-                if bus1 is not None and bus2 is not None:
-                    buses = [bus1, bus2]
-                else:
-                    buses = None
+            # Connection
+            bus1 = None
+            if hasattr(i, "from_element") and i.from_element is not None:
+                bus1 = i.from_element
+            
+            bus2 = None
+            if hasattr(i, "to_element") and i.to_element is not None:
+                bus2 = i.to_element
 
-                # Rated power
-                # if hasattr(i, 'rated_power') and i.rated_power is not None:
-                #    fp.write(' kva='+str(i.rated_power*10**-3)) #OpenDSS in kWatts
+            buses = None
+            if bus1 is not None and bus2 is not None:
+                buses = [bus1, bus2]
 
-                # Emergency power
-                # Emergency_power removed from powerTransformers and added to windings by Tarek
-                # if hasattr(i, 'emergency_power') and i.emergency_power is not None:
-                #    fp.write(' EmergHKVA='+str(i.emergency_power*10**-3)) #OpenDSS in kWatts
+            # Rated power
+            # if hasattr(i, 'rated_power') and i.rated_power is not None:
+            #    fp.write(' kva='+str(i.rated_power*10**-3)) #OpenDSS in kWatts
 
-                # Loadloss
-                if hasattr(i, "loadloss") and i.loadloss is not None:
-                    txt += " %loadloss=" + str(i.loadloss)  # OpenDSS in kWatts
+            # Emergency power
+            # Emergency_power removed from powerTransformers and added to windings by Tarek
+            # if hasattr(i, 'emergency_power') and i.emergency_power is not None:
+            #    fp.write(' EmergHKVA='+str(i.emergency_power*10**-3)) #OpenDSS in kWatts
 
-                # install type (Not mapped)
+            # Loadloss
+            if hasattr(i, "loadloss") and i.loadloss is not None:
+                txt += " %loadloss=" + str(i.loadloss)  # OpenDSS in kWatts
 
-                # noload_loss
-                if hasattr(i, "noload_loss") and i.noload_loss is not None:
-                    txt += " %Noloadloss=" + str(i.noload_loss)
+            # install type (Not mapped)
 
-                # noload_loss
-                if hasattr(i, "normhkva") and i.normhkva is not None:
-                    txt += " normhkva=" + str(i.normhkva)
+            # noload_loss
+            if hasattr(i, "noload_loss") and i.noload_loss is not None:
+                txt += " %Noloadloss=" + str(i.noload_loss)
 
-                # phase shift (Not mapped)
+            # noload_loss
+            if hasattr(i, "normhkva") and i.normhkva is not None:
+                txt += " normhkva=" + str(i.normhkva)
 
-                # Assume that we only have two or three windings. Three are used for center-tap transformers. Other single or three phase transformers use 2 windings
-                # For banked 3-phase transformers, separate single phase transformers are used
-                if hasattr(i, "windings") and i.windings is not None:
+            # phase shift (Not mapped)
+
+            # Assume that we only have two or three windings. Three are used for center-tap transformers. Other single or three phase transformers use 2 windings
+            # For banked 3-phase transformers, separate single phase transformers are used
+            if hasattr(i, "windings") and i.windings is not None:
+
+                # set compensator_r and compensator_x
+                for cnt, winding in enumerate(i.windings):
+                    if (
+                        hasattr(winding, "phase_windings")
+                        and winding.phase_windings is not None
+                    ):
+
+                        for phase_winding in winding.phase_windings:
+                            if (
+                                hasattr(phase_winding, "compensator_r")
+                                and phase_winding.compensator_r is not None
+                            ):
+                                if not i.name in self.compensator:
+                                    self.compensator[i.name] = {}
+                                    self.compensator[i.name]["R"] = set(
+                                        [phase_winding.compensator_r]
+                                    )
+                                elif "R" in self.compensator[i.name]:
+                                    self.compensator[i.name]["R"].add(
+                                        phase_winding.compensator_r
+                                    )
+                                else:
+                                    self.compensator[i.name]["R"] = set(
+                                        [phase_winding.compensator_r]
+                                    )
+
+                            if (
+                                hasattr(phase_winding, "compensator_x")
+                                and phase_winding.compensator_x is not None
+                            ):
+                                if not i.name in self.compensator:
+                                    self.compensator[i.name] = {}
+                                    self.compensator[i.name]["X"] = set(
+                                        [phase_winding.compensator_x]
+                                    )
+                                elif "X" in self.compensator[i.name]:
+                                    self.compensator[i.name]["X"].add(
+                                        phase_winding.compensator_x
+                                    )
+                                else:
+                                    self.compensator[i.name]["X"] = set(
+                                        [phase_winding.compensator_x]
+                                    )
+
+                if len(i.windings) == 2:
 
                     for cnt, winding in enumerate(i.windings):
+
+                        txt += " wdg={N}".format(N=cnt + 1)
+
+                        # Connection type
+                        if (
+                            hasattr(winding, "connection_type")
+                            and winding.connection_type is not None
+                        ):
+                            if winding.connection_type == "Y":
+                                txt += " conn=wye"
+                            elif winding.connection_type == "D":
+                                txt += " conn=delta"
+                            else:
+                                logger.error(
+                                    "Unsupported type of connection {conn} for transformer {name}".format(
+                                        conn=winding.connection_type, name=i.name
+                                    )
+                                )
+
+                        # Voltage type (Not mapped)
+
+                        # volage basis
+                        if (
+                            hasattr(winding, "base_voltage")
+                            and winding.base_voltage is not None
+                            and winding.base_voltage > 0
+                        ):
+                            self._baseKV_.add(winding.base_voltage * 10 ** -3)
+
+                        # Nominal voltage
+                        if (
+                            hasattr(winding, "nominal_voltage")
+                            and winding.nominal_voltage is not None
+                        ):
+                            txt += " Kv={kv}".format(
+                                kv=winding.nominal_voltage * 10 ** -3
+                            )  # OpenDSS in kvolts
+                            if (
+                                not substation_name + "_" + feeder_name
+                                in self._baseKV_feeders_
+                            ):
+                                self._baseKV_feeders_[
+                                    substation_name + "_" + feeder_name
+                                ] = set()
+
+                            if (
+                                winding.nominal_voltage < 300
+                            ):  # Line-Neutral voltage for 120 V
+                                self._baseKV_.add(
+                                    winding.nominal_voltage
+                                    * math.sqrt(3)
+                                    * 10 ** -3
+                                )
+                                self._baseKV_feeders_[
+                                    substation_name + "_" + feeder_name
+                                ].add(
+                                    winding.nominal_voltage
+                                    * math.sqrt(3)
+                                    * 10 ** -3
+                                )
+                            else:
+                                self._baseKV_.add(
+                                    winding.nominal_voltage * 10 ** -3
+                                )
+                                self._baseKV_feeders_[
+                                    substation_name + "_" + feeder_name
+                                ].add(winding.nominal_voltage * 10 ** -3)
+
+                        # rated power
+                        if (
+                            hasattr(winding, "rated_power")
+                            and winding.rated_power is not None
+                        ):
+                            txt += " kva={kva}".format(
+                                kva=winding.rated_power * 10 ** -3
+                            )
+
+                        # emergency_power
+                        # Was added to windings by Tarek
+                        if (
+                            hasattr(winding, "emergency_power")
+                            and winding.emergency_power is not None
+                        ):
+                            txt += " EmergHKVA={}".format(
+                                winding.emergency_power * 10 ** -3
+                            )  # OpenDSS in kWatts
+
+                        # resistance
+                        if (
+                            hasattr(winding, "resistance")
+                            and winding.resistance is not None
+                        ):
+                            txt += " %R={R}".format(R=winding.resistance)
+
+                        # Voltage limit (Not mapped)
+
+                        # Reverse resistance (Not mapped)
+
+                        # Check if winding is grounded
+                        # this check is done here so that it happens only for 2 windings
+
+                        # Phase windings
                         if (
                             hasattr(winding, "phase_windings")
                             and winding.phase_windings is not None
                         ):
 
-                            for phase_winding in winding.phase_windings:
-                                if (
-                                    hasattr(phase_winding, "compensator_r")
-                                    and phase_winding.compensator_r is not None
-                                ):
-                                    if not i.name in self.compensator:
-                                        self.compensator[i.name] = {}
-                                        self.compensator[i.name]["R"] = set(
-                                            [phase_winding.compensator_r]
-                                        )
-                                    elif "R" in self.compensator[i.name]:
-                                        self.compensator[i.name]["R"].add(
-                                            phase_winding.compensator_r
-                                        )
-                                    else:
-                                        self.compensator[i.name]["R"] = set(
-                                            [phase_winding.compensator_r]
-                                        )
-
-                                if (
-                                    hasattr(phase_winding, "compensator_x")
-                                    and phase_winding.compensator_x is not None
-                                ):
-                                    if not i.name in self.compensator:
-                                        self.compensator[i.name] = {}
-                                        self.compensator[i.name]["X"] = set(
-                                            [phase_winding.compensator_x]
-                                        )
-                                    elif "X" in self.compensator[i.name]:
-                                        self.compensator[i.name]["X"].add(
-                                            phase_winding.compensator_x
-                                        )
-                                    else:
-                                        self.compensator[i.name]["X"] = set(
-                                            [phase_winding.compensator_x]
-                                        )
-
-                    if len(i.windings) == 2:
-
-                        for cnt, winding in enumerate(i.windings):
-
-                            txt += " wdg={N}".format(N=cnt + 1)
-
-                            # Connection type
-                            if (
-                                hasattr(winding, "connection_type")
-                                and winding.connection_type is not None
-                            ):
-                                if winding.connection_type == "Y":
-                                    txt += " conn=wye"
-                                elif winding.connection_type == "D":
-                                    txt += " conn=delta"
-                                else:
-                                    logger.error(
-                                        "Unsupported type of connection {conn} for transformer {name}".format(
-                                            conn=winding.connection_type, name=i.name
-                                        )
-                                    )
-
-                            # Voltage type (Not mapped)
-
-                            # volage basis
-                            if (
-                                hasattr(winding, "base_voltage")
-                                and winding.base_voltage is not None
-                                and winding.base_voltage > 0
-                            ):
-                                self._baseKV_.add(winding.base_voltage * 10 ** -3)
-
-                            # Nominal voltage
-                            if (
-                                hasattr(winding, "nominal_voltage")
-                                and winding.nominal_voltage is not None
-                            ):
-                                txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10 ** -3
-                                )  # OpenDSS in kvolts
-                                if (
-                                    not substation_name + "_" + feeder_name
-                                    in self._baseKV_feeders_
-                                ):
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ] = set()
-
-                                if (
-                                    winding.nominal_voltage < 300
-                                ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
-                                else:
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
-
-                            # rated power
-                            if (
-                                hasattr(winding, "rated_power")
-                                and winding.rated_power is not None
-                            ):
-                                txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10 ** -3
-                                )
-
-                            # emergency_power
-                            # Was added to windings by Tarek
-                            if (
-                                hasattr(winding, "emergency_power")
-                                and winding.emergency_power is not None
-                            ):
-                                txt += " EmergHKVA={}".format(
-                                    winding.emergency_power * 10 ** -3
-                                )  # OpenDSS in kWatts
-
-                            # resistance
-                            if (
-                                hasattr(winding, "resistance")
-                                and winding.resistance is not None
-                            ):
-                                txt += " %R={R}".format(R=winding.resistance)
-
-                            # Voltage limit (Not mapped)
-
-                            # Reverse resistance (Not mapped)
-
-                            # Check if winding is grounded
-                            # this check is done here so that it happens only for 2 windings
-
-                            # Phase windings
-                            if (
-                                hasattr(winding, "phase_windings")
-                                and winding.phase_windings is not None
-                            ):
-
-                                if buses is not None:
-                                    bus = buses[cnt]
-                                    txt += " bus={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', str(bus)))
-
-                                if len(winding.phase_windings) != 3:
-
-                                    for j, phase_winding in enumerate(
-                                        winding.phase_windings
-                                    ):
-
-                                        # Connection
-                                        if (
-                                            hasattr(phase_winding, "phase")
-                                            and phase_winding.phase is not None
-                                        ):
-                                            txt += "." + str(
-                                                self.phase_mapping(phase_winding.phase)
-                                            )
-
-                                    if (
-                                        winding.connection_type == "D"
-                                        and len(winding.phase_windings) == 1
-                                    ):
-                                        print(
-                                            "Warning - only one phase specified for a delta system - adding another connection"
-                                        )
-                                        if self.phase_mapping(phase_winding.phase) == 1:
-                                            txt += ".2"
-                                        if self.phase_mapping(phase_winding.phase) == 2:
-                                            txt += ".3"
-                                        if self.phase_mapping(phase_winding.phase) == 3:
-                                            txt += ".1"
-
-                            if winding.is_grounded:
-                                txt += ".0"
-
-                            if (
-                                hasattr(winding, "phase_windings")
-                                and winding.phase_windings is not None
-                            ):
-                                # Tap position
-                                # THIS CAN CAUSE PROBLEMS
-                                # Use write_taps boolean to write this information or not
-                                if (
-                                    self.write_taps
-                                    and hasattr(
-                                        winding.phase_windings[0], "tap_position"
-                                    )
-                                    and winding.phase_windings[0].tap_position
-                                    is not None
-                                ):
-                                    txt += " Tap={tap}".format(
-                                        tap=winding.phase_windings[0].tap_position
-                                    )
-
-                        if hasattr(i, "reactances") and i.reactances is not None:
-                            # Since we are in the case of 2 windings, we should only have one reactance
-                            if isinstance(i.reactances, list):
-                                if len(i.reactances) != 1:
-                                    logger.error(
-                                        "Number of reactances incorrect for transformer {name}. Expected 1, got {N}".format(
-                                            name=i.name, N=len(i.reactances)
-                                        )
-                                    )
-                                else:
-                                    txt += " XHL={reac}".format(reac=i.reactances[0])
-                            # If it is not a list, maybe it was entered as a scalar, but should not be that way....
-                            elif isinstance(i.reactances, (int, float)):
-                                txt += " XHL={reac}".format(reac=i.reactances)
-                            else:
-                                logger.error(
-                                    "Reactances not understood for transformer {name}.".format(
-                                        name=i.name
-                                    )
-                                )
-
-                    # This is used to represent center-tap transformers
-                    # As described in the documentation, if the R and X values are not known, the values described by default_r and default_x should be used
-                    if len(i.windings) == 3:
-                        default_r = [0.6, 1.2, 1.2]
-                        default_x = [2.04, 2.04, 1.36]
-
-                        for cnt, winding in enumerate(i.windings):
-
-                            txt += f" wdg={cnt+1}"
-
-                            # conn = wye or delta
-                            if (
-                                hasattr(winding, "connection_type")
-                                and winding.connection_type is not None
-                            ):
-                                if winding.connection_type == "Y":
-                                    txt += " conn=wye"
-                                elif winding.connection_type == "D":
-                                    txt += " conn=delta"
-                                else:
-                                    logger.error(
-                                        "Unsupported type of connection {conn} for transformer {name}".format(
-                                            conn=winding.connection_type, name=i.name
-                                        )
-                                    )
-
-                            # Connection
                             if buses is not None:
+                                bus = buses[cnt]
+                                txt += " bus={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', str(bus)))
 
-                                if cnt == 0 or cnt == 1:
-                                    txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt]))
-                                elif cnt == 2:
-                                    txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt - 1]))
+                            if len(winding.phase_windings) != 3:
 
-                                # These are the configurations for center tap transformers
-                                if cnt == 0:
-                                    txt += ".{}".format(
-                                        self.phase_mapping(
-                                            winding.phase_windings[
-                                                0
-                                            ].phase  # Should beOnly one phase if it's a Wye transformer
-                                        )
-                                    )
-                                    if (
-                                        len(winding.phase_windings) > 1
-                                        and winding.connection_type == "Y"
-                                    ):
-                                        print(
-                                            "Warning - Wye center-tap transformer with more than one phase connection. Only using first one"
-                                        )
-                                    if (
-                                        winding.connection_type == "D"
-                                        and len(winding.phase_windings) >= 2
-                                    ):
-                                        txt += ".{}".format(
-                                            self.phase_mapping(
-                                                winding.phase_windings[1].phase
-                                            )
-                                        )
-                                        if len(winding.phase_windings) > 2:
-                                            print(
-                                                "Warning - Delta center-tap transformer with more than two phase connection. Only using first two"
-                                            )
-                                    if (
-                                        winding.connection_type == "D"
-                                        and len(winding.phase_windings) == 1
-                                    ):
-                                        print(
-                                            "Warning - only one phase specified for a delta system - adding another connection"
-                                        )
-                                        if self.phase_mapping(phase_winding.phase) == 1:
-                                            txt += ".2"
-                                        if self.phase_mapping(phase_winding.phase) == 2:
-                                            txt += ".3"
-                                        if self.phase_mapping(phase_winding.phase) == 3:
-                                            txt += ".1"
-
-                                if cnt == 1:
-                                    txt += ".1.0"
-                                if cnt == 2:
-                                    txt += ".0.2"
-
-                            # Voltage type (Not mapped)
-
-                            # Nominal voltage
-                            if (
-                                hasattr(winding, "nominal_voltage")
-                                and winding.nominal_voltage is not None
-                            ):
-                                txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10 ** -3
-                                )  # OpenDSS in kvolts
-                                if (
-                                    not substation_name + "_" + feeder_name
-                                    in self._baseKV_feeders_
+                                for j, phase_winding in enumerate(
+                                    winding.phase_windings
                                 ):
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ] = set()
+
+                                    # Connection
+                                    if (
+                                        hasattr(phase_winding, "phase")
+                                        and phase_winding.phase is not None
+                                    ):
+                                        txt += "." + str(
+                                            self.phase_mapping(phase_winding.phase)
+                                        )
+
                                 if (
-                                    winding.nominal_voltage < 300
-                                ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
+                                    winding.connection_type == "D"
+                                    and len(winding.phase_windings) == 1
+                                ):
+                                    print(
+                                        "Warning - only one phase specified for a delta system - adding another connection"
                                     )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
-                                else:
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
+                                    if self.phase_mapping(phase_winding.phase) == 1:
+                                        txt += ".2"
+                                    if self.phase_mapping(phase_winding.phase) == 2:
+                                        txt += ".3"
+                                    if self.phase_mapping(phase_winding.phase) == 3:
+                                        txt += ".1"
 
-                            # rated power
-                            if (
-                                hasattr(winding, "rated_power")
-                                and winding.rated_power is not None
-                            ):
-                                txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10 ** -3
-                                )
+                        if winding.is_grounded:
+                            txt += ".0"
 
-                            # emergency_power
-                            # Was added to windings by Tarek
-                            if (
-                                hasattr(winding, "emergency_power")
-                                and winding.emergency_power is not None
-                            ):
-                                txt += " EmergHKVA={}".format(
-                                    winding.emergency_power * 10 ** -3
-                                )  # OpenDSS in kWatts
-
+                        if (
+                            hasattr(winding, "phase_windings")
+                            and winding.phase_windings is not None
+                        ):
                             # Tap position
+                            # THIS CAN CAUSE PROBLEMS
+                            # Use write_taps boolean to write this information or not
                             if (
                                 self.write_taps
-                                and hasattr(winding, "phase_windings")
-                                and winding.phase_windings is not None
-                                and hasattr(winding.phase_windings[0], "tap_position")
-                                and winding.phase_windings[0].tap_position is not None
+                                and hasattr(
+                                    winding.phase_windings[0], "tap_position"
+                                )
+                                and winding.phase_windings[0].tap_position
+                                is not None
                             ):
                                 txt += " Tap={tap}".format(
                                     tap=winding.phase_windings[0].tap_position
                                 )
 
-                            # Voltage limit (Not mapped)
-
-                            # resistance
-                            # if hasattr(winding, 'resistance') and winding.resistance is not None:
-                            #    fp.write(' %R={R}'.format(R=winding.resistance))
-
-                            # Reverse resistance (Not mapped)
-
-                            if (
-                                hasattr(winding, "resistance")
-                                and winding.resistance is not None
-                            ):
-                                txt += " %r={R}".format(R=winding.resistance)
-                            else:
-                                txt += " %r={R}".format(R=default_r[cnt - 1])
-
-                        if hasattr(i, "reactances") and i.reactances is not None:
-                            # Here, we should have 3 reactances
-                            if (
-                                isinstance(i.reactances, list)
-                                and len(i.reactances) == 3
-                            ):
-                                txt += " XHL={XHL} XLT={XLT} XHT={XHT}".format(
-                                    XHL=i.reactances[0],
-                                    XLT=i.reactances[1],
-                                    XHT=i.reactances[2],
-                                )
-                            else:
+                    if hasattr(i, "reactances") and i.reactances is not None:
+                        # Since we are in the case of 2 windings, we should only have one reactance
+                        if isinstance(i.reactances, list):
+                            if len(i.reactances) != 1:
                                 logger.error(
-                                    "Wrong number of reactances for transformer {name}".format(
-                                        name=i.name
+                                    "Number of reactances incorrect for transformer {name}. Expected 1, got {N}".format(
+                                        name=i.name, N=len(i.reactances)
                                     )
                                 )
+                            else:
+                                txt += " XHL={reac}".format(reac=i.reactances[0])
+                        # If it is not a list, maybe it was entered as a scalar, but should not be that way....
+                        elif isinstance(i.reactances, (int, float)):
+                            txt += " XHL={reac}".format(reac=i.reactances)
                         else:
-                            txt += " XHL=%f XHT=%f XLT=%f" % (
-                                default_x[0],
-                                default_x[1],
-                                default_x[2],
+                            logger.error(
+                                "Reactances not understood for transformer {name}.".format(
+                                    name=i.name
+                                )
                             )
 
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                # This is used to represent center-tap transformers
+                # As described in the documentation, if the R and X values are not known, the values described by default_r and default_x should be used
+                if len(i.windings) == 3:
+                    default_r = [0.6, 1.2, 1.2]
+                    default_x = [2.04, 2.04, 1.36]
+
+                    for cnt, winding in enumerate(i.windings):
+
+                        txt += f" wdg={cnt+1}"
+
+                        # conn = wye or delta
+                        if (
+                            hasattr(winding, "connection_type")
+                            and winding.connection_type is not None
+                        ):
+                            if winding.connection_type == "Y":
+                                txt += " conn=wye"
+                            elif winding.connection_type == "D":
+                                txt += " conn=delta"
+                            else:
+                                logger.error(
+                                    "Unsupported type of connection {conn} for transformer {name}".format(
+                                        conn=winding.connection_type, name=i.name
+                                    )
+                                )
+
+                        # Connection
+                        if buses is not None:
+
+                            if cnt == 0 or cnt == 1:
+                                txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt]))
+                            elif cnt == 2:
+                                txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt - 1]))
+
+                            # These are the configurations for center tap transformers
+                            if cnt == 0:
+                                txt += ".{}".format(
+                                    self.phase_mapping(
+                                        winding.phase_windings[
+                                            0
+                                        ].phase  # Should beOnly one phase if it's a Wye transformer
+                                    )
+                                )
+                                if (
+                                    len(winding.phase_windings) > 1
+                                    and winding.connection_type == "Y"
+                                ):
+                                    print(
+                                        "Warning - Wye center-tap transformer with more than one phase connection. Only using first one"
+                                    )
+                                if (
+                                    winding.connection_type == "D"
+                                    and len(winding.phase_windings) >= 2
+                                ):
+                                    txt += ".{}".format(
+                                        self.phase_mapping(
+                                            winding.phase_windings[1].phase
+                                        )
+                                    )
+                                    if len(winding.phase_windings) > 2:
+                                        print(
+                                            "Warning - Delta center-tap transformer with more than two phase connection. Only using first two"
+                                        )
+                                if (
+                                    winding.connection_type == "D"
+                                    and len(winding.phase_windings) == 1
+                                ):
+                                    print(
+                                        "Warning - only one phase specified for a delta system - adding another connection"
+                                    )
+                                    if self.phase_mapping(phase_winding.phase) == 1:
+                                        txt += ".2"
+                                    if self.phase_mapping(phase_winding.phase) == 2:
+                                        txt += ".3"
+                                    if self.phase_mapping(phase_winding.phase) == 3:
+                                        txt += ".1"
+
+                            if cnt == 1:
+                                txt += ".1.0"
+                            if cnt == 2:
+                                txt += ".0.2"
+
+                        # Voltage type (Not mapped)
+
+                        # Nominal voltage
+                        if (
+                            hasattr(winding, "nominal_voltage")
+                            and winding.nominal_voltage is not None
+                        ):
+                            txt += " Kv={kv}".format(
+                                kv=winding.nominal_voltage * 10 ** -3
+                            )  # OpenDSS in kvolts
+                            if (
+                                not substation_name + "_" + feeder_name
+                                in self._baseKV_feeders_
+                            ):
+                                self._baseKV_feeders_[
+                                    substation_name + "_" + feeder_name
+                                ] = set()
+                            if (
+                                winding.nominal_voltage < 300
+                            ):  # Line-Neutral voltage for 120 V
+                                self._baseKV_.add(
+                                    winding.nominal_voltage
+                                    * math.sqrt(3)
+                                    * 10 ** -3
+                                )
+                                self._baseKV_feeders_[
+                                    substation_name + "_" + feeder_name
+                                ].add(
+                                    winding.nominal_voltage
+                                    * math.sqrt(3)
+                                    * 10 ** -3
+                                )
+                            else:
+                                self._baseKV_.add(
+                                    winding.nominal_voltage * 10 ** -3
+                                )
+                                self._baseKV_feeders_[
+                                    substation_name + "_" + feeder_name
+                                ].add(winding.nominal_voltage * 10 ** -3)
+
+                        # rated power
+                        if (
+                            hasattr(winding, "rated_power")
+                            and winding.rated_power is not None
+                        ):
+                            txt += " kva={kva}".format(
+                                kva=winding.rated_power * 10 ** -3
+                            )
+
+                        # emergency_power
+                        # Was added to windings by Tarek
+                        if (
+                            hasattr(winding, "emergency_power")
+                            and winding.emergency_power is not None
+                        ):
+                            txt += " EmergHKVA={}".format(
+                                winding.emergency_power * 10 ** -3
+                            )  # OpenDSS in kWatts
+
+                        # Tap position
+                        if (
+                            self.write_taps
+                            and hasattr(winding, "phase_windings")
+                            and winding.phase_windings is not None
+                            and hasattr(winding.phase_windings[0], "tap_position")
+                            and winding.phase_windings[0].tap_position is not None
+                        ):
+                            txt += " Tap={tap}".format(
+                                tap=winding.phase_windings[0].tap_position
+                            )
+
+                        # Voltage limit (Not mapped)
+
+                        # resistance
+                        # if hasattr(winding, 'resistance') and winding.resistance is not None:
+                        #    fp.write(' %R={R}'.format(R=winding.resistance))
+
+                        # Reverse resistance (Not mapped)
+
+                        if (
+                            hasattr(winding, "resistance")
+                            and winding.resistance is not None
+                        ):
+                            txt += " %r={R}".format(R=winding.resistance)
+                        else:
+                            txt += " %r={R}".format(R=default_r[cnt - 1])
+
+                    if hasattr(i, "reactances") and i.reactances is not None:
+                        # Here, we should have 3 reactances
+                        if (
+                            isinstance(i.reactances, list)
+                            and len(i.reactances) == 3
+                        ):
+                            txt += " XHL={XHL} XLT={XLT} XHT={XHT}".format(
+                                XHL=i.reactances[0],
+                                XLT=i.reactances[1],
+                                XHT=i.reactances[2],
+                            )
+                        else:
+                            logger.error(
+                                "Wrong number of reactances for transformer {name}".format(
+                                    name=i.name
+                                )
+                            )
+                    else:
+                        txt += " XHL=%f XHT=%f XLT=%f" % (
+                            default_x[0],
+                            default_x[1],
+                            default_x[2],
+                        )
+
+            txt += "\n\n"
+            feeder_text_map[substation_name + "_" + feeder_name] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
