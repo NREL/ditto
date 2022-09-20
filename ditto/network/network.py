@@ -15,17 +15,11 @@ logger = logging.getLogger(__name__)
 
 class Network:
     def __init__(self):
-        self.graph = None
-        self.digraph = None  # Doesn't contain attributes, just topology
-        self.class_map = (
-            {}
-        )  # Map the networkx names to the object type (not included in attributes)
-        self.is_built = (
-            False  # Flag that indicates whether the Network has been built or not.
-        )
-        self.attributes_set = (
-            False  # Flag that indicates whether the attributes have been set or not.
-        )
+        self.graph = None  # becomes nx.Graph() in self.build
+        self.digraph = None  # becomes nx.DiGraph() in self.build. Doesn't contain attributes, just topology
+        self.class_map = {} # Map the networkx names to the object type (not included in attributes)
+        self.is_built = False  # Flag that indicates whether the Network has been built or not.
+        self.attributes_set = False  # Flag that indicates whether the attributes have been set or not.
 
     def provide_graphs(self, graph, digraph):
         """
