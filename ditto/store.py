@@ -187,9 +187,7 @@ class Store(object):
         self.set_names()
         for i in self.models:
             if isinstance(i, Node) and hasattr(i, "name") and i.name is not None:
-                upstream_transformer = self._network.get_upstream_transformer(
-                    self, i.name
-                )
+                upstream_transformer = self._network.get_upstream_transformer(i.name)
                 try:
                     upstream_voltage = (
                         self[upstream_transformer].windings[-1].nominal_voltage
