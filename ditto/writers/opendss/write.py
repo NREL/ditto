@@ -2049,329 +2049,328 @@ class Writer(AbstractWriter):
         # At the end, we simply loop over the list to write all strings to transformers.dss
         transfo_creation_string_map = {}
 
-        for i in model.models:
-            if isinstance(i, Regulator):
+        for i in model.iter_models(Regulator):
 
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+            if (
+                self.separate_feeders
+                and hasattr(i, "feeder_name")
+                and i.feeder_name is not None
+            ):
+                feeder_name = i.feeder_name
+            else:
+                feeder_name = "DEFAULT"
+            if (
+                self.separate_substations
+                and hasattr(i, "substation_name")
+                and i.substation_name is not None
+            ):
+                substation_name = i.substation_name
+            else:
+                substation_name = "DEFAULT"
+
+            if not substation_name in substation_text_map:
+                substation_text_map[substation_name] = set([feeder_name])
+            else:
+                substation_text_map[substation_name].add(feeder_name)
+            txt = ""
+            transfo_creation_string = ""
+            if substation_name + "_" + feeder_name in feeder_text_map:
+                txt = feeder_text_map[substation_name + "_" + feeder_name]
+                transfo_creation_string = transfo_creation_string_map[
+                    substation_name + "_" + feeder_name
+                ]
+
+            if hasattr(i, "name") and i.name is not None:
+                txt += "New RegControl.{name}".format(name=i.name)
+            else:
+                continue
+
+            # Connected transformer
+            if hasattr(i, "connected_transformer"):
+
+                # If we have a valid connected_transformer then job's easy...
+                if i.connected_transformer is not None:  # not setting the connected_transformer in reader parse_regulators
+                    txt += " transformer={trans}".format(
+                        trans=i.connected_transformer
+                    )
+
+                # Otherwise, we have to create a new transformer and write it to the transformers file
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
-                else:
-                    substation_name = "DEFAULT"
 
-                if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
-                else:
-                    substation_text_map[substation_name].add(feeder_name)
-                txt = ""
-                transfo_creation_string = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
-                    transfo_creation_string = transfo_creation_string_map[
-                        substation_name + "_" + feeder_name
-                    ]
+                    # Initialize the string:
+                    transfo_creation_string += "New Transformer."
 
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New RegControl.{name}".format(name=i.name)
-                else:
-                    continue
+                    # Name:
+                    transfo_name = "trans_{}".format(
+                        i.name
+                    )  # Maybe not the best naming convention....
+                    transfo_creation_string += transfo_name
 
-                # Connected transformer
-                if hasattr(i, "connected_transformer"):
+                    # Number of Phases
+                    if hasattr(i, "windings") and i.windings is not None:
+                        if (
+                            hasattr(i.windings[0], "phase_windings")
+                            and i.windings[0].phase_windings is not None
+                        ):
+                            try:
+                                transfo_creation_string += " phases={}".format(
+                                    len(i.windings[0].phase_windings)
+                                )
+                            except:
+                                pass
+                            phases = [
+                                self.phase_mapping(x.phase)
+                                for x in i.windings[0].phase_windings
+                            ]
+                            phase_string = reduce(
+                                lambda x, y: str(x) + "." + str(y), phases
+                            )
 
-                    # If we have a valid connected_transformer then job's easy...
-                    if i.connected_transformer is not None:  # not setting the connected_transformer in reader parse_regulators
-                        txt += " transformer={trans}".format(
-                            trans=i.connected_transformer
+                    # Number of windings
+                    if hasattr(i, "windings") and i.windings is not None:
+                        try:
+                            transfo_creation_string += " windings={}".format(
+                                len(i.windings)
+                            )
+                        except:
+                            pass
+
+                    # buses:
+                    if (
+                        hasattr(i, "from_element")
+                        and i.from_element is not None
+                        and hasattr(i, "to_element")
+                        and i.to_element is not None
+                    ):
+                        transfo_creation_string += " buses=({b1}.{p},{b2}.{p})".format(
+                            b1=re.sub('[^0-9a-zA-Z]+', '_', i.from_element), b2=re.sub('[^0-9a-zA-Z]+', '_', i.to_element), p=phase_string
                         )
 
-                    # Otherwise, we have to create a new transformer and write it to the transformers file
-                    else:
+                    # Conns
+                    if hasattr(i, "windings") and i.windings is not None:
+                        conns = " conns=("
+                        for w, winding in enumerate(i.windings):
+                            if hasattr(
+                                i.windings[w], "connection_type"
+                            ) and i.windings[w].connection_type in ["Y", "D", "Z"]:
+                                mapp = {"Y": "Wye", "D": "Delta", "Z": "Zigzag"}
+                                conns += mapp[i.windings[w].connection_type] + ", "
+                        conns = conns[:-2]
+                        conns += ")"
+                        if conns == " conns)":
+                            conns = ""
+                        transfo_creation_string += conns
 
-                        # Initialize the string:
-                        transfo_creation_string += "New Transformer."
-
-                        # Name:
-                        transfo_name = "trans_{}".format(
-                            i.name
-                        )  # Maybe not the best naming convention....
-                        transfo_creation_string += transfo_name
-
-                        # Number of Phases
-                        if hasattr(i, "windings") and i.windings is not None:
-                            if (
-                                hasattr(i.windings[0], "phase_windings")
-                                and i.windings[0].phase_windings is not None
-                            ):
-                                try:
-                                    transfo_creation_string += " phases={}".format(
-                                        len(i.windings[0].phase_windings)
-                                    )
-                                except:
-                                    pass
-                                phases = [
-                                    self.phase_mapping(x.phase)
-                                    for x in i.windings[0].phase_windings
-                                ]
-                                phase_string = reduce(
-                                    lambda x, y: str(x) + "." + str(y), phases
+                    # kvs
+                    if hasattr(i, "windings") and i.windings is not None:
+                        kvs = " kvs=("
+                        for w, winding in enumerate(i.windings):
+                            if hasattr(i.windings[w], "nominal_voltage"):
+                                kvs += (
+                                    str(i.windings[w].nominal_voltage * 10 ** -3)
+                                    + ", "
                                 )
-
-                        # Number of windings
-                        if hasattr(i, "windings") and i.windings is not None:
-                            try:
-                                transfo_creation_string += " windings={}".format(
-                                    len(i.windings)
-                                )
-                            except:
-                                pass
-
-                        # buses:
-                        if (
-                            hasattr(i, "from_element")
-                            and i.from_element is not None
-                            and hasattr(i, "to_element")
-                            and i.to_element is not None
-                        ):
-                            transfo_creation_string += " buses=({b1}.{p},{b2}.{p})".format(
-                                b1=re.sub('[^0-9a-zA-Z]+', '_', i.from_element), b2=re.sub('[^0-9a-zA-Z]+', '_', i.to_element), p=phase_string
-                            )
-
-                        # Conns
-                        if hasattr(i, "windings") and i.windings is not None:
-                            conns = " conns=("
-                            for w, winding in enumerate(i.windings):
-                                if hasattr(
-                                    i.windings[w], "connection_type"
-                                ) and i.windings[w].connection_type in ["Y", "D", "Z"]:
-                                    mapp = {"Y": "Wye", "D": "Delta", "Z": "Zigzag"}
-                                    conns += mapp[i.windings[w].connection_type] + ", "
-                            conns = conns[:-2]
-                            conns += ")"
-                            if conns == " conns)":
-                                conns = ""
-                            transfo_creation_string += conns
-
-                        # kvs
-                        if hasattr(i, "windings") and i.windings is not None:
-                            kvs = " kvs=("
-                            for w, winding in enumerate(i.windings):
-                                if hasattr(i.windings[w], "nominal_voltage"):
-                                    kvs += (
-                                        str(i.windings[w].nominal_voltage * 10 ** -3)
-                                        + ", "
-                                    )
-                                    if (
-                                        not substation_name + "_" + feeder_name
-                                        in self._baseKV_feeders_
-                                    ):
-                                        self._baseKV_feeders_[
-                                            substation_name + "_" + feeder_name
-                                        ] = set()
-                                    if (
-                                        i.windings[w].nominal_voltage < 300
-                                    ):  # Line-Neutral voltage for 120 V
-                                        self._baseKV_.add(
-                                            i.windings[w].nominal_voltage
-                                            * math.sqrt(3)
-                                            * 10 ** -3
-                                        )
-                                        self._baseKV_feeders_[
-                                            substation_name + "_" + feeder_name
-                                        ].add(
-                                            winding.nominal_voltage
-                                            * math.sqrt(3)
-                                            * 10 ** -3
-                                        )
-                                    else:
-                                        self._baseKV_.add(
-                                            i.windings[w].nominal_voltage * 10 ** -3
-                                        )
-                                        self._baseKV_feeders_[
-                                            substation_name + "_" + feeder_name
-                                        ].add(winding.nominal_voltage * 10 ** -3)
-
-                            kvs = kvs[:-2]
-                            kvs += ")"
-                            transfo_creation_string += kvs
-
-                        # kvas
-                        if hasattr(i, "windings") and i.windings is not None:
-                            kvas = " kvas=("
-                            for w, winding in enumerate(i.windings):
                                 if (
-                                    hasattr(i.windings[w], "rated_power")
-                                    and i.windings[w].rated_power is not None
+                                    not substation_name + "_" + feeder_name
+                                    in self._baseKV_feeders_
                                 ):
-                                    kvas += (
-                                        str(i.windings[w].rated_power * 10 ** -3) + ", "
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ] = set()
+                                if (
+                                    i.windings[w].nominal_voltage < 300
+                                ):  # Line-Neutral voltage for 120 V
+                                    self._baseKV_.add(
+                                        i.windings[w].nominal_voltage
+                                        * math.sqrt(3)
+                                        * 10 ** -3
                                     )
-                            kvas = kvas[:-2]
-                            kvas += ")"
-                            transfo_creation_string += kvas
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ].add(
+                                        winding.nominal_voltage
+                                        * math.sqrt(3)
+                                        * 10 ** -3
+                                    )
+                                else:
+                                    self._baseKV_.add(
+                                        i.windings[w].nominal_voltage * 10 ** -3
+                                    )
+                                    self._baseKV_feeders_[
+                                        substation_name + "_" + feeder_name
+                                    ].add(winding.nominal_voltage * 10 ** -3)
 
-                        # emergency_power
-                        if hasattr(i, "windings") and i.windings is not None:
+                        kvs = kvs[:-2]
+                        kvs += ")"
+                        transfo_creation_string += kvs
+
+                    # kvas
+                    if hasattr(i, "windings") and i.windings is not None:
+                        kvas = " kvas=("
+                        for w, winding in enumerate(i.windings):
                             if (
-                                hasattr(i.windings[0], "emergency_power")
-                                and i.windings[0].emergency_power is not None
+                                hasattr(i.windings[w], "rated_power")
+                                and i.windings[w].rated_power is not None
                             ):
-                                transfo_creation_string += " EmerghKVA={}".format(
-                                    i.windings[0].emergency_power
+                                kvas += (
+                                    str(i.windings[w].rated_power * 10 ** -3) + ", "
                                 )
+                        kvas = kvas[:-2]
+                        kvas += ")"
+                        transfo_creation_string += kvas
 
-                        # reactances:
-                        if hasattr(i, "reactances") and i.reactances is not None:
-                            # XHL:
-                            try:
-                                if isinstance(i.reactances[0], (int, float)):
-                                    transfo_creation_string += " XHL={}".format(
-                                        i.reactances[0]
-                                    )
-                            except:
-                                logger.warning(
-                                    "Could not extract XHL from regulator {name}".format(
-                                        name=i.name
-                                    )
-                                )
-                                pass
-                            # XLT:
-                            try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
-                                if isinstance(i.reactances[1], (int, float)):  
-                                    transfo_creation_string += " XLT={}".format(
-                                        i.reactances[1]
-                                    )
-                            except:
-                                logger.warning(
-                                    "Could not extract XLT from regulator {name}".format(
-                                        name=i.name
-                                    )
-                                )
-                                pass
-                            # XHT:
-                            try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
-                                if isinstance(i.reactances[2], (int, float)):
-                                    transfo_creation_string += " XHT={}".format(
-                                        i.reactances[2]
-                                    )
-                            except:
-                                logger.warning(
-                                    "Could not extract XHT from regulator {name}".format(
-                                        name=i.name
-                                    )
-                                )
-                                pass
-
-                        txt += " transformer={trans}".format(trans=transfo_name)
-
-                # Winding
-                if hasattr(i, "winding") and i.winding is not None:
-                    txt += " winding={w}".format(w=i.winding)
-                else:
-                    txt += " winding=2"
-
-                # CTprim
-                if hasattr(i, "ct_prim") and i.ct_prim is not None:
-                    txt += " CTprim={CT}".format(CT=i.ct_prim)
-
-                # noload_loss
-                if hasattr(i, "noload_loss") and i.noload_loss is not None:
-                    txt += " %noLoadLoss={nL}".format(NL=i.noload_loss)
-
-                # Delay
-                if hasattr(i, "delay") and i.delay is not None:
-                    txt += " delay={d}".format(d=i.delay)
-
-                # highstep
-                # if hasattr(i, "highstep") and i.highstep is not None:
-                #     txt += " maxtapchange={high}".format(high=i.highstep)
-
-                # lowstep (Not mapped)
-
-                # pt ratio
-                if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
-                    txt += " ptratio={PT}".format(PT=i.pt_ratio)
-
-                # ct ratio  (Not mapped)
-
-                # phase shift (Not mapped)
-
-                # ltc (Not mapped)
-
-                # bandwidth
-                if hasattr(i, "bandwidth") and i.bandwidth is not None:
-                    txt += " band={b}".format(
-                        b=i.bandwidth * 1.2
-                    )  # The bandwidth is operated at 120 V
-
-                # band center
-                if hasattr(i, "bandcenter") and i.bandcenter is not None:
-                    txt += " vreg={vreg}".format(vreg=i.bandcenter)
-
-                # Pt phase
-                if hasattr(i, "pt_phase") and i.pt_phase is not None:
-                    txt += " Ptphase={PT}".format(PT=self.phase_mapping(i.pt_phase))
-
-                # Voltage limit
-                if hasattr(i, "voltage_limit") and i.voltage_limit is not None:
-                    txt += " vlimit={vlim}".format(vlim=i.voltage_limit)
-
-                if hasattr(i, "setpoint") and i.setpoint is not None:
-                    txt += " vreg = {setp}".format(setp=i.setpoint / 100.0 * 120)
-
-                # X (Store in the Phase Windings of the transformer)
-                if i.name in self.compensator:
-                    if "X" in self.compensator[i.name]:
-                        if len(self.compensator[i.name]["X"]) == 1:
-                            txt += " X={x}".format(
-                                x=list(self.compensator[i.name]["X"])[0]
+                    # emergency_power
+                    if hasattr(i, "windings") and i.windings is not None:
+                        if (
+                            hasattr(i.windings[0], "emergency_power")
+                            and i.windings[0].emergency_power is not None
+                        ):
+                            transfo_creation_string += " EmerghKVA={}".format(
+                                i.windings[0].emergency_power
                             )
-                        else:
+
+                    # reactances:
+                    if hasattr(i, "reactances") and i.reactances is not None:
+                        # XHL:
+                        try:
+                            if isinstance(i.reactances[0], (int, float)):
+                                transfo_creation_string += " XHL={}".format(
+                                    i.reactances[0]
+                                )
+                        except:
                             logger.warning(
-                                """Compensator_x not the same for all windings of transformer {name}.
-                                                   Using the first value for regControl {name2}.""".format(
-                                    name=i.connected_transformer, name2=i.name
+                                "Could not extract XHL from regulator {name}".format(
+                                    name=i.name
                                 )
                             )
-                            txt += " X={x}".format(
-                                x=list(self.compensator[i.name]["X"])[0]
-                            )
-
-                # R (Store in the Phase Windings of the transformer)
-                if i.name in self.compensator:
-                    if "R" in self.compensator[i.name]:
-                        if len(self.compensator[i.name]["R"]) == 1:
-                            txt += " R={r}".format(
-                                r=list(self.compensator[i.name]["R"])[0]
-                            )
-                        else:
+                            pass
+                        # XLT:
+                        try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
+                            if isinstance(i.reactances[1], (int, float)):  
+                                transfo_creation_string += " XLT={}".format(
+                                    i.reactances[1]
+                                )
+                        except:
                             logger.warning(
-                                """Compensator_r not the same for all windings of transformer {name}.
-                                                   Using the first value for regControl {name2}.""".format(
-                                    name=i.connected_transformer, name2=i.name
+                                "Could not extract XLT from regulator {name}".format(
+                                    name=i.name
                                 )
                             )
-                            txt += " R={r}".format(
-                                r=list(self.compensator[i.name]["R"])[0]
+                            pass
+                        # XHT:
+                        try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
+                            if isinstance(i.reactances[2], (int, float)):
+                                transfo_creation_string += " XHT={}".format(
+                                    i.reactances[2]
+                                )
+                        except:
+                            logger.warning(
+                                "Could not extract XHT from regulator {name}".format(
+                                    name=i.name
+                                )
                             )
+                            pass
 
-                txt += "\n\n"
-                if len(transfo_creation_string) > 0:
-                    transfo_creation_string += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
-                transfo_creation_string_map[
-                    substation_name + "_" + feeder_name
-                ] = transfo_creation_string
+                    txt += " transformer={trans}".format(trans=transfo_name)
+
+            # Winding
+            if hasattr(i, "winding") and i.winding is not None:
+                txt += " winding={w}".format(w=i.winding)
+            else:
+                txt += " winding=2"
+
+            # CTprim
+            if hasattr(i, "ct_prim") and i.ct_prim is not None:
+                txt += " CTprim={CT}".format(CT=i.ct_prim)
+
+            # noload_loss
+            if hasattr(i, "noload_loss") and i.noload_loss is not None:
+                txt += " %noLoadLoss={nL}".format(NL=i.noload_loss)
+
+            # Delay
+            if hasattr(i, "delay") and i.delay is not None:
+                txt += " delay={d}".format(d=i.delay)
+
+            # highstep
+            # if hasattr(i, "highstep") and i.highstep is not None:
+            #     txt += " maxtapchange={high}".format(high=i.highstep)
+
+            # lowstep (Not mapped)
+
+            # pt ratio
+            if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
+                txt += " ptratio={PT}".format(PT=i.pt_ratio)
+
+            # ct ratio  (Not mapped)
+
+            # phase shift (Not mapped)
+
+            # ltc (Not mapped)
+
+            # bandwidth
+            if hasattr(i, "bandwidth") and i.bandwidth is not None:
+                txt += " band={b}".format(
+                    b=i.bandwidth * 1.2
+                )  # The bandwidth is operated at 120 V
+
+            # band center
+            if hasattr(i, "bandcenter") and i.bandcenter is not None:
+                txt += " vreg={vreg}".format(vreg=i.bandcenter)
+
+            # Pt phase
+            if hasattr(i, "pt_phase") and i.pt_phase is not None:
+                txt += " Ptphase={PT}".format(PT=self.phase_mapping(i.pt_phase))
+
+            # Voltage limit
+            if hasattr(i, "voltage_limit") and i.voltage_limit is not None:
+                txt += " vlimit={vlim}".format(vlim=i.voltage_limit)
+
+            if hasattr(i, "setpoint") and i.setpoint is not None:
+                txt += " vreg = {setp}".format(setp=i.setpoint / 100.0 * 120)
+
+            # X (Store in the Phase Windings of the transformer)
+            if i.name in self.compensator:
+                if "X" in self.compensator[i.name]:
+                    if len(self.compensator[i.name]["X"]) == 1:
+                        txt += " X={x}".format(
+                            x=list(self.compensator[i.name]["X"])[0]
+                        )
+                    else:
+                        logger.warning(
+                            """Compensator_x not the same for all windings of transformer {name}.
+                                                Using the first value for regControl {name2}.""".format(
+                                name=i.connected_transformer, name2=i.name
+                            )
+                        )
+                        txt += " X={x}".format(
+                            x=list(self.compensator[i.name]["X"])[0]
+                        )
+
+            # R (Store in the Phase Windings of the transformer)
+            if i.name in self.compensator:
+                if "R" in self.compensator[i.name]:
+                    if len(self.compensator[i.name]["R"]) == 1:
+                        txt += " R={r}".format(
+                            r=list(self.compensator[i.name]["R"])[0]
+                        )
+                    else:
+                        logger.warning(
+                            """Compensator_r not the same for all windings of transformer {name}.
+                                                Using the first value for regControl {name2}.""".format(
+                                name=i.connected_transformer, name2=i.name
+                            )
+                        )
+                        txt += " R={r}".format(
+                            r=list(self.compensator[i.name]["R"])[0]
+                        )
+
+            txt += "\n\n"
+            if len(transfo_creation_string) > 0:
+                transfo_creation_string += "\n\n"
+            feeder_text_map[substation_name + "_" + feeder_name] = txt
+            transfo_creation_string_map[
+                substation_name + "_" + feeder_name
+            ] = transfo_creation_string
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
