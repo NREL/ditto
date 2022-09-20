@@ -205,12 +205,10 @@ class NetworkAnalyzer(object):
         """
         Use this function to add the feeder information if available.
 
-        :param feeder_names: List of the feeder names
-        :type feeder_names: List(str)
-        :param feeder_nodes: List of lists containing feeder nodes
-        :type feeder_nodes: List of Lists of strings
-        :param feeder_types: List of feeder types.
-        :type feeder_types: List or string if all feeders have the same type
+        :param feeder_names: List(str) of the feeder names
+        :param feeder_nodes: List of lists of strings containing feeder nodes
+        :param substations: List(str) of the substations names
+        :param feeder_types: List(str) of feeder types or string if all feeders have the same type
         """
         if len(feeder_names) != len(feeder_nodes):
             raise ValueError(
