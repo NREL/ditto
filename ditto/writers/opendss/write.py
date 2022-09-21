@@ -132,7 +132,7 @@ class Writer(AbstractWriter):
         # Call super
         super(Writer, self).__init__(**kwargs)
 
-        self._baseKV_ = set()
+        self._baseKV_ = set() # should only be LL?
         self._baseKV_feeders_ = {}
 
         logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
@@ -1839,59 +1839,178 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-
         substation_text_map = {}
         feeder_text_map = {}
-        for i in model.models:
-            if isinstance(i, Load):
+
+        def append_time_series(i, txt):
+            for ts in i.timeseries:
+                substation = "DEFAULT"
+                feeder = "DEFAULT"
+                if ts.feeder_name is not None:
+                    feeder = ts.feeder_name
+                if ts.substation_name is not None:
+                    substation = ts.substation_name
                 if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
+                    hasattr(ts, "data_location")
+                    and ts.data_label is not None
+                    and ts.data_location is not None
                 ):
-                    feeder_name = i.feeder_name
+                    filename = self.timeseries_datasets[
+                        substation + "_" + feeder
+                    ][ts.data_location]
+                    txt += " {ts_format}={filename}".format(
+                        ts_format=self.timeseries_format[filename],
+                        filename=filename,
+                    )
+            # TODO: manage the data correctly when it is only in memory
+            return txt
+
+        for i in model.iter_models(Load):
+
+            if not (hasattr(i, "name") and i.name is not None):
+                logger.error("Name missing for Load")  # gotta have a name
+
+            if not (hasattr(i, "phase_loads") and i.phase_loads is not None):
+                continue  # no loads
+
+            if not (hasattr(i, "connecting_element") and i.connecting_element is not None):
+                continue  # no Bus1 to place load
+
+            feeder_name = "DEFAULT"
+            if (
+                self.separate_feeders
+                and hasattr(i, "feeder_name")
+                and i.feeder_name is not None
+            ):
+                feeder_name = i.feeder_name
+                
+            substation_name = "DEFAULT"
+            if (
+                self.separate_substations
+                and hasattr(i, "substation_name")
+                and i.substation_name is not None
+            ):
+                substation_name = i.substation_name
+
+            if not substation_name in substation_text_map:
+                substation_text_map[substation_name] = set([feeder_name])
+            else:
+                substation_text_map[substation_name].add(feeder_name)
+
+            txt = ""  # first Load in the loop for the substation and feeder
+            sub_fdr_key = substation_name + "_" + feeder_name
+            if sub_fdr_key in feeder_text_map:
+                txt = feeder_text_map[sub_fdr_key]
+                # we are appending to the text to be written (last entry should be \n\n)
+
+            kws = []
+            kvars = []
+            for phase_load in i.phase_loads:
+                if hasattr(phase_load, "p") and phase_load.p is not None:
+                    kws.append(phase_load.p * 10 ** -3)
+                if hasattr(phase_load, "q") and phase_load.q is not None:
+                    kvars.append(phase_load.q * 10 ** -3)
+
+            if len(kws) == 0 and len(kvars) == 0:
+                continue
+
+            balanced_load = True
+
+            if len(kws) > 1 and len(kvars) > 1:
+                p1, q1 = kws[0], kvars[0]
+                if any(p1 != p for p in kws[1:]):
+                    balanced_load = False
+                if any(q1 != q for q in kvars[1:]):
+                    balanced_load = False
+
+            # define shared values
+            # Connection type
+            conn_type_txt = ""
+            if hasattr(i, "connection_type") and i.connection_type is not None:
+                if i.connection_type == "Y":
+                    conn_type_txt = " conn=wye"
+                elif i.connection_type == "D":
+                    conn_type_txt = " conn=delta"
+
+            bus1_txt = " bus1={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
+
+            nomimal_voltage_txt = ""
+            nominal_voltage = 0.0
+            if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+
+                if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                    nominal_voltage = i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                    nomimal_voltage_txt = f" kV={nominal_voltage}"
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
-                else:
-                    substation_name = "DEFAULT"
+                    nominal_voltage = i.nominal_voltage * 10 ** -3
+                    nomimal_voltage_txt = f" kV={nominal_voltage}"
 
-                if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
-                else:
-                    substation_text_map[substation_name].add(feeder_name)
+                if not sub_fdr_key in self._baseKV_feeders_:
+                    self._baseKV_feeders_[sub_fdr_key] = set()
 
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                self._baseKV_.add(nominal_voltage)
+                self._baseKV_feeders_[sub_fdr_key].add(nominal_voltage)
+            
+            vmin_txt = ""
+            if hasattr(i, "vmin") and i.vmin is not None:
+                vmin_txt = " Vminpu={vmin}".format(vmin=i.vmin)
+            
+            vmax_txt = ""
+            if hasattr(i, "vmax") and i.vmax is not None:
+                vmax_txt = " Vmaxpu={vmax}".format(vmax=i.vmax)
+            
+            if balanced_load:  # only need to define one New Load regardless of number of phases
+                
+                txt += "New Load." + i.name
+                txt += conn_type_txt
+                txt += bus1_txt
 
-                # Name
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Load." + i.name
-                else:
-                    logger.error("Name missing for Load")
-                    continue
+                # balanced_load case:
+                for phase_load in i.phase_loads:
+                    # add all phases onto Bus1
+                    if hasattr(phase_load, "phase") and phase_load.phase is not None:
+                        txt += f".{self.phase_mapping(phase_load.phase)}"
 
-                # Connection type
-                if hasattr(i, "connection_type") and i.connection_type is not None:
-                    if i.connection_type == "Y":
-                        txt += " conn=wye"
-                    elif i.connection_type == "D":
-                        txt += " conn=delta"
+                    # handle Delta connections
+                    if i.connection_type == "D" and len(i.phase_loads) == 1:
+                            if self.phase_mapping(i.phase_loads[0].phase) == 1:
+                                txt += ".2"
+                            if self.phase_mapping(i.phase_loads[0].phase) == 2:
+                                txt += ".3"
+                            if self.phase_mapping(i.phase_loads[0].phase) == 3:
+                                txt += ".1"
 
-                # Connecting element
-                if (
-                    hasattr(i, "connecting_element")
-                    and i.connecting_element is not None
-                ):
-                    txt += " bus1={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
-                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
-                        for phase_load in i.phase_loads:
+                txt += nomimal_voltage_txt
+
+                txt += vmin_txt
+
+                txt += vmax_txt
+
+                # positions (Not mapped)
+                
+                txt += " model={N}".format(N=i.phase_loads[0].model)
+                
+                txt += " kW={P}".format(P=sum(kws))
+
+                txt += " kvar={Q}".format(Q=sum(kvars))
+
+                # if i.connection_type=='Y':
+                txt += " Phases={N}".format(N=len(i.phase_loads))
+                # elif i.connection_type=='D' and len(i.phase_loads)==3:
+                #    fp.write(' Phases=3')
+                # elif i.connection_type=='D' and len(i.phase_loads)==2:
+                #    fp.write(' Phases=1')
+
+                for phase_load in i.phase_loads:
+
+                    # ZIP load model
+                    if (
+                        hasattr(phase_load, "use_zip")
+                        and phase_load.use_zip is not None
+                    ):
+                        if phase_load.use_zip:
+
+                            # Get the coefficients
                             if (
                                 hasattr(phase_load, "phase")
                                 and phase_load.phase is not None
@@ -2025,39 +2144,57 @@ class Writer(AbstractWriter):
                                             i.qpercentpower,
                                         )
                                     )
-
+                
                 # timeseries object
                 if hasattr(i, "timeseries") and i.timeseries is not None:
-                    for ts in i.timeseries:
-                        substation = "DEFAULT"
-                        feeder = "DEFAULT"
-                        if ts.feeder_name is not None:
-                            feeder = ts.feeder_name
-                        if ts.substation_name is not None:
-                            substation = ts.substation_name
-                        if (
-                            hasattr(ts, "data_location")
-                            and ts.data_label is not None
-                            and ts.data_location is not None
-                        ):
-                            filename = self.timeseries_datasets[
-                                substation + "_" + feeder
-                            ][ts.data_location]
-                            if self.remove_loadshapes:
-                                optional_comment = '!'
-                            else:
-                                optional_comment = ''
-                            txt += " {optional_comment}{ts_format}={filename}".format(
-                                optional_comment = optional_comment,
-                                ts_format=self.timeseries_format[filename],
-                                filename=filename,
-                            )
-                        else:
-                            pass
-                            # TODO: manage the data correctly when it is only in memory
+                    txt = append_time_series(i, txt)
 
                 txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+
+            else:  # unbalanced load, need to define more than one New Load
+                for (n, phase_load) in enumerate(i.phase_loads):
+                    txt += "New Load." + i.name + "_" + str(n+1)  # need unique names
+                    txt += conn_type_txt
+                    txt += bus1_txt
+
+                    if hasattr(phase_load, "phase") and phase_load.phase is not None:
+                        dss_phase = self.phase_mapping(phase_load.phase)
+                        txt += f".{dss_phase}"
+
+                        # handle Delta connections
+                        if i.connection_type == "D":
+                            if dss_phase == 1:
+                                txt += ".2"
+                            if dss_phase == 2:
+                                txt += ".3"
+                            if dss_phase == 3:
+                                txt += ".1"
+                    
+                    nomimal_voltage_txt = ""
+                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                        nominal_voltage = i.nominal_voltage * 10 ** -3
+                        if not (i.connection_type == "D" or nominal_voltage < 300):
+                            # single phase connections in openDSS should specify LN voltage
+                            # if not delta connection or not already LN
+                            nominal_voltage = round(nominal_voltage / math.sqrt(3), 4)
+                        nomimal_voltage_txt = f" kV={nominal_voltage}"
+
+                    txt += nomimal_voltage_txt
+                    txt += vmin_txt
+                    txt += vmax_txt
+                    # positions (Not mapped)
+                    txt += " model={N}".format(N=phase_load.model)
+                    txt += " kW={P}".format(P=kws[n])
+                    txt += " kvar={Q}".format(Q=kvars[n])
+                    txt += " Phases=1"
+
+                    # timeseries object
+                    if hasattr(i, "timeseries") and i.timeseries is not None:
+                        txt = append_time_series(i, txt)
+
+                    txt += "\n\n"
+
+            feeder_text_map[sub_fdr_key] = txt
         
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
