@@ -5673,10 +5673,10 @@ class Reader(AbstractReader):
                 )
             )
 
-        duplicate_loads = set()
+        section_ids_with_more_than_one_load = set()
         for sectionID in self.customer_loads.keys():
             if sectionID.endswith("*"):
-                duplicate_loads.add(sectionID.lower().strip("*"))
+                section_ids_with_more_than_one_load.add(sectionID.lower().strip("*"))
         
         for sectionID, settings in self.customer_loads.items():
 
@@ -5701,15 +5701,15 @@ class Reader(AbstractReader):
             else:
                 load_data = {}
 
+            connectedkva = None
             if "connectedkva" in settings:
                 connectedkva = float(settings["connectedkva"])
-            else:
-                connectedkva = None
 
+            value_type = None
             if "valuetype" in settings:
                 value_type = int(settings["valuetype"])
 
-            if "value1" in settings and "value2" in settings:
+            if "value1" in settings and "value2" in settings and value_type is not None:
                 if (
                     float(settings["value1"]) == 0.0
                     and float(settings["value2"]) == 0.0
@@ -5761,19 +5761,17 @@ class Reader(AbstractReader):
 
                 if p >= 0 or q >= 0:  # then a Load is created
 
+                    phases = []
                     if "loadphase" in settings:
                         phases = settings["loadphase"]
-                    else:
-                        phases = []
-
 
                     fused = False
-                    if sectionID in duplicate_loads:
+                    if sectionID in section_ids_with_more_than_one_load:
                         fusion = True
-                        if sectionID in self._loads:
+                        if sectionID in self._loads:  # already created a Load for this sectionID
                             api_load = self._loads[sectionID]
                             fused = True
-                        elif p != 0:
+                        elif p != 0:  # have not created a load yet
                             api_load = Load(model)
                     else:
                         fusion = False
@@ -5787,9 +5785,8 @@ class Reader(AbstractReader):
 
                     try:
                         if fusion and sectionID in self._loads:
-                            api_load.name += "_" + reduce(
-                                lambda x, y: x + "_" + y, phases
-                            )
+                            # add phases to name with underscores
+                            api_load.name += "_" + reduce(lambda x, y: x + "_" + y, phases)
                         else:
                             api_load.name = (
                                 "Load_"
@@ -5803,18 +5800,12 @@ class Reader(AbstractReader):
                     try:
                         if not (fusion and sectionID in self._loads):
                             if connectedkva is not None:
-                                api_load.transformer_connected_kva = (
-                                    connectedkva * 10 ** 3
-                                )  # DiTTo in var
+                                api_load.transformer_connected_kva = (connectedkva * 10 ** 3)  # DiTTo in var
                         elif connectedkva is not None:
                             if api_load.transformer_connected_kva is None:
-                                api_load.transformer_connected_kva = (
-                                    connectedkva * 10 ** 3
-                                )  # DiTTo in var
+                                api_load.transformer_connected_kva = (connectedkva * 10 ** 3)  # DiTTo in var
                             else:
-                                api_load.transformer_connected_kva += (
-                                    connectedkva * 10 ** 3
-                                )  # DiTTo in var
+                                api_load.transformer_connected_kva += (connectedkva * 10 ** 3)  # DiTTo in var
                     except:
                         pass
 
@@ -5848,12 +5839,7 @@ class Reader(AbstractReader):
                     api_load.num_users = float(settings["numberofcustomer"])
 
                     for ph in phases:
-                        try:
-                            api_phase_load = PhaseLoad(model)
-                        except:
-                            raise ValueError(
-                                "Unable to instanciate PhaseLoad DiTTo object."
-                            )
+                        api_phase_load = PhaseLoad(model)
 
                         try:
                             api_phase_load.phase = ph
@@ -5898,7 +5884,6 @@ class Reader(AbstractReader):
                         # on the number of objects fail since we will have many more loads than there actually are...)
                         # if api_phase_load.p!=0 or api_phase_load.q!=0:
                         api_load.phase_loads.append(api_phase_load)
-
 
                     self._loads[sectionID] = api_load
                     if not sectionID in self.section_duplicates:
