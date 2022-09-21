@@ -6468,9 +6468,9 @@ class Reader(AbstractReader):
         for i,j in self.section_duplicates.items():
             if len(j)>1:
                 multiple_elements[i] = j
+        # multiple_elements has keys of sectionID and values as list of DiTTo objects
 
         for sectionID in multiple_elements:
-            connectors = []
             regulators = []
             transformers = []
             lines = [] #Warning - if multiple lines are used the names will be the same
@@ -6510,6 +6510,11 @@ class Reader(AbstractReader):
             non_connectors = [loads,bess,pvs,capacitors]
 
             if from_element is None or to_element is None: # i.e. just loads, pvs and caps so no problem
+                continue
+
+            # if all we have is (single phase) regulators between nodes no need to fix it
+            # (looks like parse_regulators creates a Regulator for each phase)
+            if all(len(el) == 0 for el in [transformers, lines, loads, bess, capacitors]):
                 continue
 
             original_from_element = from_element
