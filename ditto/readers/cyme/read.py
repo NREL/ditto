@@ -872,43 +872,40 @@ class Reader(AbstractReader):
         """
         Parse the CYME model to DiTTo.
 
-        :param model: DiTTo model
-        :type model: DiTTo model
-        :param verbose: Set the verbose mode. Optional. Default=True
+        :param model: DiTTo Store instance
+        :param verbose: Set the verbose mode. Optional. Default=False
         :type verbose: bool
         """
+        self.verbose = False
         if "verbose" in kwargs and isinstance(kwargs["verbose"], bool):
             self.verbose = kwargs["verbose"]
-        else:
-            self.verbose = False
 
-        if self.verbose:
-            logger.info("Parsing the header...")
+        if self.verbose: logger.info("Parsing the header...")
 
         self.parse_header()
         
-        logger.info("Parsing the Headnodes...")
+        if self.verbose: logger.info("Parsing the Headnodes...")
         self.parse_head_nodes(model)
 
-        logger.info("Parsing the sections...")
+        if self.verbose: logger.info("Parsing the sections...")
         self.parse_sections(model)
 
         # Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
 
-        logger.info("Parsing the subnetwork connections...")
+        if self.verbose: logger.info("Parsing the subnetwork connections...")
         self.parse_subnetwork_connections(model)
 
-        logger.info("Parsing the sources...")
+        if self.verbose: logger.info("Parsing the sources...")
         self.parse_sources(model)
 
-        logger.info("Parsing the network equivalents...")
+        if self.verbose: logger.info("Parsing the network equivalents...")
         self.parse_network_equivalent(model)
 
         self.fix_section_overlaps(model)
-
+        # overwriting 7_reg after this? yes. what is the point of set_names() ? it's called a bunch of times
         model.set_names()
-        logger.info("Setting node and line nominal voltages...")
+        if self.verbose: logger.info("Setting node and line nominal voltages...")
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
@@ -957,9 +954,7 @@ class Reader(AbstractReader):
         self.cyme_version = cyme_version
 
         if self.use_SI is None:
-            raise ValueError(
-                "Could not find [SI] or [IMPERIAL] unit system information. Unable to parse."
-            )
+            raise ValueError("Could not find [SI] or [IMPERIAL] unit system information. Unable to parse.")
 
     def parse_subnetwork_connections(self, model):
         """Parse the subnetwork connections.
@@ -980,9 +975,7 @@ class Reader(AbstractReader):
             )
 
         for key in self.subnetwork_connections:
-            model[
-                self.subnetwork_connections[key]["nodeid"]
-            ].is_substation_connection = True
+            model[self.subnetwork_connections[key]["nodeid"]].is_substation_connection = True
 
     def parse_head_nodes(self, model):
         """ 
