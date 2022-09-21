@@ -1766,218 +1766,217 @@ class Writer(AbstractWriter):
 
         substation_text_map = {}
         feeder_text_map = {}
-        for i in model.models:
-            if isinstance(i, Load):
-                if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
-                ):
-                    feeder_name = i.feeder_name
+        for i in model.iter_models(Load):
+            if (
+                self.separate_feeders
+                and hasattr(i, "feeder_name")
+                and i.feeder_name is not None
+            ):
+                feeder_name = i.feeder_name
+            else:
+                feeder_name = "DEFAULT"
+            if (
+                self.separate_substations
+                and hasattr(i, "substation_name")
+                and i.substation_name is not None
+            ):
+                substation_name = i.substation_name
+            else:
+                substation_name = "DEFAULT"
+
+            if not substation_name in substation_text_map:
+                substation_text_map[substation_name] = set([feeder_name])
+            else:
+                substation_text_map[substation_name].add(feeder_name)
+
+            txt = ""
+            if substation_name + "_" + feeder_name in feeder_text_map:
+                txt = feeder_text_map[substation_name + "_" + feeder_name]
+
+            # Name
+            if hasattr(i, "name") and i.name is not None:
+                txt += "New Load." + i.name
+            else:
+                continue
+
+            # Connection type
+            if hasattr(i, "connection_type") and i.connection_type is not None:
+                if i.connection_type == "Y":
+                    txt += " conn=wye"
+                elif i.connection_type == "D":
+                    txt += " conn=delta"
+
+            # Connecting element
+            if (
+                hasattr(i, "connecting_element")
+                and i.connecting_element is not None
+            ):
+                txt += " bus1={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
+                if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                    for phase_load in i.phase_loads:
+                        if (
+                            hasattr(phase_load, "phase")
+                            and phase_load.phase is not None
+                        ):
+                            txt += ".{p}".format(
+                                p=self.phase_mapping(phase_load.phase)
+                            )
+
+                    if i.connection_type == "D" and len(i.phase_loads) == 1:
+                        if self.phase_mapping(i.phase_loads[0].phase) == 1:
+                            txt += ".2"
+                        if self.phase_mapping(i.phase_loads[0].phase) == 2:
+                            txt += ".3"
+                        if self.phase_mapping(i.phase_loads[0].phase) == 3:
+                            txt += ".1"
+
+            # nominal voltage
+            if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                if i.nominal_voltage < 300:
+                    txt += " kV={volt}".format(
+                        volt=i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                    )
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
+                    txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
+                    self._baseKV_feeders_[
+                        substation_name + "_" + feeder_name
+                    ] = set()
+                if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                    self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                    self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                    )
                 else:
-                    substation_name = "DEFAULT"
+                    self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                    self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        i.nominal_voltage * 10 ** -3
+                    )
 
-                if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
-                else:
-                    substation_text_map[substation_name].add(feeder_name)
+            # Vmin
+            if hasattr(i, "vmin") and i.vmin is not None:
+                txt += " Vminpu={vmin}".format(vmin=i.vmin)
 
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+            # Vmax
+            if hasattr(i, "vmax") and i.vmax is not None:
+                txt += " Vmaxpu={vmax}".format(vmax=i.vmax)
 
-                # Name
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Load." + i.name
-                else:
-                    continue
+            # positions (Not mapped)
 
-                # Connection type
-                if hasattr(i, "connection_type") and i.connection_type is not None:
-                    if i.connection_type == "Y":
-                        txt += " conn=wye"
-                    elif i.connection_type == "D":
-                        txt += " conn=delta"
+            # KW
+            total_P = 0
+            if hasattr(i, "phase_loads") and i.phase_loads:
+                txt += " model={N}".format(N=i.phase_loads[0].model)
 
-                # Connecting element
-                if (
-                    hasattr(i, "connecting_element")
-                    and i.connecting_element is not None
-                ):
-                    txt += " bus1={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
-                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
-                        for phase_load in i.phase_loads:
+                for phase_load in i.phase_loads:
+                    if hasattr(phase_load, "p") and phase_load.p is not None:
+                        total_P += phase_load.p
+                txt += " kW={P}".format(P=total_P * 10 ** -3)
+
+            # Kva
+            total_Q = 0
+            if hasattr(i, "phase_loads") and i.phase_loads:
+                for phase_load in i.phase_loads:
+                    if hasattr(phase_load, "q") and phase_load.q is not None:
+                        total_Q += phase_load.q
+                txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
+
+            # phase_loads
+            if hasattr(i, "phase_loads") and i.phase_loads:
+
+                # if i.connection_type=='Y':
+                txt += " Phases={N}".format(N=len(i.phase_loads))
+                # elif i.connection_type=='D' and len(i.phase_loads)==3:
+                #    fp.write(' Phases=3')
+                # elif i.connection_type=='D' and len(i.phase_loads)==2:
+                #    fp.write(' Phases=1')
+
+                for phase_load in i.phase_loads:
+
+                    # P
+                    # if hasattr(phase_load, 'p') and phase_load.p is not None:
+                    #    fp.write(' kW={P}'.format(P=phase_load.p*10**-3))
+
+                    # Q
+                    # if hasattr(phase_load, 'q') and phase_load.q is not None:
+                    #    fp.write(' kva={Q}'.format(Q=phase_load.q*10**-3))
+
+                    # ZIP load model
+                    if (
+                        hasattr(phase_load, "use_zip")
+                        and phase_load.use_zip is not None
+                    ):
+                        if phase_load.use_zip:
+
+                            # Get the coefficients
                             if (
-                                hasattr(phase_load, "phase")
-                                and phase_load.phase is not None
+                                (
+                                    hasattr(i, "ppercentimpedance")
+                                    and i.ppercentimpedance is not None
+                                )
+                                and (
+                                    hasattr(i, "qpercentimpedance")
+                                    and i.qpercentimpedance is not None
+                                )
+                                and (
+                                    hasattr(i, "ppercentcurrent")
+                                    and i.ppercentcurrent is not None
+                                )
+                                and (
+                                    hasattr(i, "qpercentcurrent")
+                                    and i.qpercentcurrent is not None
+                                )
+                                and (
+                                    hasattr(i, "ppercentpower")
+                                    and i.ppercentpower is not None
+                                )
+                                and (
+                                    hasattr(i, "qpercentpower")
+                                    and i.qpercentpower is not None
+                                )
                             ):
-                                txt += ".{p}".format(
-                                    p=self.phase_mapping(phase_load.phase)
+
+                                txt += (
+                                    " model=8 ZIPV=[%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]"
+                                    % (
+                                        i.ppercentimpedance,
+                                        i.ppercentcurrent,
+                                        i.ppercentpower,
+                                        i.qpercentimpedance,
+                                        i.qpercentcurrent,
+                                        i.qpercentpower,
+                                    )
                                 )
 
-                        if i.connection_type == "D" and len(i.phase_loads) == 1:
-                            if self.phase_mapping(i.phase_loads[0].phase) == 1:
-                                txt += ".2"
-                            if self.phase_mapping(i.phase_loads[0].phase) == 2:
-                                txt += ".3"
-                            if self.phase_mapping(i.phase_loads[0].phase) == 3:
-                                txt += ".1"
+            # fp.write(' model=1')
 
-                # nominal voltage
-                if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    if i.nominal_voltage < 300:
-                        txt += " kV={volt}".format(
-                            volt=i.nominal_voltage * math.sqrt(3) * 10 ** -3
+            # timeseries object
+            if hasattr(i, "timeseries") and i.timeseries is not None:
+                for ts in i.timeseries:
+                    substation = "DEFAULT"
+                    feeder = "DEFAULT"
+                    if ts.feeder_name is not None:
+                        feeder = ts.feeder_name
+                    if ts.substation_name is not None:
+                        substation = ts.substation_name
+                    if (
+                        hasattr(ts, "data_location")
+                        and ts.data_label is not None
+                        and ts.data_location is not None
+                    ):
+                        filename = self.timeseries_datasets[
+                            substation + "_" + feeder
+                        ][ts.data_location]
+                        txt += " {ts_format}={filename}".format(
+                            ts_format=self.timeseries_format[filename],
+                            filename=filename,
                         )
                     else:
-                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
-                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
-                        self._baseKV_feeders_[
-                            substation_name + "_" + feeder_name
-                        ] = set()
-                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
-                        )
-                    else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
-                        )
+                        pass
+                        # TODO: manage the data correctly when it is only in memory
 
-                # Vmin
-                if hasattr(i, "vmin") and i.vmin is not None:
-                    txt += " Vminpu={vmin}".format(vmin=i.vmin)
-
-                # Vmax
-                if hasattr(i, "vmax") and i.vmax is not None:
-                    txt += " Vmaxpu={vmax}".format(vmax=i.vmax)
-
-                # positions (Not mapped)
-
-                # KW
-                total_P = 0
-                if hasattr(i, "phase_loads") and i.phase_loads:
-                    txt += " model={N}".format(N=i.phase_loads[0].model)
-
-                    for phase_load in i.phase_loads:
-                        if hasattr(phase_load, "p") and phase_load.p is not None:
-                            total_P += phase_load.p
-                    txt += " kW={P}".format(P=total_P * 10 ** -3)
-
-                # Kva
-                total_Q = 0
-                if hasattr(i, "phase_loads") and i.phase_loads:
-                    for phase_load in i.phase_loads:
-                        if hasattr(phase_load, "q") and phase_load.q is not None:
-                            total_Q += phase_load.q
-                    txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
-
-                # phase_loads
-                if hasattr(i, "phase_loads") and i.phase_loads:
-
-                    # if i.connection_type=='Y':
-                    txt += " Phases={N}".format(N=len(i.phase_loads))
-                    # elif i.connection_type=='D' and len(i.phase_loads)==3:
-                    #    fp.write(' Phases=3')
-                    # elif i.connection_type=='D' and len(i.phase_loads)==2:
-                    #    fp.write(' Phases=1')
-
-                    for phase_load in i.phase_loads:
-
-                        # P
-                        # if hasattr(phase_load, 'p') and phase_load.p is not None:
-                        #    fp.write(' kW={P}'.format(P=phase_load.p*10**-3))
-
-                        # Q
-                        # if hasattr(phase_load, 'q') and phase_load.q is not None:
-                        #    fp.write(' kva={Q}'.format(Q=phase_load.q*10**-3))
-
-                        # ZIP load model
-                        if (
-                            hasattr(phase_load, "use_zip")
-                            and phase_load.use_zip is not None
-                        ):
-                            if phase_load.use_zip:
-
-                                # Get the coefficients
-                                if (
-                                    (
-                                        hasattr(i, "ppercentimpedance")
-                                        and i.ppercentimpedance is not None
-                                    )
-                                    and (
-                                        hasattr(i, "qpercentimpedance")
-                                        and i.qpercentimpedance is not None
-                                    )
-                                    and (
-                                        hasattr(i, "ppercentcurrent")
-                                        and i.ppercentcurrent is not None
-                                    )
-                                    and (
-                                        hasattr(i, "qpercentcurrent")
-                                        and i.qpercentcurrent is not None
-                                    )
-                                    and (
-                                        hasattr(i, "ppercentpower")
-                                        and i.ppercentpower is not None
-                                    )
-                                    and (
-                                        hasattr(i, "qpercentpower")
-                                        and i.qpercentpower is not None
-                                    )
-                                ):
-
-                                    txt += (
-                                        " model=8 ZIPV=[%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]"
-                                        % (
-                                            i.ppercentimpedance,
-                                            i.ppercentcurrent,
-                                            i.ppercentpower,
-                                            i.qpercentimpedance,
-                                            i.qpercentcurrent,
-                                            i.qpercentpower,
-                                        )
-                                    )
-
-                # fp.write(' model=1')
-
-                # timeseries object
-                if hasattr(i, "timeseries") and i.timeseries is not None:
-                    for ts in i.timeseries:
-                        substation = "DEFAULT"
-                        feeder = "DEFAULT"
-                        if ts.feeder_name is not None:
-                            feeder = ts.feeder_name
-                        if ts.substation_name is not None:
-                            substation = ts.substation_name
-                        if (
-                            hasattr(ts, "data_location")
-                            and ts.data_label is not None
-                            and ts.data_location is not None
-                        ):
-                            filename = self.timeseries_datasets[
-                                substation + "_" + feeder
-                            ][ts.data_location]
-                            txt += " {ts_format}={filename}".format(
-                                ts_format=self.timeseries_format[filename],
-                                filename=filename,
-                            )
-                        else:
-                            pass
-                            # TODO: manage the data correctly when it is only in memory
-
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+            txt += "\n\n"
+            feeder_text_map[substation_name + "_" + feeder_name] = txt
         
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
