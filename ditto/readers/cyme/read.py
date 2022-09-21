@@ -406,7 +406,8 @@ class Reader(AbstractReader):
 
         self.content = iter(content_)
 
-    def phase_mapping(self, CYME_value):
+    @staticmethod
+    def phase_mapping(CYME_value):
         """
         Maps the CYME phase value format to a list of ABC phases:
 
@@ -453,7 +454,8 @@ class Reader(AbstractReader):
         else:
             return list(CYME_value)
 
-    def phase_to_num(self, phase):
+    @staticmethod
+    def phase_to_num(phase):
         """
         Maps phase in 'A', 'B', 'C' format in 1, 2, 3 format.
 
@@ -478,7 +480,8 @@ class Reader(AbstractReader):
         else:
             return phase
 
-    def load_value_type_mapping(self, load_type, value1, value2):
+    @staticmethod
+    def load_value_type_mapping(load_type, value1, value2):
         """
         CYME customer loads provide two values v1 and v2 as well as a load value type:
         This function takes these as inputs and outputs P and Q of the load.
@@ -553,7 +556,8 @@ class Reader(AbstractReader):
                 )
             )
 
-    def capacitors_connection_mapping(self, conn):
+    @staticmethod
+    def capacitors_connection_mapping(conn):
         """
         Maps the capacitors connection in CYME (CAP_CONN) to DiTTo connection_type.
 
@@ -590,7 +594,8 @@ class Reader(AbstractReader):
         else:
             return conn
 
-    def connection_configuration_mapping(self, value):
+    @staticmethod
+    def connection_configuration_mapping(value):
         """
         Map the connection configuration from CYME to DiTTo.
 
