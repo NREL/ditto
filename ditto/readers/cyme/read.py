@@ -903,6 +903,7 @@ class Reader(AbstractReader):
         self.fix_section_overlaps(model)
 
         model.set_names()
+        logger.info("Setting node and line nominal voltages...")
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
