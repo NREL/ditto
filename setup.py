@@ -109,7 +109,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=["click", "future", "networkx", "six", "traitlets>=4.1", "json_tricks", "numpy"],
+    install_requires=["click", "future", "networkx", "six", "traitlets>=4.1", "json_tricks", "numpy", "pandas"],
     extras_require={
         "all": extras_requires
         + opendss_requires
