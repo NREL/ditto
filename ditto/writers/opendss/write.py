@@ -3452,16 +3452,15 @@ class Writer(AbstractWriter):
                         )
                     )
 
-                    fp = open(
+                    with open(
                         os.path.join(output_folder, self.output_filenames["linecodes"]),
                         "w",
-                    )
-
-                    for linecode_name, linecode_data in txt.items():
-                        fp.write("New Linecode.{name}".format(name=re.sub('[^0-9a-zA-Z]+', '_', linecode_name)))
-                        for k, v in linecode_data.items():
-                            fp.write(" {k}={v}".format(k=k, v=v))
-                        fp.write("\n\n")
+                    ) as fp:
+                        for linecode_name, linecode_data in txt.items():
+                            fp.write("New Linecode.{name}".format(name=re.sub('[^0-9a-zA-Z]+', '_', linecode_name)))
+                            for k, v in linecode_data.items():
+                                fp.write(" {k}={v}".format(k=k, v=v))
+                            fp.write("\n\n")
 
         return 1
 
