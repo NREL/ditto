@@ -440,8 +440,9 @@ class Writer(AbstractWriter):
                 substation_text_map[substation_name].add(feeder_name)
 
             txt = ""
-            if substation_name + "_" + feeder_name in feeder_text_map:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
+            sub_fdr_key = substation_name + "_" + feeder_name
+            if sub_fdr_key in feeder_text_map:
+                txt = feeder_text_map[sub_fdr_key]
 
             if hasattr(i, "name") and i.name is not None:
                 txt += "New Transformer." + i.name
@@ -495,25 +496,11 @@ class Writer(AbstractWriter):
             # Emergency_power removed from powerTransformers and added to windings by Tarek
             # if hasattr(i, 'emergency_power') and i.emergency_power is not None:
             #    fp.write(' EmergHKVA='+str(i.emergency_power*10**-3)) #OpenDSS in kWatts
-
-            # Loadloss
-            if hasattr(i, "loadloss") and i.loadloss is not None:
-                txt += " %loadloss=" + str(i.loadloss)  # OpenDSS in kWatts
-
-            # install type (Not mapped)
-
-            # noload_loss
-            if hasattr(i, "noload_loss") and i.noload_loss is not None:
-                txt += " %Noloadloss=" + str(i.noload_loss)
-
-            # noload_loss
-            if hasattr(i, "normhkva") and i.normhkva is not None:
-                txt += " normhkva=" + str(i.normhkva)
-
             # phase shift (Not mapped)
 
             # Assume that we only have two or three windings. Three are used for center-tap transformers. Other single or three phase transformers use 2 windings
             # For banked 3-phase transformers, separate single phase transformers are used
+            nphases = 3
             if hasattr(i, "windings") and i.windings is not None:
 
                 # set compensator_r and compensator_x
@@ -522,12 +509,13 @@ class Writer(AbstractWriter):
                         hasattr(winding, "phase_windings")
                         and winding.phase_windings is not None
                     ):
-
+                        nphases = 0
                         for phase_winding in winding.phase_windings:
                             if (
                                 hasattr(phase_winding, "compensator_r")
                                 and phase_winding.compensator_r is not None
                             ):
+                                nphases += 1
                                 if not i.name in self.compensator:
                                     self.compensator[i.name] = {}
                                     self.compensator[i.name]["R"] = set(
@@ -561,10 +549,48 @@ class Writer(AbstractWriter):
                                     )
 
                 if len(i.windings) == 2:
-
+                    emergency_power = None  # openDSS expects one EmergHKVA value, but DiTTo has emergency_power for each phase_winding
                     for cnt, winding in enumerate(i.windings):
 
                         txt += " wdg={N}".format(N=cnt + 1)
+
+                        # bus
+                        if (
+                            hasattr(winding, "phase_windings")
+                            and winding.phase_windings is not None
+                        ):
+
+                            if buses is not None:
+                                bus = buses[cnt]
+                                txt += " bus={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', str(bus)))
+
+                            if len(winding.phase_windings) != 3:
+
+                                for phase_winding in winding.phase_windings:
+
+                                    # Connection
+                                    if (
+                                        hasattr(phase_winding, "phase")
+                                        and phase_winding.phase is not None
+                                    ):
+                                        txt += "." + str(self.phase_mapping(phase_winding.phase))
+
+                                if (
+                                    winding.connection_type == "D"
+                                    and len(winding.phase_windings) == 1
+                                ):
+                                    logger.warn(
+                                        "Warning - only one phase specified for a delta system - adding another connection"
+                                    )
+                                    if self.phase_mapping(phase_winding.phase) == 1:
+                                        txt += ".2"
+                                    if self.phase_mapping(phase_winding.phase) == 2:
+                                        txt += ".3"
+                                    if self.phase_mapping(phase_winding.phase) == 3:
+                                        txt += ".1"
+
+                        if winding.is_grounded:
+                            txt += ".0"
 
                         # Connection type
                         if (
@@ -600,36 +626,19 @@ class Writer(AbstractWriter):
                             txt += " Kv={kv}".format(
                                 kv=winding.nominal_voltage * 10 ** -3
                             )  # OpenDSS in kvolts
-                            if (
-                                not substation_name + "_" + feeder_name
-                                in self._baseKV_feeders_
-                            ):
-                                self._baseKV_feeders_[
-                                    substation_name + "_" + feeder_name
-                                ] = set()
+                            if (not sub_fdr_key in self._baseKV_feeders_):
+                                self._baseKV_feeders_[sub_fdr_key] = set()
 
                             if (
                                 winding.nominal_voltage < 300
+                                    or nphases == 1
                             ):  # Line-Neutral voltage for 120 V
-                                self._baseKV_.add(
-                                    winding.nominal_voltage
-                                    * math.sqrt(3)
-                                    * 10 ** -3
-                                )
-                                self._baseKV_feeders_[
-                                    substation_name + "_" + feeder_name
-                                ].add(
-                                    winding.nominal_voltage
-                                    * math.sqrt(3)
-                                    * 10 ** -3
-                                )
+                                kVLL = round(winding.nominal_voltage * math.sqrt(3) * 10 ** -3, 3)
                             else:
-                                self._baseKV_.add(
-                                    winding.nominal_voltage * 10 ** -3
-                                )
-                                self._baseKV_feeders_[
-                                    substation_name + "_" + feeder_name
-                                ].add(winding.nominal_voltage * 10 ** -3)
+                                kVLL = round(winding.nominal_voltage * 10 ** -3, 3)
+
+                            self._baseKV_.add(kVLL)
+                            self._baseKV_feeders_[sub_fdr_key].add(kVLL)
 
                         # rated power
                         if (
@@ -639,72 +648,6 @@ class Writer(AbstractWriter):
                             txt += " kva={kva}".format(
                                 kva=winding.rated_power * 10 ** -3
                             )
-
-                        # emergency_power
-                        # Was added to windings by Tarek
-                        if (
-                            hasattr(winding, "emergency_power")
-                            and winding.emergency_power is not None
-                        ):
-                            txt += " EmergHKVA={}".format(
-                                winding.emergency_power * 10 ** -3
-                            )  # OpenDSS in kWatts
-
-                        # resistance
-                        if (
-                            hasattr(winding, "resistance")
-                            and winding.resistance is not None
-                        ):
-                            txt += " %R={R}".format(R=winding.resistance)
-
-                        # Voltage limit (Not mapped)
-
-                        # Reverse resistance (Not mapped)
-
-                        # Check if winding is grounded
-                        # this check is done here so that it happens only for 2 windings
-
-                        # Phase windings
-                        if (
-                            hasattr(winding, "phase_windings")
-                            and winding.phase_windings is not None
-                        ):
-
-                            if buses is not None:
-                                bus = buses[cnt]
-                                txt += " bus={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', str(bus)))
-
-                            if len(winding.phase_windings) != 3:
-
-                                for j, phase_winding in enumerate(
-                                    winding.phase_windings
-                                ):
-
-                                    # Connection
-                                    if (
-                                        hasattr(phase_winding, "phase")
-                                        and phase_winding.phase is not None
-                                    ):
-                                        txt += "." + str(
-                                            self.phase_mapping(phase_winding.phase)
-                                        )
-
-                                if (
-                                    winding.connection_type == "D"
-                                    and len(winding.phase_windings) == 1
-                                ):
-                                    print(
-                                        "Warning - only one phase specified for a delta system - adding another connection"
-                                    )
-                                    if self.phase_mapping(phase_winding.phase) == 1:
-                                        txt += ".2"
-                                    if self.phase_mapping(phase_winding.phase) == 2:
-                                        txt += ".3"
-                                    if self.phase_mapping(phase_winding.phase) == 3:
-                                        txt += ".1"
-
-                        if winding.is_grounded:
-                            txt += ".0"
 
                         if (
                             hasattr(winding, "phase_windings")
@@ -725,6 +668,27 @@ class Writer(AbstractWriter):
                                     tap=winding.phase_windings[0].tap_position
                                 )
 
+                        # resistance
+                        if (
+                            hasattr(winding, "resistance")
+                            and winding.resistance is not None
+                        ):
+                            txt += " %R={R}".format(R=winding.resistance)
+
+                        # emergency_power
+                        # Was added to windings by Tarek
+                        if (
+                            hasattr(winding, "emergency_power")
+                            and winding.emergency_power is not None
+                            and emergency_power is None
+                        ):
+                            emergency_power = " EmergHKVA={}".format(
+                                winding.emergency_power * 10 ** -3
+                            )  # OpenDSS in kWatts
+
+                        # Voltage limit (Not mapped)
+
+                        # Reverse resistance (Not mapped)
                     if hasattr(i, "reactances") and i.reactances is not None:
                         # Since we are in the case of 2 windings, we should only have one reactance
                         if isinstance(i.reactances, list):
@@ -745,6 +709,8 @@ class Writer(AbstractWriter):
                                     name=i.name
                                 )
                             )
+                    if emergency_power is not None:
+                        txt += emergency_power
 
                 # This is used to represent center-tap transformers
                 # As described in the documentation, if the R and X values are not known, the values described by default_r and default_x should be used
@@ -839,11 +805,11 @@ class Writer(AbstractWriter):
                                 kv=winding.nominal_voltage * 10 ** -3
                             )  # OpenDSS in kvolts
                             if (
-                                not substation_name + "_" + feeder_name
+                                not sub_fdr_key
                                 in self._baseKV_feeders_
                             ):
                                 self._baseKV_feeders_[
-                                    substation_name + "_" + feeder_name
+                                    sub_fdr_key
                                 ] = set()
                             if (
                                 winding.nominal_voltage < 300
@@ -854,7 +820,7 @@ class Writer(AbstractWriter):
                                     * 10 ** -3
                                 )
                                 self._baseKV_feeders_[
-                                    substation_name + "_" + feeder_name
+                                    sub_fdr_key
                                 ].add(
                                     winding.nominal_voltage
                                     * math.sqrt(3)
@@ -865,7 +831,7 @@ class Writer(AbstractWriter):
                                     winding.nominal_voltage * 10 ** -3
                                 )
                                 self._baseKV_feeders_[
-                                    substation_name + "_" + feeder_name
+                                    sub_fdr_key
                                 ].add(winding.nominal_voltage * 10 ** -3)
 
                         # rated power
@@ -939,12 +905,27 @@ class Writer(AbstractWriter):
                             default_x[2],
                         )
 
+
+            # Loadloss
+            if hasattr(i, "loadloss") and i.loadloss is not None:
+                txt += " %loadloss=" + str(i.loadloss)  # OpenDSS in kWatts
+
+            # install type (Not mapped)
+
+            # noload_loss
+            if hasattr(i, "noload_loss") and i.noload_loss is not None:
+                txt += " %Noloadloss=" + str(i.noload_loss)
+
+            # noload_loss
+            if hasattr(i, "normhkva") and i.normhkva is not None:
+                txt += " normhkva=" + str(i.normhkva)
+
             txt += "\n\n"
-            feeder_text_map[substation_name + "_" + feeder_name] = txt
+            feeder_text_map[sub_fdr_key] = txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
+                txt = feeder_text_map[sub_fdr_key]
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
                 if txt != "":
