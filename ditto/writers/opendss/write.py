@@ -2848,22 +2848,44 @@ class Writer(AbstractWriter):
                 else:
                     continue
 
-                # Set the units in miles for comparison (IEEE 13 nodes feeder)
-                # TODO: Let the user specify the export units
-                txt += " Units=km"
+                """ 
+                order for opendss is: 
+                (order matters b/c o.w. causes seg faults c.f https://sourceforge.net/p/electricdss/discussion/861977/thread/e29ef76db9/)
 
-                # Length
-                if hasattr(i, "length") and i.length is not None:
-                    txt += " Length={length}".format(
-                        length=max(
-                            0.001, self.convert_from_meters(np.real(i.length), u"km")
-                        )
-                    )
-
-                # nominal_voltage (Not mapped)
-
-                # line type (Not mapped)
-
+                bus1
+                bus2
+                Linecode
+                Length
+                Phases
+                R1
+                X1
+                R0
+                X0
+                C1
+                C0
+                B1
+                B0
+                Normamps
+                Emergamps
+                Faultrate
+                Pctperm
+                Repair
+                BaseFreq
+                Rmatrix
+                Xmatrix
+                Cmatrix
+                Switch
+                Rg
+                Xg
+                Rho
+                Geometry
+                EarthModel
+                Units
+                Seasons
+                Ratings
+                LineType
+                Like
+                """
                 # from_element
                 if hasattr(i, "from_element") and i.from_element is not None:
                     txt += " bus1={from_el}".format(from_el=re.sub('[^0-9a-zA-Z]+', '_', i.from_element))
@@ -2888,6 +2910,27 @@ class Writer(AbstractWriter):
                             ):
                                 txt += ".{p}".format(p=self.phase_mapping(wire.phase))
 
+                geometry = ""
+                if i in lines_to_geometrify:
+                    geometry = " geometry={g}".format(g=i.nameclass)  # added later in the correct order
+                elif i in lines_to_linecodify:
+                    txt += " Linecode={c}".format(c=re.sub('[^0-9a-zA-Z]+', '_', i.nameclass))
+
+                # Length
+                if hasattr(i, "length") and i.length is not None:
+                    txt += " Length={length}".format(
+                        length=max(
+                            0.001, self.convert_from_meters(np.real(i.length), u"km")
+                        )
+                    )
+
+                # Set the units in miles for comparison (IEEE 13 nodes feeder)
+                # TODO: Let the user specify the export units
+                txt += " Units=km"
+
+                # nominal_voltage (Not mapped)
+
+                # line type (Not mapped)
                 # is_switch or is_breaker
                 if (hasattr(i, "is_switch") and i.is_switch == 1) or (
                     hasattr(i, "is_breaker") and i.is_breaker == 1
@@ -2910,6 +2953,10 @@ class Writer(AbstractWriter):
                         txt += " enabled=n"
                     else:
                         txt += " enabled=y"
+                    # enabled is not in opendss manual for line objects?
+
+                if len(geometry) > 1:
+                    txt += geometry
 
                 # is_fuse
                 if hasattr(i, "is_fuse") and i.is_fuse == 1:
@@ -2937,11 +2984,6 @@ class Writer(AbstractWriter):
                 if hasattr(i, "wires") and i.wires is not None:
                     phase_wires = [w for w in i.wires if w.phase in ["A", "B", "C"]]
                     txt += " phases=" + str(len(phase_wires))
-
-                if i in lines_to_geometrify:
-                    txt += " geometry={g}".format(g=i.nameclass)
-                elif i in lines_to_linecodify:
-                    txt += " Linecode={c}".format(c=re.sub('[^0-9a-zA-Z]+', '_', i.nameclass))
 
                 txt += "\n\n"
                 if fuse_line != "":
