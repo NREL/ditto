@@ -1901,11 +1901,9 @@ class Writer(AbstractWriter):
             if balanced_load:  # only need to define one New Load regardless of number of phases
                 
                 txt += "New Load." + i.name
-                txt += conn_type_txt
                 txt += bus1_txt
-
                 # balanced_load case:
-                for phase_load in i.phase_loads:
+                for phase_load in i.phase_loads:  # add the .phs1.phs2 etc
                     # add all phases onto Bus1
                     if hasattr(phase_load, "phase") and phase_load.phase is not None:
                         txt += f".{self.phase_mapping(phase_load.phase)}"
@@ -1919,26 +1917,28 @@ class Writer(AbstractWriter):
                             if self.phase_mapping(i.phase_loads[0].phase) == 3:
                                 txt += ".1"
 
-                txt += nomimal_voltage_txt
-
-                txt += vmin_txt
-
-                txt += vmax_txt
-
-                # positions (Not mapped)
-                
-                txt += " model={N}".format(N=i.phase_loads[0].model)
-                
-                txt += " kW={P}".format(P=sum(kws))
-
-                txt += " kvar={Q}".format(Q=sum(kvars))
-
                 # if i.connection_type=='Y':
                 txt += " Phases={N}".format(N=len(i.phase_loads))
                 # elif i.connection_type=='D' and len(i.phase_loads)==3:
                 #    fp.write(' Phases=3')
                 # elif i.connection_type=='D' and len(i.phase_loads)==2:
                 #    fp.write(' Phases=1')
+
+                txt += nomimal_voltage_txt
+                
+                txt += " kW={P}".format(P=sum(kws))
+                
+                txt += " model={N}".format(N=i.phase_loads[0].model)
+
+                txt += conn_type_txt
+
+                txt += " kvar={Q}".format(Q=sum(kvars))
+
+                txt += vmin_txt
+
+                txt += vmax_txt
+
+                # positions (Not mapped)
 
                 for phase_load in i.phase_loads:
 
@@ -1967,9 +1967,7 @@ class Writer(AbstractWriter):
             else:  # unbalanced load, need to define more than one New Load
                 for (n, phase_load) in enumerate(i.phase_loads):
                     txt += "New Load." + i.name + "_" + str(n+1)  # need unique names
-                    txt += conn_type_txt
                     txt += bus1_txt
-
                     if hasattr(phase_load, "phase") and phase_load.phase is not None:
                         dss_phase = self.phase_mapping(phase_load.phase)
                         txt += f".{dss_phase}"
@@ -1982,7 +1980,9 @@ class Writer(AbstractWriter):
                                 txt += ".3"
                             if dss_phase == 3:
                                 txt += ".1"
-                    
+
+                    txt += " Phases=1"
+
                     nomimal_voltage_txt = ""
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         nominal_voltage = i.nominal_voltage * 10 ** -3
@@ -1993,13 +1993,18 @@ class Writer(AbstractWriter):
                         nomimal_voltage_txt = f" kV={nominal_voltage}"
 
                     txt += nomimal_voltage_txt
+
+                    txt += " kW={P}".format(P=kws[n])
+
+                    txt += " model={N}".format(N=phase_load.model)
+
+                    txt += conn_type_txt
+
+                    txt += " kvar={Q}".format(Q=kvars[n])
+                    
                     txt += vmin_txt
                     txt += vmax_txt
                     # positions (Not mapped)
-                    txt += " model={N}".format(N=phase_load.model)
-                    txt += " kW={P}".format(P=kws[n])
-                    txt += " kvar={Q}".format(Q=kvars[n])
-                    txt += " Phases=1"
 
                     # timeseries object
                     if hasattr(i, "timeseries") and i.timeseries is not None:
