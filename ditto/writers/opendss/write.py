@@ -2306,38 +2306,17 @@ class Writer(AbstractWriter):
                     txt += " transformer={trans}".format(trans=transfo_name)
 
             # Winding
+            txt += " winding=2"
             if hasattr(i, "winding") and i.winding is not None:
                 txt += " winding={w}".format(w=i.winding)
-            else:
-                txt += " winding=2"
 
-            # CTprim
-            if hasattr(i, "ct_prim") and i.ct_prim is not None:
-                txt += " CTprim={CT}".format(CT=i.ct_prim)
+            # band center
+            if hasattr(i, "bandcenter") and i.bandcenter is not None:
+                txt += " vreg={vreg}".format(vreg=i.bandcenter)
 
-            # noload_loss
-            if hasattr(i, "noload_loss") and i.noload_loss is not None:
-                txt += " %noLoadLoss={nL}".format(NL=i.noload_loss)
-
-            # Delay
-            if hasattr(i, "delay") and i.delay is not None:
-                txt += " delay={d}".format(d=i.delay)
-
-            # highstep
-            # if hasattr(i, "highstep") and i.highstep is not None:
-            #     txt += " maxtapchange={high}".format(high=i.highstep)
-
-            # lowstep (Not mapped)
-
-            # pt ratio
-            if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
-                txt += " ptratio={PT}".format(PT=i.pt_ratio)
-
-            # ct ratio  (Not mapped)
-
-            # phase shift (Not mapped)
-
-            # ltc (Not mapped)
+            # TODO WHAT IS GOING ON HERE? 1. overwrites vreg; 2. spaces not allowd in parameter setting
+            # if hasattr(i, "setpoint") and i.setpoint is not None:  
+            #     txt += " vreg = {setp}".format(setp=i.setpoint / 100.0 * 120)
 
             # bandwidth
             if hasattr(i, "bandwidth") and i.bandwidth is not None:
@@ -2345,20 +2324,35 @@ class Writer(AbstractWriter):
                     b=i.bandwidth * 1.2
                 )  # The bandwidth is operated at 120 V
 
-            # band center
-            if hasattr(i, "bandcenter") and i.bandcenter is not None:
-                txt += " vreg={vreg}".format(vreg=i.bandcenter)
+            # Delay
+            if hasattr(i, "delay") and i.delay is not None:
+                txt += " delay={d}".format(d=i.delay)
 
-            # Pt phase
-            if hasattr(i, "pt_phase") and i.pt_phase is not None:
-                txt += " Ptphase={PT}".format(PT=self.phase_mapping(i.pt_phase))
+            # pt ratio
+            if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
+                txt += " ptratio={PT}".format(PT=i.pt_ratio)
 
-            # Voltage limit
-            if hasattr(i, "voltage_limit") and i.voltage_limit is not None:
-                txt += " vlimit={vlim}".format(vlim=i.voltage_limit)
+            # CTprim
+            if hasattr(i, "ct_prim") and i.ct_prim is not None:
+                txt += " CTprim={CT}".format(CT=i.ct_prim)
 
-            if hasattr(i, "setpoint") and i.setpoint is not None:
-                txt += " vreg = {setp}".format(setp=i.setpoint / 100.0 * 120)
+            # R (Store in the Phase Windings of the transformer)
+            if i.name in self.compensator:
+                if "R" in self.compensator[i.name]:
+                    if len(self.compensator[i.name]["R"]) == 1:
+                        txt += " R={r}".format(
+                            r=list(self.compensator[i.name]["R"])[0]
+                        )
+                    else:
+                        logger.warning(
+                            """Compensator_r not the same for all windings of transformer {name}.
+                                                Using the first value for regControl {name2}.""".format(
+                                name=i.connected_transformer, name2=i.name
+                            )
+                        )
+                        txt += " R={r}".format(
+                            r=list(self.compensator[i.name]["R"])[0]
+                        )
 
             # X (Store in the Phase Windings of the transformer)
             if i.name in self.compensator:
@@ -2378,23 +2372,29 @@ class Writer(AbstractWriter):
                             x=list(self.compensator[i.name]["X"])[0]
                         )
 
-            # R (Store in the Phase Windings of the transformer)
-            if i.name in self.compensator:
-                if "R" in self.compensator[i.name]:
-                    if len(self.compensator[i.name]["R"]) == 1:
-                        txt += " R={r}".format(
-                            r=list(self.compensator[i.name]["R"])[0]
-                        )
-                    else:
-                        logger.warning(
-                            """Compensator_r not the same for all windings of transformer {name}.
-                                                Using the first value for regControl {name2}.""".format(
-                                name=i.connected_transformer, name2=i.name
-                            )
-                        )
-                        txt += " R={r}".format(
-                            r=list(self.compensator[i.name]["R"])[0]
-                        )
+            # Pt phase
+            if hasattr(i, "pt_phase") and i.pt_phase is not None:
+                txt += " Ptphase={PT}".format(PT=self.phase_mapping(i.pt_phase))
+
+            # noload_loss
+            if hasattr(i, "noload_loss") and i.noload_loss is not None:
+                txt += " %noLoadLoss={nL}".format(NL=i.noload_loss)
+
+            # highstep
+            # if hasattr(i, "highstep") and i.highstep is not None:
+            #     txt += " maxtapchange={high}".format(high=i.highstep)
+
+            # lowstep (Not mapped)
+
+            # ct ratio  (Not mapped)
+
+            # phase shift (Not mapped)
+
+            # ltc (Not mapped)
+
+            # Voltage limit
+            if hasattr(i, "voltage_limit") and i.voltage_limit is not None:
+                txt += " vlimit={vlim}".format(vlim=i.voltage_limit)
 
             txt += "\n\n"
             if len(transfo_creation_string) > 0:
@@ -3390,10 +3390,9 @@ class Writer(AbstractWriter):
                     )
 
                     if i.nameclass is not None:
+                        n_phases = ""
                         if "nphases" in parsed_line:
                             n_phases = str(parsed_line["nphases"])
-                        else:
-                            n_phases = ""
                         nameclass_phase = i.nameclass + "_" + n_phases
                         if nameclass_phase not in self.all_linecodes:
                             self.all_linecodes[nameclass_phase] = parsed_line
@@ -3516,7 +3515,7 @@ class Writer(AbstractWriter):
                     ) as fp:
                         for linecode_name, linecode_data in txt.items():
                             fp.write("New Linecode.{name}".format(name=re.sub('[^0-9a-zA-Z]+', '_', linecode_name)))
-                            for k, v in linecode_data.items():
+                            for k, v in linecode_data.items():  # needs an order
                                 fp.write(" {k}={v}".format(k=k, v=v))
                             fp.write("\n\n")
 
