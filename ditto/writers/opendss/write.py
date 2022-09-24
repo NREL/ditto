@@ -2153,17 +2153,14 @@ class Writer(AbstractWriter):
                     transfo_creation_string += transfo_name
 
                     # Number of Phases
+                    nphases = 0
                     if hasattr(i, "windings") and i.windings is not None:
                         if (
                             hasattr(i.windings[0], "phase_windings")
                             and i.windings[0].phase_windings is not None
                         ):
-                            try:
-                                transfo_creation_string += " phases={}".format(
-                                    len(i.windings[0].phase_windings)
-                                )
-                            except:
-                                pass
+                            nphases = len(i.windings[0].phase_windings)
+                            transfo_creation_string += f" phases={nphases}"
                             phases = [
                                 self.phase_mapping(x.phase)
                                 for x in i.windings[0].phase_windings
@@ -2189,7 +2186,8 @@ class Writer(AbstractWriter):
                         and i.to_element is not None
                     ):
                         transfo_creation_string += " buses=({b1}.{p},{b2}.{p})".format(
-                            b1=re.sub('[^0-9a-zA-Z]+', '_', i.from_element), b2=re.sub('[^0-9a-zA-Z]+', '_', i.to_element), p=phase_string
+                            b1=re.sub('[^0-9a-zA-Z]+', '_', i.from_element), 
+                            b2=re.sub('[^0-9a-zA-Z]+', '_', i.to_element), p=phase_string
                         )
 
                     # Conns
@@ -2210,10 +2208,10 @@ class Writer(AbstractWriter):
                     # kvs
                     if hasattr(i, "windings") and i.windings is not None:
                         kvs = " kvs=("
-                        for w, winding in enumerate(i.windings):
-                            if hasattr(i.windings[w], "nominal_voltage"):
+                        for winding in i.windings:
+                            if hasattr(winding, "nominal_voltage"):
                                 kvs += (
-                                    str(i.windings[w].nominal_voltage * 10 ** -3)
+                                    str(winding.nominal_voltage * 10 ** -3)
                                     + ", "
                                 )
                                 if (
@@ -2224,29 +2222,17 @@ class Writer(AbstractWriter):
                                         substation_name + "_" + feeder_name
                                     ] = set()
                                 if (
-                                    i.windings[w].nominal_voltage < 300
-                                ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
-                                        i.windings[w].nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
+                                    winding.nominal_voltage < 300
+                                    or nphases == 1
+                                ):  # Line-Neutral voltage for 120 V or single phase trfo
+                                    kVLL = round(winding.nominal_voltage * math.sqrt(3) * 10 ** -3, 3)
                                 else:
-                                    self._baseKV_.add(
-                                        i.windings[w].nominal_voltage * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
+                                    kVLL = round(winding.nominal_voltage * 10 ** -3, 3)
 
-                        kvs = kvs[:-2]
+                                self._baseKV_.add(kVLL)
+                                self._baseKV_feeders_[substation_name + "_" + feeder_name].add(kVLL)
+
+                        kvs = kvs[:-2]  # drop the last ", "
                         kvs += ")"
                         transfo_creation_string += kvs
 
