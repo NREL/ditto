@@ -1219,22 +1219,22 @@ class Writer(AbstractWriter):
         for i in model.models:
             if isinstance(i, Photovoltaic):
                 # If is_sourcebus is set to 1, then the object represents a source and not a PV system
+
+                feeder_name = "DEFAULT"
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
                     and i.feeder_name is not None
                 ):
                     feeder_name = i.feeder_name
-                else:
-                    feeder_name = "DEFAULT"
+                    
+                substation_name = "DEFAULT"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
                     and i.substation_name is not None
                 ):
                     substation_name = i.substation_name
-                else:
-                    substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -1243,23 +1243,25 @@ class Writer(AbstractWriter):
                 txt = ""
                 voltvar_nodes = set()
                 voltwatt_nodes = set()
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                sub_fdr_key = substation_name + "_" + feeder_name
+                if sub_fdr_key in feeder_text_map:
+                    txt = feeder_text_map[sub_fdr_key]
 
-                if substation_name + "_" + feeder_name in feeder_voltvar_map:
-                    voltvar_nodes = feeder_voltvar_map[
-                        substation_name + "_" + feeder_name
-                    ]
+                if sub_fdr_key in feeder_voltvar_map:
+                    voltvar_nodes = feeder_voltvar_map[sub_fdr_key]
 
-                if substation_name + "_" + feeder_name in feeder_voltwatt_map:
-                    voltwatt_nodes = feeder_voltwatt_map[
-                        substation_name + "_" + feeder_name
-                    ]
+                if sub_fdr_key in feeder_voltwatt_map:
+                    voltwatt_nodes = feeder_voltwatt_map[sub_fdr_key]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New PVSystem.{name}".format(name=i.name)
 
+                # Phases
+                n_phases = 3
+                if hasattr(i, "phases") and i.phases is not None:
+                    n_phases = len(i.phases)
+                    txt += f" phases={n_phases}"
                 # connecting element
                 if (
                     hasattr(i, "connecting_element")
@@ -1273,9 +1275,6 @@ class Writer(AbstractWriter):
                             txt += "." + str(self.phase_mapping(phase.default_value))
 
                 # Phases
-                if hasattr(i, "phases") and i.phases is not None:
-                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
-
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
@@ -1286,20 +1285,18 @@ class Writer(AbstractWriter):
                         txt += " kV={kV}".format(
                             kV=i.nominal_voltage * 10 ** -3
                         )  # DiTTo in volts
-                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
-                        self._baseKV_feeders_[
-                            substation_name + "_" + feeder_name
-                        ] = set()
+                    if not sub_fdr_key in self._baseKV_feeders_:
+                        self._baseKV_feeders_[sub_fdr_key] = set()
                     if (
                         i.nominal_voltage < 300
                     ):  # Line-Neutral voltage for 120 V (i.e. 240V)
                         self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        self._baseKV_feeders_[sub_fdr_key].add(
                             i.nominal_voltage * 2 * 10 ** -3
                         )
                     else:
                         self._baseKV_.add(i.nominal_voltage * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        self._baseKV_feeders_[sub_fdr_key].add(
                             i.nominal_voltage * 10 ** -3
                         )
                 else:
@@ -1317,26 +1314,20 @@ class Writer(AbstractWriter):
                                 kV=parent.nominal_voltage * 10 ** -3
                             )  # DiTTo in volts
                         if (
-                            not substation_name + "_" + feeder_name
+                            not sub_fdr_key
                             in self._baseKV_feeders_
                         ):
-                            self._baseKV_feeders_[
-                                substation_name + "_" + feeder_name
-                            ] = set()
+                            self._baseKV_feeders_[sub_fdr_key] = set()
                         if (
                             parent.nominal_voltage < 300
                         ):  # Line-Line voltage for 120 V (i.e. 240V)
                             self._baseKV_.add(
                                 parent.nominal_voltage * math.sqrt(3) * 10 ** -3
                             )
-                            self._baseKV_feeders_[
-                                substation_name + "_" + feeder_name
-                            ].add(parent.nominal_voltage * 2 * 10 ** -3)
+                            self._baseKV_feeders_[sub_fdr_key].add(parent.nominal_voltage * 2 * 10 ** -3)
                         else:
                             self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
-                            self._baseKV_feeders_[
-                                substation_name + "_" + feeder_name
-                            ].add(parent.nominal_voltage * 10 ** -3)
+                            self._baseKV_feeders_[sub_fdr_key].add(parent.nominal_voltage * 10 ** -3)
 
                 if hasattr(i, "active_rating") and i.active_rating is not None:
                     pf_local = 1.0
@@ -1443,7 +1434,7 @@ class Writer(AbstractWriter):
                             and os.path.isfile(os.path.join(self.output_path,ts.data_location))
                         ):
                             filename = self.timeseries_datasets[
-                                substation_name + "_" + feeder_name
+                                sub_fdr_key
                             ][ts.data_location]
                             txt += " {ts_format}={filename}".format(
                                 ts_format=self.timeseries_format[filename],
@@ -1454,10 +1445,10 @@ class Writer(AbstractWriter):
                             # TODO: manage the data correctly when it is only in memory
 
                 txt += "\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
-                feeder_voltvar_map[substation_name + "_" + feeder_name] = voltvar_nodes
+                feeder_text_map[sub_fdr_key] = txt
+                feeder_voltvar_map[sub_fdr_key] = voltvar_nodes
                 feeder_voltwatt_map[
-                    substation_name + "_" + feeder_name
+                    sub_fdr_key
                 ] = voltwatt_nodes
 
         for substation_name in substation_text_map:
