@@ -3964,18 +3964,10 @@ class Reader(AbstractReader):
             sectionID = sectionID.strip("*").lower()
 
             # Instanciate Capacitor DiTTo objects
-            try:
-                api_capacitor = Capacitor(model)
-            except:
-                raise ValueError(
-                    "Unable to instanciate capacitor {id}".format(id=scap["sectionid"])
-                )
+            api_capacitor = Capacitor(model)
 
             # Set the name
-            try:
-                api_capacitor.name = "Cap_" + sectionID
-            except:
-                pass
+            api_capacitor.name = "Cap_" + sectionID
 
             # Set the connecting element (info is in the section)
             try:
@@ -4016,12 +4008,11 @@ class Reader(AbstractReader):
                 pass
 
             # Get the device number
+            dev_num = None
             if "eqid" in settings:
                 dev_num = settings["eqid"]
             elif "shuntcapacitorid" in settings:
                 dev_num = settings["shuntcapacitorid"]
-            else:
-                dev_num = None
 
             capacitor_data = None
             if dev_num is not None:
@@ -4074,7 +4065,7 @@ class Reader(AbstractReader):
                     "Capacitor {name} is monitoring phase {p} which is not in the section {id} phase list {lis}.".format(
                         name=api_capacitor.name,
                         p=api_capacitor.pt_phase,
-                        id=scap["sectionid"],
+                        id=sectionID,
                         lis=phases,
                     )
                 )
@@ -4083,12 +4074,7 @@ class Reader(AbstractReader):
             for p in phases:
 
                 # Instanciate a PhaseCapacitor DiTTo object
-                try:
-                    api_phaseCapacitor = PhaseCapacitor(model)
-                except:
-                    raise ValueError(
-                        "Unable to instanciate PhaseCapacitor DiTTo object."
-                    )
+                api_phaseCapacitor = PhaseCapacitor(model)
 
                 # Set the phase
                 try:
