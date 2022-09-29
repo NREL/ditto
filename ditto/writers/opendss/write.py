@@ -2472,30 +2472,30 @@ class Writer(AbstractWriter):
 
             if isinstance(i, Capacitor):
 
+                feeder_name = "DEFAULT"
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
                     and i.feeder_name is not None
                 ):
                     feeder_name = i.feeder_name
-                else:
-                    feeder_name = "DEFAULT"
+                    
+                substation_name = "DEFAULT"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
                     and i.substation_name is not None
                 ):
                     substation_name = i.substation_name
-                else:
-                    substation_name = "DEFAULT"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                sub_fdr_key = substation_name + "_" + feeder_name
+                if sub_fdr_key in feeder_text_map:
+                    txt = feeder_text_map[sub_fdr_key]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -2535,18 +2535,16 @@ class Writer(AbstractWriter):
                     txt += " Kv={volt}".format(
                         volt=i.nominal_voltage * 10 ** -3
                     )  # OpenDSS in Kvolts
-                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
-                        self._baseKV_feeders_[
-                            substation_name + "_" + feeder_name
-                        ] = set()
+                    if not sub_fdr_key in self._baseKV_feeders_:
+                        self._baseKV_feeders_[sub_fdr_key] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
                         self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        self._baseKV_feeders_[sub_fdr_key].add(
                             i.nominal_voltage * math.sqrt(3) * 10 ** -3
                         )
                     else:
                         self._baseKV_.add(i.nominal_voltage * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        self._baseKV_feeders_[sub_fdr_key].add(
                             i.nominal_voltage * 10 ** -3
                         )
 
@@ -2564,8 +2562,8 @@ class Writer(AbstractWriter):
                         )
 
                 # Rated kvar
-                # In DiTTo, this is splitted accross phase_capacitors
-                # We thus have to sum them up
+                # In DiTTo, this is split accross phase_capacitors
+                # We thus have to sum them up (3 phase kVaR is split equally by openDSS)
                 total_var = 0
                 if hasattr(i, "phase_capacitors") and i.phase_capacitors is not None:
                     for phase_capacitor in i.phase_capacitors:
@@ -2578,7 +2576,7 @@ class Writer(AbstractWriter):
                             except:
                                 logger.error(
                                     "Cannot compute Var of capacitor {name}".format(
-                                        name=name
+                                        name=i.name
                                     )
                                 )
                                 pass
@@ -2643,10 +2641,11 @@ class Writer(AbstractWriter):
                         txt += " PTPhase={PT}".format(PT=self.phase_mapping(i.pt_phase))
 
                 txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                feeder_text_map[sub_fdr_key] = txt
+
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
+                txt = feeder_text_map[sub_fdr_key]
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
                 if txt != "":
