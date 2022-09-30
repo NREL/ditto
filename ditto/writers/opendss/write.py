@@ -2298,7 +2298,7 @@ class Writer(AbstractWriter):
             # bandwidth
             if hasattr(i, "bandwidth") and i.bandwidth is not None:
                 txt += " band={b}".format(
-                    b=i.bandwidth * 1.2
+                    b=i.bandwidth
                 )  # The bandwidth is operated at 120 V
 
             # Delay
