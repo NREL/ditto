@@ -122,6 +122,14 @@ class Capacitor(DiTToHasTraits):
         help="""Flag that indicates wheter the element is inside a substation or not.""",
         default_value=False,
     )
+    vmax = Float(
+        help="""Maximum voltage for control override OFF""", 
+        default_value=None
+    )
+    vmin = Float(
+        help="""Minimum voltage for control override ON""", 
+        default_value=None
+    )
 
     def build(self, model):
         self._model = model
