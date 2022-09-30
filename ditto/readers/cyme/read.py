@@ -3856,13 +3856,33 @@ class Reader(AbstractReader):
             "switchedkvara": 13,
             "switchedkvarb": 14,
             "switchedkvarc": 15,
+            "voltageoverride": 20,
+            "voltageoverrideon": 21, 
+            "voltageoverrideoff": 22,
             "kv": 24,
+            "control": 25,
+            "onvaluea": 26,
+            "onvalueb": 27,
+            "onvaluec": 28,
+            "offvaluea": 29,
+            "offvalueb": 30,
+            "offvaluec": 31,
             "controllingphase": 35,
         }
         mapp_serie_capacitor = {"id": 0, "reactance": 6}
         mapp_shunt_capacitor = {"id": 0, "kvar": 1, "kv": 2, "type": 6}
         self.settings = {}
         self.capacitors = {}
+        cap_control_map = {  # cyme names in comments, None's don't have an equivalent in Ditto model
+            0: None, # "Manual Control",
+            1: "voltage", # "Voltage Control"
+            2: "currentFlow", # "Current Control"
+            3: None, # "Reactive Current Control",
+            4: "activePower", # "Power Factor Control",
+            5: None, # "Temperature Control",
+            6: "timeScheduled", # "Time Control",
+            7: "reactivePower", # "KVAR Control",
+        }
 
         #####################################################
         #                                                   #
@@ -3914,6 +3934,16 @@ class Reader(AbstractReader):
                         "switchedkvarc",
                         "kv",
                         "controllingphase",
+                        "onvaluea",
+                        "onvalueb",
+                        "onvaluec",
+                        "offvaluea",
+                        "offvalueb",
+                        "offvaluec",
+                        "control",
+                        "voltageoverride",
+                        "voltageoverrideon", 
+                        "voltageoverrideoff",
                     ],
                     mapp_shunt_capacitor_settings,
                     {"type": "shunt"},
@@ -3971,9 +4001,7 @@ class Reader(AbstractReader):
 
             # Set the connecting element (info is in the section)
             try:
-                api_capacitor.connecting_element = self.section_phase_mapping[
-                    sectionID
-                ]["fromnodeid"]
+                api_capacitor.connecting_element = self.section_phase_mapping[sectionID]["fromnodeid"]
             except:
                 pass
 
@@ -4070,85 +4098,93 @@ class Reader(AbstractReader):
                     )
                 )
 
-            # For each phase...
+            if "voltageoverride" in settings.keys() and settings["voltageoverride"]:
+                if "voltageoverrideon" in settings.keys():
+                    try: api_capacitor.vmin = float(settings["voltageoverrideon"])
+                    except: logger.warn(f"Could not set vmin for Capacitor {api_capacitor.name}")
+                if "voltageoverrideoff" in settings.keys():
+                    try: api_capacitor.vmax = float(settings["voltageoverrideoff"])
+                    except: logger.warn(f"Could not set vmax for Capacitor {api_capacitor.name}")
+
+            # For each phase make a PhaseCapacitor and set its rating
+            on_values = []
+            off_values = []
+            control_mode_ints = []
             for p in phases:
-
-                # Instanciate a PhaseCapacitor DiTTo object
                 api_phaseCapacitor = PhaseCapacitor(model)
-
-                # Set the phase
-                try:
-                    api_phaseCapacitor.phase = p
-                except:
-                    pass
+                api_phaseCapacitor.phase = p
 
                 # Set var value
+                fixed_key = "fixedkvar" + p.lower()  # p is one of "A", "B", "C"
+                switched_key = "switchedkvar" + p.lower()
                 if (
-                    "fixedkvara" in settings
-                    and "fixedkvarb" in settings
-                    and "fixedkvarc" in settings
-                    and max(
-                        float(settings["fixedkvara"]),
-                        max(
-                            float(settings["fixedkvarb"]), float(settings["fixedkvarc"])
-                        ),
-                    )
-                    > 0
+                    fixed_key in settings.keys() and settings[fixed_key] is not None and
+                    float(settings[fixed_key]) > 0
                 ):
-                    try:
-                        if p == "A":
-                            api_phaseCapacitor.var = (
-                                float(settings["fixedkvara"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "B":
-                            api_phaseCapacitor.var = (
-                                float(settings["fixedkvarb"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "C":
-                            api_phaseCapacitor.var = (
-                                float(settings["fixedkvarc"]) * 10 ** 3
-                            )  # Ditto in var
-                    except:
-                        pass
+                    api_phaseCapacitor.var = (
+                        float(settings[fixed_key]) * 10 ** 3
+                    )  # Ditto in var
                 elif (
-                    "switchedkvara" in settings
-                    and "switchedkvarb" in settings
-                    and "switchedkvarc" in settings
-                    and max(
-                        float(settings["switchedkvara"]),
-                        max(
-                            float(settings["switchedkvarb"]),
-                            float(settings["switchedkvarc"]),
-                        ),
-                    )
-                    > 0
+                    switched_key in settings.keys() and settings[switched_key] is not None and
+                    float(settings[switched_key]) > 0
                 ):
-                    try:
-                        if p == "A":
-                            api_phaseCapacitor.var = (
-                                float(settings["switchedkvara"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "B":
-                            api_phaseCapacitor.var = (
-                                float(settings["switchedkvarb"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "C":
-                            api_phaseCapacitor.var = (
-                                float(settings["switchedkvarc"]) * 10 ** 3
-                            )  # Ditto in var
-                    except:
-                        pass
-
-                elif capacitor_data is not None:
-                    try:
+                    api_phaseCapacitor.var = (
+                        float(settings[switched_key]) * 10 ** 3
+                    )  # Ditto in var
+                    api_phaseCapacitor.switch = True
+                elif capacitor_data is not None and "kvar" in capacitor_data.keys():
+                    if capacitor_data["kvar"] is not None:
                         api_phaseCapacitor.var = (
                             float(capacitor_data["kvar"]) * 10 ** 3
                         )  # DiTTo in var
-                    except:
-                        pass
+                else:
+                    continue # can't make a capacitor without a rating
+
+                # check for on/off settings
+                on_key = "onvalue" + p.lower()
+                off_key = "offvalue" + p.lower()
+
+                if on_key in settings.keys() and settings[on_key] is not None:
+                    try:
+                        if float(settings[on_key]) > 0:
+                            on_values.append(float(settings[on_key]))
+                    except ValueError: pass  # empty string
+
+                if off_key in settings.keys() and settings[off_key] is not None:
+                    try:
+                        if float(settings[off_key]) > 0:
+                            off_values.append(float(settings[off_key]))
+                    except ValueError: pass  # empty string
+
+                if "control" in settings.keys() and settings["control"] is not None:
+                    try:
+                        control_mode_ints.append(int(settings["control"]))
+                    except ValueError: pass  # empty string
 
                 # Append the phase capacitor object to the capacitor
+                api_capacitor.measuring_element = sectionID  # the line for control measurements
                 api_capacitor.phase_capacitors.append(api_phaseCapacitor)
+            
+            if len(on_values) > 1:
+                if not all(x == on_values[0] for x in on_values[1:]):
+                    logger.warn(f"Not all of the on values for capacitor in section {sectionID} are the same. Using the lowest value.")
+                api_capacitor.low = min(on_values)
+            elif len(on_values) == 1:
+                api_capacitor.low = on_values[0]
+
+            if len(control_mode_ints) > 1:
+                if not all(x == control_mode_ints[0] for x in control_mode_ints[1:]):
+                    logger.warn(f"Not all of the control modes for capacitor in section {sectionID} are the same. Using the first value.")
+                api_capacitor.mode = cap_control_map[control_mode_ints[0]]
+            elif len(control_mode_ints) == 1:
+                api_capacitor.mode = cap_control_map[control_mode_ints[0]]
+
+            if len(off_values) > 1:
+                if not all(x == off_values[0] for x in off_values[1:]):
+                    logger.warn(f"Not all of the off values for capacitor in section {sectionID} are the same. Using the highest value.")
+                api_capacitor.high = max(off_values)
+            elif len(off_values) == 1:
+                api_capacitor.high = off_values[0]
 
             self._capacitors.append(api_capacitor)
             if not sectionID in self.section_duplicates:
