@@ -1262,6 +1262,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "phases") and i.phases is not None:
                     n_phases = len(i.phases)
                     txt += f" phases={n_phases}"
+
                 # connecting element
                 if (
                     hasattr(i, "connecting_element")
@@ -1274,7 +1275,6 @@ class Writer(AbstractWriter):
                         for phase in i.phases:
                             txt += "." + str(self.phase_mapping(phase.default_value))
 
-                # Phases
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
@@ -2583,63 +2583,105 @@ class Writer(AbstractWriter):
                     total_var *= 10 ** -3  # OpenDSS in Kvar
                     txt += " Kvar={kvar}".format(kvar=total_var)
 
-                # We create a CapControl if we have valid input
-                # values that indicate that we should
-                create_capcontrol = False
-                if (hasattr(i, "name") and i.name is not None) and (
-                    (hasattr(i, "delay") and i.delay is not None)
-                    or (hasattr(i, "mode") and i.mode is not None)
-                    or (hasattr(i, "low") and i.low is not None)
-                    or (hasattr(i, "high") and i.high is not None)
-                    or (hasattr(i, "pt_ratio") and i.pt_ratio is not None)
-                    or (hasattr(i, "ct_ratio") and i.ct_ratio is not None)
-                    or (hasattr(i, "pt_phase") and i.pt_phase is not None)
+                """         CapControl Object
+                openDSS (DiTTo) values in order (some documentation copied here from June 2021 manual):
+                - Element (Capacitor.measuring_element) REQUIRED
+                - Capacitor (Capacitor.name) REQUIRED
+                - Type (Capacitor.mode) {Current | voltage | kvar | PF | time }  REQUIRED Control type
+                - CTPhase
+                    - Number of the phase being monitored for CURRENT control or one of {AVG | MAX | MIN} for all phases. Default=1. If delta or L-L connection, enter the first or the two phases being monitored [1-2, 2-3, 3-1]. Must be less than the number of phases. Does not apply to kvar control which uses all phases by default.
+                - CTratio
+                    - Ratio of the CT from line amps to control ampere setting for current and kvar control type
+                - DeadTime 
+                    -  time after capacitor is turned OFF before it can be turned back ON. default 300 seconds
+                - Delay (Capacitor.delay)
+                    - time delay, in seconds, from when the control is armed before it sends out the switching command to turn ON. default 15 seconds
+                - DelayOFF (Capacitor.delay)
+                    - default 15 seconds
+                - EventLog
+                    - {Yes/True* | No/False} Default is YES for CapControl. Log control actions to Eventlog.
+                    - NOTE event logging can significantly slow down solve times (esp. for time series)
+                - OFFsetting (Capacitor.low)
+                    - Value at which the control arms to switch the capacitor OFF.
+                - ONsetting (Capacitor.high)
+                    - Value at which the control arms to switch the capacitor ON (or ratchet up a step). Type of Control:
+                        - Current: Line Amps / CTratio
+                        - Voltage: Line-Neutral (or Line-Line for delta) Volts / PTratio
+                        - kvar: Total kvar, all phases (3-phase for pos seq model). This is directional. 
+                        PF: Power Factor, Total power in monitored terminal. Negative for Leading.
+                        Time: Hrs from Midnight as a floating point number (decimal). 7:30am would be entered as 7.5.
+                - PTPhase (Capacitor.pt_phase)
+                    - Number of the phase being monitored for VOLTAGE control or one of {AVG | MAX | MIN} for all phases. Default=1. If delta or L-L connection, enter the first or the two phases being monitored [1-2, 2-3, 3-1]. Must be less than the number of phases. Does not apply to kvar control which uses all phases by default.
+                - PTratio (Capacitor.pt_ratio)
+                    - Ratio of the PT that converts the monitored voltage to the control voltage. Default is 60. If the capacitor is Wye, the 1st phase line-to-neutral voltage is monitored. Else, the line-to-line voltage (1st - 2nd phase) is monitored.
+                - terminal
+                    - Number of the terminal of the circuit element to which the CapControl is connected. 1 or 2, typically. Default is 1.
+                - VBus
+                    - Name of bus to use for voltage override function. Default is bus at monitored terminal. Sometimes it is useful to monitor a bus in another location to emulate various DMS control algorithms.
+                - Vmax
+                    - Maximum voltage, in volts. If the voltage across the capacitor divided by the PTRATIO is greater than this voltage, the capacitor will switch OFF regardless of other control settings. Default is 126 (goes with a PT ratio of 60 for 12.47 kV system).
+                - Vmin
+                    - Minimum voltage, in volts. If the voltage across the capacitor divided by the PTRATIO is less than this voltage, the capacitor will switch ON regardless of other control settings. Default is 115 (goes with a PT ratio of 60 for 12.47 kV system).
+                - VoltOverride
+                    - {Yes | No} Default is No. Switch to indicate whether VOLTAGE OVERRIDE is to be considered. Vmax and Vmin must be set to reasonable values if this property is Yes.
+                """
+                if (
+                    i.name is not None and 
+                    i.measuring_element is not None and
+                    i.mode is not None and 
+                    i.low is not None and
+                    i.high is not None
                 ):
-                    create_capcontrol = True
+                    txt += f"\n\nNew CapControl.{i.name} Element=Line.{i.measuring_element} Capacitor={i.name}"
 
-                # Create CapControl
-                if create_capcontrol:
-                    txt += "\n\nNew CapControl.{name} Capacitor={name}".format(
-                        name=i.name
-                    )
+                    # mode (CONTROL)
+                    txt += f" Type={self.mode_mapping(i.mode)}"
 
-                    # Element (CONTROL)
-                    if (
-                        hasattr(i, "measuring_element")
-                        and i.measuring_element is not None
-                    ):
-                        txt += " Element=Line.{elt} Terminal=1".format(
-                            elt=i.measuring_element
-                        )
+                    # CTPhase not in Capacitor model
+
+                    # CTRatio (CONTROL)
+                    if hasattr(i, "ct_ratio") and i.ct_ratio is not None:
+                        txt += " Ctratio={CT}".format(CT=i.ct_ratio)
+
+                    # DeadTime  not in Capacitor model
 
                     # Delay (CONTROL)
                     if hasattr(i, "delay") and i.delay is not None:
                         txt += " delay={d}".format(d=i.delay)
 
-                    # mode (CONTROL)
-                    if hasattr(i, "mode") and i.mode is not None:
-                        txt += " Type={m}".format(m=self.mode_mapping(i.mode))
+                    # DelayOFF  not in Capacitor model
+                    # EventLog  not in Capacitor model
 
-                    # Low (CONTROL)
-                    if hasattr(i, "low") and i.low is not None:
-                        txt += " Vmin={vmin}".format(vmin=i.low)
+                    # OFFsetting
+                    if i.high is not None:
+                        txt += f" OFFsetting={i.high}"
 
-                    # high (CONTROL)
-                    if hasattr(i, "high") and i.high is not None:
-                        txt += " Vmax={vmax}".format(vmax=i.high)
-
-                    # Pt ratio (CONTROL)
-                    if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
-                        txt += " Ptratio={PT}".format(PT=i.pt_ratio)
-
-                    # Ct ratio (CONTROL)
-                    if hasattr(i, "ct_ratio") and i.ct_ratio is not None:
-                        txt += " Ctratio={CT}".format(CT=i.ct_ratio)
+                    # ONsetting
+                    if i.low is not None:
+                        txt += f" ONsetting={i.low}"
 
                     # Pt phase (CONTROL)
                     if hasattr(i, "pt_phase") and i.pt_phase is not None:
                         txt += " PTPhase={PT}".format(PT=self.phase_mapping(i.pt_phase))
 
+                    # Pt ratio (CONTROL)
+                    if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
+                        txt += " Ptratio={PT}".format(PT=i.pt_ratio)
+
+                    # terminal not in Capacitor model
+                    # VBus not in Capacitor model
+
+                    # vmax override (CONTROL)
+                    if i.vmax is not None:
+                        txt += f" Vmax={i.vmax}"
+
+                    # vmin override (CONTROL)
+                    if i.vmin is not None:
+                        txt += f" Vmin={i.vmin}"
+
+                    if i.vmax is not None or i.vmin is not None:
+                        txt += " VoltOverride=Yes"
+                    
                 txt += "\n\n"
                 feeder_text_map[sub_fdr_key] = txt
 
