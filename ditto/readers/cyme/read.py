@@ -4848,17 +4848,8 @@ class Reader(AbstractReader):
                 #
                 if "isltc" in transformer_data and transformer_data["isltc"]:
                     # Instanciate a Regulator DiTTo object
-                    try:
-                        api_regulator = Regulator(model)
-                    except:
-                        raise ValueError(
-                            "Unable to instanciate Regulator DiTTo object."
-                        )
-
-                    try:
-                        api_regulator.name = "Reg_" + settings["sectionid"]
-                    except:
-                        pass
+                    api_regulator = Regulator(model)
+                    api_regulator.name = "Reg_" + settings["sectionid"]
                     api_regulator.feeder_name = self.section_feeder_mapping[sectionID]
 
                     try:
