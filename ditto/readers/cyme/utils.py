@@ -181,13 +181,16 @@ def add_two_windings(
 
         # Set the nominal voltage
         try:
+            scaler = 1
+            if len(phases) == 1:
+                scaler = 1/math.sqrt(3)
             if w == 0:
                 api_winding.nominal_voltage = (
-                    float(trfx_data["kvllprim"]) * 10 ** 3
+                    float(trfx_data["kvllprim"]) * 10 ** 3 * scaler
                 )  # DiTTo in volt
             if w == 1:
                 api_winding.nominal_voltage = (
-                    float(trfx_data["kvllsec"]) * 10 ** 3
+                    float(trfx_data["kvllsec"]) * 10 ** 3 * scaler
                 )  # DiTTo in volt
         except:
             pass
