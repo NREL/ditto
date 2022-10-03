@@ -2248,11 +2248,11 @@ class Writer(AbstractWriter):
                                 )
                         except:
                             logger.warning(
-                                "Could not extract XHL from regulator {name}".format(
+                                "Could not extract XHL from regulator {name}. Setting XHL=1".format(
                                     name=i.name
                                 )
                             )
-                            pass
+                            transfo_creation_string += " XHL=1"
                         # XLT:
                         try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
                             if isinstance(i.reactances[1], (int, float)):  
