@@ -2567,7 +2567,7 @@ class Reader(AbstractReader):
                 if _model == 8:
                     # Try to get the ZIPV coefficients
                     try:
-                        ZIPV = list(map(lambda x: float(x), data["ZIPV"].split()))
+                        ZIPV = list(map(lambda x: float(x), data["ZIPV"][0].split()))
                     except:
                         ZIPV = None
                         pass
