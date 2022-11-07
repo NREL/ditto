@@ -2758,4 +2758,4 @@ class Reader(AbstractReader):
 
 
 def _dss_class_to_dict(class_name):
-    return dss.utils.class_to_dataframe(class_name)
+    return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")
