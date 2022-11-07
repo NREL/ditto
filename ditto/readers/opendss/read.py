@@ -1647,7 +1647,7 @@ class Reader(AbstractReader):
             # reactances
             if "Xscarray" in data:
                 try:
-                    eph = list(map(lambda x: float(x), data["Xscarray"]))
+                    eph = [float(x) for x in data["Xscarray"][0].split()]
                     for x in eph:
                         api_transformer.reactances.append(x)
                 except:
