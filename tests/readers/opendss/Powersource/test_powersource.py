@@ -11,6 +11,7 @@ import os
 import math
 import pytest
 import numpy as np
+from numpy import testing as npt
 
 from ditto.store import Store
 from ditto.readers.opendss.read import Reader
@@ -33,8 +34,9 @@ def test_powersource():
     assert m["Vsource.source"].is_sourcebus == 1
     assert m["Vsource.source"].rated_power == 150000000.0
     #  MVASc3 = baseKVA^2 / Z1 ; Z1 = sqrt( r1^2 + x1^2)
-    emerg_power = int((230.0) ** 2 / math.sqrt(1.1208 ** 2 + 3.5169 ** 2)) * 10 ** 6
-    assert m["Vsource.source"].emergency_power == emerg_power
+    emerg_power = int((230.0) ** 2 / math.sqrt(1.1208 ** 2 + 3.5169 ** 2)) * 10 ** 6 
+    npt.assert_almost_equal(m["Vsource.source"].emergency_power/10e9, emerg_power/10e9, decimal=4)
+
     assert m["Vsource.source"].zero_sequence_impedance == 1.1208 + 3.5169j
     assert m["Vsource.source"].positive_sequence_impedance == 1.1208 + 3.5169j
     assert m["Vsource.source"].connecting_element == "sourcebus"

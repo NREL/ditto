@@ -9,6 +9,7 @@ Tests for checking the line length values are all in meters.
 import logging
 import os
 import numpy as np
+from numpy import testing as npt
 import six
 
 import tempfile
@@ -69,7 +70,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    assert m["line1"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -82,7 +82,8 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line1"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line1"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line1"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line1"].feeder_name == "sourcebus_src"
     assert m["line1"].is_recloser is None
     assert m["line1"].is_breaker is None
@@ -128,7 +129,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    # assert m["line2"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -142,6 +142,8 @@ def test_line_length():
     cap_matrix = cap_matrix.tolist()
 
     #    assert m["line2"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line2"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line2"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line2"].feeder_name == "sourcebus_src"
     assert m["line2"].is_recloser is None
     assert m["line2"].is_breaker is None
@@ -187,7 +189,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line3"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -200,8 +201,9 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    #    assert m["line3"].capacitance_matrix == cap_matrix
 
+    npt.assert_almost_equal(m["line3"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line3"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line3"].feeder_name == "sourcebus_src"
     assert m["line3"].is_recloser is None
     assert m["line3"].is_breaker is None
@@ -242,10 +244,10 @@ def test_line_length():
         complex(parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]) / 1609.34
     )  # Units = mi
     imp_matrix = imp_matrix.real + imp_matrix.imag * 1j
-    assert m["line4"].impedance_matrix == [[imp_matrix]]
     cap_matrix = complex(parsed_values["Line"]["C1"], 0) / 1609.34  # Units = mi
-    assert m["line4"].capacitance_matrix == [[cap_matrix]]
 
+    npt.assert_almost_equal(m["line4"].impedance_matrix, [[imp_matrix]], decimal=5)
+    npt.assert_almost_equal(m["line4"].capacitance_matrix, [[cap_matrix]], decimal=5)
     assert m["line4"].feeder_name == "sourcebus_src"
     assert m["line4"].is_recloser is None
     assert m["line4"].is_breaker is None
@@ -291,7 +293,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line5"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -304,7 +305,8 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    #    assert m["line5"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line5"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line5"].capacitance_matrix, cap_matrix, decimal=5)
 
     assert m["line5"].feeder_name == "sourcebus_src"
     assert m["line5"].is_recloser is None
@@ -346,9 +348,9 @@ def test_line_length():
         complex(parsed_values["Line"]["R1"], parsed_values["Line"]["X1"]) / 0.0254
     )  # Units = in
     imp_matrix = imp_matrix.real + imp_matrix.imag * 1j
-    assert m["line6"].impedance_matrix == [[imp_matrix]]
     cap_matrix = complex(parsed_values["Line"]["C1"], 0) / 0.0254  # Units = in
-    assert m["line6"].capacitance_matrix == [[cap_matrix]]
+    npt.assert_almost_equal(m["line6"].impedance_matrix, [[imp_matrix]], decimal=5)
+    npt.assert_almost_equal(m["line6"].capacitance_matrix, [[cap_matrix]], decimal=5)
 
     assert m["line6"].feeder_name == "sourcebus_src"
     assert m["line6"].is_recloser is None
@@ -400,7 +402,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line9"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -413,7 +414,8 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line9"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line9"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line9"].capacitance_matrix, cap_matrix, decimal=5)
 
     assert m["line9"].feeder_name == "sourcebus_src"
     assert m["line9"].is_recloser is None
@@ -464,7 +466,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line10"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -477,7 +478,8 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line10"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line10"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line10"].capacitance_matrix, cap_matrix, decimal=5)
 
     assert m["line10"].feeder_name == "sourcebus_src"
     assert m["line10"].is_recloser is None
@@ -528,7 +530,6 @@ def test_line_length():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line11"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -541,7 +542,8 @@ def test_line_length():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line11"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line11"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line11"].capacitance_matrix, cap_matrix, decimal=5)
 
     assert m["line11"].feeder_name == "sourcebus_src"
     assert m["line11"].is_recloser is None
