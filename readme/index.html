@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>Contributing - ditto</title>
+    <title>Introduction - ditto</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Contributing";
-        var mkdocs_page_input_path = "contributing.md";
+        var mkdocs_page_name = "Introduction";
+        var mkdocs_page_input_path = "readme.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -52,30 +52,8 @@
                 <li class="toctree-l1"><a class="reference internal" href="../cli-examples/">DiTTo examples</a>
                 </li>
               </ul>
-              <ul class="current">
-                <li class="toctree-l1 current"><a class="reference internal current" href="./">Contributing</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#types-of-contributions">Types of Contributions</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#report-bugs">Report Bugs</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#fix-bugs">Fix Bugs</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#implement-features">Implement Features</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#write-documentation">Write Documentation</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#submit-feedback">Submit Feedback</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#get-started">Get Started!</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#pull-request-guidelines">Pull Request Guidelines</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#tips">Tips</a>
-    </li>
-    </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../contributing/">Contributing</a>
                 </li>
               </ul>
               <ul>
@@ -106,8 +84,26 @@
                 <li class="toctree-l1"><a class="reference internal" href="../power_flow_minimum_requirements/">Power Flow Minimum Requirements</a>
                 </li>
               </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../readme/">Introduction</a>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Introduction</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#readers">Readers</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#available">Available</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#planned">Planned</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#writers">Writers</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#available_1">Available</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#planned_1">Planned</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
                 </li>
               </ul>
               <ul>
@@ -139,7 +135,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
-      <li>Contributing</li>
+      <li>Introduction</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -148,95 +144,115 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="contributing">Contributing</h1>
-<p>Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.</p>
-<p>You can contribute in many ways:</p>
-<h2 id="types-of-contributions">Types of Contributions</h2>
-<h3 id="report-bugs">Report Bugs</h3>
-<p>Report bugs at https://github.com/NREL/ditto/issues.</p>
-<p>If you are reporting a bug, please include:</p>
+                <h1 id="introduction">Introduction</h1>
+<p>DiTTo implements a many-to-one-to-many architecture, meaning that a distribution system is represented in a core structure whithin DiTTo and that parsers need to be developped to link this core representation to existing formats.</p>
+<p>These parsers can be classified in:</p>
 <ul>
-<li>Your operating system name and version.</li>
-<li>Any details about your local setup that might be helpful in troubleshooting.</li>
-<li>Detailed steps to reproduce the bug.</li>
+<li><code>readers</code> which read from an existing format such as <code>OpenDSS</code> and build the core representation with the input data</li>
+<li><code>writers</code> which ouptut the core representation to a given existing format.</li>
 </ul>
-<h3 id="fix-bugs">Fix Bugs</h3>
-<p>Look through the GitHub issues for bugs. Anything tagged with "bug"
-and "help wanted" is open to whoever wants to implement it.</p>
-<h3 id="implement-features">Implement Features</h3>
-<p>Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.</p>
-<h3 id="write-documentation">Write Documentation</h3>
-<p>ditto could always use more documentation, whether as part of the
-official ditto docs, in docstrings, or even on the web in blog posts,
-articles, and such.</p>
-<h3 id="submit-feedback">Submit Feedback</h3>
-<p>The best way to send feedback is to file an issue at https://github.com/NREL/ditto/issues.</p>
-<p>If you are proposing a feature:</p>
+<p>The main strength of this approach compared to classic one-to-one mappings lies in its modularity. When implementing a new reader for a given format, the capability to export to all supported formats comes for free.</p>
+<h2 id="readers">Readers</h2>
+<h3 id="available">Available</h3>
+<p>Here is a list of the available readers and their status:</p>
+<table>
+<thead>
+<tr>
+<th align="center">Readers</th>
+<th align="center">Version assumed</th>
+<th align="center">Implementation stage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">OpenDSS</td>
+<td align="center">todo</td>
+<td align="center">tested and stable</td>
+</tr>
+<tr>
+<td align="center">CYME</td>
+<td align="center">todo</td>
+<td align="center">tested and stable</td>
+</tr>
+<tr>
+<td align="center">GridlabD</td>
+<td align="center">todo</td>
+<td align="center">stable, needs more testing</td>
+</tr>
+<tr>
+<td align="center">Synergi</td>
+<td align="center">todo</td>
+<td align="center">untested</td>
+</tr>
+<tr>
+<td align="center">DEW</td>
+<td align="center">todo</td>
+<td align="center">untested, still under development</td>
+</tr>
+<tr>
+<td align="center">WindMill</td>
+<td align="center">Todo</td>
+<td align="center">Untested, still under development</td>
+</tr>
+</tbody>
+</table>
+<p>There are two slightly different readers available: <code>CSV</code> and <code>JSON</code> which are not distribution system modeling formats but data representation formats. The readers can be used to load objects into DiTTo from basic <code>CSV</code> or <code>JSON</code> formats. They can be extremely useful for dumping a DiTTo model as is on disk and reload it later, or to apply specific modifications to existing DiTTo models (see more on TODO).</p>
+<h3 id="planned">Planned</h3>
+<p>Here is a list of readers we wish to implement in a near future. All contributions are welcome!</p>
 <ul>
-<li>Explain in detail how it would work.</li>
-<li>Keep the scope as narrow as possible, to make it easier to implement.</li>
-<li>Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)</li>
+<li>CIM</li>
+<li>Ephasor</li>
 </ul>
-<h2 id="get-started">Get Started!</h2>
-<p>Ready to contribute? Here's how to set up <code>ditto</code> for local development.</p>
-<ol>
-<li>Fork the <code>ditto</code> repo on GitHub.</li>
-<li>Clone your fork locally:</li>
-</ol>
-<pre><code class="language-bash">$ git clone git@github.com:your_name_here/ditto.git
-</code></pre>
-<ol>
-<li>Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:</li>
-</ol>
-<pre><code class="language-bash">$ conda create -n python3-env python=3
-$ cd ditto/
-$ pip install -e .
-</code></pre>
-<ol>
-<li>Create a branch for local development:</li>
-</ol>
-<pre><code class="language-bash">$ git checkout -b name-of-your-bugfix-or-feature
-</code></pre>
-<p>Now you can make your changes locally.</p>
-<ol>
-<li>When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox:</li>
-</ol>
-<pre><code class="language-bash">$ flake8 ditto tests
-$ pytest -sv
-</code></pre>
-<p>To get flake8, just <code>pip install flake8</code> into your virtualenv.</p>
-<ol>
-<li>Commit your changes and push your branch to GitHub:</li>
-</ol>
-<pre><code class="language-bash">$ git add .
-$ git commit -m &quot;Your detailed description of your changes.&quot;
-$ git push origin name-of-your-bugfix-or-feature
-</code></pre>
-<ol>
-<li>Submit a pull request through the GitHub website.</li>
-</ol>
-<h2 id="pull-request-guidelines">Pull Request Guidelines</h2>
-<p>Before you submit a pull request, check that it meets these guidelines:</p>
-<ol>
-<li>The pull request should include tests.</li>
-<li>If the pull request adds functionality, the docs should be updated. Put
-   your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.</li>
-<li>The pull request should work for Python 2.7, and 3.5, and for 3.6. Run tests and make sure that the tests pass for all supported Python versions.</li>
-</ol>
-<h2 id="tips">Tips</h2>
-<p>To run a subset of tests</p>
-<pre><code class="language-bash">$ pytest -sv
-</code></pre>
+<h2 id="writers">Writers</h2>
+<h3 id="available_1">Available</h3>
+<p>Here is a list of the available writers and their status:</p>
+<table>
+<thead>
+<tr>
+<th align="center">Writers</th>
+<th align="center">Version assumed</th>
+<th align="center">Implementation stage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">OpenDSS</td>
+<td align="center">todo</td>
+<td align="center">tested and stable</td>
+</tr>
+<tr>
+<td align="center">CYME</td>
+<td align="center">todo</td>
+<td align="center">tested and stable</td>
+</tr>
+<tr>
+<td align="center">Ephasor</td>
+<td align="center">todo</td>
+<td align="center">Untested</td>
+</tr>
+<tr>
+<td align="center">GridlabD</td>
+<td align="center">todo</td>
+<td align="center">Untested, still under development</td>
+</tr>
+</tbody>
+</table>
+<p>As for <code>readers</code> the JSON writer enables one to save a raw DiTTo model to disk.</p>
+<h3 id="planned_1">Planned</h3>
+<p>Here is a list of the writers we wish to implement in a near future. All contributions are welcome!</p>
+<ul>
+<li>WindMill</li>
+<li>Synergi</li>
+<li>DEW</li>
+<li>CIM</li>
+<li>CSV</li>
+</ul>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../cli-examples/" class="btn btn-neutral float-left" title="DiTTo examples"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../history/" class="btn btn-neutral float-right" title="History">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../power_flow_minimum_requirements/" class="btn btn-neutral float-left" title="Power Flow Minimum Requirements"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../usage/" class="btn btn-neutral float-right" title="Usage">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -259,10 +275,10 @@ $ git push origin name-of-your-bugfix-or-feature
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../cli-examples/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../power_flow_minimum_requirements/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../history/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../usage/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
