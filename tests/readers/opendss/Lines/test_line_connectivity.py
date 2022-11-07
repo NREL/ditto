@@ -8,6 +8,7 @@ Tests for checking the line connectivity.
 """
 import logging
 import os
+from numpy import testing as npt
 import numpy as np
 import six
 
@@ -71,7 +72,6 @@ def test_line_connectivity():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    assert m["line1"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -84,7 +84,8 @@ def test_line_connectivity():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line1"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line1"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line1"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line1"].feeder_name == "sourcebus_src"
     assert m["line1"].is_recloser is None
     assert m["line1"].is_breaker is None
@@ -120,12 +121,10 @@ def test_line_connectivity():
     assert m["line2"].is_fuse is None
     assert m["line2"].is_switch is None
     assert m["line2"].faultrate == parsed_values["Line"]["faultrate"]
-    assert (
-        m["line2"].impedance_matrix == imp_matrix
-    )  # Copying the matrix from Line1 as it has 3 wires
-    assert (
-        m["line2"].capacitance_matrix == cap_matrix
-    )  # Copying the matrix from Line1 as it has 3 wires
+
+    # Copying the matrix from Line1 as it has 3 wires
+    npt.assert_almost_equal(m["line2"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line2"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line2"].feeder_name == "sourcebus_src"
     assert m["line2"].is_recloser is None
     assert m["line2"].is_breaker is None
@@ -176,7 +175,6 @@ def test_line_connectivity():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    assert m["line3"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -189,7 +187,8 @@ def test_line_connectivity():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["line3"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["line3"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line3"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line3"].feeder_name == "sourcebus_src"
     assert m["line3"].is_recloser is None
     assert m["line3"].is_breaker is None
@@ -227,9 +226,9 @@ def test_line_connectivity():
     assert m["line4"].faultrate == parsed_values["Line"]["faultrate"]
     imp_matrix = complex(parsed_values["Line"]["R1"], parsed_values["Line"]["X1"])
     imp_matrix = round(imp_matrix.real, 9) + imp_matrix.imag * 1j
-    assert m["line4"].impedance_matrix == [[imp_matrix]]
     cap_matrix = complex(parsed_values["Line"]["C1"], 0)
-    assert m["line4"].capacitance_matrix == [[cap_matrix]]
+    npt.assert_almost_equal(m["line4"].impedance_matrix, [[imp_matrix]], decimal=5)
+    npt.assert_almost_equal(m["line4"].capacitance_matrix, [[cap_matrix]], decimal=5)
     assert m["line4"].feeder_name == "sourcebus_src"
     assert m["line4"].is_recloser is None
     assert m["line4"].is_breaker is None
@@ -282,8 +281,6 @@ def test_line_connectivity():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    #    assert m["line5"].impedance_matrix == imp_matrix
-
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
     c_diag = ((2 * c1 + c0) / 3) / 0.3048  # Units = ft
@@ -295,7 +292,8 @@ def test_line_connectivity():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    np.testing.assert_array_almost_equal(m["line5"].capacitance_matrix, cap_matrix)
+    npt.assert_almost_equal(m["line5"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line5"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line5"].feeder_name == "sourcebus_src"
     assert m["line5"].is_recloser is None
     assert m["line5"].is_breaker is None
@@ -331,14 +329,16 @@ def test_line_connectivity():
     assert m["line6"].is_fuse is None
     assert m["line6"].is_switch is None
     assert m["line6"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line6"].impedance_matrix == [
+    imp_matrix = [
         [(0.09813333 + 0.2153j), (0.04013333 + 0.0947j)],
         [(0.04013333 + 0.0947j), (0.09813333 + 0.2153j)],
     ]
-    assert m["line6"].capacitance_matrix == [
+    cap_matrix = [
         [(2.8 + 0j), (-0.6 + 0j)],
         [(-0.6 + 0j), (2.8 + 0j)],
     ]
+    npt.assert_almost_equal(m["line6"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line6"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line6"].feeder_name == "sourcebus_src"
     assert m["line6"].is_recloser is None
     assert m["line6"].is_breaker is None
@@ -374,14 +374,16 @@ def test_line_connectivity():
     assert m["line7"].is_fuse is None
     assert m["line7"].is_switch is None
     assert m["line7"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["line7"].impedance_matrix == [
+    imp_matrix = [
         [(0.09813333 + 0.2153j), (0.04013333 + 0.0947j)],
         [(0.04013333 + 0.0947j), (0.09813333 + 0.2153j)],
     ]
-    assert m["line7"].capacitance_matrix == [
+    cap_matrix = [
         [(2.8 + 0j), (-0.6 + 0j)],
         [(-0.6 + 0j), (2.8 + 0j)],
     ]
+    npt.assert_almost_equal(m["line7"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["line7"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["line7"].feeder_name == "sourcebus_src"
     assert m["line7"].is_recloser is None
     assert m["line7"].is_breaker is None
