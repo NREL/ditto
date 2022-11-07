@@ -346,7 +346,7 @@ class Reader(AbstractReader):
         for source_name, source_data in sources.items():
 
             # Skip PowerSource object if disabled
-            if not source_data["enabled"]:
+            if not source_data["enabled"] == 'Yes':
                 continue
 
             # Instanciate DiTTo PowerSource object
@@ -798,7 +798,7 @@ class Reader(AbstractReader):
 
             # Skip Line object if disabled and not a switch
             # (Otherwise it could mean that the switch is open)
-            if not data["Switch"] and not data["enabled"]:
+            if not data["Switch"]=='Yes' and not data["enabled"]=='Yes':
                 continue
 
             api_line = Line(model)
@@ -904,17 +904,13 @@ class Reader(AbstractReader):
             # if line_name.replace("(", "").replace(")", "") in fuses_names:
             if line_name in fuses_names:
                 api_line.is_fuse = True
-                api_line.nameclass = line_name.split("(")[0]
             # is_recloser
             elif line_name in reclosers_names or "recloser" in line_name:
                 api_line.is_recloser = True
-                api_line.nameclass = line_name.split("(")[0]
             elif "breaker" in line_name:
                 api_line.is_breaker = True
-                api_line.nameclass = line_name.split("(")[0]
-            elif "Switch" in data and data["Switch"]:
+            elif "Switch" in data and data["Switch"]=='Yes':
                 api_line.is_switch = True
-                api_line.nameclass = line_name.split("(")[0]
 
             # faultrate
             if "faultrate" in data:
@@ -1121,7 +1117,7 @@ class Reader(AbstractReader):
 
                 if api_line.is_switch is True:
                     wires[p].is_switch = True
-                    if data["enabled"] is True:
+                    if data["enabled"] =='Yes':
                         wires[p].is_open = False
                     else:
                         wires[p].is_open = True
@@ -1548,7 +1544,7 @@ class Reader(AbstractReader):
         for name, data in transformers.items():
 
             # Skip Transformer object if disabled
-            if not data["enabled"]:
+            if not data["enabled"] == 'Yes':
                 continue
 
             api_transformer = PowerTransformer(model)
@@ -1850,7 +1846,7 @@ class Reader(AbstractReader):
         for name, data in regulators.items():
 
             # Skip Regulator object if disabled
-            if not data["enabled"]:
+            if not data["enabled"] == 'Yes':
                 continue
 
             api_regulator = Regulator(model)
@@ -2173,7 +2169,7 @@ class Reader(AbstractReader):
 
         for name, data in capacitors.items():
             # Skip Capacitor object if disabled
-            if not data["enabled"]:
+            if not data["enabled"] == 'Yes':
                 continue
 
             api_capacitor = Capacitor(model)
@@ -2231,9 +2227,9 @@ class Reader(AbstractReader):
 
             # mode
             try:
-                if cap_control[control_id]["type"] == "volt":
+                if cap_control[control_id]["type"] == "Voltage":
                     api_capacitor.mode = "voltage"
-                elif cap_control[control_id]["type"] == "current":
+                elif cap_control[control_id]["type"] == "Current":
                     api_capacitor.mode = "currentFlow"
                 elif cap_control[control_id]["type"] == "kvar":
                     api_capacitor.mode = "reactivePower"
@@ -2382,7 +2378,7 @@ class Reader(AbstractReader):
         for name, data in loads.items():
 
             # Skip Load object if disabled
-            if not data["enabled"]:
+            if not data["enabled"] == 'Yes':
                 continue
 
             api_load = Load(model)
@@ -2610,7 +2606,7 @@ class Reader(AbstractReader):
         for name, data in storages.items():
 
             # Skip Storage object if disabled
-            if not data["enabled"]:
+            if not data["enabled"] == 'Yes':
                 continue
 
             api_storage = Storage(model)
@@ -2762,4 +2758,4 @@ class Reader(AbstractReader):
 
 
 def _dss_class_to_dict(class_name):
-    return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")
+    return dss.utils.class_to_dataframe(class_name)
