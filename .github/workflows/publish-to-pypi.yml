@@ -15,8 +15,7 @@ jobs:
     - name: Install dependencies—pandoc
       run: |
         # pandoc
-        url="https://github.com/jgm/pandoc/releases/latest"
-        downloadUrl="https://github.com$(curl -L $url | grep -o '/jgm/pandoc/releases/download/.*-amd64\.deb')"
+        downloadUrl="https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb"
         wget --quiet "$downloadUrl"
         sudo dpkg -i "${downloadUrl##*/}"
     - name: Install pypandoc
