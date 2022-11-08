@@ -5022,6 +5022,7 @@ class Reader(AbstractReader):
             "phaseon": 9,
             "ct": 12,
             "pt": 13,
+            "settingoption": 14,  # TODO map, "T" = terminal, i.e. control voltage at regulator terminal (secondary winding in OpenDSS, use bus= in RegControl)
             "vseta": 16,
             "vsetb": 17,
             "vsetc": 18,
