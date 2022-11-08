@@ -213,6 +213,7 @@ class system_structure_modifier(Modifier):
 
     def set_nominal_voltages_recur(self, *args):
         """This function sets the nominal voltage of the elements in the network.
+        This function is only used in the CYME Reader.
         This is currently the fastest implementation available as of early January 2018.
         It uses a kind os message passing algorithm. A node passes its nominal voltage to its succesors but modify this value if there is a voltage transformation.
 
