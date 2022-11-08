@@ -3839,7 +3839,7 @@ class Writer(AbstractWriter):
         with open(
             os.path.join(self.output_path, self.output_filenames["master"]), "w"
         ) as fp:
-            fp.write("Clear\n\nNew Circuit.Full_Network ")  # not reached for PPL model? it is but gets overwritten?
+            fp.write("Clear\n\nNew Circuit.Full_Network ")
             for obj in model.models:
                 if (
                     isinstance(obj, PowerSource) and obj.is_sourcebus == 1
@@ -4044,7 +4044,7 @@ class Writer(AbstractWriter):
                             ]
                         )
                     else:
-                        _baseKV_list_ = []  # getting here?
+                        _baseKV_list_ = []
                     _baseKV_list_ = sorted(_baseKV_list_)
                     fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 
