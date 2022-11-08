@@ -15,7 +15,6 @@ if six.PY2:
     from backports import tempfile
 else:
     import tempfile
-import pytest
 import pytest as pt
 
 logger = logging.getLogger(__name__)
@@ -125,8 +124,9 @@ def test_opendss_writer():
     wirea = Wire(m, gmr=1.3, X=2, Y=20)
     wiren = Wire(m, gmr=1.2, X=2, Y=20)
     line1 = Line(m, name="l1", wires=[wirea, wiren])
-    phase_load1 = PhaseLoad(m, p=5400, q=2615.3394)
-    load1 = Load(m, name="load1", phase_loads=[phase_load1])
+    phase_load1 = PhaseLoad(m, p=5400, q=2615.3394, phase="A")
+    phase_load2 = PhaseLoad(m, p=540, q=261.3394, phase="B")
+    load1 = Load(m, name="load1", phase_loads=[phase_load1, phase_load2], connecting_element="loadbus")
 
     winding1 = Winding(m, connection_type="W", nominal_voltage=12.47, rated_power=25,)
     winding2 = Winding(m, connection_type="W", nominal_voltage=6.16, rated_power=25,)
@@ -197,6 +197,17 @@ def test_opendss_writer():
     writer.write_transformers(m)
     writer.write_regulators(m)
     writer.write_capacitors(m)
+
+    # test unbalanced loads
+    fp = open(t.name + "/Loads.dss", "r")
+    line1 = fp.readline()
+    _ = fp.readline()  # blank line
+    line2 = fp.readline()
+    assert "bus1=loadbus.1" in line1
+    assert "kW=5.4" in line1
+    assert "bus1=loadbus.2" in line2
+    assert "kW=0.54" in line2
+    fp.close()
 
 
 def test_gridlabd_writer():
