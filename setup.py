@@ -40,7 +40,7 @@ numpy_dependency = "numpy>=1.13.0"
 
 extras_requires = ["lxml", "pandas", "scipy", numpy_dependency, "XlsxWriter"]
 
-opendss_requires = ["OpenDSSDirect.py>=0.3.3", "pandas", numpy_dependency]
+opendss_requires = ["OpenDSSDirect.py>=0.7.0", "pandas", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd"]
 gridlabd_requires = ["croniter", numpy_dependency]
 cyme_requires = [numpy_dependency]

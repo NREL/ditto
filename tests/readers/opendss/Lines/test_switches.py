@@ -9,6 +9,7 @@ Tests for switch attribute of Line
 import logging
 import os
 import numpy as np
+from numpy import testing as npt
 import six
 
 import tempfile
@@ -67,7 +68,6 @@ def test_switches():
     np.fill_diagonal(imp_matrix, diag)
     imp_matrix = imp_matrix.tolist()
 
-    assert m["origin"].impedance_matrix == imp_matrix
 
     c1 = complex(parsed_values["Line"]["C1"], 0)  # c1 taken from default values
     c0 = complex(parsed_values["Line"]["C0"], 0)  # c0 taken from default values
@@ -80,7 +80,8 @@ def test_switches():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    assert m["origin"].capacitance_matrix == cap_matrix
+    npt.assert_almost_equal(m["origin"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["origin"].capacitance_matrix, cap_matrix, decimal=5)
 
     assert m["origin"].feeder_name == "sourcebus_src"
     assert m["origin"].is_recloser is None
@@ -116,7 +117,7 @@ def test_switches():
     assert m["switch1"].is_fuse is None
     assert m["switch1"].is_switch == 1
     assert m["switch1"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch1"].impedance_matrix == [
+    imp_matrix = [
         [(0.001 + 0.001j), 0j, 0j],
         [0j, (0.001 + 0.001j), 0j],
         [0j, 0j, (0.001 + 0.001j)],
@@ -133,11 +134,12 @@ def test_switches():
     np.fill_diagonal(cap_matrix, c_diag)
     cap_matrix = cap_matrix.tolist()
 
-    np.testing.assert_array_almost_equal(m["switch1"].capacitance_matrix, cap_matrix)
+    npt.assert_almost_equal(m["switch1"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch1"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch1"].feeder_name == "sourcebus_src"
     assert m["switch1"].is_recloser is None
     assert m["switch1"].is_breaker is None
-    assert m["switch1"].nameclass == "switch1"
+    assert m["switch1"].nameclass == ""
 
     for w in m["switch1"].wires:
         assert w.nameclass == ""
@@ -168,12 +170,12 @@ def test_switches():
     assert m["switch2"].is_fuse is None
     assert m["switch2"].is_switch == 1
     assert m["switch2"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch2"].impedance_matrix == [
+    imp_matrix = [
         [(0.001 + 0.001j), 0j, 0j],
         [0j, (0.001 + 0.001j), 0j],
         [0j, 0j, (0.001 + 0.001j)],
     ]
-    assert m["switch2"].capacitance_matrix == [
+    cap_matrix = [
         [
             (0.001066667 + 0j),
             (-3.3333330000000004e-05 + 0j),
@@ -190,10 +192,12 @@ def test_switches():
             (0.001066667 + 0j),
         ],
     ]
+    npt.assert_almost_equal(m["switch2"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch2"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch2"].feeder_name == "sourcebus_src"
     assert m["switch2"].is_recloser is None
     assert m["switch2"].is_breaker is None
-    assert m["switch2"].nameclass == "switch2"
+    assert m["switch2"].nameclass == ""
 
     for w in m["switch2"].wires:
         assert w.nameclass == ""
@@ -224,12 +228,12 @@ def test_switches():
     assert m["switch3"].is_fuse is None
     assert m["switch3"].is_switch == 1
     assert m["switch3"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch3"].impedance_matrix == [
+    imp_matrix = [
         [(0.001 + 0.001j), 0j, 0j],
         [0j, (0.001 + 0.001j), 0j],
         [0j, 0j, (0.001 + 0.001j)],
     ]
-    assert m["switch3"].capacitance_matrix == [
+    cap_matrix = [
         [
             (0.001066667 + 0j),
             (-3.3333330000000004e-05 + 0j),
@@ -246,10 +250,12 @@ def test_switches():
             (0.001066667 + 0j),
         ],
     ]
+    npt.assert_almost_equal(m["switch3"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch3"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch3"].feeder_name == "sourcebus_src"
     assert m["switch3"].is_recloser is None
     assert m["switch3"].is_breaker is None
-    assert m["switch3"].nameclass == "switch3"
+    assert m["switch3"].nameclass == ""
 
     for w in m["switch3"].wires:
         assert w.nameclass == ""
@@ -280,12 +286,12 @@ def test_switches():
     assert m["switch4"].is_fuse is None
     assert m["switch4"].is_switch == 1
     assert m["switch4"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch4"].impedance_matrix == [
+    imp_matrix = [
         [(0.001 + 0.001j), 0j, 0j],
         [0j, (0.001 + 0.001j), 0j],
         [0j, 0j, (0.001 + 0.001j)],
     ]
-    assert m["switch4"].capacitance_matrix == [
+    cap_matrix = [
         [
             (0.001066667 + 0j),
             (-3.3333330000000004e-05 + 0j),
@@ -302,10 +308,12 @@ def test_switches():
             (0.001066667 + 0j),
         ],
     ]
+    npt.assert_almost_equal(m["switch4"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch4"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch4"].feeder_name == "sourcebus_src"
     assert m["switch4"].is_recloser is None
     assert m["switch4"].is_breaker is None
-    assert m["switch4"].nameclass == "switch4"
+    assert m["switch4"].nameclass == ""
 
     for w in m["switch4"].wires:
         assert w.nameclass == ""
@@ -336,12 +344,14 @@ def test_switches():
     assert m["switch5"].is_fuse is None
     assert m["switch5"].is_switch == 1
     assert m["switch5"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch5"].impedance_matrix == [[(0.001 + 0.001j)]]
-    assert m["switch5"].capacitance_matrix == [[(0.0011 + 0j)]]
+    imp_matrix = [[(0.001 + 0.001j)]]
+    cap_matrix = [[(0.0011 + 0j)]]
+    npt.assert_almost_equal(m["switch5"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch5"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch5"].feeder_name == "sourcebus_src"
     assert m["switch5"].is_recloser is None
     assert m["switch5"].is_breaker is None
-    assert m["switch5"].nameclass == "switch5"
+    assert m["switch5"].nameclass == ""
 
     for w in m["switch5"].wires:
         assert w.nameclass == ""
@@ -372,12 +382,14 @@ def test_switches():
     assert m["switch6"].is_fuse is None
     assert m["switch6"].is_switch == 1
     assert m["switch6"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch6"].impedance_matrix == [[(0.001 + 0.001j)]]
-    assert m["switch6"].capacitance_matrix == [[(0.0011 + 0j)]]
+    imp_matrix = [[(0.001 + 0.001j)]]
+    cap_matrix = [[(0.0011 + 0j)]]
+    npt.assert_almost_equal(m["switch6"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch6"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch6"].feeder_name == "sourcebus_src"
     assert m["switch6"].is_recloser is None
     assert m["switch6"].is_breaker is None
-    assert m["switch6"].nameclass == "switch6"
+    assert m["switch6"].nameclass == ""
 
     for w in m["switch6"].wires:
         assert w.nameclass == ""
@@ -407,18 +419,20 @@ def test_switches():
     assert m["switch7"].is_fuse is None
     assert m["switch7"].is_switch == 1
     assert m["switch7"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch7"].impedance_matrix == [
+    imp_matrix = [
         [(0.001 + 0.001j), 0j],
         [0j, (0.001 + 0.001j)],
     ]
-    assert m["switch7"].capacitance_matrix == [
+    cap_matrix = [
         [(0.001066667 + 0j), (-3.3333330000000004e-05 + 0j)],
         [(-3.3333330000000004e-05 + 0j), (0.001066667 + 0j)],
     ]
+    npt.assert_almost_equal(m["switch7"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch7"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch7"].feeder_name == "sourcebus_src"
     assert m["switch7"].is_recloser is None
     assert m["switch7"].is_breaker is None
-    assert m["switch7"].nameclass == "switch7"
+    assert m["switch7"].nameclass == ""
 
     for w in m["switch7"].wires:
         assert w.nameclass == ""
@@ -449,18 +463,20 @@ def test_switches():
     assert m["switch8"].is_fuse is None
     assert m["switch8"].is_switch == 1
     assert m["switch8"].faultrate == parsed_values["Line"]["faultrate"]
-    assert m["switch8"].impedance_matrix == [
+    imp_matrix = [
         [(0.001 + 0.001j), 0j],
         [0j, (0.001 + 0.001j)],
     ]
-    assert m["switch8"].capacitance_matrix == [
+    cap_matrix = [
         [(0.001066667 + 0j), (-3.3333330000000004e-05 + 0j)],
         [(-3.3333330000000004e-05 + 0j), (0.001066667 + 0j)],
     ]
+    npt.assert_almost_equal(m["switch8"].impedance_matrix, imp_matrix, decimal=5)
+    npt.assert_almost_equal(m["switch8"].capacitance_matrix, cap_matrix, decimal=5)
     assert m["switch8"].feeder_name == "sourcebus_src"
     assert m["switch8"].is_recloser is None
     assert m["switch8"].is_breaker is None
-    assert m["switch8"].nameclass == "switch8"
+    assert m["switch8"].nameclass == ""
 
     for w in m["switch8"].wires:
         assert w.nameclass == ""
