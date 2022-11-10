@@ -136,7 +136,7 @@ class Writer(AbstractWriter):
         d1 = ctx.create_decimal(repr(f))
         return format(d1, "f")
 
-    def write(self, model, write_taps=False, **kwargs):
+    def write(self, model, separate_feeders = False, separate_substations = False, write_taps=False, verbose=False):
         """General writing function responsible for calling the sub-functions.
 
         Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS, 
@@ -144,30 +144,23 @@ class Writer(AbstractWriter):
 
         :param model: DiTTo model
         :type model: DiTTo model
-        :param verbose: Set verbose mode. Optional. Default=False
-        :type verbose: bool
+        :param separate_feeders: Whether or not to create subfolders for different feeders. Optional. Default=False
+        :type separate_feeders: bool
+        :param separate_substations: Whether or not to create subfolders for different substations. Optional. Default=False
+        :type separate_substations: bool
         :param write_taps: Write the transformer taps if they are provided. (This can cause some problems). Optional. Default=False
         :type write_taps: bool
+        :param verbose: Set verbose mode. Optional. Default=False
+        :type verbose: bool
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-        # Verbose print the progress
-        if "verbose" in kwargs and isinstance(kwargs["verbose"], bool):
-            self.verbose = kwargs["verbose"]
-        else:
-            self.verbose = False
 
+        self.separate_feeders = separate_feeders
+        self.separate_substations = separate_substations
         self.write_taps = write_taps
+        self.verbose = verbose
 
-        if "separate_feeders" in kwargs:
-            self.separate_feeders = kwargs["separate_feeders"]
-        else:
-            self.separate_feeders = False
-
-        if "separate_substations" in kwargs:
-            self.separate_substations = kwargs["separate_substations"]
-        else:
-            self.separate_substations = False
 
         # Write the bus coordinates
         if self.verbose:
