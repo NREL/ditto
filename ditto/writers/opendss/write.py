@@ -239,6 +239,7 @@ class Writer(AbstractWriter):
 
     def phase_mapping(self, phase):
         """Maps the Ditto phases ('A','B','C') into OpenDSS phases (1,2,3).
+           Phase Neutral is mapped to OpenDSS phase of 0
 
         **Phase mapping:**
 
@@ -250,6 +251,8 @@ class Writer(AbstractWriter):
         |    2 or '2'   |     'B'     |
         +---------------+-------------+
         |    3 or '3'   |     'C'     |
+        +---------------+-------------+
+        |    0 or '0'   |     'N'     |
         +---------------+-------------+
 
         :param phase: Phase in DiTTo format
@@ -265,7 +268,10 @@ class Writer(AbstractWriter):
             return 2
         elif phase == u"C":
             return 3
+        elif phase == u"N":
+            return 0
         else:
+            logger.debug("Warning - unknown phase detected")
             return None
 
     def mode_mapping(self, mode):
@@ -285,13 +291,15 @@ class Writer(AbstractWriter):
         else:
             return None
 
-    def write_bus_coordinates(self, model):
+    def write_bus_coordinates(self, model, delimiter=','):
         """Write the bus coordinates to a CSV file ('buscoords.csv' by default), with the following format:
 
         >>> bus_name,coordinate_X,coordinate_Y
 
         :param model: DiTTo model
         :type model: DiTTo model
+        :param delimiter: delimiter to use
+        :type delimiter: str
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
@@ -334,8 +342,8 @@ class Writer(AbstractWriter):
                     if substation_name + "_" + feeder_name in feeder_text_map:
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
 
-                    txt += "{name} {X} {Y}\n".format(
-                        name=re.sub('[^0-9a-zA-Z]+', '_', i.name.lower()), X=i.positions[0].long, Y=i.positions[0].lat
+                    txt += "{name}{delimiter}{X}{delimiter}{Y}\n".format(
+                        name=re.sub('[^0-9a-zA-Z]+', '_', i.name.lower()), X=i.positions[0].long, Y=i.positions[0].lat, delimiter = delimiter
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
