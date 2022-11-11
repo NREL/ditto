@@ -374,21 +374,21 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
                     all_substation_buses.append(txt)
                     self.all_buses.append(txt)
-                    if feeder_name != "":  # Substation elements are written separately
+                    if self.separate_feeders:  # Substation elements are written separately
                         with open(
                             os.path.join(output_folder, self.output_filenames["buses"]),
                             "w",
                         ) as fp:
                             fp.write(txt)
-                        # Not currently redirecting buscoords to each subfolder - just use the aggregate in the root directory
-                        # self.files_to_redirect.append(os.path.join(output_redirect,self.output_filenames['buses']))
-            output_folder = os.path.join(self.output_path, substation_name)
-            if not os.path.exists(output_folder):
-                os.makedirs(output_folder)
-            with open(
-                os.path.join(output_folder, self.output_filenames["buses"]), "w"
-            ) as fp:
-                fp.write("\n".join(all_substation_buses))
+                        # Not currently redirecting buscoords to each subfolder - just use the aggregate folder being run, so we have a clear list of nodes being run
+            if self.separate_substations:
+                output_folder = os.path.join(self.output_path, substation_name)
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+                with open(
+                    os.path.join(output_folder, self.output_filenames["buses"]), "w"
+                ) as fp:
+                    fp.write("\n".join(all_substation_buses))
         if len(self.all_buses) > 0:
             with open(
                 os.path.join(self.output_path, self.output_filenames["buses"]), "w"
