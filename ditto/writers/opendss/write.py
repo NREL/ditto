@@ -351,8 +351,8 @@ class Writer(AbstractWriter):
             all_substation_buses = []
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -961,8 +961,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1193,8 +1193,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1502,8 +1502,8 @@ class Writer(AbstractWriter):
                 voltwatt_nodes = feeder_voltwatt_map[
                     substation_name + "_" + feeder_name
                 ]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 inv_txt = ""
                 if len(voltvar_nodes) > 0:
                     inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.93,0.97,1.03,1.06,1.5)\n\n".format(
@@ -1715,8 +1715,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1998,8 +1998,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2398,8 +2398,8 @@ class Writer(AbstractWriter):
                     ]
                 else:
                     transfo_creation_string = ""
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2655,8 +2655,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2938,8 +2938,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -3402,8 +3402,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 if len(txt) != 0:
 
                     output_folder = None
@@ -3899,8 +3899,8 @@ class Writer(AbstractWriter):
             if isinstance(i, Node) and i.is_substation_connection:
                 feeder_name = i.feeder_name
                 substation_name = i.substation_name
-                feeder_name = feeder_name.replace(">", "-")
-                substation_name = substation_name.replace(">", "-")
+                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())[
+                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())[
                 # Note that subtransmission has no substation_connection and hence doesn't have a master file, even though it does have other .dss files
                 if (
                     feeder_name == "" #and i.nominal_voltage < 30000
