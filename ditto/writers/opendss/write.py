@@ -904,9 +904,9 @@ class Writer(AbstractWriter):
                                 hasattr(winding, "resistance")
                                 and winding.resistance is not None
                             ):
-                                txt += " %r={R}".format(R=winding.resistance)
+                                txt += " %R={R}".format(R=winding.resistance)
                             else:
-                                txt += " %r={R}".format(R=default_r[cnt - 1])
+                                txt += " %R={R}".format(R=default_r[cnt - 1])
 
                         if hasattr(i, "reactances") and i.reactances is not None:
                             # Here, we should have 3 reactances
@@ -1009,7 +1009,6 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
         for i in model.models:
             if isinstance(i, Storage):
-                # import pdb;pdb.set_trace()
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
@@ -1041,7 +1040,10 @@ class Writer(AbstractWriter):
 
                 # Phases
                 if hasattr(i, "phase_storages") and i.phase_storages is not None:
-                    txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V   
+                        txt += " phases=1"  
+                    else:
+                        txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
 
                     # kW (Need to sum over the phase_storage elements)
                     if sum([1 for phs in i.phase_storages if phs.p is None]) == 0:
@@ -1060,7 +1062,9 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " Bus1={elt}".format(elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
+                    if i.nominal_voltage is None:   
+                        i.nominal_voltage = model[i.connecting_element].nominal_voltage
+                    txt += " bus1={elt}".format(elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
                     if (
                         hasattr(i, "phase_storages")
                         and i.phase_storages is not None
@@ -1162,7 +1166,7 @@ class Writer(AbstractWriter):
 
                 # Yearly/Daily/Duty/Charge trigger/Discharge trigger
                 #
-                # TODO: See with Tarek and Elaine how we can support that
+                # TODO 
 
                 txt += "\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
