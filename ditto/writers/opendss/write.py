@@ -451,7 +451,7 @@ class Writer(AbstractWriter):
                 else:
                     # If we do not have a valid name, do not even try
                     # to write anything for this transformer....
-                    continue
+                    logger.error("Tansformer {obj} is misssing name.".format(obj=i))
 
                 # Number of phases and windings
                 if hasattr(i, "windings") and i.windings is not None:
@@ -463,16 +463,9 @@ class Writer(AbstractWriter):
                         ):
                             N_phases.append(len(winding.phase_windings))
 
-# Doesn't apply to center-tap transformers. REMOVE?
-#                    if len(np.unique(N_phases)) != 1:
-#                        logger.error(
-#                            "Did not find the same number of phases accross windings of transformer {name}".format(
-#                                name=i.name
-#                            )
-#                        )
-
                     try:
-                        # phase-phase connection defined with phase=1 even though it's two phase.
+                        # phase-phase delta connection defined with phase=1 even though it's two phase.
+                        # This is because there's no implicit neutral
                         if (
                             len(i.windings) == 3
                             and i.windings[0].connection_type is not None
@@ -493,25 +486,13 @@ class Writer(AbstractWriter):
                 if hasattr(i, "from_element") and i.from_element is not None:
                     bus1 = i.from_element
                 else:
-                    bus1 = None
+                    loggger.error("Missing a from_element connection in {name}".format(i.name))
                 if hasattr(i, "to_element") and i.to_element is not None:
                     bus2 = i.to_element
                 else:
-                    bus2 = None
+                    loggger.error("Missing a to_element connection in {name}".format(name=i.name))
 
-                if bus1 is not None and bus2 is not None:
-                    buses = [bus1, bus2]
-                else:
-                    buses = None
-
-                # Rated power
-                # if hasattr(i, 'rated_power') and i.rated_power is not None:
-                #    fp.write(' kva='+str(i.rated_power*10**-3)) #OpenDSS in kWatts
-
-                # Emergency power
-                # Emergency_power removed from powerTransformers and added to windings by Tarek
-                # if hasattr(i, 'emergency_power') and i.emergency_power is not None:
-                #    fp.write(' EmergHKVA='+str(i.emergency_power*10**-3)) #OpenDSS in kWatts
+                buses = [bus1, bus2]
 
                 # Loadloss
                 if hasattr(i, "loadloss") and i.loadloss is not None:
@@ -657,7 +638,6 @@ class Writer(AbstractWriter):
                                 )
 
                             # emergency_power
-                            # Was added to windings by Tarek
                             if (
                                 hasattr(winding, "emergency_power")
                                 and winding.emergency_power is not None
@@ -709,7 +689,7 @@ class Writer(AbstractWriter):
                                         winding.connection_type == "D"
                                         and len(winding.phase_windings) == 1
                                     ):
-                                        print(
+                                        logger.warning(
                                             "Warning - only one phase specified for a delta system - adding another connection"
                                         )
                                         if self.phase_mapping(phase_winding.phase) == 1:
@@ -764,7 +744,8 @@ class Writer(AbstractWriter):
 
                     # This is used to represent center-tap transformers
                     # As described in the documentation, if the R and X values are not known, the values described by default_r and default_x should be used
-                    if len(i.windings) == 3:
+                    # TODO: represent three winding transformers that are not center tap.
+                    if len(i.windings) == 3 and i.is_center_tap:
                         default_r = [0.6, 1.2, 1.2]
                         default_x = [2.04, 2.04, 1.36]
 
@@ -802,14 +783,14 @@ class Writer(AbstractWriter):
                                         self.phase_mapping(
                                             winding.phase_windings[
                                                 0
-                                            ].phase  # Should beOnly one phase if it's a Wye transformer
+                                            ].phase  # Should be only one phase if it's a Wye transformer
                                         )
                                     )
                                     if (
                                         len(winding.phase_windings) > 1
                                         and winding.connection_type == "Y"
                                     ):
-                                        print(
+                                        logger.warning(
                                             "Warning - Wye center-tap transformer with more than one phase connection. Only using first one"
                                         )
                                     if (
@@ -822,7 +803,7 @@ class Writer(AbstractWriter):
                                             )
                                         )
                                         if len(winding.phase_windings) > 2:
-                                            print(
+                                            logger.warning(
                                                 "Warning - Delta center-tap transformer with more than two phase connection. Only using first two"
                                             )
                                     if (
@@ -916,10 +897,6 @@ class Writer(AbstractWriter):
                                 )
 
                             # Voltage limit (Not mapped)
-
-                            # resistance
-                            # if hasattr(winding, 'resistance') and winding.resistance is not None:
-                            #    fp.write(' %R={R}'.format(R=winding.resistance))
 
                             # Reverse resistance (Not mapped)
 
