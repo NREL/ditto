@@ -1288,17 +1288,17 @@ class Writer(AbstractWriter):
                         for phase in i.phases:
                             txt += "." + str(self.phase_mapping(phase.default_value))
 
-                # Phases
-                if hasattr(i, "phases") and i.phases is not None:
-                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
-
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
+                        if hasattr(i, "phases") and i.phases is not None:
+                            txt += " phases=1"
                         txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            kV=i.nominal_voltage * 10 ** -3
                         )  # DiTTo in volts
                     else:
+                        if hasattr(i, "phases") and i.phases is not None:
+                            txt += " phases=3"
                         txt += " kV={kV}".format(
                             kV=i.nominal_voltage * 10 ** -3
                         )  # DiTTo in volts
@@ -1309,7 +1309,7 @@ class Writer(AbstractWriter):
                     if (
                         i.nominal_voltage < 300
                     ):  # Line-Neutral voltage for 120 V (i.e. 240V)
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
                             i.nominal_voltage * 2 * 10 ** -3
                         )
@@ -1325,10 +1325,14 @@ class Writer(AbstractWriter):
                         and parent.nominal_voltage is not None
                     ):
                         if parent.nominal_voltage < 300:
+                            if hasattr(i, "phases") and i.phases is not None:
+                                txt += " phases=1"
                             txt += " kV={kV}".format(
-                                kV=parent.nominal_voltage * math.sqrt(3) * 10 ** -3
+                                kV=parent.nominal_voltage * 10 ** -3
                             )  # DiTTo in volts
                         else:
+                            if hasattr(i, "phases") and i.phases is not None:
+                                txt += " phases=3"
                             txt += " kV={kV}".format(
                                 kV=parent.nominal_voltage * 10 ** -3
                             )  # DiTTo in volts
@@ -1343,7 +1347,7 @@ class Writer(AbstractWriter):
                             parent.nominal_voltage < 300
                         ):  # Line-Line voltage for 120 V (i.e. 240V)
                             self._baseKV_.add(
-                                parent.nominal_voltage * math.sqrt(3) * 10 ** -3
+                                parent.nominal_voltage * 10 ** -3
                             )
                             self._baseKV_feeders_[
                                 substation_name + "_" + feeder_name
