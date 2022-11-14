@@ -102,6 +102,7 @@ class Writer(AbstractWriter):
         self.write_taps = False
         self.separate_feeders = False
         self.separate_substations = False
+        self.remove_loadshapes = False
         self.verbose = False
 
         self.output_filenames = {
@@ -1231,6 +1232,7 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
         feeder_voltvar_map = {}
         feeder_voltwatt_map = {}
+        feeder_voltwatt_voltvar_map = {}
         substation_text_map = {}
         for i in model.models:
             if isinstance(i, Photovoltaic):
@@ -1259,6 +1261,7 @@ class Writer(AbstractWriter):
                 txt = ""
                 voltvar_nodes = set()
                 voltwatt_nodes = set()
+                voltwatt_voltvar_nodes = set()
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
 
@@ -1451,6 +1454,14 @@ class Writer(AbstractWriter):
                     voltvar_nodes.add(i.name)
 
                 if (
+                   hasattr(i, "control_type")    
+                    and i.control_type is not None   
+                    and i.control_type == "voltwatt_voltvar" 
+                ):  
+                    txt += " Model=1"   
+                    voltwatt_voltvar_nodes.add(i.name)  
+
+                if (
                     hasattr(i, "timeseries")
                     and i.timeseries is not None
                     and len(i.timeseries) > 0
@@ -1465,7 +1476,12 @@ class Writer(AbstractWriter):
                             filename = self.timeseries_datasets[
                                 substation_name + "_" + feeder_name
                             ][ts.data_location]
-                            txt += " {ts_format}={filename}".format(
+                            if self.remove_loadshapes:
+                                optional_comment = '!'
+                            else:
+                                optional_comment = ''
+                            txt += " {optional_comment}{ts_format}={filename}".format(
+                                optional_comment = optional_comment,
                                 ts_format=self.timeseries_format[filename],
                                 filename=filename,
                             )
@@ -1479,6 +1495,9 @@ class Writer(AbstractWriter):
                 feeder_voltwatt_map[
                     substation_name + "_" + feeder_name
                 ] = voltwatt_nodes
+                feeder_voltwatt_voltvar_map[
+                    substation_name + "_" + feeder_name
+                ] = voltwatt_voltvar_nodes
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
@@ -1487,32 +1506,41 @@ class Writer(AbstractWriter):
                 voltwatt_nodes = feeder_voltwatt_map[
                     substation_name + "_" + feeder_name
                 ]
+                voltwatt_voltvar_nodes = feeder_voltwatt_voltvar_map[
+                    substation_name + "_" + feeder_name
+                ]
                 feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
                 substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
                 inv_txt = ""
-                if len(voltvar_nodes) > 0:
-                    inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.93,0.97,1.03,1.06,1.5)\n\n".format(
+                if len(voltvar_nodes) > 0 and len(voltwatt_nodes) ==0:
+                    inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format(
                         loc=substation_name + "_" + feeder_name
-                    )  # Default voltvar curve used
-                    inv_txt += "New InvControl.InvPVCtrVV_{loc} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS DeltaQ_factor=0.5 PVSystemlist=[".format(
-                        loc=substation_name + "_" + feeder_name
-                    )
+                    )  # Default voltvar curve used is 1547 Cat-B
                     for node in voltvar_nodes:
-                        inv_txt += node + ","
-                    inv_txt = inv_txt.strip(",")
-                    inv_txt += "]\n\n"
+
+                        inv_txt += "New InvControl.InvPVCtrVV_{node} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS DeltaQ_factor=0.25 PVSystemlist=[{node}]\n\n".format(
+                            node=node,loc=substation_name + "_" + feeder_name
+                        )
 
                 if len(voltwatt_nodes) > 0:
                     inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format(
                         loc=substation_name + "_" + feeder_name
                     )  # Default volt-watt curve used
-                    inv_txt += "New InvControl.InvPVCtrVW_{loc} mode=VOLTWATT voltage_curvex_ref=rated VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaP_factor=0.25 PVSystemlist=[".format(
-                        loc=substation_name + "_" + feeder_name
-                    )
                     for node in voltwatt_nodes:
-                        inv_txt += node + ","
+                        inv_txt += "New InvControl.InvPVCtrVW_{node} mode=VOLTWATT voltage_curvex_ref=rated VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor=0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format(
+                            loc=substation_name + "_" + feeder_name, node=node
+                        )
                     inv_txt = inv_txt.strip(",")
                     inv_txt += "]"
+
+    
+                if len(voltwatt_voltvar_nodes) > 0: 
+                    if not len(voltvar_nodes) > 0:  
+                        inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default voltvar curve used is 1547 Cat-B 
+                    if not len(voltwatt_nodes) > 0: 
+                        inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default volt-watt curve used    
+                    for node in voltwatt_voltvar_nodes: 
+                        inv_txt += "New InvControl.InvPVCtrVW_{node} Combimode=VV_VW voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format( loc=substation_name + "_" + feeder_name, node=node)
 
                 if txt != "":
                     txt += "\n" + inv_txt
