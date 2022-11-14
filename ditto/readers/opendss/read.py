@@ -244,7 +244,7 @@ class Reader(AbstractReader):
 
         self.parse_storage(model)
 
-        self.set_nominal_voltages(model)
+        self.set_nominal_voltages(model) #Warning - this doesn't give good results.
 
         return 1
 

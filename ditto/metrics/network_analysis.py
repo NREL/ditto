@@ -21,6 +21,8 @@ from ditto.network.network import Network
 from ditto.models.regulator import Regulator
 from ditto.models.line import Line
 from ditto.models.capacitor import Capacitor
+from ditto.models.photovoltaic import Photovoltaic
+from ditto.models.storage import Storage
 from ditto.models.load import Load
 from ditto.models.powertransformer import PowerTransformer
 from ditto.models.node import Node
@@ -313,8 +315,9 @@ class NetworkAnalyzer(object):
         # TODO: More maintainable way for this...
         cols = [
             "feeder_name",
-            "feeder_type",
+#            "feeder_type",
             # Realistic electrical design and equipment parameters (MV)
+#            "hv_len_mi",
             "mv_len_mi",
             "mv_3ph_len_mi",
             "mv_oh_3ph_len_mi",
@@ -340,55 +343,66 @@ class NetworkAnalyzer(object):
             # Voltage control schemes
             "num_regulators",
             "num_capacitors",
-            "num_boosters",
+#            "num_boosters",
             "avg_regulator_sub_distance_mi",
             "avg_capacitor_sub_distance_mi",
             # Basic protection
             "num_fuses",
             "num_reclosers",
-            "num_sectionalizers",
-            "num_sectionalizers_per_recloser",
+#            "num_sectionalizers",
+#            "num_sectionalizers_per_recloser",
             "avg_recloser_sub_distance_mi",
             "num_breakers",
             # Reconfiguration Options
             "num_switches",
-            "num_interruptors",
             "num_links_adjacent_feeders",
             "num_loops",
             # Transformers
             "num_distribution_transformers",
-            "num_overloaded_transformers",
+#            "num_overloaded_transformers",
             "sum_distribution_transformer_mva",
             "num_1ph_transformers",
             "num_3ph_transformers",
             "ratio_1ph_to_3ph_transformers",
             # Substations
             "substation_name",
-            "substation_capacity_mva",
+            "substation_connection_point",
+#            "substation_capacity_mva",
             # Load specification
-            "sum_load_kw",
-            "sum_load_pha_kw",
-            "sum_load_phb_kw",
-            "sum_load_phc_kw",
-            "sum_load_kvar",
-            "perct_lv_pha_load_kw",
-            "perct_lv_phb_load_kw",
-            "perct_lv_phc_load_kw",
+            "sum_load_mw",
+            "sum_load_pha_mw",
+            "sum_load_phb_mw",
+            "sum_load_phc_mw",
+            "sum_load_mvar",
+            "perct_lv_pha_load_mw",
+            "perct_lv_phb_load_mw",
+            "perct_lv_phc_load_mw",
             "num_lv_1ph_loads",
             "num_lv_3ph_loads",
-            "num_mv_3ph_loads",
+            "num_mv_loads",
+            "sum_mv_loads_mw",
             "avg_num_load_per_transformer",
             "avg_load_pf",
             "avg_load_imbalance_by_phase",
             "num_customers",
             "cust_density",
-            "load_density_kw",
-            "load_density_kvar",
+            "load_density_mw",
+            "load_density_mvar",
             "kva_density",
             # Graph Topology
             "avg_degree",
             "avg_path_len",
             "diameter",
+            # PV
+            "num_pv",
+            "sum_pv_mw",
+            "num_pv_vv",
+            "sum_pv_vv_mw",
+            "num_pv_vv_vw",
+            "sum_pv_vv_vw_mw",
+            # Batteries
+            "num_batteries",
+            "sum_batteries_mw",
         ]
 
         # Create empty DataFrame for output
@@ -400,27 +414,27 @@ class NetworkAnalyzer(object):
             n_row += 1
 
         # Write to csv
-        card.to_csv(export_path, header=True, index=False)
+        card.to_csv(export_path, header=True, index=False, float_format='%.4f')
 
     def tag_objects(self):
         """
         Loop over the objects and fill the feeder_name and substaation_name attributes.
         """
         for obj in self.model.models:
-            if hasattr(obj, "feeder_name") and hasattr(obj, "name"):
+            if hasattr(obj, "feeder_name") and hasattr(obj, "name") and obj.feeder_name !='':
                 if isinstance(obj, Node):
                     if obj.name in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.name]
-                        if obj.feeder_name in self.substations:
-                            obj.substation_name = self.substations[obj.feeder_name]
+#                        if obj.feeder_name in self.substations:
+#                            obj.substation_name = self.substations[obj.feeder_name]
 
                 elif hasattr(obj, "connecting_element"):
                     if obj.connecting_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[
                             obj.connecting_element
                         ]
-                        if obj.feeder_name in self.substations:
-                            obj.substation_name = self.substations[obj.feeder_name]
+#                        if obj.feeder_name in self.substations:
+#                            obj.substation_name = self.substations[obj.feeder_name]
 
                     if (
                         hasattr(obj, "timeseries")
@@ -429,7 +443,7 @@ class NetworkAnalyzer(object):
                     ):
                         for t in obj.timeseries:
                             t.feeder_name = obj.feeder_name
-                            t.substation_name = obj.substation_name
+#                            t.substation_name = obj.substation_name
                         logger.debug(
                             "Object {name} connecting element {namec} was not found in feeder mapping".format(
                                 name=obj.name, namec=obj.connecting_element
@@ -438,21 +452,24 @@ class NetworkAnalyzer(object):
                 elif hasattr(obj, "from_element"):
                     if obj.from_element in self.node_feeder_mapping:
                         obj.feeder_name = self.node_feeder_mapping[obj.from_element]
-                        if obj.feeder_name in self.substations:
-                            obj.substation_name = self.substations[obj.feeder_name]
+#                        if obj.feeder_name in self.substations:
+#                            obj.substation_name = self.substations[obj.feeder_name]
 
                 else:
                     logger.debug(obj.name, type(obj))
 
         for obj in self.model.models:
             if hasattr(obj, "feeder_name") and hasattr(obj, "name"):
-                if isinstance(obj, Node):
+                if isinstance(obj, Node) and obj.name is not None:
                     if obj.name not in self.node_feeder_mapping:
                         curr_name = obj.name
                         done_looping = False
 
                         while not done_looping:
                             try:
+                                if self.model[curr_name].feeder_name == '':
+                                    done_looping = True
+                                    break
                                 predecessor = next(
                                     self.G.digraph.predecessors(curr_name)
                                 )
@@ -472,7 +489,7 @@ class NetworkAnalyzer(object):
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
                                 obj.feeder_name = prev_obj.feeder_name
-                                obj.substation_name = prev_obj.substation_name
+#                                obj.substation_name = prev_obj.substation_name
                                 done_looping = True
                                 break
 
@@ -483,10 +500,13 @@ class NetworkAnalyzer(object):
                         )
 
                 elif hasattr(obj, "connecting_element"):
-                    if obj.connecting_element not in self.node_feeder_mapping:
+                    if obj.connecting_element not in self.node_feeder_mapping and obj.connecting_element is not None:
                         curr_name = obj.connecting_element
                         done_looping = False
                         while not done_looping:
+                            if self.model[curr_name].feeder_name == '':
+                                done_looping = True
+                                break
                             try:
                                 predecessor = next(
                                     self.G.digraph.predecessors(curr_name)
@@ -507,15 +527,18 @@ class NetworkAnalyzer(object):
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
                                 obj.feeder_name = prev_obj.feeder_name
-                                obj.substation_name = prev_obj.substation_name
+#                                obj.substation_name = prev_obj.substation_name
                                 done_looping = True
                                 break
 
                 elif hasattr(obj, "from_element"):
-                    if obj.from_element not in self.node_feeder_mapping:
+                    if obj.from_element not in self.node_feeder_mapping and obj.from_element is not None:
                         curr_name = obj.from_element
                         done_looping = False
                         while not done_looping:
+                            if self.model[curr_name].feeder_name == '':
+                                done_looping = True
+                                break
                             try:
                                 predecessor = next(
                                     self.G.digraph.predecessors(curr_name)
@@ -536,7 +559,7 @@ class NetworkAnalyzer(object):
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
                                 obj.feeder_name = prev_obj.feeder_name
-                                obj.substation_name = prev_obj.substation_name
+#                                obj.substation_name = prev_obj.substation_name
                                 done_looping = True
                                 break
 
@@ -694,18 +717,27 @@ class NetworkAnalyzer(object):
 
         # logger.info('Analyzing network {name}...'.format(name=network))
 
+        self.do_transformer_distribution = False
         results = {
             "num_regulators": 0,  # Number of regulators
-            "sub_capacity_mva": sub_MVA,
+#            "sub_capacity_mva": sub_MVA,
             "num_fuses": 0,  # Number of fuses
             "num_switches": 0,  # Number of switches
             "num_reclosers": 0,  # Number of reclosers
             "num_breakers": 0,  # Number of breakers
             "num_capacitors": 0,  # Number of capacitors
-            "num_sectionalizers": 0,  # Number of sectionalizers
+            "num_pv": 0,
+            "num_pv_vv": 0,
+            "num_pv_vv_vw": 0,
+            "sum_pv_mw": 0,
+            "sum_pv_vv_vw_mw": 0,
+            "sum_pv_vv_mw": 0,
+            "num_batteries": 0,
+            "sum_batteries_mw": 0,
+#            "num_sectionalizers": 0,  # Number of sectionalizers
             "num_customers": 0,  # Number of customers
             "num_links_adjacent_feeders": 0,  # Number of links to neighboring feeders
-            "num_overloaded_transformers": 0,  # Number of overloaded transformers
+#            "num_overloaded_transformers": 0,  # Number of overloaded transformers
             "num_distribution_transformers": 0,  # Number of distribution transformers
             "max_len_secondaries_mi": 0,  # Maximum distance in the feeder between a distribution transformer and a load
             "sum_distribution_transformer_mva": 0,  # Total capacity of distribution transformers (in MVA)
@@ -734,6 +766,7 @@ class NetworkAnalyzer(object):
             ),  # Number of loops inside the feeder
             "lv_len_mi": 0,  # Total length of LV lines (in miles)
             "mv_len_mi": 0,  # Total length of MV lines (in miles)
+#            "hv_len_mi": 0,  # Total length of HV lines (in miles)
             "mv_1ph_len_mi": 0,  # Total length of 1 phase MV lines (in miles)
             "mv_oh_1ph_len_mi": 0,  # Total length of overhead 1 phase MV lines (in miles)
             "mv_2ph_len_mi": 0,  # Total length of 2 phase MV lines (in miles)
@@ -746,20 +779,21 @@ class NetworkAnalyzer(object):
             "lv_oh_2ph_len_mi": 0,  # Total length of overhead 2 phase LV lines (in miles)
             "lv_3ph_len_mi": 0,  # Total length of 3 phase LV lines (in miles)
             "lv_oh_3ph_len_mi": 0,  # Total length of overhead 3 phase LV lines (in miles)
-            "sum_load_kw": 0,  # Total demand (active power)
-            "sum_load_pha_kw": 0,  # Total demand on phase A
-            "sum_load_phb_kw": 0,  # Total demand on phase B
-            "sum_load_phc_kw": 0,  # Total demand on phase C
-            "sum_load_kvar": 0,  # Total demand (reactive power)
+            "sum_load_mw": 0,  # Total demand (active power)
+            "sum_load_pha_mw": 0,  # Total demand on phase A
+            "sum_load_phb_mw": 0,  # Total demand on phase B
+            "sum_load_phc_mw": 0,  # Total demand on phase C
+            "sum_load_mvar": 0,  # Total demand (reactive power)
             "num_lv_1ph_loads": 0,  # Number of 1 phase LV loads
             "num_lv_3ph_loads": 0,  # Number of 3 phase LV loads
-            "num_mv_3ph_loads": 0,  # Number of 3 phase MV loads
-            "perct_lv_pha_load_kw": 0,  # Percentage of total LV demand that is phase A
-            "perct_lv_phb_load_kw": 0,  # Percentage of total LV demand that is phase B
-            "perct_lv_phc_load_kw": 0,  # Percentage of total LV demand that is phase C
-            "sum_lv_pha_load_kw": 0,  # Total LV demand on phase A
-            "sum_lv_phb_load_kw": 0,  # Total LV demand on phase B
-            "sum_lv_phc_load_kw": 0,  # Total LV demand on phase C
+            "num_mv_loads": 0,  # Number of 3 phase MV loads
+            "sum_mv_loads_mw": 0,  # Number of 3 phase MV loads
+            "perct_lv_pha_load_mw": 0,  # Percentage of total LV demand that is phase A
+            "perct_lv_phb_load_mw": 0,  # Percentage of total LV demand that is phase B
+            "perct_lv_phc_load_mw": 0,  # Percentage of total LV demand that is phase C
+            "sum_lv_pha_load_mw": 0,  # Total LV demand on phase A
+            "sum_lv_phb_load_mw": 0,  # Total LV demand on phase B
+            "sum_lv_phc_load_mw": 0,  # Total LV demand on phase C
             "avg_num_load_per_transformer": 0,  # Average number of loads per distribution transformer
             "num_load_per_transformer": {},  # Store the number of loads per distribution transformer
             "num_customer_per_transformer": {},  # Store the number of customers per distribution transformer
@@ -772,8 +806,9 @@ class NetworkAnalyzer(object):
             "trans_cust_impedance_list": {},  # Store the list of line positive sequence impedances between each customer and its distribution transformer
             "nominal_voltages": [],  # Store the different nominal voltage values
             "convex_hull_area_sqmi": 0,  # Convex hull area for the feeder
-            "substation_name": _src,
-            "feeder_type": None,
+            "substation_name": self.model[_src].substation_name,
+            "substation_connection_point": _src,
+#            "feeder_type": None,
         }
         if "feeder_types" in self.__dict__ and network in self.feeder_types:
             results["Feeder_type"] = self.feeder_types[network]
@@ -872,8 +907,8 @@ class NetworkAnalyzer(object):
                 self.results[feeder_name]["num_breakers"] += 1
 
             # Sectionalizers
-            if obj.is_sectionalizer == 1:
-                self.results[feeder_name]["num_sectionalizers"] += 1
+#            if obj.is_sectionalizer == 1:
+#                self.results[feeder_name]["num_sectionalizers"] += 1
 
             if hasattr(obj, "wires") and obj.wires is not None:
                 # Get the phases (needed later)
@@ -920,14 +955,14 @@ class NetworkAnalyzer(object):
                                     "lv_oh_1ph_len_mi"
                                 ] += obj.length
 
-                        # Two Phase low voltage Line
+                        # Two Phase low voltage Line - Actually represents 1-phase triplex
                         elif len(phases) == 2:
-                            self.results[feeder_name]["lv_2ph_len_mi"] += obj.length
+                            self.results[feeder_name]["lv_1ph_len_mi"] += obj.length
 
                             # Two Phase low voltage Overhead Line
                             if obj.line_type == "overhead":
                                 self.results[feeder_name][
-                                    "lv_oh_2ph_len_mi"
+                                    "lv_oh_1ph_len_mi"
                                 ] += obj.length
 
                         # Three Phase low voltage Line
@@ -985,6 +1020,18 @@ class NetworkAnalyzer(object):
                                     "mv_oh_3ph_len_mi"
                                 ] += obj.length
 
+            # If the line is high voltage
+            elif (
+                obj.nominal_voltage is not None
+                and self.MV_threshold
+                <= obj.nominal_voltage
+            ):
+
+                # Update the counter for low voltage line length
+                if hasattr(obj, "length") and obj.length >= 0:
+#                    self.results[feeder_name]["hv_len_mi"] += obj.length
+                    pass
+
             return
 
         # If we get a load
@@ -1006,7 +1053,9 @@ class NetworkAnalyzer(object):
             if (
                 hasattr(obj, "upstream_transformer_name")
                 and obj.upstream_transformer_name is not None
+                and obj.upstream_transformer_name in self.model.model_names
             ):
+
                 # Number of loads per distribution transformer
                 if (
                     obj.upstream_transformer_name
@@ -1035,44 +1084,60 @@ class NetworkAnalyzer(object):
 
                 # Line impedance list
                 # Get the secondary
-                trans_obj = self.model[obj.upstream_transformer_name]
-                if (
-                    hasattr(trans_obj, "to_element")
-                    and trans_obj.to_element is not None
-                ):
-                    _net3 = _net.copy()
-                    if not _net3.has_node(trans_obj.to_element):
-                        _sp = nx.shortest_path(
-                            self.G.graph, trans_obj.to_element, list(_net3.nodes())[0]
-                        )
-                        for n1, n2 in zip(_sp[:-1], _sp[1:]):
-                            _net3.add_edge(
-                                n1, n2, length=self.G.graph[n1][n2]["length"]
+                if self.do_transformer_distribution:
+                    trans_obj = self.model[obj.upstream_transformer_name]
+                    if (
+                        hasattr(trans_obj, "to_element")
+                        and trans_obj.to_element is not None
+                    ):
+                        _net3 = _net.copy()
+                        if not _net3.has_node(trans_obj.to_element):
+                            _sp = nx.shortest_path(
+                                self.G.graph, trans_obj.to_element, list(_net3.nodes())[0]
                             )
-                    self.results[feeder_name]["trans_cust_impedance_list"][
-                        obj.name
-                    ] = self.get_impedance_list_between_nodes(
-                        _net3, trans_obj.to_element, obj.connecting_element
-                    )
+                            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                                _net3.add_edge(
+                                    n1, n2, length=self.G.graph[n1][n2]["length"]
+                                )
+                        self.results[feeder_name]["trans_cust_impedance_list"][
+                            obj.name
+                        ] = self.get_impedance_list_between_nodes(
+                            _net3, trans_obj.to_element, obj.connecting_element
+                        )
 
             # If the load is low voltage
             if hasattr(obj, "nominal_voltage") and obj.nominal_voltage is not None:
                 if obj.nominal_voltage * math.sqrt(3) <= self.LV_threshold:
 
                     # Update the counters
+                    trans_obj = None
+                    trans_phases = []
+                    if obj.upstream_transformer_name is not None and obj.upstream_transformer_name in self.model.model_names:
+                        trans_obj = self.model[obj.upstream_transformer_name]
+                        for trans_ph in trans_obj.windings[0].phase_windings:
+                            if trans_ph.phase in ['A','B','C']:
+                                trans_phases.append(trans_ph.phase)
+
                     if hasattr(obj, "phase_loads") and obj.phase_loads is not None:
 
                         _phase_loads_ = [p for p in obj.phase_loads if p.drop != 1]
 
                         # One phase low voltage load count
-                        if len(_phase_loads_) == 1:
+                        if len(trans_phases) <3 :
                             self.results[feeder_name]["num_lv_1ph_loads"] += 1
 
+#                        elif len(_phase_loads_) == 1:
+#                            self.results[feeder_name]["num_lv_1ph_loads"] += 1
+
                         # Three phase low voltage load count
-                        elif len(_phase_loads_) == 3:
+                        elif len(trans_phases) == 3:
                             self.results[feeder_name]["num_lv_3ph_loads"] += 1
 
+#                        elif len(_phase_loads_) == 3:
+#                            self.results[feeder_name]["num_lv_3ph_loads"] += 1
+
                         # The following block keeps track of the total active power for each phase
+                        total_load = 0
                         for phase_load in _phase_loads_:
                             if hasattr(phase_load, "phase") and phase_load.phase in [
                                 "A",
@@ -1083,24 +1148,22 @@ class NetworkAnalyzer(object):
                                     hasattr(phase_load, "p")
                                     and phase_load.p is not None
                                 ):
+                                    total_load += phase_load.p
+                        for tr_phase in trans_phases:
+                            if tr_phase == 'A':
+                                self.results[feeder_name][
+                                    "sum_lv_pha_load_mw"
+                                ] += total_load/len(trans_phases)
 
-                                    # Phase A
-                                    if phase_load.phase == "A":
-                                        self.results[feeder_name][
-                                            "sum_lv_pha_load_kw"
-                                        ] += phase_load.p
-
-                                    # Phase B
-                                    elif phase_load.phase == "B":
-                                        self.results[feeder_name][
-                                            "sum_lv_phb_load_kw"
-                                        ] += phase_load.p
-
-                                    # Phase C
-                                    elif phase_load.phase == "C":
-                                        self.results[feeder_name][
-                                            "sum_lv_phc_load_kw"
-                                        ] += phase_load.p
+                            if tr_phase == 'B':
+                                self.results[feeder_name][
+                                    "sum_lv_phb_load_mw"
+                                ] += total_load/len(trans_phases)
+                                    
+                            if tr_phase == 'C':
+                                self.results[feeder_name][
+                                    "sum_lv_phc_load_mw"
+                                ] += total_load/len(trans_phases)
 
                 # If the load is medium voltage
                 elif (
@@ -1110,11 +1173,19 @@ class NetworkAnalyzer(object):
                 ):
                     if hasattr(obj, "phase_loads") and obj.phase_loads is not None:
 
+                        total_load = 0
                         _phase_loads_ = [p for p in obj.phase_loads if p.drop != 1]
+                        for phase_load in _phase_loads_:
+                            if hasattr(phase_load, "phase") and phase_load.phase in [ "A", "B", "C" ]:
+                                if (
+                                    hasattr(phase_load, "p")
+                                    and phase_load.p is not None
+                                ):
+                                    total_load += phase_load.p
 
                         # Update the count of three phase medium voltage loads
-                        if len(_phase_loads_) == 3:
-                            self.results[feeder_name]["num_mv_3ph_loads"] += 1
+                        self.results[feeder_name]["num_mv_loads"] += 1
+                        self.results[feeder_name]["sum_mv_loads_mw"] += total_load
 
             # Total demand and total KVAR updates
             if hasattr(obj, "phase_loads") and obj.phase_loads is not None:
@@ -1130,9 +1201,10 @@ class NetworkAnalyzer(object):
                         and obj.transformer_connected_kva != 0
                     ):
                         self.results[feeder_name][
-                            "sum_load_kw"
+                            "sum_load_mw"
                         ] += obj.transformer_connected_kva
-                        self.load_distribution.append(obj.transformer_connected_kva)
+                        if self.do_transformer_distribution:
+                            self.load_distribution.append(obj.transformer_connected_kva)
                         # Assume balance accross phases...
                         for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
                             if hasattr(phase_load, "phase") and phase_load.phase in [
@@ -1146,7 +1218,7 @@ class NetworkAnalyzer(object):
                                 ):
                                     if phase_load.phase == "A":
                                         self.results[feeder_name][
-                                            "sum_load_pha_kw"
+                                            "sum_load_pha_mw"
                                         ] += float(
                                             obj.transformer_connected_kva
                                         ) / float(
@@ -1154,7 +1226,7 @@ class NetworkAnalyzer(object):
                                         )
                                     elif phase_load.phase == "B":
                                         self.results[feeder_name][
-                                            "sum_load_phb_kw"
+                                            "sum_load_phb_mw"
                                         ] += float(
                                             obj.transformer_connected_kva
                                         ) / float(
@@ -1162,19 +1234,20 @@ class NetworkAnalyzer(object):
                                         )
                                     elif phase_load.phase == "C":
                                         self.results[feeder_name][
-                                            "sum_load_phc_kw"
+                                            "sum_load_phc_mw"
                                         ] += float(
                                             obj.transformer_connected_kva
                                         ) / float(
                                             len(_phase_loads_)
                                         )
                 else:
-                    self.results[feeder_name]["sum_load_kw"] += np.sum(
+                    self.results[feeder_name]["sum_load_mw"] += np.sum(
                         [pl.p for pl in _phase_loads_ if pl.p is not None]
                     )
-                    self.load_distribution.append(
-                        np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
-                    )
+                    if self.do_transformer_distribution:
+                        self.load_distribution.append(
+                            np.sum([pl.p for pl in _phase_loads_ if pl.p is not None])
+                        )
 
                     for phase_load in [p for p in obj.phase_loads if p.drop != 1]:
                         if hasattr(phase_load, "phase") and phase_load.phase in [
@@ -1185,18 +1258,18 @@ class NetworkAnalyzer(object):
                             if hasattr(phase_load, "p") and phase_load.p is not None:
                                 if phase_load.phase == "A":
                                     self.results[feeder_name][
-                                        "sum_load_pha_kw"
+                                        "sum_load_pha_mw"
                                     ] += phase_load.p
                                 elif phase_load.phase == "B":
                                     self.results[feeder_name][
-                                        "sum_load_phb_kw"
+                                        "sum_load_phb_mw"
                                     ] += phase_load.p
                                 elif phase_load.phase == "C":
                                     self.results[feeder_name][
-                                        "sum_load_phc_kw"
+                                        "sum_load_phc_mw"
                                     ] += phase_load.p
 
-                self.results[feeder_name]["sum_load_kvar"] += np.sum(
+                self.results[feeder_name]["sum_load_mvar"] += np.sum(
                     [pl.q for pl in _phase_loads_ if pl.q is not None]
                 )
                 # Pass if P and Q are zero (might happen in some datasets...)
@@ -1228,6 +1301,31 @@ class NetworkAnalyzer(object):
 
             return
 
+        if isinstance(obj,Photovoltaic):
+            self.results[feeder_name]["num_pv"] +=1
+
+            if obj.rated_power is not None:
+                self.results[feeder_name]["sum_pv_mw"] += obj.rated_power
+
+                if obj.control is not None and obj.control == 'voltvar':
+                    self.results[feeder_name]["num_pv_vv"] +=1
+                    self.results[feeder_name]["sum_pv_vv_mw"] +=obj.rated_power
+
+                if obj.control is not None and obj.control == 'voltwatt_voltvar':
+                    self.results[feeder_name]["num_pv_vv_vw"] +=1
+                    self.results[feeder_name]["sum_pv_vv_vw_mw"] +=obj.rated_power
+
+            return
+
+        if isinstance(obj,Storage):
+            self.results[feeder_name]["num_batteries"] +=1
+
+            if obj.rated_power is not None:
+                self.results[feeder_name]["sum_batteries_mw"] += obj.rated_power
+
+            return
+
+
         # If we get a Transformer
         if isinstance(obj, PowerTransformer):
 
@@ -1236,23 +1334,24 @@ class NetworkAnalyzer(object):
             if obj.name in self.transformer_load_mapping:
                 load_names = self.transformer_load_mapping[obj.name]
 
-                # Get the primary
-                if hasattr(obj, "from_element") and obj.from_element is not None:
-                    _net2 = _net.copy()
-                    if not _net2.has_node(_src):
-                        _sp = nx.shortest_path(
-                            self.G.graph, _src, list(_net2.nodes())[0]
-                        )
-                        for n1, n2 in zip(_sp[:-1], _sp[1:]):
-                            _net2.add_edge(
-                                n1, n2, length=self.G.graph[n1][n2]["length"]
+                if self.do_transformer_distribution:
+                    # Get the primary
+                    if hasattr(obj, "from_element") and obj.from_element is not None:
+                        _net2 = _net.copy()
+                        if not _net2.has_node(_src):
+                            _sp = nx.shortest_path(
+                                self.G.graph, _src, list(_net2.nodes())[0]
                             )
-
-                    self.results[feeder_name]["sub_trans_impedance_list"][
-                        obj.name
-                    ] = self.get_impedance_list_between_nodes(
-                        _net2, _src, obj.from_element
-                    )
+                            for n1, n2 in zip(_sp[:-1], _sp[1:]):
+                                _net2.add_edge(
+                                    n1, n2, length=self.G.graph[n1][n2]["length"]
+                                )
+    
+                        self.results[feeder_name]["sub_trans_impedance_list"][
+                            obj.name
+                        ] = self.get_impedance_list_between_nodes(
+                            _net2, _src, obj.from_element
+                        )
 
                 # This section updates the maximum length of secondaries
                 # If the graph contains the transformer's connecting element
@@ -1289,49 +1388,50 @@ class NetworkAnalyzer(object):
                                         "max_len_secondaries_mi"
                                     ] = length
 
-                # ...compute the total load KVA downstream
-                total_load_kva = 0
-                for load_name in load_names:
-                    try:
-                        load_obj = self.model[load_name]
-                    except KeyError:
-                        load_obj = None
-                    if (
-                        hasattr(load_obj, "phase_loads")
-                        and load_obj.phase_loads is not None
-                    ):
-                        for pl in load_obj.phase_loads:
-                            if (
-                                hasattr(pl, "p")
-                                and pl.p is not None
-                                and hasattr(pl, "q")
-                                and pl.q is not None
-                            ):
-                                total_load_kva += math.sqrt(pl.p ** 2 + pl.q ** 2)
-                # ...compute the transformer KVA
-                if hasattr(obj, "windings") and obj.windings is not None:
-                    transformer_kva = max(
-                        [
-                            wdg.rated_power
-                            for wdg in obj.windings
-                            if wdg.rated_power is not None
-                        ]  # The kva values should be the same on all windings but we take the max
-                    )
-                    self.results[feeder_name]["transformer_kva_distribution"].append(
-                        transformer_kva
-                    )
-                # ...and, compare the two values
-                if total_load_kva > transformer_kva:
-                    self.results[feeder_name]["num_overloaded_transformers"] += 1
-                # Store the ratio of load to transformer KVA
-                if transformer_kva != 0:
-                    self.results[feeder_name][
-                        "ratio_load_kW_to_transformer_KVA_distribution"
-                    ][obj.name] = float(total_load_kva) / float(transformer_kva)
-                else:
-                    self.results[feeder_name][
-                        "ratio_load_kW_to_transformer_KVA_distribution"
-                    ][obj.name] = np.nan
+                if self.do_transformer_distribution:
+                    # ...compute the total load KVA downstream
+                    total_load_kva = 0
+                    for load_name in load_names:
+                        try:
+                            load_obj = self.model[load_name]
+                        except KeyError:
+                            load_obj = None
+                        if (
+                            hasattr(load_obj, "phase_loads")
+                            and load_obj.phase_loads is not None
+                        ):
+                            for pl in load_obj.phase_loads:
+                                if (
+                                    hasattr(pl, "p")
+                                    and pl.p is not None
+                                    and hasattr(pl, "q")
+                                    and pl.q is not None
+                                ):
+                                    total_load_kva += math.sqrt(pl.p ** 2 + pl.q ** 2)
+                    # ...compute the transformer KVA
+                    if hasattr(obj, "windings") and obj.windings is not None:
+                        transformer_kva = max(
+                            [
+                                wdg.rated_power
+                                for wdg in obj.windings
+                                if wdg.rated_power is not None
+                            ]  # The kva values should be the same on all windings but we take the max
+                        )
+                        self.results[feeder_name]["transformer_kva_distribution"].append(
+                            transformer_kva
+                        )
+                    # ...and, compare the two values
+                    if total_load_kva > transformer_kva:
+                        self.results[feeder_name]["num_overloaded_transformers"] += 1
+                    # Store the ratio of load to transformer KVA
+                    if transformer_kva != 0:
+                        self.results[feeder_name][
+                            "ratio_load_kW_to_transformer_KVA_distribution"
+                        ][obj.name] = float(total_load_kva) / float(transformer_kva)
+                    else:
+                        self.results[feeder_name][
+                            "ratio_load_kW_to_transformer_KVA_distribution"
+                        ][obj.name] = np.nan
 
             if (
                 hasattr(obj, "windings")
@@ -1430,23 +1530,24 @@ class NetworkAnalyzer(object):
             "avg_capacitor_sub_distance_mi",
         ]
 
-        # List of keys to divide by 10^3
-        keys_to_divide_by_1000 = [
-            "sum_load_kw",
-            "sum_load_kvar",
-            "sum_lv_pha_load_kw",
-            "sum_lv_phb_load_kw",
-            "sum_lv_phc_load_kw",
-            "sum_load_pha_kw",
-            "sum_load_phb_kw",
-            "sum_load_phc_kw",
+        # List of keys to divide by 10^6
+        keys_to_divide_by_1000000 = [
+            "sum_load_mw",
+            "sum_load_mvar",
+            "sum_lv_pha_load_mw",
+            "sum_lv_phb_load_mw",
+            "sum_lv_phc_load_mw",
+            "sum_load_pha_mw",
+            "sum_load_phb_mw",
+            "sum_load_phc_mw",
+            "sum_mv_loads_mw",
+            "sum_pv_mw",
+            "sum_pv_vv_mw",
+            "sum_pv_vv_vw_mw",
+            "sum_batteries_mw",
         ]
 
-        mv_feeder_names = [
-            k
-            for k in self.feeder_names
-            if self.substations[k] is not None and len(self.substations[k]) > 0
-        ]
+        mv_feeder_names = [ k for k in self.feeder_names if self.substations[k] is not None and len(self.substations[k]) > 0 ]
 
         # Setup the data structures for all feeders
         self.results = {
@@ -1454,6 +1555,7 @@ class NetworkAnalyzer(object):
         }
 
         # Loop over the objects in the model and analyze them
+        #import pdb;pdb.set_trace()
         for obj in self.model.models:
             # Get the feeder of this object if it exists
             if hasattr(obj, "name"):
@@ -1467,30 +1569,30 @@ class NetworkAnalyzer(object):
         # Compute the percentages of low voltage load kW for each phase
         for _feeder_ref in mv_feeder_names:
             total_demand_LV = (
-                self.results[_feeder_ref]["sum_lv_pha_load_kw"]
-                + self.results[_feeder_ref]["sum_lv_phb_load_kw"]
-                + self.results[_feeder_ref]["sum_lv_phc_load_kw"]
+                self.results[_feeder_ref]["sum_lv_pha_load_mw"]
+                + self.results[_feeder_ref]["sum_lv_phb_load_mw"]
+                + self.results[_feeder_ref]["sum_lv_phc_load_mw"]
             )
             if total_demand_LV != 0:
-                self.results[_feeder_ref]["perct_lv_pha_load_kw"] = (
-                    float(self.results[_feeder_ref]["sum_lv_pha_load_kw"])
+                self.results[_feeder_ref]["perct_lv_pha_load_mw"] = (
+                    float(self.results[_feeder_ref]["sum_lv_pha_load_mw"])
                     / float(total_demand_LV)
                     * 100
                 )
-                self.results[_feeder_ref]["perct_lv_phb_load_kw"] = (
-                    float(self.results[_feeder_ref]["sum_lv_phb_load_kw"])
+                self.results[_feeder_ref]["perct_lv_phb_load_mw"] = (
+                    float(self.results[_feeder_ref]["sum_lv_phb_load_mw"])
                     / float(total_demand_LV)
                     * 100
                 )
-                self.results[_feeder_ref]["perct_lv_phc_load_kw"] = (
-                    float(self.results[_feeder_ref]["sum_lv_phc_load_kw"])
+                self.results[_feeder_ref]["perct_lv_phc_load_mw"] = (
+                    float(self.results[_feeder_ref]["sum_lv_phc_load_mw"])
                     / float(total_demand_LV)
                     * 100
                 )
             else:
-                self.results[_feeder_ref]["perct_lv_pha_load_kw"] = 0
-                self.results[_feeder_ref]["perct_lv_phb_load_kw"] = 0
-                self.results[_feeder_ref]["perct_lv_phc_load_kw"] = 0
+                self.results[_feeder_ref]["perct_lv_pha_load_mw"] = 0
+                self.results[_feeder_ref]["perct_lv_phb_load_mw"] = 0
+                self.results[_feeder_ref]["perct_lv_phc_load_mw"] = 0
 
             # ratio_1phto3ph_Xfrm
             if self.results[_feeder_ref]["num_3ph_transformers"] != 0:
@@ -1498,7 +1600,7 @@ class NetworkAnalyzer(object):
                     self.results[_feeder_ref]["num_1ph_transformers"]
                 ) / float(self.results[_feeder_ref]["num_3ph_transformers"])
             else:
-                self.results[_feeder_ref]["ratio_1ph_to_3ph_transformers"] = np.inf
+                self.results[_feeder_ref]["ratio_1ph_to_3ph_transformers"] = 0 # Set 0 to aviod plotting issues np.inf
 
             # avg_nb_load_per_transformer
             if len(self.results[_feeder_ref]["num_load_per_transformer"]) > 0:
@@ -1511,10 +1613,10 @@ class NetworkAnalyzer(object):
                 if k in self.results[_feeder_ref]:
                     self.results[_feeder_ref][k] *= 0.000621371
 
-            # Divide by 10^3
-            for k in keys_to_divide_by_1000:
+            # Divide by 10^6
+            for k in keys_to_divide_by_1000000:
                 if k in self.results[_feeder_ref]:
-                    self.results[_feeder_ref][k] *= 10 ** -3
+                    self.results[_feeder_ref][k] *= 10 ** -6
 
             # Ratio of MV Line Length to Number of Customers
             if self.results[_feeder_ref]["num_customers"] != 0:
@@ -1559,12 +1661,12 @@ class NetworkAnalyzer(object):
                 self.results[_feeder_ref]["perct_lv_oh_len"] = np.nan
 
             # Sectionalizers per recloser
-            if float(self.results[_feeder_ref]["num_reclosers"]) != 0:
-                self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = float(
-                    self.results[_feeder_ref]["num_sectionalizers"]
-                ) / float(self.results[_feeder_ref]["num_reclosers"])
-            else:
-                self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = np.nan
+#            if float(self.results[_feeder_ref]["num_reclosers"]) != 0:
+#                self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = float(
+#                    self.results[_feeder_ref]["num_sectionalizers"]
+#                ) / float(self.results[_feeder_ref]["num_reclosers"])
+#            else:
+#                self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = np.nan
 
             # Average load power factor
             self.results[_feeder_ref]["avg_load_pf"] = np.mean(
@@ -1574,17 +1676,17 @@ class NetworkAnalyzer(object):
             # Average imbalance of load by phase
             #
             # sum_i |tot_demand_phase_i - 1/3 * tot_demand|
-            if self.results[_feeder_ref]["sum_load_kw"] != 0:
-                third_tot_demand = self.results[_feeder_ref]["sum_load_kw"] / 3.0
+            if self.results[_feeder_ref]["sum_load_mw"] != 0:
+                third_tot_demand = self.results[_feeder_ref]["sum_load_mw"] / 3.0
                 self.results[_feeder_ref]["avg_load_imbalance_by_phase"] = (
-                    abs(self.results[_feeder_ref]["sum_load_pha_kw"] - third_tot_demand)
+                    abs(self.results[_feeder_ref]["sum_load_pha_mw"] - third_tot_demand)
                     + abs(
-                        self.results[_feeder_ref]["sum_load_phb_kw"] - third_tot_demand
+                        self.results[_feeder_ref]["sum_load_phb_mw"] - third_tot_demand
                     )
                     + abs(
-                        self.results[_feeder_ref]["sum_load_phc_kw"] - third_tot_demand
+                        self.results[_feeder_ref]["sum_load_phc_mw"] - third_tot_demand
                     )
-                ) / self.results[_feeder_ref]["sum_load_kw"]
+                ) / self.results[_feeder_ref]["sum_load_mw"]
             else:
                 self.results[_feeder_ref]["avg_load_imbalance_by_phase"] = np.nan
 
@@ -1657,8 +1759,8 @@ class NetworkAnalyzer(object):
             #
             # Get the list of points for the feeder
             self.results[_feeder_ref]["cust_density"] = np.nan
-            self.results[_feeder_ref]["load_density_kw"] = np.nan
-            self.results[_feeder_ref]["load_density_kvar"] = np.nan
+            self.results[_feeder_ref]["load_density_mw"] = np.nan
+            self.results[_feeder_ref]["load_density_mvar"] = np.nan
             self.results[_feeder_ref]["kva_density"] = np.nan
 
             try:
@@ -1681,11 +1783,11 @@ class NetworkAnalyzer(object):
                     self.results[_feeder_ref]["cust_density"] = float(
                         self.results[_feeder_ref]["num_customers"]
                     ) / float(hull_surf_sqmile)
-                    self.results[_feeder_ref]["load_density_kw"] = float(
-                        self.results[_feeder_ref]["sum_load_kw"]
+                    self.results[_feeder_ref]["load_density_mw"] = float(
+                        self.results[_feeder_ref]["sum_load_mw"]
                     ) / float(hull_surf_sqmile)
-                    self.results[_feeder_ref]["load_density_kvar"] = float(
-                        self.results[_feeder_ref]["sum_load_kvar"]
+                    self.results[_feeder_ref]["load_density_mvar"] = float(
+                        self.results[_feeder_ref]["sum_load_mvar"]
                     ) / float(hull_surf_sqmile)
                     self.results[_feeder_ref]["kva_density"] = float(
                         10 ** 3
@@ -1738,16 +1840,21 @@ class NetworkAnalyzer(object):
             "avg_capacitor_sub_distance_mi",
         ]
 
-        # List of keys to divide by 10^3
-        keys_to_divide_by_1000 = [
-            "sum_load_kw",
-            "sum_load_kvar",
-            "sum_lv_pha_load_kw",
-            "sum_lv_phb_load_kw",
-            "sum_lv_phc_load_kw",
-            "sum_load_pha_kw",
-            "sum_load_phb_kw",
-            "sum_load_phc_kw",
+        # List of keys to divide by 10^6
+        keys_to_divide_by_1000000 = [
+            "sum_load_mw",
+            "sum_load_mvar",
+            "sum_lv_pha_load_mw",
+            "sum_lv_phb_load_mw",
+            "sum_lv_phc_load_mw",
+            "sum_load_pha_mw",
+            "sum_load_phb_mw",
+            "sum_load_phc_mw",
+            "sum_mv_loads_mw",
+            "sum_pv_mw",
+            "sum_pv_vv_mw",
+            "sum_pv_vv_vw_mw",
+            "sum_batteries_mw",
         ]
 
         # Loop over the objects in the model and analyze them
@@ -1760,30 +1867,30 @@ class NetworkAnalyzer(object):
         _feeder_ref = f_name
 
         total_demand_LV = (
-            self.results[_feeder_ref]["sum_lv_pha_load_kw"]
-            + self.results[_feeder_ref]["sum_lv_phb_load_kw"]
-            + self.results[_feeder_ref]["sum_lv_phc_load_kw"]
+            self.results[_feeder_ref]["sum_lv_pha_load_mw"]
+            + self.results[_feeder_ref]["sum_lv_phb_load_mw"]
+            + self.results[_feeder_ref]["sum_lv_phc_load_mw"]
         )
         if total_demand_LV != 0:
-            self.results[_feeder_ref]["perct_lv_pha_load_kw"] = (
-                float(self.results[_feeder_ref]["sum_lv_pha_load_kw"])
+            self.results[_feeder_ref]["perct_lv_pha_load_mw"] = (
+                float(self.results[_feeder_ref]["sum_lv_pha_load_mw"])
                 / float(total_demand_LV)
                 * 100
             )
-            self.results[_feeder_ref]["perct_lv_phb_load_kw"] = (
-                float(self.results[_feeder_ref]["sum_lv_phb_load_kw"])
+            self.results[_feeder_ref]["perct_lv_phb_load_mw"] = (
+                float(self.results[_feeder_ref]["sum_lv_phb_load_mw"])
                 / float(total_demand_LV)
                 * 100
             )
-            self.results[_feeder_ref]["perct_lv_phc_load_kw"] = (
-                float(self.results[_feeder_ref]["sum_lv_phc_load_kw"])
+            self.results[_feeder_ref]["perct_lv_phc_load_mw"] = (
+                float(self.results[_feeder_ref]["sum_lv_phc_load_mw"])
                 / float(total_demand_LV)
                 * 100
             )
         else:
-            self.results[_feeder_ref]["perct_lv_pha_load_kw"] = 0
-            self.results[_feeder_ref]["perct_lv_phb_load_kw"] = 0
-            self.results[_feeder_ref]["perct_lv_phc_load_kw"] = 0
+            self.results[_feeder_ref]["perct_lv_pha_load_mw"] = 0
+            self.results[_feeder_ref]["perct_lv_phb_load_mw"] = 0
+            self.results[_feeder_ref]["perct_lv_phc_load_mw"] = 0
 
         # ratio_1phto3ph_Xfrm
         if self.results[_feeder_ref]["num_3ph_transformers"] != 0:
@@ -1804,10 +1911,10 @@ class NetworkAnalyzer(object):
             if k in self.results[_feeder_ref]:
                 self.results[_feeder_ref][k] *= 0.000621371
 
-        # Divide by 10^3
-        for k in keys_to_divide_by_1000:
+        # Divide by 10^6
+        for k in keys_to_divide_by_1000000:
             if k in self.results[_feeder_ref]:
-                self.results[_feeder_ref][k] *= 10 ** -3
+                self.results[_feeder_ref][k] *= 10 ** -6
 
         # Ratio of MV Line Length to Number of Customers
         if self.results[_feeder_ref]["num_customers"] != 0:
@@ -1852,12 +1959,12 @@ class NetworkAnalyzer(object):
             self.results[_feeder_ref]["perct_lv_oh_len"] = np.nan
 
         # Sectionalizers per recloser
-        if float(self.results[_feeder_ref]["num_reclosers"]) != 0:
-            self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = float(
-                self.results[_feeder_ref]["num_sectionalizers"]
-            ) / float(self.results[_feeder_ref]["num_reclosers"])
-        else:
-            self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = np.nan
+#        if float(self.results[_feeder_ref]["num_reclosers"]) != 0:
+#            self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = float(
+#                self.results[_feeder_ref]["num_sectionalizers"]
+#            ) / float(self.results[_feeder_ref]["num_reclosers"])
+#        else:
+#            self.results[_feeder_ref]["num_sectionalizers_per_recloser"] = np.nan
 
         # Average load power factor
         self.results[_feeder_ref]["avg_load_pf"] = np.mean(
@@ -1867,13 +1974,13 @@ class NetworkAnalyzer(object):
         # Average imbalance of load by phase
         #
         # sum_i |tot_demand_phase_i - 1/3 * tot_demand|
-        if self.results[_feeder_ref]["sum_load_kw"] != 0:
-            third_tot_demand = self.results[_feeder_ref]["sum_load_kw"] / 3.0
+        if self.results[_feeder_ref]["sum_load_mw"] != 0:
+            third_tot_demand = self.results[_feeder_ref]["sum_load_mw"] / 3.0
             self.results[_feeder_ref]["avg_load_imbalance_by_phase"] = (
-                abs(self.results[_feeder_ref]["sum_load_pha_kw"] - third_tot_demand)
-                + abs(self.results[_feeder_ref]["sum_load_phb_kw"] - third_tot_demand)
-                + abs(self.results[_feeder_ref]["sum_load_phc_kw"] - third_tot_demand)
-            ) / self.results[_feeder_ref]["sum_load_kw"]
+                abs(self.results[_feeder_ref]["sum_load_pha_mw"] - third_tot_demand)
+                + abs(self.results[_feeder_ref]["sum_load_phb_mw"] - third_tot_demand)
+                + abs(self.results[_feeder_ref]["sum_load_phc_mw"] - third_tot_demand)
+            ) / self.results[_feeder_ref]["sum_load_mw"]
         else:
             self.results[_feeder_ref]["avg_load_imbalance_by_phase"] = np.nan
 
@@ -1942,8 +2049,8 @@ class NetworkAnalyzer(object):
         #
         # Get the list of points for the feeder
         self.results[_feeder_ref]["cust_density"] = np.nan
-        self.results[_feeder_ref]["load_density_kw"] = np.nan
-        self.results[_feeder_ref]["load_density_kvar"] = np.nan
+        self.results[_feeder_ref]["load_density_mw"] = np.nan
+        self.results[_feeder_ref]["load_density_mvar"] = np.nan
         self.results[_feeder_ref]["kva_density"] = np.nan
 
         try:
@@ -1963,11 +2070,11 @@ class NetworkAnalyzer(object):
                 self.results[_feeder_ref]["cust_density"] = float(
                     self.results[_feeder_ref]["num_customers"]
                 ) / float(hull_surf_sqmile)
-                self.results[_feeder_ref]["load_density_kw"] = float(
-                    self.results[_feeder_ref]["sum_load_kw"]
+                self.results[_feeder_ref]["load_density_mw"] = float(
+                    self.results[_feeder_ref]["sum_load_mw"]
                 ) / float(hull_surf_sqmile)
-                self.results[_feeder_ref]["load_density_kvar"] = float(
-                    self.results[_feeder_ref]["sum_load_kvar"]
+                self.results[_feeder_ref]["load_density_mvar"] = float(
+                    self.results[_feeder_ref]["sum_load_mvar"]
                 ) / float(hull_surf_sqmile)
                 self.results[_feeder_ref]["kva_density"] = float(
                     10 ** 3
@@ -2011,6 +2118,14 @@ class NetworkAnalyzer(object):
     def number_of_capacitors(self):
         """Returns the number of capacitors."""
         return sum([1 for obj in self.model.models if isinstance(obj, Capacitor)])
+
+    def number_of_pvs(self):
+        """Returns the number of Photovoltaic systems"""
+        return sum([1 for obj in self.model.models if isinstance(obj,Photovoltaic)])
+
+    def number_of_batteries(self):
+        """Returns the number of battery systems"""
+        return sum([1 for obj in self.model.models if isinstance(obj,Storage)])
 
     def average_degree(self, *args):
         """Returns the average degree of the network."""

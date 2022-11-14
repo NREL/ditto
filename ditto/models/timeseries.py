@@ -26,6 +26,10 @@ class Timeseries(DiTToHasTraits):
         help="""The absolute location on disk of the data""", default_value=None
     )
 
+    data_location_kvar = Unicode(
+        help="""The absolute location on disk of the data for the corresponding kvar file""", default_value=None
+    )
+
     data_type = Unicode(
         help="""This is the python datatype of the timeseries e.g. float, complex etc.""",
         default_value=None,

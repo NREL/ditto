@@ -13,6 +13,7 @@ from ditto.store import Store
 from ditto.models.power_source import PowerSource
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.node import Node
+from ditto.models.timeseries import Timeseries
 from ditto.models.line import Line
 from ditto.models.winding import Winding
 from ditto.models.powertransformer import PowerTransformer
@@ -139,6 +140,7 @@ class Reader(AbstractReader):
                 "PhaseCapacitor",
                 "Position",
                 "PhaseLoad",
+                "Timeseries",
             ]:
                 continue
 

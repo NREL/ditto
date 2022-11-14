@@ -250,8 +250,13 @@ class Network:
                         set(dir(i)) - set(dir(DiTToHasTraits))
                     ):  # only set attributes from the subclass, not the base class
                         if attr[0] != "_":
-                            self.graph.node[i.name][attr] = getattr(i, attr)
-                            self.digraph.node[i.name][attr] = getattr(i, attr)
+                            try:
+                                self.graph.node[i.name][attr] = getattr(i, attr)
+                                self.digraph.node[i.name][attr] = getattr(i, attr)
+                            except:
+                                #print('warning - graph is likely disconnected for node '+i.name)
+                                pass
+                                #import pdb;pdb.set_trace()
 
                 if (
                     hasattr(i, "from_element")

@@ -144,8 +144,10 @@ class Writer(AbstractWriter):
         transformer_map = {
             "Y_Y": "0",
             "D_Y": "1",
-            "Y_D": "2",
-            "D_D": "4",
+#            "Y_D": "2", #Seems to be 6 empirically
+            "Y_D": "6",
+#            "D_D": "4", # seems to be 2 empirically
+            "D_D": "2",
             "Yg_Zg": "11",
             "D_Zg": "12",
         }
@@ -1468,7 +1470,7 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
-                                                if len(i.capacitance_matrix) == len(
+                                                if False and len(i.capacitance_matrix) == len(
                                                     i.impedance_matrix
                                                 ):
                                                     tt["MutualShuntSusceptanceCA"] = (
@@ -1497,7 +1499,7 @@ class Writer(AbstractWriter):
                                                     i.impedance_matrix[k][j].imag
                                                     * 10 ** 3
                                                 )
-                                                if len(i.capacitance_matrix) == len(
+                                                if False and len(i.capacitance_matrix) == len(
                                                     i.impedance_matrix
                                                 ):
                                                     tt[
@@ -1705,6 +1707,7 @@ class Writer(AbstractWriter):
                     new_bess_setting_string = ""
                     new_converter_string = ""
                     new_converter_control_setting_string = ""
+                    new_converter_control_setting_string2 = ""
 
                     if (
                         hasattr(i, "name")
@@ -1787,6 +1790,11 @@ class Writer(AbstractWriter):
                             new_section_ID + ",80,"
                         )  # 45 is the CYME code for PV devices
                         new_converter_control_setting_string += (
+                            new_section_ID + ",80,0,0,"
+                        )  # The controlindex and timetrigger indices are both zero
+
+                        use_second_controller = False
+                        new_converter_control_setting_string2 += (
                             new_section_ID + ",80,0,0,"
                         )  # The controlindex and timetrigger indices are both zero
 
@@ -1907,18 +1915,11 @@ class Writer(AbstractWriter):
                         else:
                             new_converter_string += ","
 
-                        if hasattr(i, "rated_power") and i.rated_power is not None:
-                            new_dg_generation_string += str(i.rated_power / 1000.0)
-                        elif hasattr(i, "rated_power") and i.rated_power is not None:
-                            new_dg_generation_string += str(i.rated_power / 1000.0)
-                        new_dg_generation_string += ","
                         if (
                             hasattr(i, "min_powerfactor")
                             and i.min_powerfactor is not None
                         ):
                             new_converter_string += str(i.powerfactor * 100)
-                            new_dg_generation_string += str(i.powerfactor * 100)
-                        new_dg_generation_string += ","
                         new_converter_string += ","
                         if hasattr(i, "fall_limit") and i.fall_limit is not None:
                             new_converter_string += str(i.fall_limit)
@@ -1944,22 +1945,41 @@ class Writer(AbstractWriter):
                             if i.control_type.lower() == "voltvar_novars":
                                 new_converter_control_setting_string += "3"
                             if i.control_type.lower() == "voltwatt":
-                                new_converter_control_setting_string += "5"
+                                new_converter_control_setting_string += "4" #Cross-reference the numbers for these. Not same as in ASCII document
                             if i.control_type.lower() == "watt_powerfactor":
                                 new_converter_control_setting_string += "6"
                             if i.control_type.lower() == "powerfactor":
                                 new_converter_control_setting_string += "10"
+                            if i.control_type.lower() == "voltwatt_voltvar":
+                                new_converter_control_setting_string += "1"
+                                new_converter_control_setting_string2 += "4"
+                                use_second_controller = True
 
                             new_converter_control_setting_string += ","
+                            new_converter_control_setting_string2 += ","
+
+                            if i.control.lower() == "powerfactor" and i.power_factor is not None:
+                                new_converter_control_setting_string+=str(i.power_factor*100)
+                            new_converter_control_setting_string+=','
+                            new_converter_control_setting_string2+=','
+                            if i.control.lower() == 'voltvar' or i.control.lower() =='voltwatt_voltvar':
+                                new_converter_control_setting_string+='1547_VOLT-VAR_CAT_B'
+                            if i.control.lower() == 'voltwatt':
+                                new_converter_control_setting_string+='1547_VOLT-WATT_CAT_B'
+                            if i.control.lower() == 'voltwatt_voltvar':
+                                new_converter_control_setting_string2+='1547_VOLT-WATT_CAT_B'
+
+
+                            """
                             if (
                                 i.control_type.lower() == "voltvar_fixed_vars"
                                 and i.var_injection is not None
                             ):
                                 new_converter_control_setting_string += (
-                                    str(i.var_injection) + ",2,"
+                                    str(i.var_injection) + "2,"
                                 )  # 2 is the code for the pecentage reactive power available
                             else:
-                                new_converter_control_setting_string += ",,"
+                                new_converter_control_setting_string += ","
                             if (
                                 i.control_type.lower() == "voltvar_watts_over_vars"
                                 or i.control_type.lower() == "voltvar_vars_over_watts"
@@ -1983,14 +2003,19 @@ class Writer(AbstractWriter):
                                 )  # 0 is the code for using the active power rating
                             else:
                                 new_converter_control_setting_string += ",,"
+                        """
                         else:
-                            new_converter_control_setting_string += "10" + "," * 5
+                            new_converter_control_setting_string += "10" + ",100,"
 
                     if new_converter_string != "":
                         converter_string_list.append(new_converter_string)
                     if new_converter_control_setting_string != "":
                         converter_control_string_list.append(
                             new_converter_control_setting_string
+                        )
+                    if new_converter_control_setting_string2 != "" and use_second_controller:
+                        converter_control_string_list.append(
+                            new_converter_control_setting_string2
                         )
 
                     if new_bess_setting_string != "":
@@ -2001,6 +2026,7 @@ class Writer(AbstractWriter):
                 if isinstance(i, Photovoltaic):
                     new_converter_string = ""
                     new_converter_control_setting_string = ""
+                    new_converter_control_setting_string2 = ""
                     new_pv_setting_string = ""
                     new_dg_generation_string = ""
                     if (
@@ -2084,10 +2110,24 @@ class Writer(AbstractWriter):
                         new_converter_control_setting_string += (
                             new_section_ID + ",45,0,0,"
                         )  # The controlindex and timetrigger indices are both zero
-                        new_pv_setting_string += (
-                            new_section_ID + ",M," + new_section_ID + ",DEFAULT,"
-                        )  # Use the default CYME PV configuration for the moment.
-                        new_dg_generation_string += new_section_ID + "45,DEFAULT,"
+
+                        use_second_controller = False
+                        new_converter_control_setting_string2 += (
+                            new_section_ID + ",45,0,0,"
+                        )  # The controlindex and timetrigger indices are both zero
+                        new_pv_setting_string += new_section_ID + ",M,"+i.name
+                        if (
+                            hasattr(i, "timeseries")
+                            and i.timeseries is not None
+                            and len(i.timeseries) > 0
+                            and i.timeseries[0].data_label is not None
+                            and i.timeseries[0].data_location is not None
+                        ):
+                            new_pv_setting_string+='_'+i.timeseries[0].data_label #Add profile afterwards if a timeseries. Requires coordination with CYME profile creation
+                        
+                        new_pv_setting_string += ",DEFAULT,"  # Use the default CYME PV configuration for the moment.
+                        new_dg_generation_string += new_section_ID + ",45,DEFAULT,"
+                        
                         # DGGENERATIONMODEL is not included as this just sets the LoadModelName which is DEFAULT
 
                         if hasattr(i, "rated_power") and i.rated_power is not None:
@@ -2151,7 +2191,7 @@ class Writer(AbstractWriter):
                                     str(
                                         math.sqrt(
                                             i.reactive_rating ** 2
-                                            + (i.rated_power * 1.1) ** 2
+                                            + (i.rated_power / 1.1) ** 2
                                         )
                                         / 1000.0
                                     )
@@ -2159,10 +2199,10 @@ class Writer(AbstractWriter):
                                 )
                             else:
                                 new_converter_string += (
-                                    str(i.rated_power * 1.1 / 1000.0) + ","
+                                    str(i.rated_power / 1.1 / 1000.0) + ","
                                 )
                             new_converter_string += (
-                                str(i.rated_power * 1.1 / 1000.0) + ","
+                                str(i.rated_power / 1.1 / 1000.0) + ","
                             )  # Default value sets inverter to be oversized by 10%
                         else:
                             new_converter_string += ",,"
@@ -2176,7 +2216,7 @@ class Writer(AbstractWriter):
                             )
                         elif hasattr(i, "rated_power") and i.rated_power is not None:
                             new_converter_string += (
-                                str(i.rated_power * 1.1 / 1000.0) + ","
+                                str(i.rated_power / 1.1 / 1000.0) + ","
                             )  # Default value sets inverter to be oversized by 10% and active=reactive
                         else:
                             new_converter_string += ","
@@ -2192,7 +2232,7 @@ class Writer(AbstractWriter):
                         ):
                             new_converter_string += str(i.powerfactor * 100)
                             new_dg_generation_string += str(i.powerfactor * 100)
-                        new_dg_generation_string += ","
+                        #new_dg_generation_string += ","
                         new_converter_string += ","
                         if hasattr(i, "fall_limit") and i.fall_limit is not None:
                             new_converter_string += str(i.fall_limit)
@@ -2205,28 +2245,47 @@ class Writer(AbstractWriter):
                         ):
                             new_converter_string += "0"  # Using units of % per minute
 
-                        if hasattr(i, "control_type") and i.control_type is not None:
+                        if hasattr(i, "control") and i.control is not None:
                             if (
-                                i.control_type.lower() == "voltvar_vars_over_watts"
-                                or i.control_type.lower() == "voltvar"
+                                i.control.lower() == "voltvar_vars_over_watts"
+                                or i.control.lower() == "voltvar"
                             ):  # use default voltvar curve in cyme
                                 new_converter_control_setting_string += "1"
-                            if i.control_type.lower() == "voltvar_watts_over_vars":
+                            if i.control.lower() == "voltvar_watts_over_vars":
                                 new_converter_control_setting_string += "0"
-                            if i.control_type.lower() == "voltvar_fixed_vars":
+                            if i.control.lower() == "voltvar_fixed_vars":
                                 new_converter_control_setting_string += "2"
-                            if i.control_type.lower() == "voltvar_novars":
+                            if i.control.lower() == "voltvar_novars":
                                 new_converter_control_setting_string += "3"
-                            if i.control_type.lower() == "voltwatt":
-                                new_converter_control_setting_string += "5"
-                            if i.control_type.lower() == "watt_powerfactor":
+                            if i.control.lower() == "voltwatt": 
+                                new_converter_control_setting_string += "4" #Cross-reference the numbers for these. Not same as in ASCII document
+                            if i.control.lower() == "watt_powerfactor":
                                 new_converter_control_setting_string += "6"
-                            if i.control_type.lower() == "powerfactor":
+                            if i.control.lower() == "powerfactor":
                                 new_converter_control_setting_string += "10"
+                            if i.control.lower() == 'voltwatt_voltvar':
+                                new_converter_control_setting_string += "1"
+                                new_converter_control_setting_string2 += "4"
+                                use_second_controller = True
 
                             new_converter_control_setting_string += ","
+                            new_converter_control_setting_string2 += ","
+
+                            if i.control.lower() == "powerfactor" and i.power_factor is not None:
+                                new_converter_control_setting_string+=str(i.power_factor*100)
+                            new_converter_control_setting_string+=','
+                            new_converter_control_setting_string2+=','
+                            if i.control.lower() == 'voltvar' or i.control.lower() =='voltwatt_voltvar':
+                                new_converter_control_setting_string+='1547_VOLT-VAR_CAT_B'
+                            if i.control.lower() == 'voltwatt':
+                                new_converter_control_setting_string+='1547_VOLT-WATT_CAT_B'
+                            if i.control.lower() == 'voltwatt_voltvar':
+                                new_converter_control_setting_string2+='1547_VOLT-WATT_CAT_B'
+
+
+                            """
                             if (
-                                i.control_type.lower() == "voltvar_fixed_vars"
+                                i.control.lower() == "voltvar_fixed_vars"
                                 and i.var_injection is not None
                             ):
                                 new_converter_control_setting_string += (
@@ -2235,21 +2294,21 @@ class Writer(AbstractWriter):
                             else:
                                 new_converter_control_setting_string += ",,"
                             if (
-                                i.control_type.lower() == "voltvar_watts_over_vars"
-                                or i.control_type.lower() == "voltvar_vars_over_watts"
+                                i.control.lower() == "voltvar_watts_over_vars"
+                                or i.control.lower() == "voltvar_vars_over_watts"
                             ) and i.voltvar_curve is not None:
                                 new_converter_control_setting_string += (
                                     i.voltvar_curve + ",,"
                                 )
                             elif (
-                                i.control_type.lower() == "voltwatt"
+                                i.control.lower() == "voltwatt"
                                 and i.voltwatt_curve is not None
                             ):
                                 new_converter_control_setting_string += (
                                     i.voltwatt_curve + ",0,"
                                 )  # 0 is the code for using the active power rating
                             elif (
-                                i.control_type.lower() == "watt_powerfactor"
+                                i.control.lower() == "watt_powerfactor"
                                 and i.watt_powerfactor_curve is not None
                             ):
                                 new_converter_control_setting_string += (
@@ -2259,16 +2318,15 @@ class Writer(AbstractWriter):
                                 new_converter_control_setting_string += ",,"
 
                             if (
-                                i.control_type.lower() == "powerfactor"
-                                and i.powerfactor is not None
+                                i.control.lower() == "powerfactor"
+                                and i.power_factor is not None
                             ):
                                 new_converter_control_setting_string += str(
-                                    i.powerfactor
+                                    i.power_factor
                                 )
+                            """
                         else:
-                            new_converter_control_setting_string += (
-                                "10,,,,,100"
-                            )  # Use Powerfactor as default
+                            new_converter_control_setting_string += "10" + ",100,"
 
                         if (
                             hasattr(i, "timeseries")
@@ -2277,12 +2335,8 @@ class Writer(AbstractWriter):
                             and i.timeseries[0].data_label is not None
                             and i.timeseries[0].data_location is not None
                         ):
-                            new_pv_setting_string += ",0,{loc}".format(
-                                loc=i.timeseries[0].data_label
-                            )
-                            self.irradiance_profiles[
-                                i.timeseries[0].data_label
-                            ] = i.timeseries[0].data_location
+                            #new_pv_setting_string += ",0,"
+                            new_pv_setting_string += ",1,"
                         else:
                             new_pv_setting_string += ",1,"
 
@@ -2301,6 +2355,10 @@ class Writer(AbstractWriter):
                     if new_converter_control_setting_string != "":
                         converter_control_string_list.append(
                             new_converter_control_setting_string
+                        )
+                    if new_converter_control_setting_string2 != "" and use_second_controller:
+                        converter_control_string_list.append(
+                            new_converter_control_setting_string2
                         )
                     if new_pv_setting_string != "":
                         pv_settings_string_list.append(new_pv_setting_string)
@@ -2451,7 +2509,7 @@ class Writer(AbstractWriter):
                     # KV
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         try:
-                            if len(phases) == 1:
+                            if len(phases) == 1 or i.connection_type == 'D':
                                 new_capacitor_line += "," + str(
                                     i.nominal_voltage * 10 ** -3
                                 )
@@ -2804,9 +2862,9 @@ class Writer(AbstractWriter):
                                 pass
 
                             phase_shift = 0
-                            if CONN == "0" or CONN == "4":
+                            if CONN == "0" or CONN == "4" or CONN== "2":
                                 phase_shift = 0
-                            if CONN == "1" or CONN == "2":
+                            if CONN == "1": #Only apply a shift for Delta-Wye connections
                                 phase_shift = 1
 
                             try:
@@ -3324,12 +3382,7 @@ class Writer(AbstractWriter):
                                 try:
                                     if (
                                         transformer_object.is_center_tap == 1
-                                        and len(
-                                            transformer_object.windings[
-                                                0
-                                            ].phase_windings
-                                        )
-                                        == 1
+                                        and ( len( transformer_object.windings[ 0 ].phase_windings) == 1 or len(transformer_object.windings[0].phase_windings) ==2)
                                     ):
                                         TYPE = 4
                                     elif (
@@ -3338,7 +3391,7 @@ class Writer(AbstractWriter):
                                                 0
                                             ].phase_windings
                                         )
-                                        == 1
+                                        <= 2
                                     ):
                                         TYPE = 1
                                     elif (
@@ -3382,13 +3435,27 @@ class Writer(AbstractWriter):
                             CONN = ""
                             try:
                                 if TYPE == 4:
-                                    CONN = (
-                                        "0"
-                                    )  # Center Tap not a configuration for transformer object. Leave as Y-Y
-                                    new_transformer_line += ",15"
+                                    if transformer_object.windings[0].connection_type == 'D':
+                                        CONN= "1"
+                                        ct_phases = set()
+                                        ct_phase_number = ''
+                                        if len(transformer_object.windings[0].phase_windings) == 2:
+                                            ct_phases.add( transformer_object.windings[0].phase_windings[0].phase)
+                                            ct_phases.add( transformer_object.windings[0].phase_windings[1].phase)
+                                            if 'A' in ct_phases and 'B' in ct_phases:
+                                                ct_phase_number = '1'
+                                            if 'B' in ct_phases and 'C' in ct_phases:
+                                                ct_phase_number = '2'
+                                            if 'A' in ct_phases and 'C' in ct_phases:
+                                                ct_phase_number = '3'
+                                        new_transformer_line += ","+ct_phase_number+",16"
+                                    else:
+                                        CONN = "0"  # Center Tap not a configuration for transformer object. Leave as Y-Y. No line-line CT configuration. Delta assumes 3-phase delta line
+                                        new_transformer_line += ",,15"
+
                                 else:
                                     new_transformer_line += (
-                                        ","
+                                        ",,"
                                         + self.transformer_connection_configuration_mapping(
                                             transformer_object.windings[
                                                 0
@@ -3408,9 +3475,9 @@ class Writer(AbstractWriter):
                                 pass
 
                             phase_shift = 0
-                            if CONN == "0" or CONN == "4":
+                            if CONN == "0" or CONN == "4" or CONN == "2":
                                 phase_shift = 0
-                            if CONN == "1" or CONN == "2":
+                            if CONN == "1": #Only apply a shift for Delta-Wye connections
                                 phase_shift = 1
 
                             try:
@@ -4088,7 +4155,7 @@ class Writer(AbstractWriter):
                 )
 
             f.write("\n[HEADNODES]\n")
-            f.write("FORMAT_HEADNODES=NodeID,NetworkID\n")
+            f.write("FORMAT_HEADNODES=NodeID,NetworkID,EquivalentSourceConfiguration,EquivSourceCenterTapPhase\n")
             # k=0
             # for source_string in source_string_list:
             #    k+=1
@@ -4103,7 +4170,12 @@ class Writer(AbstractWriter):
                     head = model[
                         f_name
                     ].headnode  # self.section_headnode_mapping[f_name]
-                    f.write("{nodeID},{NetID}\n".format(nodeID=head, NetID=f_name))
+                    source_config = 0
+                    source_centertap = 0
+                    if f_name.startswith('p10u'):
+                        source_centertap = 4
+                        source_config = 2
+                    f.write("{nodeID},{NetID},{SConfig},{S_CT}\n".format(nodeID=head, NetID=f_name,SConfig=source_config,S_CT=source_centertap))
 
             # Source equivalent
             #
@@ -4127,20 +4199,13 @@ class Writer(AbstractWriter):
                         volt = temp.nominal_voltage * 10 ** -3
                     else:
                         volt = model[temp.headnode].nominal_voltage * 10 ** -3
+                    volt_ln = volt/math.sqrt(3)
                     if temp.headnode not in id_from_source:
                         f.write(
-                            "{node_id},{voltage},{angle1},{angle2},{angle3},{R1},{X1},{R0},{X0},{R2},{X2},{voltage},{voltage},{voltage},0\n".format(
+                            "{node_id},{voltage},0.0,-120.0,120.0,1e-05,1e-05,1e-05,1e-05,1e-05,1e-05,{voltage_ln},{voltage_ln},{voltage_ln},0\n".format(
                                 node_id=temp.headnode,
                                 voltage=volt,
-                                angle1=temp.operating_angle1,
-                                angle2=temp.operating_angle2,
-                                angle3=temp.operating_angle3,
-                                R1=temp.positive_sequence_resistance,
-                                X1=temp.positive_sequence_reactance,
-                                R0=temp.zero_sequence_resistance,
-                                X0=temp.zero_sequence_reactance,
-                                R2=temp.negative_sequence_resistance,
-                                X2=temp.negative_sequence_reactance,
+                                voltage_ln=volt_ln,
                             )
                         )
 
@@ -4461,7 +4526,7 @@ class Writer(AbstractWriter):
             if len(two_windings_transformer_string_list) > 0:
                 f.write("\n[TRANSFORMER SETTING]\n")
                 f.write(
-                    "FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,Conn,PhaseON,EqID,DeviceNumber,PhaseShiftType,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n"
+                    "FORMAT_TRANSFORMERSETTING=SectionID,CoordX,CoordY,CTPhase,Conn,PhaseON,EqID,DeviceNumber,PhaseShiftType,Location,PrimTap,SecondaryTap,ODPrimPh,ConnectionStatus,Tap,SetPoint,ControlType,LowerBandwidth,UpperBandwidth,Maxbuck,Maxboost\n"
                 )
                 for transformer_string in two_windings_transformer_string_list:
                     f.write(transformer_string + "\n")
@@ -4501,7 +4566,7 @@ class Writer(AbstractWriter):
             if len(converter_control_string_list) > 0:
                 f.write("\n[CONVERTER CONTROL SETTING]\n")
                 f.write(
-                    "FORMAT_CONVERTERCONTROLSETTING=DeviceNumber,DeviceType,ControlIndex,TimeTriggerIndex,ControlType,FixedVarInjection,InjectionReference,ConverterControlID,PowerReference,PowerFactor\n"
+                    "FORMAT_CONVERTERCONTROLSETTING=DeviceNumber,DeviceType,ControlIndex,TimeTriggerIndex,ControlType,PowerFactor,ConverterControlID\n"
                 )
                 for i in converter_control_string_list:
                     f.write(i)
@@ -4551,7 +4616,8 @@ class Writer(AbstractWriter):
             f.write("[GENERAL]\n")
             current_date = datetime.now().strftime("%B %d, %Y at %H:%M:%S")
             f.write("DATE={}\n".format(current_date))
-            f.write("CYME_VERSION=8.02\n")
+            f.write("CYME_VERSION=9.0\n")
+            f.write("CYME_REVISION=5\n")
             f.write("\n[SI]\n")
 
             # Substations
@@ -4849,16 +4915,16 @@ class Writer(AbstractWriter):
                     f.write(data.strip(","))
                     f.write("\n")
 
-            if len(self.irradiance_profiles) > 0:
-                f.write("\n[INSOLATION MODEL] \n")
-                f.write("FORMAT_INSOLATIONMODEL=ID,FromFile,FileName\n")
-                for i in self.irradiance_profiles:
-                    f.write(
-                        "{label},1,{loc}".format(
-                            label=i, loc=self.irradiance_profiles[i]
-                        )
-                    )
-                    f.write("\n")
+#            if len(self.irradiance_profiles) > 0:
+#                f.write("\n[INSOLATION MODEL] \n")
+#                f.write("FORMAT_INSOLATIONMODEL=ID,FromFile,FileName\n")
+#                for i in self.irradiance_profiles:
+#                    f.write(
+#                        "{label},1,{loc}".format(
+#                            label=i, loc=self.irradiance_profiles[i]
+#                        )
+#                    )
+#                    f.write("\n")
 
             if len(self.bess_codes) > 0:
                 f.write("\n[BESS] \n")
@@ -4996,22 +5062,12 @@ class Writer(AbstractWriter):
                                     except:
                                         pass
 
-                        # Take care of delta connections.
-                        # In this case, the corresponding section should be two phase
-                        if (
-                            len(i.phase_loads) == 1
-                            and hasattr(i, "connection_type")
-                            and i.connection_type == "D"
-                        ):
-                            mapp = {"A": "B", "B": "C", "C": "A"}
-                            try:
-                                new_section = new_section[:-1] + "".join(
-                                    sorted(
-                                        new_section[-1] + mapp[i.phase_loads[0].phase]
-                                    )
-                                )
-                            except:
-                                pass
+                        # Note that delta-centet-tap connections maintain a single phase load.
+                        # If the transformer is AB -> Load = A
+                        # If the transformer is BC -> Load = B
+                        # If the transformer is CA -> Load = C
+
+
                         # Value type is set to P and Q
                         try:
                             new_customer_load_string += ",0"
@@ -5048,7 +5104,7 @@ class Writer(AbstractWriter):
 
                     # Location
                     new_load_string += ",0"
-                    new_customer_load_string += ",0,"
+                    new_customer_load_string += ","+new_section_ID+","
 
                     # CustomerNumber, CustomerType
                     found_timeseries = False
@@ -5083,12 +5139,12 @@ class Writer(AbstractWriter):
                         and i.center_tap_perct_1_2 is not None
                     ):
                         new_customer_load_string += ",{p1},{p2},{PP},{QQ},{PPP},{QQQ}".format(
-                            p1=i.center_tap_perct_1_N * 100,
-                            p2=i.center_tap_perct_N_2 * 100,
-                            PP=P * i.center_tap_perct_1_N,
-                            QQ=Q * i.center_tap_perct_1_N,
-                            PPP=P * i.center_tap_perct_N_2,
-                            QQQ=Q * i.center_tap_perct_N_2,
+                            p1=i.center_tap_perct_1_N ,
+                            p2=i.center_tap_perct_N_2 ,
+                            PP=P * i.center_tap_perct_1_N/100,
+                            QQ=Q * i.center_tap_perct_1_N/100,
+                            PPP=P * i.center_tap_perct_N_2/100,
+                            QQQ=Q * i.center_tap_perct_N_2/100,
                         )
                     else:
                         new_customer_load_string += ",,,,,,"

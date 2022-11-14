@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from functools import reduce
+from functools import cmp_to_key
 
 # DiTTo imports
 from ditto.models.node import Node
@@ -62,6 +63,8 @@ class Writer(AbstractWriter):
     +-----------------+--------------------+
     |   capacitors    |   Capacitors.dss   |
     +-----------------+--------------------+
+    | intermediates   |  Intermediate.txt  |
+    +-----------------+--------------------+
     |     lines       |      Lines.dss     |
     +-----------------+--------------------+
     |    wiredata     |    WireData.dss    |
@@ -101,6 +104,9 @@ class Writer(AbstractWriter):
         self.write_taps = False
         self.separate_feeders = False
         self.separate_substations = False
+        self.has_timeseries = False
+        self.solve = True
+        self.remove_loadshapes = False
         self.verbose = False
 
         self.output_filenames = {
@@ -111,6 +117,7 @@ class Writer(AbstractWriter):
             "capacitors": "Capacitors.dss",
             "capcontrols": "CapControls.dss",
             "lines": "Lines.dss",
+            "intermediates": "Intermediates.txt",
             "linecodes": "LineCodes.dss",
             "linegeometry": "LineGeometry.dss",
             "wiredata": "WireData.dss",
@@ -123,9 +130,14 @@ class Writer(AbstractWriter):
 
         # Call super
         super(Writer, self).__init__(**kwargs)
+        self.profile_path_res = kwargs.get("profile_path_res","../../profiles")
+        self.profile_path_com = kwargs.get("profile_path_com","../../profiles")
+        self.solve = kwargs.get("solve",True)
+        self.remove_loadshapes = kwargs.get("remove_loadshapes",False)
 
         self._baseKV_ = set()
         self._baseKV_feeders_ = {}
+        self._baseKV_substations_ = {}
 
         self.logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
 
@@ -134,6 +146,41 @@ class Writer(AbstractWriter):
         ctx = decimal.Context()
         d1 = ctx.create_decimal(repr(f))
         return format(d1, "f")
+
+    def order_output(self,s1,s2):
+        """ Order the outputs as:
+            - wiredata
+            - CNDATA
+            - linegeometry
+            - linecodes
+            - lines
+            - transformers
+            - regulators
+            - loadshapes
+            - loads
+            - capacitors
+        """
+        ordered_elements = ['wiredata','CNDATA','linegeometry','linecodes','lines','transformers','regulators','loadshapes','loads','capacitors','storage','PVSystems']
+        for element_key in ordered_elements:
+            element = self.output_filenames[element_key]
+            if element in s1 and not element in s2:
+                return -1
+            if element in s2 and not element in s1:
+                return 1
+            if element in s1 and element in s2:
+                if s1<s2:
+                    return -1
+                if s2<s1:
+                    return 1
+                if s1==s2:
+                    return 0
+        if s1<s2:
+            return -1
+        if s2<s1:
+            return 1
+        if s1==s2:
+            return 0
+
 
     def write(self, model, **kwargs):
         """General writing function responsible for calling the sub-functions.
@@ -610,7 +657,7 @@ class Writer(AbstractWriter):
                                 and winding.nominal_voltage is not None
                             ):
                                 txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10 ** -3
+                                    kv=round(winding.nominal_voltage * 10 ** -3,3)
                                 )  # OpenDSS in kvolts
                                 if (
                                     not substation_name + "_" + feeder_name
@@ -621,27 +668,33 @@ class Writer(AbstractWriter):
                                     ] = set()
 
                                 if (
+                                    not substation_name
+                                    in self._baseKV_substations_
+                                ):
+                                    self._baseKV_substations_[
+                                        substation_name
+                                    ] = set()
+
+                                if (
                                     winding.nominal_voltage < 300
                                 ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
+                                    self._baseKV_.add(round( winding.nominal_voltage * 10 ** -3,3))
+                                    self._baseKV_feeders_[ substation_name + "_" + feeder_name ].add( round( winding.nominal_voltage * 10 ** -3,3))
+                                    self._baseKV_substations_[ substation_name ].add(round( winding.nominal_voltage * 10 ** -3,3))
+
+                                    self._baseKV_.add(round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                                    self._baseKV_feeders_[ substation_name + "_" + feeder_name ].add( round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                                    self._baseKV_substations_[ substation_name ].add(round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
                                 else:
                                     self._baseKV_.add(
-                                        winding.nominal_voltage * 10 ** -3
+                                        round(winding.nominal_voltage * 10 ** -3,3)
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
+                                    ].add(round(winding.nominal_voltage * 10 ** -3,3))
+                                    self._baseKV_substations_[
+                                        substation_name 
+                                    ].add(round(winding.nominal_voltage * 10 ** -3,3))
 
                             # rated power
                             if (
@@ -837,7 +890,7 @@ class Writer(AbstractWriter):
                                 and winding.nominal_voltage is not None
                             ):
                                 txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10 ** -3
+                                    kv=round(winding.nominal_voltage * 10 ** -3,3)
                                 )  # OpenDSS in kvolts
                                 if (
                                     not substation_name + "_" + feeder_name
@@ -847,27 +900,34 @@ class Writer(AbstractWriter):
                                         substation_name + "_" + feeder_name
                                     ] = set()
                                 if (
+                                    not substation_name
+                                    in self._baseKV_substations_
+                                ):
+                                    self._baseKV_substations_[
+                                        substation_name
+                                    ] = set()
+
+
+                                if (
                                     winding.nominal_voltage < 300
                                 ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(
-                                        winding.nominal_voltage
-                                        * math.sqrt(3)
-                                        * 10 ** -3
-                                    )
+                                    self._baseKV_.add(round( winding.nominal_voltage * 10 ** -3,3))
+                                    self._baseKV_feeders_[ substation_name + "_" + feeder_name ].add(round( winding.nominal_voltage * 10 ** -3,3))
+                                    self._baseKV_substations_[ substation_name ].add(round( winding.nominal_voltage * 10 ** -3,3))
+
+                                    self._baseKV_.add(round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                                    self._baseKV_feeders_[ substation_name + "_" + feeder_name ].add(round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                                    self._baseKV_substations_[ substation_name ].add(round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
                                 else:
                                     self._baseKV_.add(
-                                        winding.nominal_voltage * 10 ** -3
+                                        round(winding.nominal_voltage * 10 ** -3,3)
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
+                                    ].add(round(winding.nominal_voltage * 10 ** -3,3))
+                                    self._baseKV_substations_[
+                                        substation_name
+                                    ].add(round(winding.nominal_voltage * 10 ** -3,3))
 
                             # rated power
                             if (
@@ -976,16 +1036,16 @@ class Writer(AbstractWriter):
                         fp.write(txt)
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(
                                 feeder_name, self.output_filenames["transformers"]
                             )
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["transformers"]
                         )
                     if self.separate_feeders:
@@ -1048,8 +1108,13 @@ class Writer(AbstractWriter):
                     txt += "New Storage.{name}".format(name=i.name)
 
                 # Phases
+                if i.nominal_voltage is None:
+                    i.nominal_voltage = model[i.connecting_element].nominal_voltage
                 if hasattr(i, "phase_storages") and i.phase_storages is not None:
-                    txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        txt += " phases=1"
+                    else:
+                        txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
 
                     # kW (Need to sum over the phase_storage elements)
                     if sum([1 for phs in i.phase_storages if phs.p is None]) == 0:
@@ -1068,7 +1133,7 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " Bus1={elt}".format(elt=i.connecting_element)
+                    txt += " bus1={elt}".format(elt=i.connecting_element)
                     if (
                         hasattr(i, "phase_storages")
                         and i.phase_storages is not None
@@ -1079,22 +1144,37 @@ class Writer(AbstractWriter):
 
                 # nominal_voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    txt += " kV={volt}".format(
-                        volt=i.nominal_voltage * 10 ** -3
-                    )  # DiTTo in volts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
+
+                    if (
+                        not substation_name
+                        in self._baseKV_substations_
+                    ):
+                        self._baseKV_substations_[
+                            substation_name
+                        ] = set()
+
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
-                        )
+
+                        txt += " kV={volt}".format(
+                            volt=round(i.nominal_voltage * 2*10 ** -3,3)
+                        )  # DiTTo in volts
+                        self._baseKV_.add(round(i.nominal_voltage * 2 * 10 ** -3,3))
+                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add( round(i.nominal_voltage * 2 * 10 ** -3,3))
+                        self._baseKV_substations_[substation_name].add( round(i.nominal_voltage * 2* 10 ** -3,3))
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        txt += " kV={volt}".format(
+                            volt=round(i.nominal_voltage *10 ** -3,3)
+                        )  # DiTTo in volts
+                        self._baseKV_.add(round(i.nominal_voltage * 10 ** -3,3))
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                            round(i.nominal_voltage * 10 ** -3,3)
+                        )
+                        self._baseKV_substations_[substation_name].add(
+                            round(i.nominal_voltage * 10 ** -3,3)
                         )
                     if hasattr(i, "active_rating") and i.active_rating is not None:
                         pf_local = 1.0
@@ -1206,14 +1286,14 @@ class Writer(AbstractWriter):
                         fp.write(txt)
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(feeder_name, self.output_filenames["storage"])
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["storage"]
                         )
                     if self.separate_feeders:
@@ -1235,6 +1315,7 @@ class Writer(AbstractWriter):
         feeder_text_map = {}
         feeder_voltvar_map = {}
         feeder_voltwatt_map = {}
+        feeder_voltwatt_voltvar_map = {}
         substation_text_map = {}
         for i in model.models:
             if isinstance(i, Photovoltaic):
@@ -1263,6 +1344,7 @@ class Writer(AbstractWriter):
                 txt = ""
                 voltvar_nodes = set()
                 voltwatt_nodes = set()
+                voltwatt_voltvar_nodes = set()
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
 
@@ -1276,6 +1358,10 @@ class Writer(AbstractWriter):
                         substation_name + "_" + feeder_name
                     ]
 
+                if substation_name + "_" + feeder_name in feeder_voltwatt_voltvar_map:
+                    voltwatt_voltvar_nodes = feeder_voltwatt_voltvar_map[
+                        substation_name + "_" + feeder_name
+                    ]
                 # Name
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New PVSystem.{name}".format(name=i.name)
@@ -1292,35 +1378,46 @@ class Writer(AbstractWriter):
                         for phase in i.phases:
                             txt += "." + str(self.phase_mapping(phase.default_value))
 
-                # Phases
-                if hasattr(i, "phases") and i.phases is not None:
-                    txt += " phases={n_phases}".format(n_phases=len(i.phases))
+#                # Phases
+#                        if hasattr(i, "phases") and i.phases is not None:
+#                            txt += " phases={n_phases}".format(n_phases=len(i.phases))
 
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
+                        if hasattr(i, "phases") and i.phases is not None:
+                            txt += " phases=1"
                         txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            kV=round(i.nominal_voltage * 2 * 10 ** -3,3) # set as line to line
                         )  # DiTTo in volts
                     else:
+                        if hasattr(i, "phases") and i.phases is not None:
+                            txt += " phases=3"
                         txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10 ** -3
+                            kV=round(i.nominal_voltage * 10 ** -3,3)
                         )  # DiTTo in volts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
+                    if not substation_name in self._baseKV_substations_:
+                        self._baseKV_substations_[
+                            substation_name
+                        ] = set()
                     if (
                         i.nominal_voltage < 300
                     ):  # Line-Neutral voltage for 120 V (i.e. 240V)
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_.add(round(i.nominal_voltage * 2 * 10 ** -3,3))
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 2 * 10 ** -3
+                            round(i.nominal_voltage * 2 * 10 ** -3,3)
+                        )
+                        self._baseKV_substations_[substation_name].add(
+                            round(i.nominal_voltage * 2 * 10 ** -3,3)
                         )
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                        self._baseKV_.add(round(i.nominal_voltage * 10 ** -3,3))
+                        self._baseKV_substations_[substation_name].add(
+                            round(i.nominal_voltage * 10 ** -3,3)
                         )
                 else:
                     parent = model[i.connecting_element]
@@ -1329,12 +1426,16 @@ class Writer(AbstractWriter):
                         and parent.nominal_voltage is not None
                     ):
                         if parent.nominal_voltage < 300:
+                            if hasattr(i, "phases") and i.phases is not None:
+                                txt += " phases=1"
                             txt += " kV={kV}".format(
-                                kV=parent.nominal_voltage * math.sqrt(3) * 10 ** -3
+                                kV=round(parent.nominal_voltage * 2 * 10 ** -3,3)
                             )  # DiTTo in volts
                         else:
+                            if hasattr(i, "phases") and i.phases is not None:
+                                txt += " phases=3"
                             txt += " kV={kV}".format(
-                                kV=parent.nominal_voltage * 10 ** -3
+                                kV=round(parent.nominal_voltage * 10 ** -3,3)
                             )  # DiTTo in volts
                         if (
                             not substation_name + "_" + feeder_name
@@ -1344,19 +1445,31 @@ class Writer(AbstractWriter):
                                 substation_name + "_" + feeder_name
                             ] = set()
                         if (
+                            not substation_name in self._baseKV_substations_
+                        ):
+                            self._baseKV_substations_[
+                                substation_name
+                            ] = set()
+                        if (
                             parent.nominal_voltage < 300
                         ):  # Line-Line voltage for 120 V (i.e. 240V)
                             self._baseKV_.add(
-                                parent.nominal_voltage * math.sqrt(3) * 10 ** -3
+                                round(parent.nominal_voltage * 2 * 10 ** -3,3)
                             )
                             self._baseKV_feeders_[
                                 substation_name + "_" + feeder_name
-                            ].add(parent.nominal_voltage * 2 * 10 ** -3)
+                            ].add(round(parent.nominal_voltage * 2 * 10 ** -3,3))
+                            self._baseKV_substations_[
+                                substation_name
+                            ].add(round(parent.nominal_voltage * 2 * 10 ** -3,3))
                         else:
-                            self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
+                            self._baseKV_.add(round(parent.nominal_voltage * 10 ** -3,3))
                             self._baseKV_feeders_[
                                 substation_name + "_" + feeder_name
-                            ].add(parent.nominal_voltage * 10 ** -3)
+                            ].add(round(parent.nominal_voltage * 10 ** -3,3))
+                            self._baseKV_substations_[
+                                substation_name
+                            ].add(round(parent.nominal_voltage * 10 ** -3,3))
 
                 if hasattr(i, "active_rating") and i.active_rating is not None:
                     pf_local = 1.0
@@ -1439,7 +1552,7 @@ class Writer(AbstractWriter):
                     and i.control is not None
                     and i.control == "voltwatt"
                 ):
-                    txt += " Model=1 kvar=0"
+                    txt += " Model=1"
                     voltwatt_nodes.add(i.name)
 
                 if (
@@ -1447,8 +1560,16 @@ class Writer(AbstractWriter):
                     and i.control is not None
                     and i.control == "voltvar"
                 ):
-                    txt += " Model=1 kvar=0"
+                    txt += " Model=1"
                     voltvar_nodes.add(i.name)
+
+                if (
+                    hasattr(i, "control")
+                    and i.control is not None
+                    and i.control == "voltwatt_voltvar"
+                ):
+                    txt += " Model=1"
+                    voltwatt_voltvar_nodes.add(i.name)
 
                 if (
                     hasattr(i, "timeseries")
@@ -1460,13 +1581,18 @@ class Writer(AbstractWriter):
                         if (
                             hasattr(ts, "data_location")
                             and ts.data_location is not None
-                            and os.path.isfile(ts.data_location)
+                            #and os.path.isfile(ts.data_location)
                         ):
+                            #import pdb;pdb.set_trace()
                             filename = self.timeseries_datasets[
                                 substation_name + "_" + feeder_name
                             ][ts.data_location]
-                            txt += " {ts_format}={filename}".format(
-                                ts_format=self.timeseries_format[filename],
+                            if self.remove_loadshapes:
+                                optional_comment = '!'
+                            else:
+                                optional_comment = ''
+                            txt += " {optional_comment}{ts_format}={filename}".format(
+                                optional_comment=optional_comment, ts_format=self.timeseries_format[filename],
                                 filename=filename,
                             )
                         else:
@@ -1476,43 +1602,39 @@ class Writer(AbstractWriter):
                 txt += "\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
                 feeder_voltvar_map[substation_name + "_" + feeder_name] = voltvar_nodes
-                feeder_voltwatt_map[
-                    substation_name + "_" + feeder_name
-                ] = voltwatt_nodes
+                feeder_voltwatt_map[substation_name + "_" + feeder_name ] = voltwatt_nodes
+                feeder_voltwatt_voltvar_map[substation_name + "_" + feeder_name] = voltwatt_voltvar_nodes
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
                 voltvar_nodes = feeder_voltvar_map[substation_name + "_" + feeder_name]
-                voltwatt_nodes = feeder_voltwatt_map[
-                    substation_name + "_" + feeder_name
-                ]
+                voltwatt_nodes = feeder_voltwatt_map[ substation_name + "_" + feeder_name ]
+                voltwatt_voltvar_nodes = feeder_voltwatt_voltvar_map[substation_name + "_" + feeder_name ]
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
                 inv_txt = ""
-                if len(voltvar_nodes) > 0:
-                    inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.93,0.97,1.03,1.06,1.5)\n\n".format(
+                if len(voltvar_nodes) > 0 and len(voltwatt_nodes) == 0:
+                    inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format( 
                         loc=substation_name + "_" + feeder_name
-                    )  # Default voltvar curve used
-                    inv_txt += "New InvControl.InvPVCtrVV_{loc} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS DeltaQ_factor=0.5 PVSystemlist=[".format(
-                        loc=substation_name + "_" + feeder_name
-                    )
+                    )  # Default voltvar curve used is 1547 Cat-B
                     for node in voltvar_nodes:
-                        inv_txt += node + ","
-                    inv_txt = inv_txt.strip(",")
-                    inv_txt += "]\n\n"
+                        inv_txt += "New InvControl.InvPVCtrVV_{node} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format( node=node,loc=substation_name + "_" + feeder_name)
 
                 if len(voltwatt_nodes) > 0:
                     inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format(
                         loc=substation_name + "_" + feeder_name
                     )  # Default volt-watt curve used
-                    inv_txt += "New InvControl.InvPVCtrVW_{loc} mode=VOLTWATT voltage_curvex_ref=rated VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaP_factor=0.25 PVSystemlist=[".format(
-                        loc=substation_name + "_" + feeder_name
-                    )
                     for node in voltwatt_nodes:
-                        inv_txt += node + ","
-                    inv_txt = inv_txt.strip(",")
-                    inv_txt += "]"
+                        inv_txt += "New InvControl.InvPVCtrVW_{node} mode=VOLTWATT voltage_curvex_ref=rated VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format( loc=substation_name + "_" + feeder_name, node=node)
+
+                if len(voltwatt_voltvar_nodes) > 0:
+                    if not len(voltvar_nodes) > 0:
+                        inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default voltvar curve used is 1547 Cat-B
+                    if not len(voltwatt_nodes) > 0:
+                        inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default volt-watt curve used
+                    for node in voltwatt_voltvar_nodes:
+                        inv_txt += "New InvControl.InvPVCtrVW_{node} Combimode=VV_VW voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format( loc=substation_name + "_" + feeder_name, node=node)
 
                 if txt != "":
                     txt += "\n" + inv_txt
@@ -1542,16 +1664,16 @@ class Writer(AbstractWriter):
 
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(
                                 feeder_name, self.output_filenames["PVSystems"]
                             )
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["PVSystems"]
                         )
                     if self.separate_feeders:
@@ -1578,9 +1700,15 @@ class Writer(AbstractWriter):
 
         substation_text_map = {}
         feeder_text_map = {}
+        substation_text = {}
+        timeseries_datasets_substation = {}
+        timeseries_datasets_all = {}
+        all_text = ""
         all_data = set()
+        txt_all = ""
         for i in model.models:
             if isinstance(i, Timeseries):
+                self.has_timeseries = True
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
@@ -1603,47 +1731,109 @@ class Writer(AbstractWriter):
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ""
+                txt_subs=""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+
+                if substation_name in substation_text:
+                    txt_subs = substation_text[substation_name]
                 if substation_name + "_" + feeder_name not in self.timeseries_datasets:
                     self.timeseries_datasets[substation_name + "_" + feeder_name] = {}
+
+                if substation_name not in timeseries_datasets_substation:
+                    timeseries_datasets_substation[substation_name] = {}
 
                 if (
                     hasattr(i, "data_location")
                     and i.data_location is not None
-                    and os.path.isfile(i.data_location)
+                    #and os.path.isfile(i.data_location)
                     and (i.scale_factor is None or i.scale_factor == 1)
                 ):
                     filename = i.data_location.split("/")[-1][
                         :-4
                     ]  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
-                    location = os.path.join(
-                        "..", "..", filename
-                    )  # Assume the load is in a feeder and the data is two folders up. TODO Fix this correctly
+                    if filename.startswith('res_'):
+                        profile_path = self.profile_path_res
+                    else:
+                        profile_path = self.profile_path_com
+                    suffix = i.data_location.split("/")[-1][-4:]
+                    if i.data_location_kvar is not None: # A current hack to include kvar in the same timeseries
+                        filename_kvar = i.data_location_kvar.split("/")[-1][:-4]  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
+
+                        data_location_kvar=os.path.join( "..", "..",profile_path, filename_kvar+suffix)
+                        data_location_kvar_subs=os.path.join( "..", profile_path, filename_kvar+suffix)
+                        data_location_kvar_all=os.path.join( profile_path, filename_kvar+suffix)
+                        txt_kvar = ' qmult = (file='+data_location_kvar+')'  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
+                        txt_kvar_subs = ' qmult = (file='+data_location_kvar_subs+')'  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
+                        txt_kvar_all = ' qmult = (file='+data_location_kvar_all+')'  # Assume all data files have a 3 letter suffix (e.g. .dss .csv .txt etc)
+                    else:
+                        txt_kvar = ''
+                        txt_kvar_subs = ''
+                        txt_kvar_all = ''
                     if (
                         i.data_location
                         in self.timeseries_datasets[substation_name + "_" + feeder_name]
                         and substation_name + "_" + feeder_name in feeder_text_map
-                    ):  # Need to make sure the loadshape exits in each subfolder
+                    ):  # Need to make sure the loadshape exists in each subfolder
                         continue
-                    npoints = len(pd.read_csv(i.data_location))
+                    npoints = 8760*4 #HARDCODED for smart-ds at 15 minute resolution for both solar and loads
+                    #npoints = len(pd.read_csv(i.data_location))
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
                     ):  # The cases of hourly, minute or second resolution data for exactly one day TODO: make this more precise
                         self.timeseries_format[filename] = "daily"
+                        self.timeseries_solve_format = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
+                        self.timeseries_solve_format = "yearly"
+                        self.timeseries_step = "15m"
+                        self.timeseries_number = 4*24*365 #TODO: DON'T HARDCODE - CURRENTLY A SMART-DS HACK
+                        self.timeseries_day = 4*24
 
                     interval = 1
                     if i.interval is not None:
                         interval = i.interval
-                    txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location})\n\n".format(
-                        filename=filename,
-                        npoints=npoints,
-                        # data_location=i.data_location.split("/")[-1],
-                        data_location=location,
-                        interv=interval,
-                    )
+
+                    local_data_location = os.path.join( "..", "..", profile_path, filename+suffix)
+                    local_data_location_kvar = txt_kvar
+                    if substation_name=='': #special case if substation name is empty - otherwise bad redirect
+                        local_data_location=os.path.join( "..", profile_path, filename+suffix),
+                        local_data_location_kvar = txt_kvar_subs,
+                    if not self.remove_loadshapes:
+                        txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}){data_location_kvar}\n\n".format(
+                            filename=filename,
+                            npoints=npoints,
+                            # data_location=i.data_location.split("/")[-1],
+                            data_location=local_data_location,
+                            data_location_kvar = local_data_location_kvar,
+                            interv=interval,
+                        )
+                    if (
+                        i.data_location
+                        not in timeseries_datasets_substation[substation_name] and not self.remove_loadshapes
+                    ):
+                        txt_subs += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}){data_location_kvar_subs}\n\n".format(
+                            filename=filename,
+                            npoints=npoints,
+                            # data_location=i.data_location.split("/")[-1],
+                            data_location=os.path.join( "..", profile_path, filename+suffix),
+                            data_location_kvar_subs = txt_kvar_subs,
+                            interv=interval,
+                        )
+                        timeseries_datasets_substation[substation_name][
+                            i.data_location
+                        ] = filename
+                    if i.data_location not in timeseries_datasets_all and not self.remove_loadshapes:
+                        txt_all += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}) {data_location_kvar_all}\n\n".format(
+                            filename=filename,
+                            npoints=npoints,
+                            # data_location=i.data_location.split("/")[-1],
+                            data_location=os.path.join( profile_path, filename+suffix),
+                            data_location_kvar_all = txt_kvar_all,
+                            interv=interval,
+                        )
+                        timeseries_datasets_all[i.data_location] = filename
+
                     self.timeseries_datasets[substation_name + "_" + feeder_name][
                         i.data_location
                     ] = filename
@@ -1651,7 +1841,7 @@ class Writer(AbstractWriter):
                 elif (
                     hasattr(i, "data_location")
                     and i.data_location is not None
-                    and os.path.isfile(i.data_location)
+                    #and os.path.isfile(i.data_location)
                     and i.scale_factor is not None
                     and i.scale_factor != 1
                 ):
@@ -1679,32 +1869,61 @@ class Writer(AbstractWriter):
                         self.timeseries_format[filename] = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
-                    txt += "New Loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
-                        filename=filename,
-                        npoints=npoints,
-                        data_location=scaled_data_location,
-                    )
+                    if not self.remove_loadshapes:
+                        txt += "New Loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
+                            filename=filename,
+                            npoints=npoints,
+                            data_location=scaled_data_location,
+                        )
+                    self.timeseries_datasets[substation_name + "_" + feeder_name][
+                        i.data_location
+                    ] = filename
                 # elif: In memory
                 #     pass
                 else:
-                    import pdb
-
-                    pdb.set_trace()
+                    #print('warning - timeseries file missing')
                     pass  # problem
 
-                self.timeseries_datasets[substation_name + "_" + feeder_name][
-                    i.data_location
-                ] = filename
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
+                substation_text[substation_name] = txt_subs
+                all_text = txt_all
 
                 # pass #TODO: write the timeseries data if it's in memory
+        if txt_all !="":
+            with open(
+                os.path.join(
+                    self.output_path, self.output_filenames["loadshapes"]
+                ),
+                "w",
+            ) as fp:
+                fp.write(txt_all) #write substation information to loadshapes file
 
         for substation_name in substation_text_map:
+            if self.separate_substations:
+                output_folder_sub = os.path.join(self.output_path, substation_name.replace(">", "-"))
+                if not os.path.exists(output_folder_sub):
+                    os.makedirs(output_folder_sub)
+            else:
+                output_folder_sub = os.path.join(self.output_path)
+                output_redirect = ""
+                if not os.path.exists(output_folder_sub):
+                    os.makedirs(output_folder_sub)
+            txt_subs = substation_text[substation_name]
+            if txt_subs!="" and substation_name!= "": # so doesn't overwrite basefolder name
+                with open(
+                        os.path.join(
+                            output_folder_sub, self.output_filenames["loadshapes"]
+                        ),
+                        "w",
+                    ) as fp:
+                        fp.write(txt_subs) #write substation information to loadshapes file
+
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
-                if txt != "":
+                if txt != "" and not(substation_name == "" and feeder_name == ""):
+                    
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -1732,16 +1951,12 @@ class Writer(AbstractWriter):
                         fp.write(txt)
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
-                            os.path.join(
-                                feeder_name, self.output_filenames["loadshapes"]
-                            )
-                        )
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add( self.output_filenames["loadshapes"]) #use local version not redirected for loadshapes
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["loadshapes"]
                         )
                     if self.separate_feeders:
@@ -1752,11 +1967,8 @@ class Writer(AbstractWriter):
                             self.output_filenames["loadshapes"]
                         )
 
-                    self.files_to_redirect.append(
-                        os.path.join(
-                            output_redirect, self.output_filenames["loadshapes"]
-                        )
-                    )
+        if txt_all !="":
+            self.files_to_redirect.append(self.output_filenames["loadshapes"]) # Just have a single loadshapes.dss at Master
 
     def write_loads(self, model):
         """Write the loads to an OpenDSS file (Loads.dss by default).
@@ -1796,185 +2008,233 @@ class Writer(AbstractWriter):
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
 
-                # Name
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Load." + i.name
+
+                load_info = []
+                if hasattr(i,'nominal_voltage') and i.nominal_voltage < 300: #i.e. for center tap we have two smaller loads
+                    if hasattr(i, "name") and i.name is not None:
+                        load_info.append(i.name+'_1')
+                        load_info.append(i.name+'_2')
+                    else:
+                        continue
                 else:
-                    continue
-
-                # Connection type
-                if hasattr(i, "connection_type") and i.connection_type is not None:
-                    if i.connection_type == "Y":
-                        txt += " conn=wye"
-                    elif i.connection_type == "D":
-                        txt += " conn=delta"
-
-                # Connecting element
-                if (
-                    hasattr(i, "connecting_element")
-                    and i.connecting_element is not None
-                ):
-                    txt += " bus1={bus}".format(bus=i.connecting_element)
-                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
-                        for phase_load in i.phase_loads:
-                            if (
-                                hasattr(phase_load, "phase")
-                                and phase_load.phase is not None
-                            ):
-                                txt += ".{p}".format(
-                                    p=self.phase_mapping(phase_load.phase)
-                                )
-
-                        if i.connection_type == "D" and len(i.phase_loads) == 1:
-                            if self.phase_mapping(i.phase_loads[0].phase) == 1:
-                                txt += ".2"
-                            if self.phase_mapping(i.phase_loads[0].phase) == 2:
-                                txt += ".3"
-                            if self.phase_mapping(i.phase_loads[0].phase) == 3:
-                                txt += ".1"
-
-                # nominal voltage
-                if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    if i.nominal_voltage < 300:
-                        txt += " kV={volt}".format(
-                            volt=i.nominal_voltage * math.sqrt(3) * 10 ** -3
-                        )
+                    if hasattr(i, "name") and i.name is not None:
+                        load_info.append(i.name)
                     else:
-                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
-                    if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
-                        self._baseKV_feeders_[
-                            substation_name + "_" + feeder_name
-                        ] = set()
-                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
-                        )
-                    else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
-                        )
+                        continue
 
-                # Vmin
-                if hasattr(i, "vmin") and i.vmin is not None:
-                    txt += " Vminpu={vmin}".format(vmin=i.vmin)
+                load_info_cnt = 0
+                for name in load_info:
+                    load_info_cnt+=1
+                    txt += "New Load." + name
+    
+                    # Connection type
+                    if hasattr(i, "connection_type") and i.connection_type is not None:
+                        if i.connection_type == "Y":
+                            txt += " conn=wye"
+                        elif i.connection_type == "D":
+                            txt += " conn=delta"
+    
+                    # Connecting element
+                    if (
+                        hasattr(i, "connecting_element")
+                        and i.connecting_element is not None
+                    ):
+                        txt += " bus1={bus}".format(bus=i.connecting_element)
+                        if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                            if len(load_info) == 2: # for center_tap
+                                if load_info_cnt == 1:
+                                    txt+='.1'
+                                if load_info_cnt == 2:
+                                    txt+='.2'
 
-                # Vmax
-                if hasattr(i, "vmax") and i.vmax is not None:
-                    txt += " Vmaxpu={vmax}".format(vmax=i.vmax)
-
-                # positions (Not mapped)
-
-                # KW
-                total_P = 0
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
-
-                    txt += " model={N}".format(N=i.phase_loads[0].model)
-
-                    for phase_load in i.phase_loads:
-                        if hasattr(phase_load, "p") and phase_load.p is not None:
-                            total_P += phase_load.p
-                    txt += " kW={P}".format(P=total_P * 10 ** -3)
-
-                # Kva
-                total_Q = 0
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
-                    for phase_load in i.phase_loads:
-                        if hasattr(phase_load, "q") and phase_load.q is not None:
-                            total_Q += phase_load.q
-                    txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
-
-                # phase_loads
-                if hasattr(i, "phase_loads") and i.phase_loads is not None:
-
-                    # if i.connection_type=='Y':
-                    txt += " Phases={N}".format(N=len(i.phase_loads))
-                    # elif i.connection_type=='D' and len(i.phase_loads)==3:
-                    #    fp.write(' Phases=3')
-                    # elif i.connection_type=='D' and len(i.phase_loads)==2:
-                    #    fp.write(' Phases=1')
-
-                    for phase_load in i.phase_loads:
-
-                        # P
-                        # if hasattr(phase_load, 'p') and phase_load.p is not None:
-                        #    fp.write(' kW={P}'.format(P=phase_load.p*10**-3))
-
-                        # Q
-                        # if hasattr(phase_load, 'q') and phase_load.q is not None:
-                        #    fp.write(' kva={Q}'.format(Q=phase_load.q*10**-3))
-
-                        # ZIP load model
-                        if (
-                            hasattr(phase_load, "use_zip")
-                            and phase_load.use_zip is not None
-                        ):
-                            if phase_load.use_zip:
-
-                                # Get the coefficients
-                                if (
-                                    (
-                                        hasattr(i, "ppercentimpedance")
-                                        and i.ppercentimpedance is not None
-                                    )
-                                    and (
-                                        hasattr(i, "qpercentimpedance")
-                                        and i.qpercentimpedance is not None
-                                    )
-                                    and (
-                                        hasattr(i, "ppercentcurrent")
-                                        and i.ppercentcurrent is not None
-                                    )
-                                    and (
-                                        hasattr(i, "qpercentcurrent")
-                                        and i.qpercentcurrent is not None
-                                    )
-                                    and (
-                                        hasattr(i, "ppercentpower")
-                                        and i.ppercentpower is not None
-                                    )
-                                    and (
-                                        hasattr(i, "qpercentpower")
-                                        and i.qpercentpower is not None
-                                    )
-                                ):
-
-                                    txt += (
-                                        " model=8 ZIPV=[%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]"
-                                        % (
-                                            i.ppercentimpedance,
-                                            i.ppercentcurrent,
-                                            i.ppercentpower,
-                                            i.qpercentimpedance,
-                                            i.qpercentcurrent,
-                                            i.qpercentpower,
+                            else:
+                                for phase_load in i.phase_loads:
+                                    if (
+                                        hasattr(phase_load, "phase")
+                                        and phase_load.phase is not None
+                                    ):
+                                        txt += ".{p}".format(
+                                            p=self.phase_mapping(phase_load.phase)
                                         )
-                                    )
-
-                # fp.write(' model=1')
-
-                # timeseries object
-                if hasattr(i, "timeseries") and i.timeseries is not None:
-                    for ts in i.timeseries:
-                        if (
-                            hasattr(ts, "data_location")
-                            and ts.data_location is not None
-                            and os.path.isfile(ts.data_location)
-                        ):
-                            filename = self.timeseries_datasets[
-                                ts.substation_name + "_" + ts.feeder_name
-                            ][ts.data_location]
-                            txt += " {ts_format}={filename}".format(
-                                ts_format=self.timeseries_format[filename],
-                                filename=filename,
+    
+                            if i.connection_type == "D" and len(i.phase_loads) == 1:
+                                if self.phase_mapping(i.phase_loads[0].phase) == 1:
+                                    txt += ".2"
+                                if self.phase_mapping(i.phase_loads[0].phase) == 2:
+                                    txt += ".3"
+                                if self.phase_mapping(i.phase_loads[0].phase) == 3:
+                                    txt += ".1"
+    
+                    # nominal voltage
+                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                        if i.nominal_voltage < 300:
+                            txt += " kV={volt}".format(
+                                volt=round(i.nominal_voltage * 10 ** -3,3)
                             )
                         else:
-                            pass
-                            # TODO: manage the data correctly when it is only in memory
+                            txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10 ** -3,3))
+                        if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
+                            self._baseKV_feeders_[
+                                substation_name + "_" + feeder_name
+                            ] = set()
+                        if not substation_name in self._baseKV_substations_:
+                            self._baseKV_substations_[
+                                substation_name 
+                            ] = set()
+                        if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                            self._baseKV_.add(round(i.nominal_voltage * 10 ** -3,3))
+                            self._baseKV_feeders_[substation_name + "_" + feeder_name].add( round(i.nominal_voltage * 10 ** -3,3))
+                            self._baseKV_substations_[substation_name].add( round(i.nominal_voltage * 10 ** -3,3))
 
-                txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                            self._baseKV_.add(round(i.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                            self._baseKV_feeders_[substation_name + "_" + feeder_name].add( round(i.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                            self._baseKV_substations_[substation_name].add( round(i.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                        else:
+                            self._baseKV_.add(round(i.nominal_voltage * 10 ** -3,3))
+                            self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                                round(i.nominal_voltage * 10 ** -3,3)
+                            )
+                            self._baseKV_substations_[substation_name].add(
+                                round(i.nominal_voltage * 10 ** -3,3)
+                            )
+    
+                    # Vmin
+                    if hasattr(i, "vmin") and i.vmin is not None:
+                        txt += " Vminpu={vmin}".format(vmin=i.vmin)
+    
+                    # Vmax
+                    if hasattr(i, "vmax") and i.vmax is not None:
+                        txt += " Vmaxpu={vmax}".format(vmax=i.vmax)
+    
+                    # positions (Not mapped)
+    
+                    # KW
+                    total_P = 0
+                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
+    
+                        txt += " model={N}".format(N=i.phase_loads[0].model)
+    
+                        for phase_load in i.phase_loads:
+                            if hasattr(phase_load, "p") and phase_load.p is not None:
+                                total_P += phase_load.p
+                        if len(load_info) ==2:
+                            txt += " kW={P}".format(P=total_P /2.0 * 10 ** -3)
+                        else:
+                            txt += " kW={P}".format(P=total_P * 10 ** -3)
+    
+                    # Kva
+                    total_Q = 0
+                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                        for phase_load in i.phase_loads:
+                            if hasattr(phase_load, "q") and phase_load.q is not None:
+                                total_Q += phase_load.q
+                        if len(load_info) ==2:
+                            txt += " kvar={Q}".format(Q=total_Q/2.0 * 10 ** -3)
+                        else:
+                            txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
+    
+                    # phase_loads
+                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
+    
+                        # if i.connection_type=='Y':
+                        if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                            if i.nominal_voltage < 300:
+                                txt+=" Phases=1"
+                            else:
+                                txt += " Phases={N}".format(N=len(i.phase_loads))
+
+                        else:
+                            txt += " Phases={N}".format(N=len(i.phase_loads))
+                        # elif i.connection_type=='D' and len(i.phase_loads)==3:
+                        #    fp.write(' Phases=3')
+                        # elif i.connection_type=='D' and len(i.phase_loads)==2:
+                        #    fp.write(' Phases=1')
+    
+                        for phase_load in i.phase_loads:
+    
+                            # P
+                            # if hasattr(phase_load, 'p') and phase_load.p is not None:
+                            #    fp.write(' kW={P}'.format(P=phase_load.p*10**-3))
+    
+                            # Q
+                            # if hasattr(phase_load, 'q') and phase_load.q is not None:
+                            #    fp.write(' kva={Q}'.format(Q=phase_load.q*10**-3))
+    
+                            # ZIP load model
+                            if (
+                                hasattr(phase_load, "use_zip")
+                                and phase_load.use_zip is not None
+                            ):
+                                if phase_load.use_zip:
+    
+                                    # Get the coefficients
+                                    if (
+                                        (
+                                            hasattr(i, "ppercentimpedance")
+                                            and i.ppercentimpedance is not None
+                                        )
+                                        and (
+                                            hasattr(i, "qpercentimpedance")
+                                            and i.qpercentimpedance is not None
+                                        )
+                                        and (
+                                            hasattr(i, "ppercentcurrent")
+                                            and i.ppercentcurrent is not None
+                                        )
+                                        and (
+                                            hasattr(i, "qpercentcurrent")
+                                            and i.qpercentcurrent is not None
+                                        )
+                                        and (
+                                            hasattr(i, "ppercentpower")
+                                            and i.ppercentpower is not None
+                                        )
+                                        and (
+                                            hasattr(i, "qpercentpower")
+                                            and i.qpercentpower is not None
+                                        )
+                                    ):
+    
+                                        txt += (
+                                            " model=8 ZIPV=[%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]"
+                                            % (
+                                                i.ppercentimpedance,
+                                                i.ppercentcurrent,
+                                                i.ppercentpower,
+                                                i.qpercentimpedance,
+                                                i.qpercentcurrent,
+                                                i.qpercentpower,
+                                            )
+                                        )
+    
+                    # fp.write(' model=1')
+    
+                    # timeseries object
+                    if hasattr(i, "timeseries") and i.timeseries is not None:
+                        for ts in i.timeseries:
+                            if (
+                                hasattr(ts, "data_location")
+                                and ts.data_location is not None
+                                #and os.path.isfile(ts.data_location)
+                            ):
+                                filename = self.timeseries_datasets[
+                                    ts.substation_name + "_" + ts.feeder_name
+                                ][ts.data_location]
+                                if self.remove_loadshapes:
+                                    optional_comment = '!'
+                                else:
+                                    optional_comment = ''
+
+                                txt += " {optional_comment}{ts_format}={filename}".format(
+                                    optional_comment=optional_comment,ts_format=self.timeseries_format[filename],
+                                    filename=filename,
+                                )
+                            else:
+                                pass
+                                # TODO: manage the data correctly when it is only in memory
+    
+                    txt += "\n\n"
+                    feeder_text_map[substation_name + "_" + feeder_name] = txt
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
@@ -2005,14 +2265,14 @@ class Writer(AbstractWriter):
                         fp.write(txt)
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(feeder_name, self.output_filenames["loads"])
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["loads"]
                         )
                     if self.separate_feeders:
@@ -2164,7 +2424,7 @@ class Writer(AbstractWriter):
                             for w, winding in enumerate(i.windings):
                                 if hasattr(i.windings[w], "nominal_voltage"):
                                     kvs += (
-                                        str(i.windings[w].nominal_voltage * 10 ** -3)
+                                        str(round(i.windings[w].nominal_voltage * 10 ** -3,3))
                                         + ", "
                                     )
                                     if (
@@ -2175,27 +2435,32 @@ class Writer(AbstractWriter):
                                             substation_name + "_" + feeder_name
                                         ] = set()
                                     if (
+                                        not substation_name 
+                                        in self._baseKV_substations_
+                                    ):
+                                        self._baseKV_substations_[
+                                            substation_name 
+                                        ] = set()
+                                    if (
                                         i.windings[w].nominal_voltage < 300
                                     ):  # Line-Neutral voltage for 120 V
-                                        self._baseKV_.add(
-                                            i.windings[w].nominal_voltage
-                                            * math.sqrt(3)
-                                            * 10 ** -3
-                                        )
-                                        self._baseKV_feeders_[
-                                            substation_name + "_" + feeder_name
-                                        ].add(
-                                            winding.nominal_voltage
-                                            * math.sqrt(3)
-                                            * 10 ** -3
-                                        )
+                                        self._baseKV_.add(round( i.windings[w].nominal_voltage * 10 ** -3,3))
+                                        self._baseKV_feeders_[ substation_name + "_" + feeder_name ].add( round( winding.nominal_voltage * 10 ** -3,3))
+                                        self._baseKV_substations_[ substation_name ].add( round( winding.nominal_voltage * 10 ** -3,3))
+
+                                        self._baseKV_.add(round( i.windings[w].nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                                        self._baseKV_feeders_[ substation_name + "_" + feeder_name ].add( round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
+                                        self._baseKV_substations_[ substation_name ].add( round( winding.nominal_voltage * math.sqrt(3) * 10 ** -3,3))
                                     else:
                                         self._baseKV_.add(
-                                            i.windings[w].nominal_voltage * 10 ** -3
+                                            round(i.windings[w].nominal_voltage * 10 ** -3,3)
                                         )
                                         self._baseKV_feeders_[
                                             substation_name + "_" + feeder_name
-                                        ].add(winding.nominal_voltage * 10 ** -3)
+                                        ].add(round(winding.nominal_voltage * 10 ** -3,3))
+                                        self._baseKV_substations_[
+                                            substation_name
+                                        ].add(round(winding.nominal_voltage * 10 ** -3,3))
                             kvs = kvs[:-2]
                             kvs += ")"
                             transfo_creation_string += kvs
@@ -2416,24 +2681,61 @@ class Writer(AbstractWriter):
 
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(
                                 feeder_name, self.output_filenames["regulators"]
                             )
                         )
+
+                        transformer_added = False
+                        for filename in self.substations_redirect[substation_name]:
+                            if os.path.join(feeder_name,self.output_filenames["transformers"]) == filename:
+                                transformer_added = True
+                        if not transformer_added:
+                            self.substations_redirect[substation_name].add(os.path.join(feeder_name, self.output_filenames["transformers"]))
+
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["regulators"]
                         )
+                        transformer_added = False
+                        for filename in self.substations_redirect[substation_name]:
+                            if self.output_filenames["transformers"] == filename:
+                                transformer_added = True
+                        if not transformer_added:
+                            self.substations_redirect[substation_name].add(
+                                self.output_filenames["transformers"]
+                            )
                     if self.separate_feeders:
                         combined_feeder_sub = os.path.join(substation_name, feeder_name)
                         if combined_feeder_sub not in self.feeders_redirect:
                             self.feeders_redirect[combined_feeder_sub] = []
                         self.feeders_redirect[combined_feeder_sub].append(
                             self.output_filenames["regulators"]
+                        )
+
+                        transformer_added = False
+                        for filename in self.feeders_redirect[combined_feeder_sub]:
+                            if self.output_filenames["transformers"] == filename:
+                                transformer_added = True
+                        if not transformer_added:
+                            self.feeders_redirect[combined_feeder_sub].append(
+                                self.output_filenames["transformers"]
+                            )
+
+
+                    transformer_added = False
+                    for filename in self.files_to_redirect:
+                        if os.path.join(output_redirect,self.output_filenames["transformers"]) == filename:
+                            transformer_added = True
+                    if not transformer_added:
+                        self.files_to_redirect.append(
+                            os.path.join(
+                                output_redirect, self.output_filenames["transformers"]
+                            )
                         )
 
                     self.files_to_redirect.append(
@@ -2492,7 +2794,7 @@ class Writer(AbstractWriter):
 
                 # Connecting element
                 if i.connecting_element is not None:
-                    txt += " Bus1=" + i.connecting_element
+                    txt += " bus1=" + i.connecting_element
 
                     # For a 3-phase capbank we don't add any suffixes to the output.
                     if (
@@ -2515,26 +2817,39 @@ class Writer(AbstractWriter):
 
                 # Phases
                 if hasattr(i, "phase_capacitors") and i.phase_capacitors is not None:
-                    txt += " phases={N}".format(N=len(i.phase_capacitors))
+                    num_phases = 3
+                    if len(i.phase_capacitors) == 2 or len(i.phase_capacitors) == 1: #for line-line connections
+                        num_phases = 1
+                    txt += " phases={N}".format(N=num_phases)
 
                 # nominal_voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     txt += " Kv={volt}".format(
-                        volt=i.nominal_voltage * 10 ** -3
+                        volt=round(i.nominal_voltage * 10 ** -3,3)
                     )  # OpenDSS in Kvolts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
+                    if not substation_name in self._baseKV_substations_:
+                        self._baseKV_substations_[
+                            substation_name 
+                        ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_.add(round(i.nominal_voltage * 10 ** -3,3))
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            round(i.nominal_voltage * 10 ** -3,3)
+                        )
+                        self._baseKV_substations_[substation_name].add(
+                            round(i.nominal_voltage  * 10 ** -3,3)
                         )
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(round(i.nominal_voltage * 10 ** -3,3))
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                            round(i.nominal_voltage * 10 ** -3,3)
+                        )
+                        self._baseKV_substations_[substation_name].add(
+                            round(i.nominal_voltage * 10 ** -3,3)
                         )
 
                 # connection type
@@ -2542,7 +2857,7 @@ class Writer(AbstractWriter):
                     if i.connection_type == "Y":
                         txt += " conn=Wye"
                     elif i.connection_type == "D":
-                        txt += " conn=delta"
+                        txt += " conn=Delta"
                     else:
                         self.logger.error(
                             "Unknown connection type in capacitor {name}".format(
@@ -2665,16 +2980,16 @@ class Writer(AbstractWriter):
 
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(
                                 feeder_name, self.output_filenames["capacitors"]
                             )
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["capacitors"]
                         )
                     if self.separate_feeders:
@@ -2695,6 +3010,7 @@ class Writer(AbstractWriter):
 
     def write_lines(self, model):
         """Write the lines to an OpenDSS file (Lines.dss by default).
+           Output intermediate nodes in the line to Intermediates.txt
 
         :param model: DiTTo model
         :type model: DiTTo model
@@ -2704,6 +3020,7 @@ class Writer(AbstractWriter):
 
         substation_text_map = {}
         feeder_text_map = {}
+        feeder_text_intermediate_map = {}
         # First, we have to decide if we want to output using LineGeometries and WireData or using LineCodes
         # We divide the lines in 2 groups:
         # - if we have enough information about the wires and the spacing,
@@ -2799,14 +3116,25 @@ class Writer(AbstractWriter):
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ""
+                intermediate_txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+
+                if substation_name + "_" + feeder_name in feeder_text_intermediate_map:
+                    intermediate_txt = feeder_text_intermediate_map[substation_name + "_" + feeder_name]
+
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Line." + i.name
+                    intermediate_txt += i.name
                 else:
                     continue
+
+                if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0:
+                    for position in i.positions:
+                        intermediate_txt +=f';({position.long},{position.lat})'
+                intermediate_txt+='\n\n'
 
                 # Set the units in miles for comparison (IEEE 13 nodes feeder)
                 # TODO: Let the user specify the export units
@@ -2909,10 +3237,12 @@ class Writer(AbstractWriter):
                     txt += "\n\n"
 
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
+                feeder_text_intermediate_map[substation_name+ "_" + feeder_name] = intermediate_txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
+                intermediate_txt = feeder_text_intermediate_map[substation_name+ "_" + feeder_name] 
                 feeder_name = feeder_name.replace(">", "-")
                 substation_name = substation_name.replace(">", "-")
                 if txt != "":
@@ -2941,14 +3271,14 @@ class Writer(AbstractWriter):
 
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(feeder_name, self.output_filenames["lines"])
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["lines"]
                         )
                     if self.separate_feeders:
@@ -2962,6 +3292,32 @@ class Writer(AbstractWriter):
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["lines"])
                     )
+                if intermediate_txt != "":
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path, substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ""
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder, feeder_name)
+                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(
+                        os.path.join(output_folder, self.output_filenames["intermediates"]), "w"
+                    ) as fp:
+                        fp.write(intermediate_txt)
+                        # Just write the file - don't redirect it
+
+                   
 
         return 1
 
@@ -3075,14 +3431,14 @@ class Writer(AbstractWriter):
 
             if self.separate_substations and self.separate_feeders:
                 if substation_name not in self.substations_redirect:
-                    self.substations_redirect[substation_name] = []
-                self.substations_redirect[substation_name].append(
+                    self.substations_redirect[substation_name] = set()
+                self.substations_redirect[substation_name].add(
                     os.path.join(feeder_name, self.output_filenames["wiredata"])
                 )
             elif self.separate_substations:
                 if substation_name not in self.substations_redirect:
-                    self.substations_redirect[substation_name] = []
-                self.substations_redirect[substation_name].append(
+                    self.substations_redirect[substation_name] = set()
+                self.substations_redirect[substation_name].add(
                     self.output_filenames["wiredata"]
                 )
             if self.separate_feeders:
@@ -3107,14 +3463,14 @@ class Writer(AbstractWriter):
 
             if self.separate_substations and self.separate_feeders:
                 if substation_name not in self.substations_redirect:
-                    self.substations_redirect[substation_name] = []
-                self.substations_redirect[substation_name].append(
+                    self.substations_redirect[substation_name] = set()
+                self.substations_redirect[substation_name].add(
                     os.path.join(feeder_name, self.output_filenames["CNDATA"])
                 )
             elif self.separate_substations:
                 if substation_name not in self.substations_redirect:
-                    self.substations_redirect[substation_name] = []
-                self.substations_redirect[substation_name].append(
+                    self.substations_redirect[substation_name] = set()
+                self.substations_redirect[substation_name].add(
                     self.output_filenames["CNDATA"]
                 )
             if self.separate_feeders:
@@ -3200,14 +3556,14 @@ class Writer(AbstractWriter):
             )
             if self.separate_substations and self.separate_feeders:
                 if substation_name not in self.substations_redirect:
-                    self.substations_redirect[substation_name] = []
-                self.substations_redirect[substation_name].append(
+                    self.substations_redirect[substation_name] = set()
+                self.substations_redirect[substation_name].add(
                     os.path.join(feeder_name, self.output_filenames["linegeometry"])
                 )
             elif self.separate_substations:
                 if substation_name not in self.substations_redirect:
-                    self.substations_redirect[substation_name] = []
-                self.substations_redirect[substation_name].append(
+                    self.substations_redirect[substation_name] = set()
+                self.substations_redirect[substation_name].add(
                     self.output_filenames["linegeometry"]
                 )
             if self.separate_feeders:
@@ -3257,10 +3613,15 @@ class Writer(AbstractWriter):
         substation_text_map = {}
         feeder_text_map = {}
         substation_feeder_lookup = {}
+        linecode_map = {}
+        nameclass_phase_count = {}
         for i in list_of_lines:
             if isinstance(i, Line):
 
                 parsed_line = self.parse_line(i)
+                parsed_line_string = ''
+                for key in sorted(list(parsed_line.keys())):
+                    parsed_line_string+=key+'_'+str(parsed_line[key])
                 if len(parsed_line) > 0:
 
                     if (
@@ -3293,11 +3654,31 @@ class Writer(AbstractWriter):
                     )
 
                     if i.nameclass is not None:
+                        # WARNING - A total SMART-DS HACK
+                        last_char = None 
+                        for pos in range(len(i.nameclass)):
+                            if i.nameclass[pos].isalpha():
+                                last_char = pos+1
+                        i.nameclass = i.nameclass[:last_char] # Just want the nameclass not extra underscore garbage
+                        # End smartds hack
                         if "nphases" in parsed_line:
                             n_phases = str(parsed_line["nphases"])
                         else:
                             n_phases = ""
                         nameclass_phase = i.nameclass + "_" + n_phases
+                        parsed_line_string+=nameclass_phase
+                        if not parsed_line_string in linecode_map: #Map the linecode details to a name
+                            if nameclass_phase in nameclass_phase_count: #If the linecode name has already been taken include a counter at the end
+                                nameclass_phase_count[nameclass_phase]+=1
+                                linecode_map[parsed_line_string] = nameclass_phase + '_'+str(nameclass_phase_count[nameclass_phase])
+                            else:
+                                nameclass_phase_count[nameclass_phase] = 0
+                                linecode_map[parsed_line_string] = nameclass_phase 
+                        txt[linecode_map[parsed_line_string]] = parsed_line
+                        self.all_linecodes[nameclass_phase] = parsed_line
+                        i.nameclass = linecode_map[parsed_line_string] 
+
+                        """
                         if nameclass_phase not in self.all_linecodes:
                             self.all_linecodes[nameclass_phase] = parsed_line
                             txt[nameclass_phase] = parsed_line
@@ -3327,6 +3708,8 @@ class Writer(AbstractWriter):
                                     cnt += 1
                             else:
                                 i.nameclass = nameclass_phase
+                        """
+
 
                     else:
                         linecode_found = False
@@ -3337,9 +3720,7 @@ class Writer(AbstractWriter):
                         if not linecode_found:
                             nameclass = ""
                             if hasattr(i, "wires") and i.wires is not None:
-                                phase_wires = [
-                                    w for w in i.wires if w.phase in ["A", "B", "C"]
-                                ]
+                                phase_wires = [ w for w in i.wires if w.phase in ["A", "B", "C"] ]
                                 nameclass += str(len(phase_wires)) + "P_"
 
                             if hasattr(i, "line_type") and i.line_type == "overhead":
@@ -3347,6 +3728,22 @@ class Writer(AbstractWriter):
 
                             if hasattr(i, "line_type") and i.line_type == "underground":
                                 nameclass += "UG_"
+
+                            parsed_line_string+=nameclass_phase
+                            if not parsed_line_string in linecode_map: #Map the linecode details to a name
+                                if nameclass_phase in nameclass_phase_count: #If the linecode name has already been taken include a counter at the end
+                                    nameclass_phase_count[nameclass_phase]+=1
+                                    linecode_map[parsed_line_string] = nameclass_phase + '_'+str(nameclass_phase_count[nameclass_phase])
+                                else:
+                                    nameclass_phase_count[nameclass_phase] = 0
+                                    linecode_map[parsed_line_string] = nameclass_phase 
+                            txt[linecode_map[parsed_line_string]] = parsed_line
+                            self.all_linecodes[nameclass_phase] = parsed_line
+                            i.nameclass = linecode_map[parsed_line_string] 
+
+
+                            """
+
                             self.all_linecodes[
                                 "{class_}Code{N}".format(class_=nameclass, N=cnt)
                             ] = parsed_line
@@ -3357,6 +3754,9 @@ class Writer(AbstractWriter):
                                 class_=nameclass, N=cnt
                             )
                             cnt += 1
+                            """
+                    #print(linecode_map[parsed_line_string])
+                    #print(parsed_line)
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
         for substation_name in substation_text_map:
@@ -3387,16 +3787,16 @@ class Writer(AbstractWriter):
 
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             os.path.join(
                                 feeder_name, self.output_filenames["linecodes"]
                             )
                         )
                     elif self.separate_substations:
                         if substation_name not in self.substations_redirect:
-                            self.substations_redirect[substation_name] = []
-                        self.substations_redirect[substation_name].append(
+                            self.substations_redirect[substation_name] = set()
+                        self.substations_redirect[substation_name].add(
                             self.output_filenames["linecodes"]
                         )
                     if self.separate_feeders:
@@ -3713,6 +4113,18 @@ class Writer(AbstractWriter):
 
     def write_master_file(self, model):
         """Write the master.dss file."""
+        from_node_map = {}
+        to_node_map = {}
+        for obj in model.models:
+            if hasattr(obj,'from_element'):
+                if not obj.from_element in from_node_map:
+                    from_node_map[obj.from_element] = []
+                from_node_map[obj.from_element].append(obj.name)
+            if hasattr(obj,'to_element'):
+                if not obj.to_element in to_node_map:
+                    to_node_map[obj.to_element] = []
+                to_node_map[obj.to_element].append(obj.name)
+        model_head = None
         with open(
             os.path.join(self.output_path, self.output_filenames["master"]), "w"
         ) as fp:
@@ -3734,6 +4146,7 @@ class Writer(AbstractWriter):
                                 name=obj.connecting_element, pu=obj.per_unit
                             )
                         )
+                        model_head = obj.connecting_element
                     else:
                         logger.warning(
                             "No valid name for connecting element of source {}. Using name of the source instead...".format(
@@ -3745,13 +4158,14 @@ class Writer(AbstractWriter):
                                 name=cleaned_name, pu=obj.per_unit
                             )
                         )
+                        model_head = cleaned_name
 
                     if (
                         hasattr(obj, "nominal_voltage")
                         and obj.nominal_voltage is not None
                     ):
                         fp.write(
-                            " basekV={volt}".format(volt=obj.nominal_voltage * 10 ** -3)
+                            " basekV={volt}".format(volt=round(obj.nominal_voltage * 10 ** -3,3))
                         )  # DiTTo in volts
 
                     if (
@@ -3827,6 +4241,21 @@ class Writer(AbstractWriter):
                 ):
                     fp.write("Redirect {file}\n".format(file=file))
 
+            if self.has_timeseries:
+                monitored_line = None
+                if model_head in from_node_map:
+                    monitored_line = from_node_map[model_head][0]
+                elif model_head in to_node_map:
+                    monitored_line  = to_node_map[model_head][0]
+                else:
+                    print("Warning - Source doesn't seem to be connected")
+                    # Sometimes this is intentional e.g. if there is no subtransmission network
+                if monitored_line is not None:
+                    print('Monitored line ', model_head,monitored_line)
+                    fp.write(f"new monitor.m1 element=Line.{monitored_line} mode=0\n")
+                    fp.write(f"new monitor.m2 element=Line.{monitored_line} mode=1\n")
+                    fp.write(f"new energymeter.m3 Line.{monitored_line}\n")
+
             _baseKV_list_ = list(self._baseKV_)
             _baseKV_list_ = sorted(_baseKV_list_)
             fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
@@ -3840,7 +4269,18 @@ class Writer(AbstractWriter):
                     "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                 )  # The buscoords are also written to base folder as well as the subfolders
 
-            fp.write("\nSolve")
+            fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed
+            if self.solve:
+                if self.has_timeseries:
+                    fp.write("\nSolve mode={timestep} stepsize=15m number=35040\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_day)) #Run for first day of year
+                    fp.write("Export monitors m1\n")
+                    fp.write("Plot monitor object= m1 channels=(7 9 11 )\n")
+                    fp.write("Export monitors m2\n")
+                    fp.write("Plot monitor object= m2 channels=(1 3 5 )\n")
+                    fp.write("Plot Profile Phases=All\n")
+                else:
+                    fp.write("\nSolve\n") # Makes resolving easier
+                    fp.write("Plot Profile Phases=All\n")
         for i in model.models:
             if isinstance(i, Node) and i.is_substation_connection:
                 feeder_name = i.feeder_name
@@ -3881,10 +4321,19 @@ class Writer(AbstractWriter):
                         fp.write(
                             "Clear\n\nNew Circuit.feeder_{name} ".format(name=i.name)
                         )
+
+                     # Include base kV in list of voltages. Assume at least one kV value on feeder
+                    if i.substation_name + "_" + i.feeder_name in self._baseKV_feeders_ and i.feeder_name != '' and i.feeder_name is not None:
+                        self._baseKV_feeders_[i.substation_name + "_" + i.feeder_name].add(i.nominal_voltage*10**-3)
+                    elif i.substation_name in self._baseKV_substations_:
+                        self._baseKV_substations_[i.substation_name].add(i.nominal_voltage*10**-3)
+
+
+
                     fp.write("bus1={name} pu={pu}".format(name=i.name, pu=i.setpoint))
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         fp.write(
-                            " basekV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                            " basekV={volt}".format(volt=round(i.nominal_voltage * 10 ** -3,3))
                         )  # DiTTo in volts
                     fp.write(
                         " R1={R1} X1={X1}".format(R1=0.00001, X1=0.00001)
@@ -3897,7 +4346,7 @@ class Writer(AbstractWriter):
                         substation_name in self.substations_redirect
                         and feeder_name == ""
                     ):  # i.e. it's a substation
-                        for element in self.substations_redirect[substation_name]:
+                        for element in sorted(self.substations_redirect[substation_name],key=cmp_to_key(self.order_output)):
                             fp.write("Redirect " + element + "\n")
                     if (
                         os.path.join(substation_name, feeder_name)
@@ -3905,13 +4354,40 @@ class Writer(AbstractWriter):
                         and not os.path.join(substation_name, feeder_name).strip("/")
                         in self.substations_redirect
                     ):  # i.e. it's a feeder
-                        for element in self.feeders_redirect[
-                            os.path.join(substation_name, feeder_name)
-                        ]:
+                        for element in sorted(self.feeders_redirect[os.path.join(substation_name, feeder_name)], key=cmp_to_key(self.order_output)):
                             fp.write("Redirect " + element + "\n")
-                    if i.substation_name + "_" + i.feeder_name in self._baseKV_feeders_:
+
+                    if self.has_timeseries:
+                        found_monitor = False
+                        monitored_line = None
+                        if i.name in from_node_map:
+                            for monitor in from_node_map[i.name]:
+                                if model[monitor].feeder_name == i.feeder_name and model[monitor].substation_name == i.substation_name:
+                                    monitored_line = monitor
+                                    found_monitor = True
+                                    break
+                        if not found_monitor and i.name in to_node_map:
+                            for monitor in to_node_map[i.name]:
+                                if model[monitor].feeder_name == i.feeder_name and model[monitor].substation_name == i.substation_name:
+                                    monitored_line = monitor
+                                    found_monitor = True
+                                    break
+
+                        if not found_monitor:
+                            print(f"Source doesn't seem to be connected for {i.feeder_name} {i.substation_name}")
+                        else:
+                            print('Monitored line ', i.name,monitored_line)
+                            fp.write(f"new monitor.m1 element=Line.{monitored_line} mode=0\n")
+                            fp.write(f"new monitor.m2 element=Line.{monitored_line} mode=1\n")
+                            fp.write(f"new energymeter.m3 Line.{monitored_line}\n")
+
+                    if i.substation_name + "_" + i.feeder_name in self._baseKV_feeders_ and i.feeder_name != '' and i.feeder_name is not None:
                         _baseKV_list_ = list(
                             self._baseKV_feeders_[i.substation_name + "_" + i.feeder_name]
+                        )
+                    elif i.substation_name in self._baseKV_substations_:
+                        _baseKV_list_ = list(
+                            self._baseKV_substations_[i.substation_name]
                         )
                     else:
                         _baseKV_list_ = []
@@ -3927,4 +4403,18 @@ class Writer(AbstractWriter):
                             "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                         )  # The buscoords are also written to base folder as well as the subfolders
 
-                    fp.write("\nSolve")
+                    fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed
+                    if self.solve:
+                        if self.has_timeseries:
+                            fp.write("\nSolve mode={timestep} stepsize=15m number=35040\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_day)) #Run for first day of year
+                            fp.write("Export monitors m1\n")
+                            fp.write("Plot monitor object= m1 channels=(7 9 11 )\n")
+                            fp.write("Export monitors m2\n")
+                            fp.write("Plot monitor object= m2 channels=(1 3 5 )\n")
+                            fp.write("Plot Profile Phases=All\n")
+                        else:
+                            fp.write("\nSolve\n") # Makes resolving easier
+                            fp.write("Plot Profile Phases=All\n")
+ 
+#                    if self.has_timeseries:
+#                        fp.write(" mode={timestep} number={iternumber}".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_number))

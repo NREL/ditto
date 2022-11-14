@@ -260,7 +260,7 @@ class system_structure_modifier(Modifier):
         """
         for obj in self.model.models:
             # If we get a line
-            if isinstance(obj, Line) and obj.nominal_voltage is None:
+            if isinstance(obj, Line): # and obj.nominal_voltage is None:
                 # Get the from node
                 if hasattr(obj, "from_element") and obj.from_element is not None:
                     node_from_object = self.model[obj.from_element]
@@ -616,6 +616,8 @@ class system_structure_modifier(Modifier):
             for n in group:
 
                 # And set the nominal voltage as the group value
+                if not n in self.model.model_names:
+                    continue
                 self.model[n].nominal_voltage = nominal_voltage_group[idx]
                 if isinstance(self.model[n], Load):
                     self.model[
@@ -718,6 +720,40 @@ class system_structure_modifier(Modifier):
                                         volts.append(winding.nominal_voltage)
                                 secondary_voltage = min(volts)
                                 obj.nominal_voltage = secondary_voltage
+
+    def get_transformer_secondary(self,transformer_name):
+        """
+        Returns a list of ditto models that are downstream of a given transformer (including the transformer). The names returned are just the base element names (no PhaseLoads etc.) This is useful for getting a specific secondary
+        """
+        self.model.set_names()
+        if not transformer_name in self.model.model_names:
+            print('Warning - secondary cannot be provided for transformer {tr}: no such element'.format(tr = transformer_name))
+            return []
+        transformer = self.model[transformer_name]
+        connectivity_elements = []
+        connectivity_elements.append(transformer_name)
+        connectivity_elements.append(transformer.from_element)
+        # Use the node at the end of the transformer since the digraph represents the transformer as an edge
+        # Also add the transformer as well
+        subgraph = self.G.digraph.subgraph(nx.descendants(self.G.digraph,transformer.to_element)) 
+        for i in subgraph.nodes():
+            connectivity_elements.append(i)
+        for i in subgraph.edges():
+            from_node = i[0]
+            end_node = i[1]
+            name = None
+            if (from_node, end_node) in self.edge_equipment_name:
+                name = self.edge_equipment_name[(from_node, end_node)]
+            elif (end_node, from_node) in self.edge_equipment_name:
+                name = self.edge_equipment_name[(end_node, from_node)]
+            if name is not None: # an edge which isn't listed may refer to a load connected to a parent which is an edge in networkx but not DiTTo
+                connectivity_elements.append(name)
+
+
+
+        return connectivity_elements
+
+            
 
     def center_tap_load_preprocessing(self):
         """Performs the center tap load pre-processing step.
