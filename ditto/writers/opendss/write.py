@@ -103,6 +103,9 @@ class Writer(AbstractWriter):
         self.separate_feeders = False
         self.separate_substations = False
         self.remove_loadshapes = False
+        self.has_timeseries = False
+        self.timeseries_solve_format = None
+        self.timeseries_iternumber = None
         self.verbose = False
 
         self.output_filenames = {
@@ -1609,6 +1612,7 @@ class Writer(AbstractWriter):
         all_data = set()
         for i in model.models:
             if isinstance(i, Timeseries):
+                self.has_timeseries = True
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
@@ -1644,35 +1648,53 @@ class Writer(AbstractWriter):
                 ):
                     filename = i.data_label
                     location = i.data_location
+                    # Skip if we've already written the LoadShape info
                     if (
                         i.data_location
                         in self.timeseries_datasets[substation_name + "_" + feeder_name]
                         and substation_name + "_" + feeder_name in feeder_text_map
-                    ):  # Need to make sure the loadshape exits in each subfolder
+                    ):  # Need to make sure the loadshape exists in each subfolder
                         continue
+                    # WARNING - this step can be slow for big systems with lots of data
                     npoints = len(
                         pd.read_csv(os.path.join(self.output_path, i.data_location))
                     )
+
+                    if self.timeseries_iternumber is None:
+                        self.timeseries_iternumber = npoints
+                    else:
+                        self.timeseries_iternumber = min(self.timeseries_iternumber,npoints)
+
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
                     ):  # The cases of hourly, minute or second resolution data for exactly one day TODO: make this more precise
                         self.timeseries_format[filename] = "daily"
+                        if self.timeseries_solve_format is None:
+                            self.timeseries_solve_format = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
+                        self.timeseries_solve_format = "yearly"
 
                     interval = 1
                     if i.interval is not None:
                         interval = i.interval
-                    txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location})\n\n".format(
-                        filename=filename,
-                        npoints=npoints,
-                        # data_location=i.data_location.split("/")[-1],
-                        data_location=location,
-                        interv=interval,
-                    )
-                    self.timeseries_datasets[substation_name + "_" + feeder_name][
-                        i.data_location
-                    ] = filename
+
+                    if i.data_location_kvar is not None:
+                        q_mult = " qmult = (file="+i.data_location_kvar+")"
+                    else:
+                        q_mult = ""
+                    if not self.remove_loadshapes:
+                        txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}{data_location_kvar})\n\n".format(
+                            filename=filename,
+                            npoints=npoints,
+                            data_location=location,
+                            data_location_kvar = i.data_location_kvar,
+                            interv=interval,
+                        )
+                        self.timeseries_datasets[substation_name + "_" + feeder_name][
+                            i.data_location
+                        ] = filename
+                        feeder_text_map[substation_name + "_" + feeder_name] = txt
 
                 elif (
                     hasattr(i, "data_location")
@@ -1693,37 +1715,55 @@ class Writer(AbstractWriter):
                         and substation_name + "_" + feeder_name in feeder_text_map
                     ):  # Need to make sure the loadshape exits in each subfolder
                         continue
+
+                    # WARNING - this step can be slow for big systems with lots of data
                     timeseries = pd.read_csv(
                         os.path.join(self.output_path, i.data_location)
                     )
                     npoints = len(timeseries)
+
+                    if self.timeseries_iternumber is None:
+                        self.timeseries_iternumber = npoints
+                    else:
+                        self.timeseries_iternumber = min(self.timeseries_iternumber,npoints)
+
                     timeseries.iloc[:, [0]] = timeseries.iloc[:, [0]] * i.scale_factor
                     timeseries.to_csv(scaled_data_location, index=False)
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
                     ):  # The cases of hourly, minute or second resolution data for exactly one day TODO: make this more precise
                         self.timeseries_format[filename] = "daily"
+                        if self.timeseries_solve_format is None:
+                            self.timeseries_solve_format = "daily"
                     else:
                         self.timeseries_format[filename] = "yearly"
-                    txt += "New Loadshape.{filename} npts= {npoints} interval=1 mult = (file={data_location})\n\n".format(
-                        filename=filename,
-                        npoints=npoints,
-                        data_location=scaled_data_location,
-                    )
-                # elif: In memory
-                #     pass
+                        self.timeseries_solve_format = "yearly"
+
+                    interval = 1
+                    if i.interval is not None:
+                        interval = i.interval
+
+                    if i.data_location_kvar is not None:
+                        q_mult = " qmult = (file="+i.data_location_kvar+")"
+                    else:
+                        q_mult = ""
+                    if not self.remove_loadshapes:
+                        txt += "New Loadshape.{filename} npts= {npoints} interval={interval} mult = (file={data_location})\n\n".format(
+                            filename=filename,
+                            npoints=npoints,
+                            data_location=scaled_data_location,
+                            data_location_kvar = i.data_location_kvar,
+                            interval=interval,
+                        )
+                        self.timeseries_datasets[substation_name + "_" + feeder_name][
+                            i.data_location
+                        ] = filename
+                        feeder_text_map[substation_name + "_" + feeder_name] = txt
                 else:
-                    import pdb
+                   logger.error("Problem exists with loadshape{filename}".format(filename=filename))
 
-                    pdb.set_trace()
-                    pass  # problem
 
-                self.timeseries_datasets[substation_name + "_" + feeder_name][
-                    i.data_location
-                ] = filename
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
-
-                # pass #TODO: write the timeseries data if it's in memory
+                #TODO: write the timeseries data if it's in memory
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
@@ -3903,7 +3943,12 @@ class Writer(AbstractWriter):
                     "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                 )  # The buscoords are also written to base folder as well as the subfolders
 
-            fp.write("\nSolve")
+            fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed 
+            if self.has_timeseries:
+                fp.write("\nSolve mode={timestep} number={iternumber}\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_iternumber)) #Run for first day of year
+
+            else:
+                fp.write("\nSolve\n")
 
         # return # below is opening Master.dss again !?
 
