@@ -814,7 +814,7 @@ class Writer(AbstractWriter):
                                         winding.connection_type == "D"
                                         and len(winding.phase_windings) == 1
                                     ):
-                                        print(
+                                        logger.warning(
                                             "Warning - only one phase specified for a delta system - adding another connection"
                                         )
                                         if self.phase_mapping(phase_winding.phase) == 1:
@@ -1867,6 +1867,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Load." + i.name
                 else:
+                    logger.error("Name missing for Load")
                     continue
 
                 # Connection type
@@ -1893,6 +1894,7 @@ class Writer(AbstractWriter):
                                 )
 
                         if i.connection_type == "D" and len(i.phase_loads) == 1:
+                            logger.warning( "Warning - only one phase specified for a delta system - adding another connection")
                             if self.phase_mapping(i.phase_loads[0].phase) == 1:
                                 txt += ".2"
                             if self.phase_mapping(i.phase_loads[0].phase) == 2:
@@ -1904,7 +1906,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
                         txt += " kV={volt}".format(
-                            volt=i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            volt=i.nominal_voltage * 10 ** -3
                         )
                     else:
                         txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
@@ -1952,14 +1954,13 @@ class Writer(AbstractWriter):
                     txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
 
                 # phase_loads
-                if hasattr(i, "phase_loads") and i.phase_loads:
+                if hasattr(i, "phase_loads") and i.phase_loads is not None:
 
                     # if i.connection_type=='Y':
-                    txt += " Phases={N}".format(N=len(i.phase_loads))
-                    # elif i.connection_type=='D' and len(i.phase_loads)==3:
-                    #    fp.write(' Phases=3')
-                    # elif i.connection_type=='D' and len(i.phase_loads)==2:
-                    #    fp.write(' Phases=1')
+                    if i.nominal_voltage < 300:
+                        txt += " Phases=1"
+                    else:
+                        txt += " Phases={N}".format(N=len(i.phase_loads))
 
                     for phase_load in i.phase_loads:
 
@@ -2018,8 +2019,6 @@ class Writer(AbstractWriter):
                                         )
                                     )
 
-                # fp.write(' model=1')
-
                 # timeseries object
                 if hasattr(i, "timeseries") and i.timeseries is not None:
                     for ts in i.timeseries:
@@ -2037,7 +2036,12 @@ class Writer(AbstractWriter):
                             filename = self.timeseries_datasets[
                                 substation + "_" + feeder
                             ][ts.data_location]
-                            txt += " {ts_format}={filename}".format(
+                            if self.remove_loadshapes:
+                                optional_comment = '!'
+                            else:
+                                optional_comment = ''
+                            txt += " {optional_comment}{ts_format}={filename}".format(
+                                optional_comment = optional_comment,
                                 ts_format=self.timeseries_format[filename],
                                 filename=filename,
                             )
