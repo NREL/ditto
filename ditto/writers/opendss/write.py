@@ -3954,9 +3954,7 @@ class Writer(AbstractWriter):
             else:
                 fp.write("\nSolve\n")
 
-        # return # below is opening Master.dss again !?
-
-
+        # Write master for each feeder and substation"
         for i in model.models:
             if isinstance(i, Node) and i.is_substation_connection:
                 feeder_name = i.feeder_name
@@ -4045,4 +4043,11 @@ class Writer(AbstractWriter):
                             "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                         )  # The buscoords are also written to base folder as well as the subfolders
 
-                    fp.write("\nSolve")
+                    fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed 
+                    if self.has_timeseries:
+                        fp.write("\nSolve mode={timestep} number={iternumber}\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_iternumber)) #Run for first day of year
+        
+                    else:
+                        fp.write("\nSolve\n")
+
+
