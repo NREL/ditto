@@ -27,27 +27,27 @@ with open(os.path.join(here, "ditto", "version.py"), encoding="utf-8") as f:
 version = version.splitlines()[1].split()[2].strip('"').strip("'")
 
 test_requires = [
-    "backports.tempfile",
-    "pytest",
-    "pytest-cov",
-    "sphinx-rtd-theme",
-    "nbsphinx",
-    "sphinxcontrib-napoleon",
-    "ghp-import",
+    "backports.tempfile~=1.0",
+    "pytest~=7.2.0",
+    "pytest-cov~=4.0.0",
+    "sphinx-rtd-theme~=1.1.1",
+    "nbsphinx~=0.8.10",
+    "sphinxcontrib-napoleon~=0.7",
+    "ghp-import~=2.1.0",
 ]
 
-numpy_dependency = "numpy>=1.13.0"
+numpy_dependency = "numpy~=1.13.0"
 
-extras_requires = ["lxml", "pandas", "scipy", numpy_dependency, "XlsxWriter"]
+extras_requires = ["lxml~=4.9.1", "pandas~=1.5.0", "scipy~=1.9.3", numpy_dependency, "XlsxWriter~=3.03"]
 
-opendss_requires = ["OpenDSSDirect.py>=0.7.0", "pandas", numpy_dependency]
-dew_requires = [numpy_dependency, "xlrd"]
-gridlabd_requires = ["croniter", numpy_dependency]
+opendss_requires = ["OpenDSSDirect.py~=0.7.0", "pandas~=1.5.0", numpy_dependency]
+dew_requires = [numpy_dependency, "xlrd~=2.0.1"]
+gridlabd_requires = ["croniter~=1.3.7", numpy_dependency]
 cyme_requires = [numpy_dependency]
-ephasor_requires = [numpy_dependency, "pandas"]
+ephasor_requires = [numpy_dependency, "pandas~=1.5.0"]
 synergi_requires = [
     numpy_dependency,
-    "pandas_access",
+    "pandas_access~=0.0.1",
 ]  # Need pandas_access to convert the MDB tables to Pandas DataFrame
 
 
@@ -109,7 +109,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=["click", "future", "networkx", "six", "traitlets>=4.1", "json_tricks", "numpy"],
+    install_requires=["click~=8.1.3", "future~=0.18.2", "networkx~=2.8.8", "six~=1.16.0", "traitlets~=4.1", "json_tricks~=3.16.1", numpy_dependency],
     extras_require={
         "all": extras_requires
         + opendss_requires
