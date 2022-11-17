@@ -36,7 +36,7 @@ test_requires = [
     "ghp-import~=2.1.0",
 ]
 
-numpy_dependency = "numpy~=1.13.0"
+numpy_dependency = "numpy~=1.20.1"
 
 extras_requires = ["lxml~=4.9.1", "pandas~=1.3.5", "scipy~=1.9.3", numpy_dependency, "XlsxWriter~=3.0.3"]
 
