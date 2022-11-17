@@ -2570,7 +2570,7 @@ class Writer(AbstractWriter):
 
                 # Connecting element
                 if i.connecting_element is not None:
-                    txt += " Bus1=" + re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element)
+                    txt += " bus1=" + re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element)
 
                     # For a 3-phase capbank we don't add any suffixes to the output.
                     if (
@@ -2593,7 +2593,11 @@ class Writer(AbstractWriter):
 
                 # Phases
                 if hasattr(i, "phase_capacitors") and i.phase_capacitors is not None:
-                    txt += " phases={N}".format(N=len(i.phase_capacitors))
+                    num_phases = 3
+                    # For line-line connection set phases=1
+                    if len(i.phase_capacitors) ==2 or len(i.phase_capacitors) ==1:
+                        num_phases = 1
+                    txt += " phases={N}".format(N=num_phases)
 
                 # nominal_voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
@@ -2605,7 +2609,7 @@ class Writer(AbstractWriter):
                             substation_name + "_" + feeder_name
                         ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
                             i.nominal_voltage * math.sqrt(3) * 10 ** -3
                         )
