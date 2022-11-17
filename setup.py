@@ -38,7 +38,7 @@ test_requires = [
 
 numpy_dependency = "numpy~=1.13.0"
 
-extras_requires = ["lxml~=4.9.1", "pandas~=1.5.0", "scipy~=1.9.3", numpy_dependency, "XlsxWriter~=3.03"]
+extras_requires = ["lxml~=4.9.1", "pandas~=1.5.0", "scipy~=1.9.3", numpy_dependency, "XlsxWriter~=3.0.3"]
 
 opendss_requires = ["OpenDSSDirect.py~=0.7.0", "pandas~=1.5.0", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd~=2.0.1"]
