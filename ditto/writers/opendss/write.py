@@ -1689,7 +1689,7 @@ class Writer(AbstractWriter):
                         q_mult = ""
                         data_location_kvar = ""
                     if not self.remove_loadshapes:
-                        txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}{data_location_kvar})\n\n".format(
+                        txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}){data_location_kvar}\n\n".format(
                             filename=filename,
                             npoints=npoints,
                             data_location=location,
@@ -1755,7 +1755,7 @@ class Writer(AbstractWriter):
                         q_mult = ""
                         data_location_kvar = ""
                     if not self.remove_loadshapes:
-                        txt += "New Loadshape.{filename} npts= {npoints} interval={interval} mult = (file={data_location})\n\n".format(
+                        txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}){data_location_kvar}\n\n".format(
                             filename=filename,
                             npoints=npoints,
                             data_location=scaled_data_location,
