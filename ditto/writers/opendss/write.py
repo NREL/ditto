@@ -71,6 +71,8 @@ class Writer(AbstractWriter):
     +-----------------+--------------------+
     |     linecodes   |    LineCodes.dss   |
     +-----------------+--------------------+
+    |  intermediates  | Intermediate.txt  |
+    +-----------------+--------------------+
     |     loadshapes  |    LoadShapes.dss  |
     +-----------------+--------------------+
     |     storages    |     Storages.dss   |
@@ -116,6 +118,7 @@ class Writer(AbstractWriter):
             "capacitors": "Capacitors.dss",
             "capcontrols": "CapControls.dss",
             "lines": "Lines.dss",
+            "intermediates": "Intermediate.txt",
             "linecodes": "LineCodes.dss",
             "linegeometry": "LineGeometry.dss",
             "wiredata": "WireData.dss",
@@ -2777,6 +2780,7 @@ class Writer(AbstractWriter):
 
     def write_lines(self, model):
         """Write the lines to an OpenDSS file (Lines.dss by default).
+           Output intermediate nodes in the line to Intermediates.txt
 
         :param model: DiTTo model
         :type model: DiTTo model
@@ -2786,6 +2790,7 @@ class Writer(AbstractWriter):
 
         substation_text_map = {}
         feeder_text_map = {}
+        feeder_text_intermediate_map = {}
         # First, we have to decide if we want to output using LineGeometries and WireData or using LineCodes
         # We divide the lines in 2 groups:
         # - if we have enough information about the wires and the spacing,
@@ -2885,14 +2890,21 @@ class Writer(AbstractWriter):
                 else:
                     substation_text_map[substation_name].add(feeder_name)
                 txt = ""
+                intermediate_txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Line." + i.name
+                    intermediate_txt += i.name
                 else:
                     continue
+
+                if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0: 
+                    for position in i.positions:    
+                        intermediate_txt +=f';({position.long},{position.lat})' 
+                intermediate_txt+='\n\n'    
 
                 # Set the units in miles for comparison (IEEE 13 nodes feeder)
                 # TODO: Let the user specify the export units
