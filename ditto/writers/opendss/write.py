@@ -1660,7 +1660,7 @@ class Writer(AbstractWriter):
                         continue
                     # WARNING - this step can be slow for big systems with lots of data
                     npoints = len(
-                        pd.read_csv(os.path.join(self.output_path, i.data_location))
+                        pd.read_csv(os.path.join(self.output_path, i.data_location)),header=None
                     )
 
                     if self.timeseries_iternumber is None:
@@ -1723,7 +1723,7 @@ class Writer(AbstractWriter):
 
                     # WARNING - this step can be slow for big systems with lots of data
                     timeseries = pd.read_csv(
-                        os.path.join(self.output_path, i.data_location)
+                        os.path.join(self.output_path, i.data_location), header=None
                     )
                     npoints = len(timeseries)
 
@@ -2901,14 +2901,14 @@ class Writer(AbstractWriter):
                 # Name
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Line." + i.name
-                    intermediate_txt += i.name
                 else:
                     continue
 
                 if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0: 
+                    intermediate_txt += i.name
                     for position in i.positions:    
                         intermediate_txt +=f';({position.long},{position.lat})' 
-                intermediate_txt+='\n\n'    
+                    intermediate_txt+='\n\n'    
 
                 # Set the units in miles for comparison (IEEE 13 nodes feeder)
                 # TODO: Let the user specify the export units
