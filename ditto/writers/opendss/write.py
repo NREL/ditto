@@ -588,6 +588,14 @@ class Writer(AbstractWriter):
 
                             # Voltage type (Not mapped)
 
+                            # volage basis
+                            if (
+                                hasattr(winding, "nominal_voltage")
+                                and winding.nominal_voltage is not None
+                                and winding.nominal_voltage > 0
+                            ):
+                                self._baseKV_.add(winding.nominal_voltage * 10 ** -3)
+
                             # Nominal voltage
                             if (
                                 hasattr(winding, "nominal_voltage")
