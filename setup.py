@@ -38,13 +38,13 @@ test_requires = [
 
 numpy_dependency = "numpy~=1.13.0"
 
-extras_requires = ["lxml~=4.9.1", "pandas~=1.5.0", "scipy~=1.9.3", numpy_dependency, "XlsxWriter~=3.0.3"]
+extras_requires = ["lxml~=4.9.1", "pandas~=1.3.5", "scipy~=1.9.3", numpy_dependency, "XlsxWriter~=3.0.3"]
 
-opendss_requires = ["OpenDSSDirect.py~=0.7.0", "pandas~=1.5.0", numpy_dependency]
+opendss_requires = ["OpenDSSDirect.py~=0.7.0", "pandas~=1.3.5", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd~=2.0.1"]
 gridlabd_requires = ["croniter~=1.3.7", numpy_dependency]
 cyme_requires = [numpy_dependency]
-ephasor_requires = [numpy_dependency, "pandas~=1.5.0"]
+ephasor_requires = [numpy_dependency, "pandas~=1.3.5"]
 synergi_requires = [
     numpy_dependency,
     "pandas_access~=0.0.1",
