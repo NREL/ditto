@@ -28,7 +28,7 @@ version = version.splitlines()[1].split()[2].strip('"').strip("'")
 
 test_requires = [
     "backports.tempfile~=1.0",
-    "pytest~=7.2.0",
+    "pytest~=7.0.1",
     "pytest-cov~=4.0.0",
     "sphinx-rtd-theme~=1.1.1",
     "nbsphinx~=0.8.10",
