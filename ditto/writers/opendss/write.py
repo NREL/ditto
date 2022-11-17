@@ -2975,7 +2975,6 @@ class Writer(AbstractWriter):
                         name=i.name
                     )
                     if hasattr(i, "wires") and i.wires is not None:
-                        currt_rating = -1
                         all_current_ratings = [
                             w.interrupting_rating
                             for w in i.wires
@@ -3007,10 +3006,13 @@ class Writer(AbstractWriter):
                     txt += "\n\n"
 
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
+                feeder_text_intermediate_map[substation_name + "_" + feeder_name] = intermediate_txt
+
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
+                intermediate_txt = feeder_text_intermediate_map[substation_name + "_" + feeder_name]
                 feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
                 substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
                 if txt != "":
@@ -3060,6 +3062,29 @@ class Writer(AbstractWriter):
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["lines"])
                     )
+                if intermediate_txt != "":  
+                    output_folder = None    
+                    output_redirect = None  
+                    if self.separate_substations:   
+                        output_folder = os.path.join(self.output_path, substation_name) 
+                        output_redirect = substation_name   
+                        if not os.path.exists(output_folder):   
+                            os.makedirs(output_folder)  
+                    else:   
+                        output_folder = os.path.join(self.output_path)  
+                        output_redirect = ""    
+                        if not os.path.exists(output_folder):   
+                            os.makedirs(output_folder)  
+                    if self.separate_feeders:   
+                        output_folder = os.path.join(output_folder, feeder_name)    
+                        output_redirect = os.path.join(output_redirect, feeder_name)    
+                        if not os.path.exists(output_folder):   
+                            os.makedirs(output_folder)  
+                    with open(  
+                        os.path.join(output_folder, self.output_filenames["intermediates"]), "w"    
+                    ) as fp:    
+                        fp.write(intermediate_txt)  
+                        # Just write the file - don't redirect it
 
         return 1
 
