@@ -125,7 +125,7 @@ def test_opendss_writer():
     wirea = Wire(m, gmr=1.3, X=2, Y=20)
     wiren = Wire(m, gmr=1.2, X=2, Y=20)
     line1 = Line(m, name="l1", wires=[wirea, wiren])
-    phase_load1 = PhaseLoad(m, p=5400, q=2615.3394)
+    phase_load1 = PhaseLoad(m, p=5400, q=2615.3394, nominal_voltage=120)
     load1 = Load(m, name="load1", phase_loads=[phase_load1])
 
     winding1 = Winding(m, connection_type="W", nominal_voltage=12.47, rated_power=25,)

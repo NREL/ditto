@@ -1960,7 +1960,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "phase_loads") and i.phase_loads is not None:
 
                     # if i.connection_type=='Y':
-                    if i.nominal_voltage < 300:
+                    if i.nominal_voltage is not None and i.nominal_voltage < 300:
                         txt += " Phases=1"
                     else:
                         txt += " Phases={N}".format(N=len(i.phase_loads))
