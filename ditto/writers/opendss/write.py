@@ -1684,14 +1684,16 @@ class Writer(AbstractWriter):
 
                     if i.data_location_kvar is not None:
                         q_mult = " qmult = (file="+i.data_location_kvar+")"
+                        data_location_kvar = i.data_location_kvar
                     else:
                         q_mult = ""
+                        data_location_kvar = ""
                     if not self.remove_loadshapes:
                         txt += "New Loadshape.{filename} npts= {npoints} interval={interv} mult = (file={data_location}{data_location_kvar})\n\n".format(
                             filename=filename,
                             npoints=npoints,
                             data_location=location,
-                            data_location_kvar = i.data_location_kvar,
+                            data_location_kvar = data_location_kvar,
                             interv=interval,
                         )
                         self.timeseries_datasets[substation_name + "_" + feeder_name][
@@ -1748,14 +1750,16 @@ class Writer(AbstractWriter):
 
                     if i.data_location_kvar is not None:
                         q_mult = " qmult = (file="+i.data_location_kvar+")"
+                        data_location_kvar = i.data_location_kvar
                     else:
                         q_mult = ""
+                        data_location_kvar = ""
                     if not self.remove_loadshapes:
                         txt += "New Loadshape.{filename} npts= {npoints} interval={interval} mult = (file={data_location})\n\n".format(
                             filename=filename,
                             npoints=npoints,
                             data_location=scaled_data_location,
-                            data_location_kvar = i.data_location_kvar,
+                            data_location_kvar = data_location_kvar,
                             interval=interval,
                         )
                         self.timeseries_datasets[substation_name + "_" + feeder_name][
