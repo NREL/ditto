@@ -8,7 +8,7 @@ from ditto.models.powertransformer import PowerTransformer
 from six import string_types
 
 
-def get_transformer_xhl_Rpercent(trfx: dict) -> tuple[float, float]:
+def get_transformer_xhl_Rpercent(trfx: dict):
     # Resistance
     # Note: Imported from Julietta's code
     Z1 = float(trfx["z1"])  # TODO default values
