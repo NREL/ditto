@@ -48,7 +48,7 @@ def test_single_phase_capacitor_writing():
     assert (
         len(lines) == 2
     )  # There is one line with the capacitor string and one empty line
-    assert lines[0] == "New Capacitor.cap1 Bus1=bus23.1 phases=1 Kv=4.16 Kvar=100.0\n"
+    assert lines[0] == "New Capacitor.cap1 bus1=bus23.1 phases=1 Kv=4.16 Kvar=100.0\n"
 
 
 def test_three_phase_capacitor_writing():
@@ -79,4 +79,4 @@ def test_three_phase_capacitor_writing():
     assert (
         len(lines) == 2
     )  # There is one line with the capacitor string and one empty line
-    assert lines[0] == "New Capacitor.cap1 Bus1=bus66 phases=3 Kv=4.16 Kvar=900.0\n"
+    assert lines[0] == "New Capacitor.cap1 bus1=bus66 phases=3 Kv=4.16 Kvar=900.0\n"
