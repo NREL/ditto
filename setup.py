@@ -36,19 +36,26 @@ test_requires = [
     "ghp-import~=2.1.0",
 ]
 
-numpy_dependency = "numpy~=1.20.1"
+numpy_dependency = "numpy"
 
-extras_requires = ["lxml~=4.9.1", "pandas~=1.3.5", "scipy~=1.7.3", numpy_dependency, "XlsxWriter~=3.0.3"]
+extras_requires = [
+    "lxml~=4.9.1",
+    "pandas",
+    "scipy~=1.7.3",
+    numpy_dependency,
+    "XlsxWriter~=3.0.3",
+]
 
-opendss_requires = ["OpenDSSDirect.py~=0.7.0", "pandas~=1.3.5", numpy_dependency]
+opendss_requires = ["OpenDSSDirect.py~=0.7.0", "pandas", numpy_dependency]
 dew_requires = [numpy_dependency, "xlrd~=2.0.1"]
 gridlabd_requires = ["croniter~=1.3.7", numpy_dependency]
 cyme_requires = [numpy_dependency]
-ephasor_requires = [numpy_dependency, "pandas~=1.3.5"]
+ephasor_requires = [numpy_dependency, "pandas"]
 synergi_requires = [
     numpy_dependency,
     "pandas_access~=0.0.1",
 ]  # Need pandas_access to convert the MDB tables to Pandas DataFrame
+windmil_requires = ["bokeh", "xmltodict"]
 
 
 class PostDevelopCommand(develop):
@@ -109,7 +116,16 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=["click~=8.0.4", "future~=0.18.2", "networkx~=2.5.1", "six~=1.16.0", "traitlets~=5.1.1", "json_tricks~=3.16.1", "pandas~=1.3.5", numpy_dependency],
+    install_requires=[
+        "click~=8.0.4",
+        "future~=0.18.2",
+        "networkx~=2.5.1",
+        "six~=1.16.0",
+        "traitlets~=5.1.1",
+        "json_tricks~=3.16.1",
+        "pandas",
+        numpy_dependency,
+    ],
     extras_require={
         "all": extras_requires
         + opendss_requires
@@ -117,7 +133,8 @@ setup(
         + gridlabd_requires
         + ephasor_requires
         + cyme_requires
-        + synergi_requires,
+        + synergi_requires
+        + windmil_requires,
         "extras": extras_requires,
         "cyme": cyme_requires,
         "dew": dew_requires,
@@ -125,6 +142,7 @@ setup(
         "synergi": synergi_requires,
         "gridlabd": gridlabd_requires,
         "opendss": opendss_requires,
+        "windmil": windmil_requires,
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "black", "pre-commit"],
     },
