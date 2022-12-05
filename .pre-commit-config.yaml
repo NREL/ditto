@@ -14,4 +14,3 @@ repos:
       entry: python -m black
       types: [python]
       args: [--line-length=88, --safe]
-      python_version: python3.6
