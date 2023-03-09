@@ -1,0 +1,7 @@
+{
+    "master_file": "master.dss",
+    "buscoordinates_file": "buscoord.dss",
+    "coordinates_delimiter": "," ,
+    "default_values_file": null,
+    "remove_opendss_default_values_flag": false
+}

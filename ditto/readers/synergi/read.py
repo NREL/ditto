@@ -86,9 +86,7 @@ class Reader(AbstractReader):
         if "input_file" in kwargs:
             self.input_file = kwargs["input_file"]
         else:
-            mdb_files = [f for f in os.listdir(".") if f.endswith(".mdb")]
-            if len(mdb_files) == 1:
-                self.input_file = mdb_files[0]
+            self.input_file = "input.mdb"
 
         # Can provide a ware house database seperated from the main database
         if "warehouse" in kwargs:

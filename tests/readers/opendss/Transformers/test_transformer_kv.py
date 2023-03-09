@@ -11,6 +11,7 @@ import os
 import math
 import pytest
 import numpy as np
+from numpy import testing as npt
 
 from ditto.store import Store
 from ditto.readers.opendss.read import Reader
@@ -311,7 +312,7 @@ def test_transformer_kv():
 
     assert m["sb5_p4uhs0_4_trans_439"].feeder_name == "sourcebus_src"
     assert m["sb5_p4uhs0_4_trans_439"].noload_loss == 0.0
-    assert m["sb5_p4uhs0_4_trans_439"].loadloss == 0.9616652
+    assert m["sb5_p4uhs0_4_trans_439"].loadloss == 0.961665222413704
     assert m["sb5_p4uhs0_4_trans_439"].phase_shift == -30
     assert m["sb5_p4uhs0_4_trans_439"].normhkva == 8800.0
     assert m["sb5_p4uhs0_4_trans_439"].from_element == "sb5_p4uhs0_4_node_5_12"
