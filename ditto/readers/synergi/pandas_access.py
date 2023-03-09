@@ -4,6 +4,7 @@
 # Since we are currently installing mdbtools as part of DiTTo, changes are made to use the path where mdbtools is downloaded.
 # Whenever the package is updated to allow executables to be located in custom path, we can continue with the normal import of pandas_access and delete this file.
 import re
+import platform
 import subprocess
 import pandas as pd
 import numpy as np
@@ -21,7 +22,8 @@ DEF_RE = re.compile("\s*\[(\w+)\]\s*(.*?),")
 
 # Path to the mdbtools installation
 current_dir = os.path.realpath(os.path.dirname(__file__))
-path_to_mdbtools = os.path.join(current_dir, "mdbtools/bin/")
+path_to_mdbtools = os.path.join(current_dir, "mdbtools","bin")
+path_to_mdbtools_win = os.path.join(current_dir, "mdbtools")
 
 
 def list_tables(rdb_file, encoding="latin-1"):
@@ -32,9 +34,15 @@ def list_tables(rdb_file, encoding="latin-1"):
         actually be UTF-8.
     :return: A list of the tables in a given database.
     """
-    tables = subprocess.check_output(
-        [os.path.join(path_to_mdbtools, "mdb-tables"), rdb_file]
-    ).decode(encoding)
+    operating_system = platform.system()
+    if operating_system == 'Windows':
+        tables = subprocess.check_output(
+            [os.path.join(path_to_mdbtools_win, "mdb-tables.exe"), rdb_file]
+        ).decode(encoding)
+    else:
+        tables = subprocess.check_output(
+            [os.path.join(path_to_mdbtools, "mdb-tables"), rdb_file]
+        ).decode(encoding)
     return tables.strip().split(" ")
 
 
@@ -68,9 +76,15 @@ def read_schema(rdb_file, encoding="utf8"):
         spits out UTF-8, exclusively.
     :return: a dictionary of table -> column -> access_data_type
     """
-    output = subprocess.check_output(
-        [os.path.join(path_to_mdbtools, "mdb-schema"), rdb_file]
-    )
+    operating_system = platform.system()
+    if operating_system == 'Windows':
+        output = subprocess.check_output(
+            [os.path.join(path_to_mdbtools_win, "mdb-schema.exe"), rdb_file]
+        )
+    else:
+        output = subprocess.check_output(
+            [os.path.join(path_to_mdbtools, "mdb-schema"), rdb_file]
+        )
     lines = output.decode(encoding).splitlines()
     schema_ddl = "\n".join(l for l in lines if l and not l.startswith("-"))
 
@@ -123,6 +137,7 @@ def read_table(rdb_file, table_name, *args, **kwargs):
     :return: a pandas `DataFrame` (or, `TextFileReader` if you set
         `chunksize=k`)
     """
+    operating_system = platform.system()
     if kwargs.pop("converters_from_schema", True):
         specified_dtypes = kwargs.pop("dtype", {})
         schema_encoding = kwargs.pop("schema_encoding", "utf8")
@@ -134,6 +149,9 @@ def read_table(rdb_file, table_name, *args, **kwargs):
         if dtypes != {}:
             kwargs["dtype"] = dtypes
 
-    cmd = [os.path.join(path_to_mdbtools, "mdb-export"), rdb_file, table_name]
+    if operating_system == 'Windows':
+        cmd = [os.path.join(path_to_mdbtools_win, "mdb-export.exe"), rdb_file, table_name]
+    else:
+        cmd = [os.path.join(path_to_mdbtools, "mdb-export"), rdb_file, table_name]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     return pd.read_csv(proc.stdout, *args, **kwargs)
