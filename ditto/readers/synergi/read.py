@@ -75,6 +75,7 @@ class Reader(AbstractReader):
     - Nicolas Gensollen
     **Contributor:**
     - Wenbo Wang
+    - Nadia Panossian
     """
 
     register_names = ["synergi", "Synergi", "syn"]
@@ -423,8 +424,9 @@ class Reader(AbstractReader):
 
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
         CableDiamConductor = self.get_data(
-            "DevConductors", "Diameter_SUL"
-        )  # wenbo changed
+            "DevConductors", "CableDiamConductor_SUL"
+        )  # "Diameter_SUL"
+        # )  # wenbo changed
         CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
         ConductorName = self.get_data("DevConductors", "ConductorName")
         PosSequenceResistance_PerLUL = self.get_data(
@@ -698,7 +700,6 @@ class Reader(AbstractReader):
         # wenbo changed FeederId to FeederId_subtrans
 
         for i, obj in enumerate(FeederId):
-
             # Create a DiTTo PowerSource object
             api_source = PowerSource(model)
 
@@ -712,7 +713,7 @@ class Reader(AbstractReader):
                 ]
 
             # Set the nominal voltage
-            api_source.nominal_voltage = NominalKvll_src[i] * 10 ** 3  # DiTTo in volts
+            api_source.nominal_voltage = NominalKvll_src[i] * 10**3  # DiTTo in volts
 
             # Set the per unit
             api_source.per_unit = (
@@ -768,7 +769,6 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Nodes...")
         for i, obj in enumerate(NodeID):
-
             # Create a DiTTo Node object
             api_node = Node(model)
 
@@ -817,7 +817,6 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Lines...")
         for i, obj in enumerate(LineID):
-
             ## Do not parse sections with regulators or Transformers to Lines
             if obj in RegulatorSectionId.values or obj in TransformerSectionId.values:
                 continue
@@ -885,7 +884,7 @@ class Reader(AbstractReader):
             api_line.LineDescription = LineDescription[i]
 
             api_line.nominal_voltage = (
-                float(LineDescription[i].rsplit("-", 1)[1]) * 10 ** 3
+                float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
             )
 
             # wenbo added, bus_nominal_voltage from line sections
@@ -948,7 +947,6 @@ class Reader(AbstractReader):
 
                 # Get the type of protector
                 if len(idd) == 1:
-
                     if (
                         protective_device_deviceID[idd[0]]
                         in ProtectiveDeviceTypeName.values
@@ -959,7 +957,6 @@ class Reader(AbstractReader):
                         ).flatten()
 
                         if len(eqt_id) == 1:
-
                             # Get the type
                             protect_type = ProtectiveDeviceType[eqt_id].lower()
 
@@ -1019,7 +1016,6 @@ class Reader(AbstractReader):
 
             # Create the Wire DiTTo objects
             for idx, phase in enumerate(SectionPhases_thisline):
-
                 # Create a Wire DiTTo object
                 api_wire = Wire(model)
 
@@ -1028,7 +1024,6 @@ class Reader(AbstractReader):
 
                 # Is_recloser
                 if api_line.is_recloser == 1:
-
                     # Set the flag to True if the line has been identified as a Recloser
                     api_wire.is_recloser = 1
 
@@ -1051,7 +1046,6 @@ class Reader(AbstractReader):
 
                 # Is_switch
                 if api_line.is_switch == 1:
-
                     # Set the flag to True if the line has been identified as a Switch
                     api_wire.is_switch = 1
 
@@ -1070,7 +1064,6 @@ class Reader(AbstractReader):
 
                 # Is_fuse
                 if api_line.is_fuse is True:
-
                     # Set the flag to True if the line has been identified as a Fuse
                     api_wire.is_fuse = True
 
@@ -1094,7 +1087,6 @@ class Reader(AbstractReader):
 
                 # Is_sectionalizer
                 if api_line.is_sectionalizer is True:
-
                     # Set the flag to True if the line has been identified as a sectionalizer
                     api_wire.is_sectionalizer = True
 
@@ -1110,7 +1102,6 @@ class Reader(AbstractReader):
 
                 # Is_network_protector
                 if api_line.is_network_protector is True:
-
                     # Set the flag to True if the line has been identified as a network protector
                     api_wire.is_network_protector = True
 
@@ -1273,7 +1264,6 @@ class Reader(AbstractReader):
                         and isinstance(NeutralConductorID[i], str)
                         and len(NeutralConductorID[i]) > 0
                     ):
-
                         # Set the nameclass
                         api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
                         # Cache the conductor name
@@ -1281,7 +1271,6 @@ class Reader(AbstractReader):
 
                     # Set the Spacing of the neutral
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
-
                         # Set X
                         #                        api_wire.X = convert_length_unit(
                         #                            config["Neutral_X_MUL"], SynergiValueType.MUL, LengthUnits
@@ -1498,7 +1487,6 @@ class Reader(AbstractReader):
                         capacitance_matrix = [[2 * B1, -B1], [-B1, 2 * B1]]
 
                     else:
-
                         impedance_matrix = [
                             [
                                 complex(
@@ -1513,7 +1501,6 @@ class Reader(AbstractReader):
                 if NPhase == 3:
                     # print('SectionPhases_thisline[-1]={}'.format(SectionPhases_thisline[-1]))
                     if SectionPhases_thisline[-1] != "N":
-
                         a = complex(
                             (2 * float(r1) + float(r0)), (2 * float(x1) + float(x0))
                         )
@@ -1540,7 +1527,6 @@ class Reader(AbstractReader):
                         ]
 
                     else:
-
                         b1 = float(r0) - float(r1)
                         b2 = float(x0) - float(x1)
 
@@ -1608,7 +1594,6 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Transformers...")
         for i, obj in enumerate(TransformerId):
-
             # Create a PowerTransformer object
             api_transformer = PowerTransformer(model)
 
@@ -1682,7 +1667,6 @@ class Reader(AbstractReader):
 
             if TransformerTypesinStock is not None:
                 for k, trans_obj in enumerate(TransformerTypesinStock):
-
                     if TransformerType[i] == trans_obj:
                         Count = k
                         break
@@ -1694,7 +1678,6 @@ class Reader(AbstractReader):
                 )
 
             if Count is not None:
-
                 # Set the PT Ratio
                 api_transformer.pt_ratio = PTRatio[Count]
 
@@ -1725,7 +1708,6 @@ class Reader(AbstractReader):
                 # BEGINING OF WINDING SECTION
                 ############################################################
                 for winding in range(n_windings):
-
                     # Create a new Winding object
                     w = Winding(model)
 
@@ -1734,7 +1716,6 @@ class Reader(AbstractReader):
 
                     # Primary
                     if winding == 0:
-
                         # Set the Connection_type of the Winding
                         if (
                             HighVoltageConnectionCode_W is not None
@@ -1750,12 +1731,11 @@ class Reader(AbstractReader):
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
-                            HighSideRatedKv[Count] * 10 ** 3
+                            HighSideRatedKv[Count] * 10**3
                         )  # DiTTo in volts
 
                     # Secondary
                     elif winding == 1:
-
                         # Set the Connection_type of the Winding
                         if (
                             LowVoltageConnectionCode_W is not None
@@ -1771,12 +1751,11 @@ class Reader(AbstractReader):
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
-                            LowSideRatedKv[Count] * 10 ** 3
+                            LowSideRatedKv[Count] * 10**3
                         )  # DiTTo in volts
 
                     # Tertiary
                     elif winding == 2:
-
                         # Set the Connection_type of the Winding
                         if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
                             w.connection_type = TertConnectCode[i][:1].upper()
@@ -1787,7 +1766,7 @@ class Reader(AbstractReader):
 
                         # Set the Nominal voltage of the Winding
                         w.nominal_voltage = (
-                            TertiaryRatedKv[Count] * 10 ** 3
+                            TertiaryRatedKv[Count] * 10**3
                         )  # DiTTo in volts
 
                     # Set the rated power
@@ -1800,14 +1779,14 @@ class Reader(AbstractReader):
                         )  # DiTTo in Vars
                     elif winding == 2:
                         w.rated_power = (
-                            TertiaryKva * 10 ** 3
+                            TertiaryKva * 10**3
                         )  # TODO: Check that this is correct...
 
                     # Set the emergency power
                     w.emergency_power = (
                         EmergencyKvaRating[Count]
                         # / float(n_windings)  Wenbo changed
-                        * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
+                        * 10**3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                     )  # DiTTo in Vars
 
                     # Create the PhaseWindings
@@ -1835,7 +1814,6 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Loads...")
         for i, obj in enumerate(LoadName):
-
             # Create a Load DiTTo object
             api_load = Load(model)
 
@@ -1878,7 +1856,6 @@ class Reader(AbstractReader):
                 print("WARNING: No section found for Load {}".format(obj))
 
             if Count is not None:
-
                 # Set the connecting element
                 api_load.connecting_element = ToNodeId[Count].lower().replace(" ", "_")
 
@@ -1889,16 +1866,16 @@ class Reader(AbstractReader):
                 # map obejct is similar to list
 
                 PLoad = map(
-                    lambda x: x * 10 ** 3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
+                    lambda x: x * 10**3, [Phase1Kw[i], Phase2Kw[i], Phase3Kw[i]]
                 )
 
                 QLoad = map(
-                    lambda x: x * 10 ** 3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
+                    lambda x: x * 10**3, [Phase1Kvar[i], Phase2Kvar[i], Phase3Kvar[i]]
                 )
 
                 # if there is no load information in the kvar and kw, try to get information out from the kva information
                 LoadPF = 0.95
-                LoadQFactor = (1 - LoadPF ** 2) ** 0.5
+                LoadQFactor = (1 - LoadPF**2) ** 0.5
 
                 #                PLoadkva = map(
                 #                    lambda x: x * 10 ** 3,
@@ -1924,12 +1901,10 @@ class Reader(AbstractReader):
                 #                ):
                 # wenbo edit
                 for P, Q, phase in zip(PLoad, QLoad, ["A", "B", "C"]):
-
                     # print('inside for loop')
                     # print('P={}, Q={}, Pkva={}, Qkva={}, phase={}'.format(PLoad,QLoad,PLoadkva,QLoadkva,phase))
                     # Only create a PhaseLoad is P OR Q is not zero
                     if P != 0 or Q != 0:  # phase load added from large cust
-
                         # Create the PhaseLoad DiTTo object
                         phase_load = PhaseLoad(model)
 
@@ -1996,7 +1971,6 @@ class Reader(AbstractReader):
                     )
                     == 4
                 ):
-
                     api_load.nominal_voltage = round(
                         self.node_nominal_voltage_mapping.get(
                             api_load.connecting_element
@@ -2061,7 +2035,6 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Capacitors...")
         for i, obj in enumerate(CapacitorName):
-
             # Create a Capacitor DiTTo object
             api_cap = Capacitor(model)
 
@@ -2156,7 +2129,6 @@ class Reader(AbstractReader):
                 PhasesthisCap = ["A", "B", "C"]
 
             for t, phase in enumerate(PhasesthisCap):
-
                 # Create a PhaseCapacitor DiTTo object
                 phase_caps = PhaseCapacitor(model)
 
@@ -2176,7 +2148,6 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Regulators...")
         for i, obj in enumerate(RegulatorId):
-
             # Create a Regulator DiTTo object
             api_regulator = Regulator(model)
 
@@ -2286,7 +2257,6 @@ class Reader(AbstractReader):
                 print("WARNING: No Regulator found for section {}".format(obj))
 
             if Count is not None:
-
                 # Set the PT ratio of the Regulator
                 api_regulator.pt_ratio = RegulatorPTRatio[Count]
 
@@ -2314,7 +2284,6 @@ class Reader(AbstractReader):
             #
             n_windings = 2
             for winding in range(n_windings):
-
                 # Create a Winding DiTTo object
                 w = Winding(model)
 
@@ -2323,21 +2292,19 @@ class Reader(AbstractReader):
                     w.connection_type = RegulatorConnectionCode[Count][:1].upper()
 
                     # Set the Nominal voltage
-                    w.nominal_voltage = RegulatorRatedVoltage[Count] * 10 ** 3
+                    w.nominal_voltage = RegulatorRatedVoltage[Count] * 10**3
 
                     # Set the Rated Power
                     w.rated_power = (
                         RegulatorRatedKva[Count]
                         # / float(n_windings)  wenbo changed: kva should be divided by num_of_windings
-                        * 10 ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
+                        * 10**3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                     )
 
                 # Create the PhaseWindings
 
                 for phase in api_regulator.phases:
-
                     if phase != "N":
-
                         # Create a PhaseWinding DiTTo object
                         pw = PhaseWinding(model)
 
@@ -2362,7 +2329,6 @@ class Reader(AbstractReader):
                 print("WARNING: No section found for regulator {}".format(obj))
 
             if Count is not None:
-
                 # Set the from element
                 api_regulator.from_element = FromNodeId[Count].lower().replace(" ", "_")
 
@@ -2566,9 +2532,7 @@ class Reader(AbstractReader):
 
         # check large customer tab for PVs
         for i, obj in enumerate(PVUniqueDeviceId):
-
             if PVGenType[i] == "photovoltaic" or PVGenType[i] == "photovoltaic 3p":
-
                 # Create a Photovoltaic object
                 api_PV = Photovoltaic(model)
 
@@ -2598,7 +2562,7 @@ class Reader(AbstractReader):
                     rated_power_pv += PVGenPhase3Kw[i]
 
                 # Set the rated power
-                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.rated_power = rated_power_pv * 10**3  # DiTTo in Watts
 
                 # Set the reactive power
                 reactive_rating_pv = 0
@@ -2609,7 +2573,7 @@ class Reader(AbstractReader):
                 if PVGenPhase3Kvar[i] != 0:
                     reactive_rating_pv += PVGenPhase3Kvar[i]
 
-                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.reactive_rating = reactive_rating_pv * 10**3  # DiTTo in Watts
 
                 ## Set the from and to elements through the sections
                 Count = None
@@ -2675,7 +2639,6 @@ class Reader(AbstractReader):
                 GeneratorType[idx] == "photovoltaic"
                 or GeneratorType[idx] == "photovoltaic 3p"
             ):  # this is for non-special name PV
-
                 api_PV = Photovoltaic(model)
                 api_PV.name = GeneratorID[idx].lower().replace(" ", "-")
 
@@ -2704,7 +2667,7 @@ class Reader(AbstractReader):
                     rated_power_pv += GenPhase3Kw[idx]
 
                 # set the rated power
-                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.rated_power = rated_power_pv * 10**3  # DiTTo in Watts
 
                 # set the reactive power
                 reactive_rating_pv = 0
@@ -2718,7 +2681,7 @@ class Reader(AbstractReader):
                     api_PV.phases.append("C") if "C" not in api_PV.phases else None
                     reactive_rating_pv += GenPhase3Kvar[idx]
 
-                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.reactive_rating = reactive_rating_pv * 10**3  # DiTTo in Watts
 
                 # set the connecting element:
                 Count1 = None
@@ -2780,7 +2743,6 @@ class Reader(AbstractReader):
                 GeneratorType[idx] != "photovoltaic"
                 and GeneratorType[idx] != "photovoltaic 3p"
             ):  # this is for non-special name PV
-
                 for k, gen in enumerate(GeneratorName):
                     Count = None
 
@@ -2793,7 +2755,6 @@ class Reader(AbstractReader):
                     #                        print('Count={}'.format(Count))
 
                     if Count is not None and GeneratorTypeDev[Count].lower() == "pv":
-
                         # Create a Photovoltaic DiTTo object
                         api_PV = Photovoltaic(model)
 
@@ -2802,7 +2763,7 @@ class Reader(AbstractReader):
                         # api_PV.name = GeneratorSectionID[idx].lower().replace(" ", "_")
 
                         # Set the Rated Power
-                        api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
+                        api_PV.rated_power = GeneratorKwRating[Count] * 10**3
 
                         # Set the Phases
 
@@ -2829,7 +2790,6 @@ class Reader(AbstractReader):
                             print("WARNING: No section found for PV {}".format(obj))
 
                         if Count2 is not None:
-
                             # Set the connecting element
                             api_PV.connecting_element = (
                                 ToNodeId[Count2].lower().replace(" ", "_")
@@ -2839,10 +2799,10 @@ class Reader(AbstractReader):
 
                         if len(api_PV.phases) == 1:
                             api_PV.nominal_voltage = round(
-                                GeneratorKvRating[Count] * 10 ** 3 / 1.732, 1
+                                GeneratorKvRating[Count] * 10**3 / 1.732, 1
                             )
                         else:
-                            api_PV.nominal_voltage = GeneratorKvRating[Count] * 10 ** 3
+                            api_PV.nominal_voltage = GeneratorKvRating[Count] * 10**3
 
                         # Set the Power Factor
                         api_PV.power_factor = GeneratorPF[idx] / 100
@@ -2856,7 +2816,6 @@ class Reader(AbstractReader):
                     Count = k
 
             if Count is not None and GeneratorTypeDev[Count] == "pv":
-
                 # Create a Photovoltaic DiTTo object
                 api_PV = Photovoltaic(model)
 
@@ -2865,7 +2824,7 @@ class Reader(AbstractReader):
 
                 # Set the Rated Power
 
-                api_PV.rated_power = GeneratorKwRating[Count] * 10 ** 3
+                api_PV.rated_power = GeneratorKwRating[Count] * 10**3
 
                 # Set feeder name if in mapping
                 if obj in self.section_feeder_mapping:
@@ -2883,8 +2842,8 @@ class Reader(AbstractReader):
                     rated_power_pv += DGenPhase3Kw[idx]
 
                 # Set the rated power
-                api_PV.rated_power = rated_power_pv * 10 ** 3  # DiTTo in Watts
-                api_PV.active_rating = rated_power_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.rated_power = rated_power_pv * 10**3  # DiTTo in Watts
+                api_PV.active_rating = rated_power_pv * 10**3  # DiTTo in Watts
 
                 # Set the reactive power
                 reactive_rating_pv = 0
@@ -2898,7 +2857,7 @@ class Reader(AbstractReader):
                     api_PV.phases.append("C") if "C" not in api_PV.phases else None
                     reactive_rating_pv += DGenPhase3Kvar[idx]
 
-                api_PV.reactive_rating = reactive_rating_pv * 10 ** 3  # DiTTo in Watts
+                api_PV.reactive_rating = reactive_rating_pv * 10**3  # DiTTo in Watts
 
                 # Set the Connecting element
                 Count2 = None
@@ -2916,7 +2875,7 @@ class Reader(AbstractReader):
                     )
 
                 # Set the Nominal voltage
-                api_PV.nominal_voltage = DGeneratorVoltageSetting[idx] * 10 ** 3
+                api_PV.nominal_voltage = DGeneratorVoltageSetting[idx] * 10**3
 
                 # Set the Power Factor
                 api_PV.control_type = "powerfactor"
