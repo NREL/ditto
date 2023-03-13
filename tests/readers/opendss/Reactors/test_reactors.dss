@@ -1,0 +1,5 @@
+Clear
+
+New Circuit.test_reactor bus1=sourcebus pu=0.99 basekV=12.47 R1=1.1208 X1=3.5169 R0=1.1208 X0=3.5169
+
+New Reactor.714 Phases=3 Bus1=700T1.1.2.3 Bus2=714.1.2.3 R=0.00100000 X=0.00000000
