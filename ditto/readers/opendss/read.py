@@ -36,6 +36,7 @@ from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
 from ditto.models.storage import Storage
+from ditto.models.generator import Generator
 from ditto.models.phase_storage import PhaseStorage
 
 
@@ -2756,6 +2757,63 @@ class Reader(AbstractReader):
 
                 api_storage.phase_storages.append(api_phase_storage)
 
+
+    def parse_generators(self, model):
+        """Parse the generators.
+
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        """
+        
+        generators = _dss_class_to_dict("generator")
+        self._generators = []
+
+
+        for name, data in generators.items():
+
+            api_generator = Generator(model)
+            api_generator.feeder_name = self.source_name
+
+            # Name
+            try:
+                generator_name = name.split("enerator.")[1].lower()
+                if generator_name not in self.all_object_names:
+                    self.all_object_names.append(generator_name)
+                api_generator.name = generator_name
+            except:
+                pass
+
+            # nominal_voltage
+            try:
+                api_generator.nominal_voltage = (
+                    float(data["kv"]) * 10 ** 3
+                )  # DiTTo in volts
+            except:
+                pass
+
+            # vmin
+            try:
+                api_generator.vmin = float(data["Vminpu"])
+            except:
+                pass
+
+            # vmax
+            try:
+                api_generator.vmax = float(data["Vmaxpu"])
+            except:
+                pass
+
+            # model
+            try:
+                api_generator.model= int(data["model"])
+            except:
+                pass
+
+            self._generators.append(api_generator)
+    
+        return 1
 
 def _dss_class_to_dict(class_name):
     return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")
