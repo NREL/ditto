@@ -1,0 +1,5 @@
+Clear
+
+new circuit.loadtest basekV=1 phases=3 pu=1.0 bus1=src
+
+new generator.gen bus1=powerbus1 kv=2 kW=1 pf=0.95 phases=3 conn=delta Model=3 vminpu=0.0 vmaxpu=1.2
