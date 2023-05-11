@@ -51,12 +51,12 @@ class Generator(DiTToHasTraits):
         Instance(Position),
         help="""This parameter is a list of positional points describing the power source - it should only contain one. The positions are objects containing elements of long, lat and elevation.""",
     )
-    vmin = Float(
-        help="""The minimum per-unit voltage value. Going below this implies constant impedance.""",
+    v_max_pu = Float(
+        help="""The per-unit maximum voltage. Beyond this constant impedance model is applied""",
         default_value=None,
     )
-    vmax = Float(
-        help="""The maximum per-unit voltage value. Going below this implies constant impedance.""",
+    v_min_pu = Float(
+        help="""The per-unit minimum voltage. Below this, constant impedance model is applied""",
         default_value=None,
     )
     feeder_name = Unicode(

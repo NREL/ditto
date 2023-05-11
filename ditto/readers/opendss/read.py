@@ -2832,13 +2832,13 @@ class Reader(AbstractReader):
 
             # vmin
             try:
-                api_generator.vmin = float(data["Vminpu"])
+                api_generator.v_min_pu = float(data["Vminpu"])
             except:
                 pass
 
             # vmax
             try:
-                api_generator.vmax = float(data["Vmaxpu"])
+                api_generator.v_max_pu = float(data["Vmaxpu"])
             except:
                 pass
 
