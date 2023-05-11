@@ -2769,7 +2769,6 @@ class Reader(AbstractReader):
         
         generators = _dss_class_to_dict("generator")
         self._generators = []
-        print(generators)
 
         for name, data in generators.items():
 
