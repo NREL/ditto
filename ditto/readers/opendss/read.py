@@ -2784,6 +2784,16 @@ class Reader(AbstractReader):
             except:
                 pass
 
+            try:
+                if "." in str(data["bus1"]):
+                    api_generator.connecting_element = str(data["bus1"]).split(
+                        "."
+                    )[0]
+                else:
+                    api_generator.connecting_element = str(data["bus1"])
+            except:
+                pass
+
             # nominal_voltage
             try:
                 api_generator.nominal_voltage = (
