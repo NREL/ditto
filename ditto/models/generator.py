@@ -28,6 +28,10 @@ class Generator(DiTToHasTraits):
     connecting_element = Unicode(
         help="""Name of the bus the generator is connected to.""", default_value=None
     )
+    substation_name = Unicode(
+        help="""The name of the substation to which the object is connected.""",
+        default_value=None,
+    )
     forced_on = Unicode(
         help="""Check if generator active.""",
         default_value=None
