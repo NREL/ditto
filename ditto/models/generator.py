@@ -25,6 +25,9 @@ class Generator(DiTToHasTraits):
         help="""This parameter defines the base voltage at the power source.""",
         default_value=None,
     )
+    connecting_element = Unicode(
+        help="""Name of the bus the generator is connected to.""", default_value=None
+    )
     forced_on = Unicode(
         help="""Check if generator active.""",
         default_value=None
