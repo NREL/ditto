@@ -32,12 +32,14 @@ def test_generators():
             "../../../../ditto/default_values/opendss_default_values.json",
         )
     )
+
+
+    assert m["gen"].name == "gen"
+    assert m["gen"].forced_on == "No"
+    assert m["gen"].power_factor == 0.95
+    assert m["gen"].rated_power == 1.2 * 10 ** 3
     assert m["gen"].vmin == 0.0
     assert m["gen"].vmax == 1.2
-
     assert m["gen"].nominal_voltage == 2 * 10 ** 3
     assert m["gen"].feeder_name == "src_src"
-
     assert m["gen"].model == 3
-
-test_generators()

@@ -2769,7 +2769,7 @@ class Reader(AbstractReader):
         
         generators = _dss_class_to_dict("generator")
         self._generators = []
-
+        print(generators)
 
         for name, data in generators.items():
 
@@ -2790,6 +2790,34 @@ class Reader(AbstractReader):
                 api_generator.nominal_voltage = (
                     float(data["kv"]) * 10 ** 3
                 )  # DiTTo in volts
+            except:
+                pass
+
+            # on
+            try:
+                api_generator.forced_on = str(data["forceon"])
+            except:
+                pass
+
+            # power factor
+            try:
+                api_generator.power_factor = float(data["pf"])
+            except:
+                pass
+
+            # rated_power
+            try:
+                api_generator.rated_power = (
+                    float(data["kVA"]) * 10 ** 3
+                )  # DiTTo in watts
+            except:
+                pass
+
+            # phases
+            try:
+                api_generator.phases = list(
+                    map(lambda x: Unicode(self.phase_mapping(x)), data["phases"])
+                )
             except:
                 pass
 
