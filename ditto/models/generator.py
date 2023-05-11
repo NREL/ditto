@@ -25,7 +25,7 @@ class Generator(DiTToHasTraits):
         help="""This parameter defines the base voltage at the power source.""",
         default_value=None,
     )
-    forced_on = Bool(
+    forced_on = Unicode(
         help="""Check if generator active.""",
         default_value=None
     )
