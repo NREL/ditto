@@ -1,6 +1,11 @@
 name: Publish Python 🐍 distributions 📦 to TestPyPI and PyPI
 
-on: push
+# Run only manually (workflow_dispatch) or on push/merge to master
+on:
+  workflow_dispatch:
+  push:
+      branches:
+        - master
 
 jobs:
   build-n-publish:
