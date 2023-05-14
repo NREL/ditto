@@ -57,6 +57,10 @@ pytest = "^7.3.1"
 pytest-ordering = "^0.6"
 pytest-cov = "^4.0.0"
 
+[tool.poetry.scripts]
+ditto = "ditto.cli:main"
+ditto-cli = "ditto.cli:cli"
+
 [tool.pytest.ini_options]
 # Ignore library warnings - they just pollute the test output
 filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning", "ignore::FutureWarning"]
