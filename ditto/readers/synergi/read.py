@@ -200,7 +200,7 @@ class Reader(AbstractReader):
         # add subtrans to feeder ID
         FeederId_subtrans = list(set(list(LineFeederId)) - set(FeederId))
 
-        FeederId = FeederId.append(pd.Series(FeederId_subtrans), ignore_index=True)
+        FeederId = pd.concat([FeederId, pd.Series(FeederId_subtrans)]) #, ignore_index=True)
 
         FromNodeId = self.get_data("InstSection", "FromNodeId")
         ToNodeId = self.get_data("InstSection", "ToNodeId")
@@ -262,24 +262,23 @@ class Reader(AbstractReader):
         #            TransformerSectionId = TransformerSectionId.append(pd.Series(LineID[idx]), ignore_index=True)
 
         # wenbo added for subtransmission
-        NominalKvll_src = NominalKvll_src.append(
-            SubstationTransformerV, ignore_index=True
-        )
+        NominalKvll_src = pd.concat([NominalKvll_src,
+            SubstationTransformerV]) #ignore_index=True
+        #)
 
         # wenbo added: BusVoltage level
         SubstationTransformerVoltageLevel = self.get_data(
             "InstSubstationTransformers", "BusVoltageLevel"
         )
-        BusVoltageLevel = BusVoltageLevel.append(
-            SubstationTransformerVoltageLevel, ignore_index=True
-        )
+        BusVoltageLevel = pd.concat([BusVoltageLevel,
+            SubstationTransformerVoltageLevel]) #ignore_index=True
 
         SubtransByPhVoltDegPh1 = self.get_data(
             "InstSubstationTransformers", "ByPhVoltDegPh1"
         )
-        ByPhVoltDegPh1 = ByPhVoltDegPh1.append(
-            SubtransByPhVoltDegPh1, ignore_index=True
-        )
+        ByPhVoltDegPh1 = pd.concat([ByPhVoltDegPh1,
+            SubtransByPhVoltDegPh1]) # ignore_index=True
+
 
         ## Transformer Setting ##
 
@@ -495,6 +494,9 @@ class Reader(AbstractReader):
         Phase1Kvar = self.get_data("Loads", "Phase1Kvar")
         Phase2Kvar = self.get_data("Loads", "Phase2Kvar")
         Phase3Kvar = self.get_data("Loads", "Phase3Kvar")
+        CustomerVoltage = self.get_data("InstCustomers", "AmiVolts")
+        CustomerSectionId = self.get_data("InstCustomers", "SectionId")
+
 
         #        Phase1Kva = self.get_data("Loads", "Phase1Kva")
         #        Phase2Kva = self.get_data("Loads", "Phase2Kva")
@@ -883,9 +885,16 @@ class Reader(AbstractReader):
             # wenbo add this to get the line object nominal voltage
             api_line.LineDescription = LineDescription[i]
 
-            api_line.nominal_voltage = (
-                float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
-            )
+            # if there is a nominal voltage in the line description then use that
+            if '-' in LineDescription[i]:
+                api_line.nominal_voltage = (
+                    float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
+                )
+            elif obj in CustomerSectionId:
+                api_line.nominal_voltage = float(CustomerVoltage[i])
+            else:
+                pass
+                #print(f'WARNING: no voltage listed for section {obj}')
 
             # wenbo added, bus_nominal_voltage from line sections
 
@@ -1962,47 +1971,53 @@ class Reader(AbstractReader):
                 #                print('map(conelem)={}'.format(self.node_nominal_voltage_mapping.get(api_load.connecting_element)))
                 #                if api_load.name == "Load_1002094_oh":
                 #                    import pdb;pdb.set_trace()
-                if (
-                    len(api_load.phase_loads) == 1
-                    and len(
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[1]
-                    )
-                    == 4
-                ):
-                    api_load.nominal_voltage = round(
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[0]
-                        / 1.732,
-                        1,
-                    )
-
-                elif (
-                    len(api_load.phase_loads) > 1
-                    and len(
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[1]
-                    )
-                    == 3
-                    and self.node_nominal_voltage_mapping.get(
-                        api_load.connecting_element
-                    )[1][-1]
-                    == "N"
-                ):
-                    api_load.nominal_voltage = round(
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[0]
-                        * 1.732,
-                        1,
-                    )
+                if obj in CustomerSectionId.tolist():
+                    cust_ind = CustomerSectionId.tolist().index(obj)
+                    api_load.nominal_voltage = CustomerVoltage[cust_ind]
+                    #print(f"{obj} nominal voltage is {api_load.nominal_voltage}")
                 else:
-                    api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
-                        api_load.connecting_element
-                    )[0]
+                    #print(f"Warning: {obj} not in {CustomerSectionId}")
+                    if (
+                        len(api_load.phase_loads) == 1
+                        and len(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[1]
+                        )
+                        == 4
+                    ):
+                        api_load.nominal_voltage = round(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[0]
+                            / 1.732,
+                            1,
+                        )
+
+                    elif (
+                        len(api_load.phase_loads) > 1
+                        and len(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[1]
+                        )
+                        == 3
+                        and self.node_nominal_voltage_mapping.get(
+                            api_load.connecting_element
+                        )[1][-1]
+                        == "N"
+                    ):
+                        api_load.nominal_voltage = round(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[0]
+                            * 1.732,
+                            1,
+                        )
+                    else:
+                        api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
+                            api_load.connecting_element
+                        )[0]
 
                 # now define api_load.vmin and api_load.vmax
                 api_load.vmin = 0.65
