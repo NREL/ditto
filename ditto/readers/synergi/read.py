@@ -609,26 +609,26 @@ class Reader(AbstractReader):
         LargeCustType = self.get_data("InstLargeCust", "Category")
         for i, x in enumerate(LargeCustType):
             if x.upper() == "L" or x.upper() == "C":
-                LoadName = LoadName.append(
-                    pd.Series(LargeCustDeviceId[i]), ignore_index=True
+                LoadName = pd.concat([LoadName,
+                    pd.Series(LargeCustDeviceId[i])], ignore_index=True
+                    )
+                Phase1Kw = pd.concat([Phase1Kw,
+                    pd.Series(LargeCustLoadPhase1Kw[i])], ignore_index=True
+                    )
+                Phase2Kw = pd.concat([Phase2Kw,
+                    pd.Series(LargeCustLoadPhase2Kw[i])], ignore_index=True
                 )
-                Phase1Kw = Phase1Kw.append(
-                    pd.Series(LargeCustLoadPhase1Kw[i]), ignore_index=True
+                Phase3Kw = pd.concat([Phase3Kw,
+                    pd.Series(LargeCustLoadPhase3Kw[i])], ignore_index=True
                 )
-                Phase2Kw = Phase2Kw.append(
-                    pd.Series(LargeCustLoadPhase2Kw[i]), ignore_index=True
+                Phase1Kvar = pd.concat([Phase1Kvar,
+                    pd.Series(LargeCustLoadPhase1Kvar[i])], ignore_index=True
                 )
-                Phase3Kw = Phase3Kw.append(
-                    pd.Series(LargeCustLoadPhase3Kw[i]), ignore_index=True
+                Phase2Kvar = pd.concat([Phase2Kvar,
+                    pd.Series(LargeCustLoadPhase2Kvar[i])], ignore_index=True
                 )
-                Phase1Kvar = Phase1Kvar.append(
-                    pd.Series(LargeCustLoadPhase1Kvar[i]), ignore_index=True
-                )
-                Phase2Kvar = Phase2Kvar.append(
-                    pd.Series(LargeCustLoadPhase2Kvar[i]), ignore_index=True
-                )
-                Phase3Kvar = Phase3Kvar.append(
-                    pd.Series(LargeCustLoadPhase3Kvar[i]), ignore_index=True
+                Phase3Kvar = pd.concat([Phase3Kvar,
+                    pd.Series(LargeCustLoadPhase3Kvar[i])], ignore_index=True
                 )
         #                Phase1Kva = Phase1Kva.append(pd.Series(LargeCustLoadPhase1Kva[i]),ignore_index=True)
         #                Phase2Kva = Phase2Kva.append(pd.Series(LargeCustLoadPhase2Kva[i]),ignore_index=True)
