@@ -8,8 +8,8 @@ import sys
 from pkg_resources import iter_entry_points
 import click
 
-from . import version
-from .converter import Converter
+from ditto import version
+from ditto.converter import Converter
 
 try:
     from .metric_computer import MetricComputer
@@ -149,7 +149,7 @@ def metric(ctx, **kwargs):
 def convert(ctx, **kwargs):
     """ Convert from one type to another"""
 
-    verbose = ctx.obj["verbose"]
+    # verbose = ctx.obj["verbose"]
 
     if kwargs["from"] not in registered_readers.keys():
         raise click.BadOptionUsage(
