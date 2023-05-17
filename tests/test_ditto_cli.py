@@ -12,7 +12,7 @@ else:
 current_directory = os.path.dirname(os.path.realpath(__file__))
 IS_DEBUG = True
 
-def run_command(args: list[str], ignore_errors: bool = False, print_output: bool = True) -> str:
+def run_command(args: list, ignore_errors: bool = False, print_output: bool = True) -> str:
     """ Run a command and print the output after it is finished.
     :param args: list of arguments to pass to the command
     :param ignore_errors: if True, ignore errors and just return the output, if True, raise a RuntimeError containing stdout+stderr if the command fails.
