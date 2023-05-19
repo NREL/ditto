@@ -103,7 +103,7 @@ class Writer(AbstractWriter):
         self.feeders_redirect = {}
 
         self.write_taps = False
-        self.separate_feeders = False
+        self.separate_feeders = True #False
         self.separate_substations = False
         self.remove_loadshapes = False
         self.has_timeseries = False
@@ -147,7 +147,7 @@ class Writer(AbstractWriter):
     def write(
         self,
         model,
-        separate_feeders=False,
+        separate_feeders=True,
         separate_substations=False,
         write_taps=False,
         verbose=False,
@@ -190,6 +190,13 @@ class Writer(AbstractWriter):
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
+        # Write the capacitors
+        if self.verbose:
+            logger.debug("Writing the capacitors...")
+        s = self.write_capacitors(model)
+        if self.verbose and s != -1:
+            logger.debug("Succesful!")
+
         # Write the regulators
         if self.verbose:
             logger.debug("Writing the regulators...")
@@ -215,13 +222,6 @@ class Writer(AbstractWriter):
         if self.verbose:
             logger.debug("Writting the lines...")
         s = self.write_lines(model)
-        if self.verbose and s != -1:
-            logger.debug("Succesful!")
-
-        # Write the capacitors
-        if self.verbose:
-            logger.debug("Writing the capacitors...")
-        s = self.write_capacitors(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
@@ -337,7 +337,7 @@ class Writer(AbstractWriter):
                     ):
                         feeder_name = i.feeder_name
                     else:
-                        feeder_name = "DEFAULT"
+                        feeder_name = "default"
                     if (
                         self.separate_substations
                         and hasattr(i, "substation_name")
@@ -345,7 +345,7 @@ class Writer(AbstractWriter):
                     ):
                         substation_name = i.substation_name
                     else:
-                        substation_name = "DEFAULT"
+                        substation_name = "default"
 
                     if not substation_name in substation_text_map:
                         substation_text_map[substation_name] = set([feeder_name])
@@ -354,6 +354,8 @@ class Writer(AbstractWriter):
                     txt = ""
                     if substation_name + "_" + feeder_name in feeder_text_map:
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    elif feeder_name in feeder_text_map:
+                        txt = feeder_text_map[feeder_name]
 
                     txt += "{name}{delimiter}{X}{delimiter}{Y}\n".format(
                         name=re.sub("[^0-9a-zA-Z]+", "_", i.name.lower()),
@@ -436,7 +438,9 @@ class Writer(AbstractWriter):
         # Loop over the DiTTo objects
         for i in model.models:
             # If we get a transformer object...
+
             if isinstance(i, PowerTransformer):
+                print(f'got a power transformer')
                 # Write the data in the file
                 # Name
                 if (
@@ -446,7 +450,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -454,8 +458,8 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
-
+                    substation_name = "default"
+                print(substation_name)
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
                 else:
@@ -463,7 +467,9 @@ class Writer(AbstractWriter):
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
-
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
+                print(f'substation_name')
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Transformer." + i.name
                 else:
@@ -953,12 +959,14 @@ class Writer(AbstractWriter):
 
                 txt += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
-
+        print(f'substation_text_map: {substation_text_map}')
         for substation_name in substation_text_map:
+            print(f'substation_name: {substation_name}')
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
                 feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
                 substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
+                print(f'txt: {txt}')
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1012,7 +1020,7 @@ class Writer(AbstractWriter):
                             output_redirect, self.output_filenames["transformers"]
                         )
                     )
-
+        print(f'after transformer dss created {self.files_to_redirect}')
         return 1
 
     def write_storages(self, model):
@@ -1035,7 +1043,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -1043,7 +1051,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -1052,6 +1060,8 @@ class Writer(AbstractWriter):
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -1266,7 +1276,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -1274,7 +1284,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -1286,16 +1296,22 @@ class Writer(AbstractWriter):
                 voltwatt_voltvar_nodes = set()
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
 
                 if substation_name + "_" + feeder_name in feeder_voltvar_map:
                     voltvar_nodes = feeder_voltvar_map[
                         substation_name + "_" + feeder_name
                     ]
+                elif feeder_name in feeder_voltvar_map:
+                    voltvar_nodes = feeder_voltvar_map[feeder_name]
 
                 if substation_name + "_" + feeder_name in feeder_voltwatt_map:
                     voltwatt_nodes = feeder_voltwatt_map[
                         substation_name + "_" + feeder_name
                     ]
+                elif feeder_name in feeder_voltwatt_map:
+                    voltwatt_nodes = feeder_voltwatt_map[feeder_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -1650,7 +1666,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -1658,7 +1674,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -1667,8 +1683,12 @@ class Writer(AbstractWriter):
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
                 if substation_name + "_" + feeder_name not in self.timeseries_datasets:
                     self.timeseries_datasets[substation_name + "_" + feeder_name] = {}
+                elif feeder_name not in self.timeseries_datasets:
+                    self.timeseries_datasets[feeder_name] = {}
 
                 if (
                     hasattr(i, "data_location")
@@ -1886,7 +1906,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -1894,7 +1914,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -1904,6 +1924,8 @@ class Writer(AbstractWriter):
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -2062,8 +2084,8 @@ class Writer(AbstractWriter):
                 # timeseries object
                 if hasattr(i, "timeseries") and i.timeseries is not None:
                     for ts in i.timeseries:
-                        substation = "DEFAULT"
-                        feeder = "DEFAULT"
+                        substation = "default"
+                        feeder = "default"
                         if ts.feeder_name is not None:
                             feeder = ts.feeder_name
                         if ts.substation_name is not None:
@@ -2094,7 +2116,11 @@ class Writer(AbstractWriter):
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
+                print(f'feeder_text_map at 2119: {feeder_text_map}')
+                if substation_name + "_" + feeder_name in feeder_text_map:
+                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
                 feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
                 substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
@@ -2171,7 +2197,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -2179,7 +2205,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -2192,6 +2218,9 @@ class Writer(AbstractWriter):
                     transfo_creation_string = transfo_creation_string_map[
                         substation_name + "_" + feeder_name
                     ]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
+                    transfo_creation_string = transfo_creation_string_map[feeder_name]
 
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New RegControl.{name}".format(name=i.name)
@@ -2496,6 +2525,8 @@ class Writer(AbstractWriter):
                     transfo_creation_string = transfo_creation_string_map[
                         substation_name + "_" + feeder_name
                     ]
+                elif feeder_name in transfo_creation_string_map:
+                    transfo_creation_string = transfo_creation_string_map[feeder_name]
                 else:
                     transfo_creation_string = ""
                 feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
@@ -2519,13 +2550,7 @@ class Writer(AbstractWriter):
                         output_redirect = os.path.join(output_redirect, feeder_name)
                         if not os.path.exists(output_folder):
                             os.makedirs(output_folder)
-                    with open(
-                        os.path.join(
-                            output_folder, self.output_filenames["regulators"]
-                        ),
-                        "w",
-                    ) as fp:
-                        fp.write(txt)
+
                     if len(transfo_creation_string) > 0:
                         with open(
                             os.path.join(
@@ -2534,6 +2559,14 @@ class Writer(AbstractWriter):
                             "a",
                         ) as f:
                             f.write(transfo_creation_string)
+
+                    with open(
+                        os.path.join(
+                            output_folder, self.output_filenames["regulators"]
+                        ),
+                        "w",
+                    ) as fp:
+                        fp.write(txt)
 
                     if self.separate_substations and self.separate_feeders:
                         if substation_name not in self.substations_redirect:
@@ -2585,7 +2618,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -2593,7 +2626,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -2602,6 +2635,8 @@ class Writer(AbstractWriter):
                 txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -2752,10 +2787,10 @@ class Writer(AbstractWriter):
                         txt += " PTPhase={PT}".format(PT=self.phase_mapping(i.pt_phase))
 
                 txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
+                feeder_text_map[feeder_name] = txt #[substation_name + "_" + feeder_name] = txt
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                txt = feeder_text_map[substation_name + "_" + feeder_name]
+                txt = feeder_text_map[feeder_name] #feeder_text_map[substation_name + "_" + feeder_name]
                 feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
                 substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
@@ -2912,7 +2947,7 @@ class Writer(AbstractWriter):
                 ):
                     feeder_name = i.feeder_name
                 else:
-                    feeder_name = "DEFAULT"
+                    feeder_name = "default"
                 if (
                     self.separate_substations
                     and hasattr(i, "substation_name")
@@ -2920,7 +2955,7 @@ class Writer(AbstractWriter):
                 ):
                     substation_name = i.substation_name
                 else:
-                    substation_name = "DEFAULT"
+                    substation_name = "default"
 
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
@@ -2930,6 +2965,8 @@ class Writer(AbstractWriter):
                 intermediate_txt = ""
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
+                elif feeder_name in feeder_text_map:
+                    txt = feeder_text_map[feeder_name]
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
@@ -3059,6 +3096,7 @@ class Writer(AbstractWriter):
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
+
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
                 intermediate_txt = feeder_text_intermediate_map[
                     substation_name + "_" + feeder_name
@@ -3459,7 +3497,7 @@ class Writer(AbstractWriter):
                     ):
                         feeder_name = i.feeder_name
                     else:
-                        feeder_name = "DEFAULT"
+                        feeder_name = "default"
                     if (
                         self.separate_substations
                         and hasattr(i, "substation_name")
@@ -3467,7 +3505,7 @@ class Writer(AbstractWriter):
                     ):
                         substation_name = i.substation_name
                     else:
-                        substation_name = "DEFAULT"
+                        substation_name = "default"
 
                     if not substation_name in substation_text_map:
                         substation_text_map[substation_name] = set([feeder_name])
@@ -3476,6 +3514,8 @@ class Writer(AbstractWriter):
                     txt = {}
                     if substation_name + "_" + feeder_name in feeder_text_map:
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
+                    elif feeder_name in feeder_text_map:
+                        txt = feeder_text_map[feeder_name]
                     substation_feeder_lookup[substation_name + "_" + feeder_name] = (
                         substation_name,
                         feeder_name,
@@ -3979,7 +4019,7 @@ class Writer(AbstractWriter):
                         R0 = obj.zero_sequence_impedance.real
                         X0 = obj.zero_sequence_impedance.imag
                         fp.write(
-                            " R0={R0} X0={X0}".format(
+                            " R0={R0} X0={X0} ".format(
                                 R0=self.float_to_str(R0), X0=self.float_to_str(X0)
                             )
                         )
@@ -4018,6 +4058,9 @@ class Writer(AbstractWriter):
                 self.files_to_redirect.remove(self.output_filenames["lines"])
 
             # Write Transformers.dss then if it exists
+            #print(self.output_filenames.keys())
+            print('in list')
+            #print(self.files_to_redirect)
             if self.output_filenames["transformers"] in self.files_to_redirect:
                 fp.write(
                     "Redirect {f}\n".format(f=self.output_filenames["transformers"])
@@ -4111,7 +4154,7 @@ class Writer(AbstractWriter):
                         " R1={R1} X1={X1}".format(R1=0.00001, X1=0.00001)
                     )  # Infinite source bus
                     fp.write(
-                        " R0={R0} X0={X0}".format(R0=0.00001, X0=0.00001)
+                        " R0={R0} X0={X0} ".format(R0=0.00001, X0=0.00001)
                     )  # Infinite source bus
                     fp.write("\n\n")
                     if (

@@ -200,7 +200,9 @@ class Reader(AbstractReader):
         # add subtrans to feeder ID
         FeederId_subtrans = list(set(list(LineFeederId)) - set(FeederId))
 
-        FeederId = pd.concat([FeederId, pd.Series(FeederId_subtrans)]) #, ignore_index=True)
+        FeederId = pd.concat(
+            [FeederId, pd.Series(FeederId_subtrans)]
+        )  # , ignore_index=True)
 
         FromNodeId = self.get_data("InstSection", "FromNodeId")
         ToNodeId = self.get_data("InstSection", "ToNodeId")
@@ -262,23 +264,25 @@ class Reader(AbstractReader):
         #            TransformerSectionId = TransformerSectionId.append(pd.Series(LineID[idx]), ignore_index=True)
 
         # wenbo added for subtransmission
-        NominalKvll_src = pd.concat([NominalKvll_src,
-            SubstationTransformerV]) #ignore_index=True
-        #)
+        NominalKvll_src = pd.concat(
+            [NominalKvll_src, SubstationTransformerV]
+        )  # ignore_index=True
+        # )
 
         # wenbo added: BusVoltage level
         SubstationTransformerVoltageLevel = self.get_data(
             "InstSubstationTransformers", "BusVoltageLevel"
         )
-        BusVoltageLevel = pd.concat([BusVoltageLevel,
-            SubstationTransformerVoltageLevel]) #ignore_index=True
+        BusVoltageLevel = pd.concat(
+            [BusVoltageLevel, SubstationTransformerVoltageLevel]
+        )  # ignore_index=True
 
         SubtransByPhVoltDegPh1 = self.get_data(
             "InstSubstationTransformers", "ByPhVoltDegPh1"
         )
-        ByPhVoltDegPh1 = pd.concat([ByPhVoltDegPh1,
-            SubtransByPhVoltDegPh1]) # ignore_index=True
-
+        ByPhVoltDegPh1 = pd.concat(
+            [ByPhVoltDegPh1, SubtransByPhVoltDegPh1]
+        )  # ignore_index=True
 
         ## Transformer Setting ##
 
@@ -497,7 +501,6 @@ class Reader(AbstractReader):
         CustomerVoltage = self.get_data("InstCustomers", "AmiVolts")
         CustomerSectionId = self.get_data("InstCustomers", "SectionId")
 
-
         #        Phase1Kva = self.get_data("Loads", "Phase1Kva")
         #        Phase2Kva = self.get_data("Loads", "Phase2Kva")
         #        Phase3Kva = self.get_data("Loads", "Phase3Kva")
@@ -609,26 +612,29 @@ class Reader(AbstractReader):
         LargeCustType = self.get_data("InstLargeCust", "Category")
         for i, x in enumerate(LargeCustType):
             if x.upper() == "L" or x.upper() == "C":
-                LoadName = pd.concat([LoadName,
-                    pd.Series(LargeCustDeviceId[i])], ignore_index=True
-                    )
-                Phase1Kw = pd.concat([Phase1Kw,
-                    pd.Series(LargeCustLoadPhase1Kw[i])], ignore_index=True
-                    )
-                Phase2Kw = pd.concat([Phase2Kw,
-                    pd.Series(LargeCustLoadPhase2Kw[i])], ignore_index=True
+                LoadName = pd.concat(
+                    [LoadName, pd.Series(LargeCustDeviceId[i])], ignore_index=True
                 )
-                Phase3Kw = pd.concat([Phase3Kw,
-                    pd.Series(LargeCustLoadPhase3Kw[i])], ignore_index=True
+                Phase1Kw = pd.concat(
+                    [Phase1Kw, pd.Series(LargeCustLoadPhase1Kw[i])], ignore_index=True
                 )
-                Phase1Kvar = pd.concat([Phase1Kvar,
-                    pd.Series(LargeCustLoadPhase1Kvar[i])], ignore_index=True
+                Phase2Kw = pd.concat(
+                    [Phase2Kw, pd.Series(LargeCustLoadPhase2Kw[i])], ignore_index=True
                 )
-                Phase2Kvar = pd.concat([Phase2Kvar,
-                    pd.Series(LargeCustLoadPhase2Kvar[i])], ignore_index=True
+                Phase3Kw = pd.concat(
+                    [Phase3Kw, pd.Series(LargeCustLoadPhase3Kw[i])], ignore_index=True
                 )
-                Phase3Kvar = pd.concat([Phase3Kvar,
-                    pd.Series(LargeCustLoadPhase3Kvar[i])], ignore_index=True
+                Phase1Kvar = pd.concat(
+                    [Phase1Kvar, pd.Series(LargeCustLoadPhase1Kvar[i])],
+                    ignore_index=True,
+                )
+                Phase2Kvar = pd.concat(
+                    [Phase2Kvar, pd.Series(LargeCustLoadPhase2Kvar[i])],
+                    ignore_index=True,
+                )
+                Phase3Kvar = pd.concat(
+                    [Phase3Kvar, pd.Series(LargeCustLoadPhase3Kvar[i])],
+                    ignore_index=True,
                 )
         #                Phase1Kva = Phase1Kva.append(pd.Series(LargeCustLoadPhase1Kva[i]),ignore_index=True)
         #                Phase2Kva = Phase2Kva.append(pd.Series(LargeCustLoadPhase2Kva[i]),ignore_index=True)
@@ -860,9 +866,9 @@ class Reader(AbstractReader):
             )
 
             # wenbo add this
-            if LineNote_[i].lower() == "underground":
+            if LineNote_[i].lower() == "underground" or LineNote_[i].lower().startswith('ug') or ConfigurationId[i].lower().startswith('underground'):
                 api_line.line_type = "underground"
-            elif LineNote_[i].lower() == "overhead":
+            elif LineNote_[i].lower() == "overhead" or LineNote_[i].lower().startswith('oh') or ConfigurationId[i].lower().startswith('vertical'):
                 api_line.line_type = "overhead"
             else:
                 api_line.line_type = "swgearbus"
@@ -886,7 +892,7 @@ class Reader(AbstractReader):
             api_line.LineDescription = LineDescription[i]
 
             # if there is a nominal voltage in the line description then use that
-            if '-' in LineDescription[i]:
+            if "-" in LineDescription[i]:
                 api_line.nominal_voltage = (
                     float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
                 )
@@ -894,7 +900,7 @@ class Reader(AbstractReader):
                 api_line.nominal_voltage = float(CustomerVoltage[i])
             else:
                 pass
-                #print(f'WARNING: no voltage listed for section {obj}')
+                # print(f'WARNING: no voltage listed for section {obj}')
 
             # wenbo added, bus_nominal_voltage from line sections
 
@@ -1974,9 +1980,9 @@ class Reader(AbstractReader):
                 if obj in CustomerSectionId.tolist():
                     cust_ind = CustomerSectionId.tolist().index(obj)
                     api_load.nominal_voltage = CustomerVoltage[cust_ind]
-                    #print(f"{obj} nominal voltage is {api_load.nominal_voltage}")
+                    # print(f"{obj} nominal voltage is {api_load.nominal_voltage}")
                 else:
-                    #print(f"Warning: {obj} not in {CustomerSectionId}")
+                    # print(f"Warning: {obj} not in {CustomerSectionId}")
                     if (
                         len(api_load.phase_loads) == 1
                         and len(
@@ -2015,9 +2021,11 @@ class Reader(AbstractReader):
                             1,
                         )
                     else:
-                        api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[0]
+                        api_load.nominal_voltage = (
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[0]
+                        )
 
                 # now define api_load.vmin and api_load.vmax
                 api_load.vmin = 0.65
@@ -2073,7 +2081,11 @@ class Reader(AbstractReader):
 
             # Set the nominal voltage
             # Convert from KV to Volts since DiTTo is in volts
-            api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
+            # if the mdb doesn't give a value, prevent divide by zero
+            if CapacitorVoltage[i] == 0:
+                api_cap.nominal_voltage = max([CapacitorCTRating[i], CapacitorModule1CapSwitchTripValue[i]])
+            else:
+                api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
 
             # Set the connection of the capacitor
             api_cap.connection_type = CapacitorConnectionType[i][:1].upper()
