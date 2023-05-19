@@ -440,7 +440,6 @@ class Writer(AbstractWriter):
             # If we get a transformer object...
 
             if isinstance(i, PowerTransformer):
-                print(f'got a power transformer')
                 # Write the data in the file
                 # Name
                 if (
@@ -459,7 +458,6 @@ class Writer(AbstractWriter):
                     substation_name = i.substation_name
                 else:
                     substation_name = "default"
-                print(substation_name)
                 if not substation_name in substation_text_map:
                     substation_text_map[substation_name] = set([feeder_name])
                 else:
@@ -469,7 +467,6 @@ class Writer(AbstractWriter):
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
                 elif feeder_name in feeder_text_map:
                     txt = feeder_text_map[feeder_name]
-                print(f'substation_name')
                 if hasattr(i, "name") and i.name is not None:
                     txt += "New Transformer." + i.name
                 else:
@@ -959,14 +956,11 @@ class Writer(AbstractWriter):
 
                 txt += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
-        print(f'substation_text_map: {substation_text_map}')
         for substation_name in substation_text_map:
-            print(f'substation_name: {substation_name}')
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
                 feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
                 substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
-                print(f'txt: {txt}')
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2116,7 +2110,6 @@ class Writer(AbstractWriter):
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
-                print(f'feeder_text_map at 2119: {feeder_text_map}')
                 if substation_name + "_" + feeder_name in feeder_text_map:
                     txt = feeder_text_map[substation_name + "_" + feeder_name]
                 elif feeder_name in feeder_text_map:
@@ -4058,9 +4051,6 @@ class Writer(AbstractWriter):
                 self.files_to_redirect.remove(self.output_filenames["lines"])
 
             # Write Transformers.dss then if it exists
-            #print(self.output_filenames.keys())
-            print('in list')
-            #print(self.files_to_redirect)
             if self.output_filenames["transformers"] in self.files_to_redirect:
                 fp.write(
                     "Redirect {f}\n".format(f=self.output_filenames["transformers"])
