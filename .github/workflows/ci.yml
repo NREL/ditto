@@ -15,7 +15,7 @@ jobs:
           - macOS-latest
           - ubuntu-latest
           - windows-latest
-        python-version: [ '3.10' ] # '3.7','3.8','3.9',
+        python-version: [ '3.7','3.8','3.9', '3.10' ]
     steps:
 
     - uses: actions/checkout@v2
@@ -34,11 +34,8 @@ jobs:
     - name: Install dependencies
       run: poetry install --all-extras
 
-    - name: run pytests
-      run: poetry run pytest -vvv
-
-    - name: Generate coverage report
-      run: poetry run pytest --cov=./ --cov-report=xml:unit.coverage.xml
+    - name: run pytests & coverage report
+      run: poetry run pytest -vvv --cov=./ --cov-report=xml:unit.coverage.xml
 
     - name: Upload unit test coverage to Codecov
       uses: codecov/codecov-action@v1.0.7
