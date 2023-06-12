@@ -195,8 +195,6 @@ class Reader(AbstractReader):
                 FeederId[idx].replace(" ", "_")
             ] = SubstationId[idx].replace(" ", "_")
 
-        print(self.feeder_substation_mapping)
-
         # add subtrans to feeder ID
         FeederId_subtrans = list(set(list(LineFeederId)) - set(FeederId))
 

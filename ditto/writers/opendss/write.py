@@ -190,17 +190,17 @@ class Writer(AbstractWriter):
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
+        # Write the lines
+        if self.verbose:
+            logger.debug("Writting the lines...")
+        s = self.write_lines(model)
+        if self.verbose and s != -1:
+            logger.debug("Succesful!")
+
         # Write the capacitors
         if self.verbose:
             logger.debug("Writing the capacitors...")
         s = self.write_capacitors(model)
-        if self.verbose and s != -1:
-            logger.debug("Succesful!")
-
-        # Write the regulators
-        if self.verbose:
-            logger.debug("Writing the regulators...")
-        s = self.write_regulators(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
@@ -218,10 +218,10 @@ class Writer(AbstractWriter):
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
-        # Write the lines
+        # Write the regulators
         if self.verbose:
-            logger.debug("Writting the lines...")
-        s = self.write_lines(model)
+            logger.debug("Writing the regulators...")
+        s = self.write_regulators(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
@@ -953,9 +953,11 @@ class Writer(AbstractWriter):
                                 default_x[1],
                                 default_x[2],
                             )
-
+        
                 txt += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
+                print(f'feeder text map after transformers: {feeder_text_map.keys()}')
+                print(f'substation text map after transformers: {substation_text_map.keys()}')
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
@@ -2545,13 +2547,16 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if len(transfo_creation_string) > 0:
-                        with open(
-                            os.path.join(
+                        transformer_file = os.path.join(
                                 output_folder, self.output_filenames["transformers"]
-                            ),
-                            "a",
-                        ) as f:
-                            f.write(transfo_creation_string)
+                            )
+                        if transformer_file in self.files_to_redirect:
+                            with open(transformer_file,"a") as f:
+                                f.write(transfo_creation_string)
+                        else:
+                            with open(transformer_file,"w") as f:
+                                f.write(transfo_creation_string)
+                            self.files_to_redirect.append(transformer_file)
 
                     with open(
                         os.path.join(
@@ -4019,19 +4024,19 @@ class Writer(AbstractWriter):
 
             fp.write("\n\n")
 
-            # Write WireData.dss first if it exists
-            if self.output_filenames["wiredata"] in self.files_to_redirect:
-                fp.write(
-                    "Redirect {f}\n".format(f=self.output_filenames["wiredata"])
-                )  # Currently wire data is in the base folder
-                self.files_to_redirect.remove(self.output_filenames["wiredata"])
-
             # Write CNDATA.dss first if it exists
             if self.output_filenames["CNDATA"] in self.files_to_redirect:
                 fp.write(
                     "Redirect {f}\n".format(f=self.output_filenames["CNDATA"])
                 )  # Currently wire data is in the base folder
                 self.files_to_redirect.remove(self.output_filenames["CNDATA"])
+
+            # Write WireData.dss first if it exists
+            if self.output_filenames["wiredata"] in self.files_to_redirect:
+                fp.write(
+                    "Redirect {f}\n".format(f=self.output_filenames["wiredata"])
+                )  # Currently wire data is in the base folder
+                self.files_to_redirect.remove(self.output_filenames["wiredata"])
 
             # Write LineGeometry.dss then if it exists
             if self.output_filenames["linegeometry"] in self.files_to_redirect:
