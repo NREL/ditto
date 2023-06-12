@@ -866,9 +866,17 @@ class Reader(AbstractReader):
             )
 
             # wenbo add this
-            if LineNote_[i].lower() == "underground" or LineNote_[i].lower().startswith('ug') or ConfigurationId[i].lower().startswith('underground'):
+            if (
+                LineNote_[i].lower() == "underground"
+                or LineNote_[i].lower().startswith("ug")
+                or ConfigurationId[i].lower().startswith("underground")
+            ):
                 api_line.line_type = "underground"
-            elif LineNote_[i].lower() == "overhead" or LineNote_[i].lower().startswith('oh') or ConfigurationId[i].lower().startswith('vertical'):
+            elif (
+                LineNote_[i].lower() == "overhead"
+                or LineNote_[i].lower().startswith("oh")
+                or ConfigurationId[i].lower().startswith("vertical")
+            ):
                 api_line.line_type = "overhead"
             else:
                 api_line.line_type = "swgearbus"
@@ -1608,7 +1616,7 @@ class Reader(AbstractReader):
         ####################################################################################
         #
         print("--> Parsing Transformers...")
-        print(f'TransformerId with length {len(TransformerId)} is {TransformerId}')
+        print(f"TransformerId with length {len(TransformerId)} is {TransformerId}")
         for i, obj in enumerate(TransformerId):
             # Create a PowerTransformer object
             api_transformer = PowerTransformer(model)
@@ -1978,16 +1986,22 @@ class Reader(AbstractReader):
                 #                print('map(conelem)={}'.format(self.node_nominal_voltage_mapping.get(api_load.connecting_element)))
                 #                if api_load.name == "Load_1002094_oh":
                 #                    import pdb;pdb.set_trace()
-                #if obj in CustomerSectionId.tolist() and obj in DTransformerSectionId.tolist():
+                # if obj in CustomerSectionId.tolist() and obj in DTransformerSectionId.tolist():
                 #    cust_ind = CustomerSectionId.tolist().index(obj)
                 #    api_load.nominal_voltage = CustomerVoltage[cust_ind]
                 #    # print(f"{obj} nominal voltage is {api_load.nominal_voltage}")
-                #else:
+                # else:
                 # print(f"Warning: {obj} not in {CustomerSectionId}")
                 # if there are no voltages specified for this load, set it to the feeder voltage
-                if self.node_nominal_voltage_mapping.get(api_load.connecting_element)[0] == None:
+                if (
+                    self.node_nominal_voltage_mapping.get(api_load.connecting_element)[
+                        0
+                    ]
+                    == None
+                ):
                     feeder_i = FeederId.tolist().index(api_load.feeder_name)
-                    api_load.nominal_voltage = NominalKvll_src[feeder_i] * 10**3
+                    n_phases = len(api_load.phase_loads)
+                    api_load.nominal_voltage = NominalKvll_src[feeder_i] * 10**3 *(n_phases/3)**0.5
                 elif (
                     len(api_load.phase_loads) == 1
                     and len(
@@ -2026,11 +2040,9 @@ class Reader(AbstractReader):
                         1,
                     )
                 else:
-                    api_load.nominal_voltage = (
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[0]
-                    )
+                    api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
+                        api_load.connecting_element
+                    )[0]
 
                 # now define api_load.vmin and api_load.vmax
                 api_load.vmin = 0.65
@@ -2088,7 +2100,9 @@ class Reader(AbstractReader):
             # Convert from KV to Volts since DiTTo is in volts
             # if the mdb doesn't give a value, prevent divide by zero
             if CapacitorVoltage[i] == 0:
-                api_cap.nominal_voltage = max([CapacitorCTRating[i], CapacitorModule1CapSwitchTripValue[i]])
+                api_cap.nominal_voltage = max(
+                    [CapacitorCTRating[i], CapacitorModule1CapSwitchTripValue[i]]
+                )
             else:
                 api_cap.nominal_voltage = CapacitorVoltage[i] * 1000
 
