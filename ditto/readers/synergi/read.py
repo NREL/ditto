@@ -228,12 +228,23 @@ class Reader(AbstractReader):
         TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
         TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
         TransformerType = self.get_data("InstPrimaryTransformers", "TransformerType")
+        HighSideConnCode = self.get_data("InstTrans", "HighSideConnCode")
+        LowSideConnCode = self.get_data("InstTrans", "LowSideConnCode")
+        ConnPhases = self.get_data("InstTrans", "ConnectedPhases")
 
+        # group primary and secondaries together
         DTranId = self.get_data("InstDTrans", "DTranId")
+        TransformerId = pd.concat([TransformerId,DTranId])
         DTransformerSectionId = self.get_data("InstDTrans", "SectionId")
-        HighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
-        LowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
-        ConnPhases = self.get_data("InstDTrans", "ConnPhases")
+        TransformerSectionId = pd.concat([TransformerSectionId, DTransformerSectionId])
+        DTransformerType = self.get_data("InstDTrans", "TransformerType")
+        TransformerType = pd.concat([TransformerType,DTransformerType])
+        DHighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
+        HighSideConnCode = pd.concat([HighSideConnCode,DHighSideConnCode])
+        DLowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
+        LowSideConnCode = pd.concat([LowSideConnCode,DLowSideConnCode])
+        DConnPhases = self.get_data("InstDTrans", "ConnPhases")
+        ConnPhases = pd.concat([ConnPhases,DConnPhases])
 
         ## Substration Transformers ##
         # wenbo added
@@ -302,6 +313,9 @@ class Reader(AbstractReader):
         TransformerHighSideNearFromNode = self.get_data(
             "InstPrimaryTransformers", "HighSideNearFromNode"
         )
+        # all distribution transformers have the high side near the from node
+        if len(DTranId)>0:
+            TransformerHighSideNearFromNode = pd.concat([TransformerHighSideNearFromNode, pd.Series([1]*len(DTranId))])
 
         # NOTE: When the same information is given in the database and in the warehouse,
         # both are stored and the priority will be given to the information from the
@@ -1656,6 +1670,7 @@ class Reader(AbstractReader):
             # If no section found, print a warning
             if Count is None:
                 print("WARNING: No section found for section {}".format(obj))
+            
             # Query the high side on either from element or to element
             # 0 meaning high side is at the to node; 1 meaning high side is at the from node
             if Count is not None:
@@ -1991,7 +2006,12 @@ class Reader(AbstractReader):
                 # else:
                 # print(f"Warning: {obj} not in {CustomerSectionId}")
                 # if there are no voltages specified for this load, set it to the feeder voltage
-                if (
+                if (self.node_nominal_voltage_mapping.get(api_load.connecting_element)
+                    == None):
+                    feeder_i = FeederId.tolist().index(api_load.feeder_name)
+                    n_phases = len(api_load.phase_loads)
+                    api_load.nominal_voltage = NominalKvll_src[feeder_i] * 10**3 *(n_phases/3)**0.5
+                elif (
                     self.node_nominal_voltage_mapping.get(api_load.connecting_element)[
                         0
                     ]
