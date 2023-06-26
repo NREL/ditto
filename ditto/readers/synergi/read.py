@@ -898,7 +898,7 @@ class Reader(AbstractReader):
             api_line.LineDescription = LineDescription[i]
 
             # if there is a nominal voltage in the line description then use that
-            if "voltage" in LineDescription[i]:
+            if "-" in LineDescription[i]:
                 api_line.nominal_voltage = (
                     float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
                 )
@@ -906,7 +906,7 @@ class Reader(AbstractReader):
                 api_line.nominal_voltage = float(CustomerVoltage[i])
             else:
                 pass
-                print(f'WARNING: no voltage listed for section {obj}')
+                # print(f'WARNING: no voltage listed for section {obj}')
 
             # wenbo added, bus_nominal_voltage from line sections
 
