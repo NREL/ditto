@@ -956,8 +956,7 @@ class Writer(AbstractWriter):
         
                 txt += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
-                print(f'feeder text map after transformers: {feeder_text_map.keys()}')
-                print(f'substation text map after transformers: {substation_text_map.keys()}')
+
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
@@ -1010,13 +1009,11 @@ class Writer(AbstractWriter):
                         self.feeders_redirect[combined_feeder_sub].append(
                             self.output_filenames["transformers"]
                         )
-
                     self.files_to_redirect.append(
                         os.path.join(
                             output_redirect, self.output_filenames["transformers"]
                         )
                     )
-        print(f'after transformer dss created {self.files_to_redirect}')
         return 1
 
     def write_storages(self, model):
@@ -2547,9 +2544,9 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
 
                     if len(transfo_creation_string) > 0:
-                        transformer_file = os.path.join(
+                        transformer_file = str(os.path.join(
                                 output_folder, self.output_filenames["transformers"]
-                            )
+                            )).replace('.\\','')
                         if transformer_file in self.files_to_redirect:
                             with open(transformer_file,"a") as f:
                                 f.write(transfo_creation_string)
