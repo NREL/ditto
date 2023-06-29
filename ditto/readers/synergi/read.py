@@ -883,10 +883,12 @@ class Reader(AbstractReader):
             # wenbo add this to get the line object nominal voltage
             api_line.LineDescription = LineDescription[i]
 
-            api_line.nominal_voltage = (
-                float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
-            )
-
+            if 'voltage' in api_line.LineDescription:
+                api_line.nominal_voltage = (
+                    float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
+                )
+            else:
+                print('no line voltage')
             # wenbo added, bus_nominal_voltage from line sections
 
             # Switching devices and network protection devices
