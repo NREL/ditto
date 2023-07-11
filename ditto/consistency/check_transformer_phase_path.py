@@ -54,6 +54,8 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
         source_name = source.connecting_element
         all_paths = nx.single_source_shortest_path(ditto_graph.graph,source_name)
         break_load = False
+        msgs = []
+
         for load in all_loads:
             load_connection = load.connecting_element
             if load_connection in all_paths:
@@ -75,7 +77,7 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                         transformer_low_side = path[i-1]
 
                 ### Check that the low side of the transformer is connected to a line that leads to a load
-                if num_transformers ==1:
+                if num_transformers == 1:
                     load_transformer_map[load.name] = element['name']
                     if model[transformer_names[0]].to_element != transformer_low_side:
                         if verbose:
@@ -121,18 +123,24 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                         if element['equipment'] == 'PowerTransformer' and not element['is_substation']:
                             break
                         if element['equipment'] == 'Line':
-                            line_phases = [wire.phase for wire in element['wires'] if wire.phase != 'N'] #Neutral phases not included in the transformer
-                            if not set(high_phases).issubset(set(line_phases)): #MV phase line phase must be able to support transformer phase
-                                if verbose:
-                                    print('Load '+load.name+ ' has incorrect phases '+str(line_phases)+' '+str(high_phases)+' on high side of transformer for line '+element['name'])
-                                result = False
-                                break
-                            if len(line_phases) > len(prev_line_phases):
-                                if verbose:
-                                    print('Number of phases increases along line '+element['name'] +' from '+str(len(prev_line_phases))+' to '+str(len(line_phases)))
-                                result = False
-                                break
-                            prev_line_phases = line_phases
+                            if not "wires" in element.keys():
+                                msg = f"Warning: Line {element['equipment_name']} has no wires!"
+                                if not msg in msgs:
+                                    print(msg)
+                                    msgs.append(msg)
+                            else:
+                                line_phases = [wire.phase for wire in element['wires'] if wire.phase != 'N'] #Neutral phases not included in the transformer
+                                if not set(high_phases).issubset(set(line_phases)): #MV phase line phase must be able to support transformer phase
+                                    if verbose:
+                                        print('Load '+load.name+ ' has incorrect phases '+str(line_phases)+' '+str(high_phases)+' on high side of transformer for line '+element['name'])
+                                    result = False
+                                    break
+                                if len(line_phases) > len(prev_line_phases):
+                                    if verbose:
+                                        print('Number of phases increases along line '+element['name'] +' from '+str(len(prev_line_phases))+' to '+str(len(line_phases)))
+                                    result = False
+                                    break
+                                prev_line_phases = line_phases
                         elif element['equipment'] != 'Regulator':
                             print('Warning: element of type '+element['equipment'] +' found on path to load '+load.name)
 
@@ -143,13 +151,21 @@ def check_transformer_phase_path(model,needs_transformers=False,verbose=True):
                     for i in range(len(path)-1):
                         element = ditto_graph.graph[path[i]][path[i+1]]
                         if element['equipment'] == 'Line':
-                            line_phases = [wire.phase for wire in element['wires'] if wire.phase != 'N'] #Neutral phases not included in the transformer
-                            if len(line_phases) > len(prev_line_phases):
-                                if verbose:
-                                    print('Number of phases increases along line '+element['name'] +' from '+str(len(prev_line_phases))+' to '+str(len(line_phases)))
-                                result = False
-                                break
-                            prev_line_phases = line_phases
+                            if not "wires" in element.keys():
+                                msg = f"Warning: Line {element['equipment_name']} has no wires!"
+                                if not msg in msgs:
+                                    print(msg)
+                                    msgs.append(msg)
+                            else:
+                                line_phases = [wire.phase for wire in element['wires'] if wire.phase != 'N'] #Neutral phases not included in the transformer
+                                if len(line_phases) > len(prev_line_phases):
+                                    msg = 'Number of phases increases along line '+element['name'] +' from '+str(len(prev_line_phases))+' to '+str(len(line_phases))
+                                    if verbose and not msg in msgs:
+                                        print(msg)
+                                        msgs.append(msg)
+                                    result = False
+                                    break
+                                prev_line_phases = line_phases
                         elif element['equipment'] != 'Regulator' and element['equipment'] != 'PowerTransformer':
                             print('Warning: element of type '+element['equipment'] +' found on path to load '+load.name)
     return result
