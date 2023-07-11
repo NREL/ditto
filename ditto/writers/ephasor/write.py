@@ -1408,7 +1408,7 @@ class Writer(AbstractWriter):
 
         worksheet.set_column(0, 19, 16)
 
-        writer.save()
+        writer.close()
 
 
 if __name__ == "__main__":
