@@ -14,7 +14,7 @@ import logging
 import time
 import operator
 import pandas as pd
-
+import re
 # Ditto imports #
 
 from ditto.readers.abstract_reader import AbstractReader
@@ -36,6 +36,7 @@ from ditto.models.position import Position
 from ditto.models.base import Unicode
 
 from ditto.readers.synergi.length_units import convert_length_unit, SynergiValueType
+from ditto.modify.system_structure import system_structure_modifier
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +211,7 @@ class Reader(AbstractReader):
         AveHeightAboveGround_MUL = self.get_data(
             "InstSection", "AveHeightAboveGround_MUL"
         )
-        # wenbo add this to get line voltage
+        # wenbo add this to get line voltage or line type depending on utility model naming convention
         LineDescription = self.get_data("InstSection", "Description")
 
         # Create mapping between section IDs and Feeder Ids
@@ -858,12 +859,23 @@ class Reader(AbstractReader):
             )
 
             # wenbo add this
-            if LineNote_[i].lower() == "underground":
+            # line type need to be decided by decription or notes depend on the utility naming convension
+
+
+            if "underground" in LineDescription[i].lower():
                 api_line.line_type = "underground"
-            elif LineNote_[i].lower() == "overhead":
+            elif "overhead" in LineDescription[i].lower():
                 api_line.line_type = "overhead"
             else:
-                api_line.line_type = "swgearbus"
+                api_line.line_type = "swgearbus_busbar"
+            
+            # when the line type is included in LineNote, uncomment the following codes
+            # if LineNote_[i].lower() == "underground":
+            #     api_line.line_type = "underground"
+            # elif LineNote_[i].lower() == "overhead":
+            #     api_line.line_type = "overhead"
+            # else:
+            #     api_line.line_type = "swgearbus"
 
             #            if LineHeight[i] < 0:
             #                api_line.line_type = "underground"
@@ -936,7 +948,8 @@ class Reader(AbstractReader):
 
                 # Get the current ratings (to be used in the wires)
                 if len(idd) == 1:
-                    eqt_rating = fuse_rating[idd[0]]
+                    #eqt_rating = fuse_rating[idd[0]]
+                    eqt_rating = re.findall(r'\d+',fuse_rating[idd[0]])[0] # fuse might contain letters, E-rated fuse are general purpose
                     eqt_interrupting_rating = fuse_blow_rating[idd[0]]
                     eqt_open = fuse_is_open[idd[0]]
 
@@ -1267,10 +1280,14 @@ class Reader(AbstractReader):
                         and len(NeutralConductorID[i]) > 0
                     ):
                         # Set the nameclass
+                        # if np.isnan(NeutralConductorID[i]): # if it is nan, assume it is the same as PhaseConductorID[i]
                         api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
                         # Cache the conductor name
                         conductor_name_raw = NeutralConductorID[i]
-
+                    else: # 
+                        api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
+                        # Cache the conductor name
+                        conductor_name_raw = PhaseConductorID[i]
                     # Set the Spacing of the neutral
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
                         # Set X
@@ -1288,9 +1305,13 @@ class Reader(AbstractReader):
                         api_wire.Y = (
                             AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
                         )
+                print("api_line.name", api_line.name, "phase", phase, "api_wire.nameclass", api_wire.nameclass)
+                print("api_line.line_type", api_line.line_type)
                 if api_line.line_type == "underground":
                     api_wire.nameclass = "Cable_" + api_wire.nameclass
                 elif api_line.line_type == "swgearbus":
+                    print('Pass on swgearbus line type: fix later')
+                    continue
                     api_wire.nameclass = "Swgearbus" + api_wire.nameclass
                 else:
                     api_wire.nameclass = "Wire_" + api_wire.nameclass
@@ -1815,15 +1836,20 @@ class Reader(AbstractReader):
         ####################################################################################
         #
         print("--> Parsing Loads...")
+        
+        previous_load = None # this line is to check dubplicated load from previous load
         for i, obj in enumerate(LoadName):
             # Create a Load DiTTo object
             api_load = Load(model)
 
             # Set the name
             api_load.name = "Load_" + obj.replace(" ", "_").lower()
+            if api_load.name == previous_load:
+                api_load.name = "Load_" + obj.replace(" ", "_").lower() + '_du'
+            
+            previous_load = api_load.name
 
             # Set the feeder_name if in the mapping
-
             if obj in self.section_feeder_mapping:
                 api_load.feeder_name = self.section_feeder_mapping[obj]
 
@@ -1964,48 +1990,53 @@ class Reader(AbstractReader):
                 #                print('map(conelem)={}'.format(self.node_nominal_voltage_mapping.get(api_load.connecting_element)))
                 #                if api_load.name == "Load_1002094_oh":
                 #                    import pdb;pdb.set_trace()
-                if (
-                    len(api_load.phase_loads) == 1
-                    and len(
-                        self.node_nominal_voltage_mapping.get(
+                try:
+                
+                    if (
+                        len(api_load.phase_loads) == 1
+                        and len(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[1]
+                        )
+                        == 4
+                    ):
+                        api_load.nominal_voltage = round(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[0]
+                            / 1.732,
+                            1,
+                        )
+
+                    elif (
+                        len(api_load.phase_loads) > 1
+                        and len(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[1]
+                        )
+                        == 3
+                        and self.node_nominal_voltage_mapping.get(
                             api_load.connecting_element
-                        )[1]
-                    )
-                    == 4
-                ):
-                    api_load.nominal_voltage = round(
-                        self.node_nominal_voltage_mapping.get(
+                        )[1][-1]
+                        == "N"
+                    ):
+                        api_load.nominal_voltage = round(
+                            self.node_nominal_voltage_mapping.get(
+                                api_load.connecting_element
+                            )[0]
+                            * 1.732,
+                            1,
+                        )
+                    else:
+                        api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
                             api_load.connecting_element
                         )[0]
-                        / 1.732,
-                        1,
-                    )
 
-                elif (
-                    len(api_load.phase_loads) > 1
-                    and len(
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[1]
-                    )
-                    == 3
-                    and self.node_nominal_voltage_mapping.get(
-                        api_load.connecting_element
-                    )[1][-1]
-                    == "N"
-                ):
-                    api_load.nominal_voltage = round(
-                        self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[0]
-                        * 1.732,
-                        1,
-                    )
-                else:
-                    api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
-                        api_load.connecting_element
-                    )[0]
-
+                except:
+                    print("Load nominal voltage not defined.")
+                
                 # now define api_load.vmin and api_load.vmax
                 api_load.vmin = 0.65
                 api_load.vmax = 1.1
@@ -2885,7 +2916,25 @@ class Reader(AbstractReader):
 
         ####################################################################################
         #                                                                                  #
-        #                              Generator genwind.dss                                 #
+        #                              Generator genwind.dss                               #
         #                                                                                  #
         ####################################################################################
         #
+
+
+        # wenbo added
+        ####################################################################################
+        #                                                                                  #
+        #  Here use ditto system_structure_modifier function to add nominal voltage, 
+        #  the nominal voltage is L-L for all lines, even with single phase laterals       #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Identifying nominal voltage for node and lines...")
+        
+        model.set_names()
+        modifier = system_structure_modifier(model)
+        modifier.set_nominal_voltages_recur()
+        modifier.set_nominal_voltages_recur_line()
+
+        # end of parse function

@@ -1952,8 +1952,13 @@ class Writer(AbstractWriter):
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
                         txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
+                    # Wenbo: This is added because single phase load should be L-N, not N-N
+                    elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
+                        txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2))
                     else:
                         txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
+                     
+                   
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
@@ -2837,7 +2842,7 @@ class Writer(AbstractWriter):
         lines_to_linecodify = []
         for i in model.models:
             if isinstance(i, Line):
-                use_linecodes = False
+                use_linecodes = True # wenbo changed to always True
 
                 # Find out if we have all the information we need to export
                 # the line using geometries. If we miss something, use LineCodes.
