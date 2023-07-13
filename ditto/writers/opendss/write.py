@@ -1952,7 +1952,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
                         txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
-                    # Wenbo: This is added because single phase load should be L-N, not N-N
+                    # Wenbo: This is added because single phase load should be L-N, not L-L
                     elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
                         txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2))
                     else:
