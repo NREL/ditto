@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 
-import warnings
 from traitlets.traitlets import (
     ObserveHandler,
     _deprecated_method,
@@ -29,9 +28,7 @@ class DiTToHasTraits(T.HasTraits):
         try:
             name = self.name
             if name in model.model_names:
-                warnings.warn("Duplicate name %s being set. Object overwritten." % name)
-                logger.debug("Duplicate name %s being set. Object overwritten." % name)
-                logger.debug(model.model_names[name], self)
+                logger.warn("Duplicate name %s being set. Object overwritten." % name)
             model.model_names[name] = self
         except AttributeError:
             pass

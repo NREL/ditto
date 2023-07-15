@@ -2,7 +2,6 @@
 
 import logging
 import math
-import cmath
 import os
 from functools import reduce
 from six import string_types
@@ -29,6 +28,7 @@ from ditto.models.feeder_metadata import Feeder_metadata
 from ditto.models.photovoltaic import Photovoltaic
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
+from ditto.readers.cyme.utils import get_transformer_xhl_Rpercent, add_two_windings
 
 from ditto.models.base import Unicode
 from ditto.modify.system_structure import system_structure_modifier
@@ -113,6 +113,8 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |             'transformer_settings'        |              '[TRANSFORMER SETTING]'       |
     +-------------------------------------------+--------------------------------------------+
+    |       'transformer_byphase_settings'      |        '[TRANSFORMER BYPHASE SETTING]'     |
+    +-------------------------------------------+--------------------------------------------+
     |               'auto_transformer'          |                '[AUTO TRANSFORMER]'        |
     +-------------------------------------------+--------------------------------------------+
     |             'grounding_transformer'       |               '[GROUNDING TRANSFORMER]'    |
@@ -160,6 +162,48 @@ class Reader(AbstractReader):
     +-------------------------------------------+--------------------------------------------+
     |        'network_equivalent_setting'       |      '[NETWORK EQUIVALENT SETTING]'        |
     +-------------------------------------------+--------------------------------------------+
+
+    (nlaws fall 2022)
+    The CYME import/export manual is essentially a list of the section headers and the column names
+    for each section. Most of the following has been deducted from actual CYME models and their
+    ASCII exports.
+
+    An attempt at describing the CYME modeling concepts in CYME 9.0:
+
+    The highest level ID (abstract object) appears to be a StructureID, 
+    which can be found in:
+    - [HEADNODES], [STRUCTUREUDD], [UNCONNECTED NODES]
+    However, there can probably be more than one structure in a network, so 
+    perhaps the NetworkID is the highest level ID.
+    It appears that a NetworkID is one to one with a substation or feeder.
+
+    [HEADNODES]
+    - two mandatory fields: NodeID, NetworkID
+    - it appears that the NodeID in HEADNODES serve as the source nodes for each network
+    - source nodes should correspond to a substation or feeder (just like NetworkID)
+
+    [SOURCE (EQUIVALENT)]
+    - I do not have an example of CYME export with a SOURCE section
+    - so using the SOURCE EQUIVALENT SECTION, the only mandatory field is NodeID
+    - in the examples that I have the [HEADNODES].NodeID are 1:1 with [SOURCE EQUIVALENT].NodeID
+
+    [SECTION]
+    - the rest of the network connections are specified in the [SECTION] block
+    - the [SECTION] block is peculiar compared to the other object blocks because it can contain
+     more than one "TOPO", where a TOPO line starts with FORMAT_OBJNAME, for example:
+        - FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,ZoneID,SubNetworkId
+        - FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,Group4,Group5,Group6,North,South,East,West,AreaFilter,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version
+        - FORMAT_SUBSTATION=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,Group4,Group5,Group6,North,South,East,West,AreaFilter,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version
+    - with the exception of FORMAT_SECTION, any data line that uses FORMAT_OBJNAME must start with OBJNAME=
+        - for example, a feeder specification will look like:
+        - FEEDER=1234,SOURCE_1234,1, ...
+    - SectionID's tend to correspond to line specifications, but could also be a load or any piece of equipment (I think)
+    - perhaps the biggest gotcha in CYME is that more than one object can be in a section (i.e. between two nodes)
+        - for example, a node-transformer-line-node specification looks like:
+            - in [OVERHEADLINE SETTING] SectionID=sec1, DeviceNumber=dev1, LineCableID=lin1
+            - in [TRANSFORMER SETTING]  SectionID=sec1, FromNodeID=nd1
+            - in [SECTION]              SectionID=sec1, FromNodeID=nd1, ToNodeID=nd2
+        - these issues are fixed in fix_section_overlaps
     """
 
     register_names = ["cyme", "Cyme", "CYME"]
@@ -198,6 +242,11 @@ class Reader(AbstractReader):
         else:
             self.load_filename = "load.txt"
 
+        # optional load_model_id will parse only the loads with the corresponding LoadModelID (value in [CUSTOMER LOADS])
+        self.load_model_id = None
+        if "load_model_id" in kwargs.keys():
+            self.load_model_id = int(kwargs["load_model_id"])
+        
         # Set the Network Type to be None. This is set in the parse_sections() function
         self.network_type = None
 
@@ -254,6 +303,7 @@ class Reader(AbstractReader):
                 "[THREE WINDING TRANSFORMER SETTING]"
             ],
             "transformer_settings": ["[TRANSFORMER SETTING]"],
+            "transformer_byphase_settings": ["[TRANSFORMER BYPHASE SETTING]"],
             "phase_shifter_transformer_settings": [
                 "[PHASE SHIFTER TRANSFORMER SETTING]"
             ],
@@ -328,9 +378,9 @@ class Reader(AbstractReader):
         # Replace the old mapping by the new one
         self.header_mapping = new_mapping
 
-    def get_file_content(self, filename):
+    def get_file_content(self, filename: str) -> None:
         """
-        Open the requested file and returns the content.
+        Open the requested file and set self.content to iter(file_pointer.readlines())
         For convinience, filename can be either the full file path or:
 
             -'network': Will get the content of the network file given in the constructor
@@ -356,7 +406,8 @@ class Reader(AbstractReader):
 
         self.content = iter(content_)
 
-    def phase_mapping(self, CYME_value):
+    @staticmethod
+    def phase_mapping(CYME_value):
         """
         Maps the CYME phase value format to a list of ABC phases:
 
@@ -403,7 +454,8 @@ class Reader(AbstractReader):
         else:
             return list(CYME_value)
 
-    def phase_to_num(self, phase):
+    @staticmethod
+    def phase_to_num(phase):
         """
         Maps phase in 'A', 'B', 'C' format in 1, 2, 3 format.
 
@@ -428,7 +480,8 @@ class Reader(AbstractReader):
         else:
             return phase
 
-    def load_value_type_mapping(self, load_type, value1, value2):
+    @staticmethod
+    def load_value_type_mapping(load_type, value1, value2):
         """
         CYME customer loads provide two values v1 and v2 as well as a load value type:
         This function takes these as inputs and outputs P and Q of the load.
@@ -503,7 +556,8 @@ class Reader(AbstractReader):
                 )
             )
 
-    def capacitors_connection_mapping(self, conn):
+    @staticmethod
+    def capacitors_connection_mapping(conn):
         """
         Maps the capacitors connection in CYME (CAP_CONN) to DiTTo connection_type.
 
@@ -540,7 +594,8 @@ class Reader(AbstractReader):
         else:
             return conn
 
-    def connection_configuration_mapping(self, value):
+    @staticmethod
+    def connection_configuration_mapping(value):
         """
         Map the connection configuration from CYME to DiTTo.
 
@@ -614,112 +669,7 @@ class Reader(AbstractReader):
                 )
             )
 
-    def transformer_connection_configuration_mapping(self, value, winding):
-        """
-        Map the connection configuration for transformer (2 windings) objects from CYME to DiTTo.
-
-        :param value: CYME value (either string or id)
-        :type value: int or str
-        :param winding: Number of the winding (0 or 1)
-        :type winding: int
-        :returns: DiTTo connection configuration for the requested winding
-        :rtype: str
-
-        **Mapping:**
-
-        +----------+----------------+------------+
-        |   Value  |       CYME     |  DiTTo     |
-        +----------+----------------+-----+------+
-        |          |                | 1st | 2nd  |
-        +==========+================+=====+======+
-        | 0 or '0' |      'Y_Y'     | 'Y' | 'Y'  |
-        +----------+----------------+-----+------+
-        | 1 or '1' |      'D_Y'     | 'D' | 'Y'  |
-        +----------+----------------+-----+------+
-        | 2 or '2' |      'Y_D'     | 'Y' | 'D'  |
-        +----------+----------------+-----+------+
-        | 3 or '3' |    'YNG_YNG'   | 'Y' | 'Y'  |
-        +----------+----------------+-----+------+
-        | 4 or '4' |      'D_D'     | 'D' | 'D'  |
-        +----------+----------------+-----+------+
-        | 5 or '5' |     'DO_DO'    | 'D' | 'D'  |
-        +----------+----------------+-----+------+
-        | 6 or '6' |     'YO_DO'    | 'Y' | 'D'  |
-        +----------+----------------+-----+------+
-        | 7 or '7' |     'D_YNG'    | 'D' | 'Y'  |
-        +----------+----------------+-----+------+
-        | 8 or '8' |     'YNG_D'    | 'Y' | 'D'  |
-        +----------+----------------+-----+------+
-        | 9 or '9' |     'Y_YNG'    | 'Y' | 'Y'  |
-        +----------+----------------+-----+------+
-        |10 or '10'|     'YNG_Y'    | 'Y' | 'Y'  |
-        +----------+----------------+-----+------+
-        |11 or '11'|     'Yg_Zg'    | 'Y' | 'Z'  |
-        +----------+----------------+-----+------+
-        |12 or '12'|     'D_Zg'     | 'D' | 'Z'  |
-        +----------+----------------+-----+------+
-        """
-        if winding not in [0, 1]:
-            raise ValueError(
-                "transformer_connection_configuration_mapping expects an integer 0 or 1 for winding arg. {} was provided.".format(
-                    winding
-                )
-            )
-
-        res = (None, None)
-
-        if isinstance(value, int):
-            if value == 0 or value == 3 or value == 9 or value == 10:
-                res = ("Y", "Y")
-            if value == 1 or value == 7:
-                res = ("D", "Y")
-            if value == 2 or value == 6 or value == 8:
-                res = ("Y", "D")
-            if value == 4 or value == 5:
-                res = ("D", "D")
-            if value == 11:
-                res = ("Y", "Z")
-            if value == 12:
-                res = ("D", "Z")
-
-        elif isinstance(value, string_types):
-            if value == "0" or value.lower() == "y_y":
-                res = ("Y", "Y")
-            if value == "1" or value.lower() == "d_y":
-                res = ("D", "Y")
-            if value == "2" or value.lower() == "y_d":
-                res = ("Y", "D")
-            if value == "3" or value.lower() == "yng_yng":
-                res = ("Y", "Y")
-            if value == "4" or value.lower() == "d_d":
-                res = ("D", "D")
-            if value == "5" or value.lower() == "do_do":
-                res = ("D", "D")
-            if value == "6" or value.lower() == "yo_do":
-                res = ("Y", "D")
-            if value == "7" or value.lower() == "d_yng":
-                res = ("D", "Y")
-            if value == "8" or value.lower() == "yng_d":
-                res = ("Y", "D")
-            if value == "9" or value.lower() == "y_yng":
-                res = ("Y", "Y")
-            if value == "10" or value.lower() == "yng_y":
-                res = ("Y", "Y")
-            if value == "11" or value.lower() == "yg_zg":
-                res = ("Y", "Z")
-            if value == "12" or value.lower() == "d_zg":
-                res = ("D", "Z")
-
-        else:
-            raise ValueError(
-                "transformer_connection_configuration_mapping expects an integer or a string. {} was provided.".format(
-                    type(value)
-                )
-            )
-
-        return res[winding]
-
-    def check_object_in_line(self, line, obj):
+    def check_object_in_line(self, line: str, obj: str) -> bool:
         """
         Check if the header corresponding to object is in the given line.
 
@@ -754,22 +704,72 @@ class Reader(AbstractReader):
 
         return np.any([x in line for x in self.header_mapping[obj]])
 
-    def parser_helper(self, line, obj_list, attribute_list, mapping, *args, **kwargs):
+    def parser_helper(self, line, obj: str, attribute_list, mapping: dict, *args, **kwargs) -> dict:
         """
         .. warning:: This is a helper function for the parsers. Do not use directly.
 
-        Takes as input the list of objects we want to parse as well as the list of attributes we want to extract.
-        Also takes the default positions of the attributes (mapping).
-        The function returns a list of dictionaries, where each dictionary contains the values of the desired attributes of a CYME object.
+        Takes as input the object we want to parse (eg. "section" maps to "[SECTION]") 
+        as well as the list of attributes we want to extract (eg. ["sectionid", "fromnodeid", "tonodeid", "phase"]).
+        Also takes the default positions of the attributes (mapping), which is overwritten if "format" is found in the line after `obj` is found.
+        The function returns a dictionary of dictionaries, where each sub-dictionary contains the values of the desired attributes of a CYME object.
+
+        The first and only top-level key in the returned dictionary is set to the first comma separated value in the line 
+        after the "format" line. For example, given 
+
+        - line="[TRANSFORMER]" 
+        - obj="transformer" 
+        - attribute_list=["kva", "kvllprim", "kvllsec"]
+        - args={"type": "transformer"}
+        
+        the following (truncated) example lines in network.txt:
+
+            [TRANSFORMER]
+            FORMAT_TRANSFORMER=ID,Type,WindingType,KVA,VoltageUnit,KVLLprim,KVLLsec, ...
+            1P_7.2KV/120/240V_25KVA,1,1,25.000000,0,12.470000,0.240000, ...
+            1P_7.2KV/240/120V_50KVA,1,1,50.000000,0,12.470000,0.240000, ...
+
+        will result in a returned dictionary like:
+
+            {
+                "type": "transformer",
+
+                "1P_7.2KV/120/240V_25KVA": {
+                    "kva": 25.000000,
+                    "kvllprim": 12.470000,
+                    "kvllsec": 0.240000
+                },
+
+                "1P_7.2KV/240/120V_50KVA": {
+                    "kva": 50.000000,
+                    "kvllprim": 12.470000,
+                    "kvllsec": 0.240000
+                },
+            }
+
+        Note that the `mapping` argument is not used in the above example because there is a "FORMAT_TRANSFORMER="
+        line after the section header, which is used to define the `mapping`.
+        
+
+        TODO is this case handled?!: (i.e. when the format is only temporary?)
+        [SECTION]
+        FORMAT_SECTION=SectionID,FromNodeID,FromNodeIndex,ToNodeID,ToNodeIndex,Phase,ZoneID,SubNetworkId
+        FORMAT_FEEDER=NetworkID,HeadNodeID,CoordSet,Year,Description,Color,LoadFactor,LossLoadFactorK,Group1,Group2,Group3,Group4,Group5,Group6,North,South,East,West,AreaFilter,TagText,TagProperties,TagDeltaX,TagDeltaY,TagAngle,TagAlignment,TagBorder,TagBackground,TagTextColor,TagBorderColor,TagBackgroundColor,TagLocation,TagFont,TagTextSize,TagOffset,Version
+        FEEDER=60803,SOURCE_60803,1,1662563223,,0,1.000000,0.150000,Lancaster,UNK,,,,,225423.609616,194367.254874,2452036.118000,2423405.968000,217563134,NULL,,,,,,,,,,,,,,,-1
+        43044S21249-L,2430449.596_212244.46,0,43044S21249-L,0,C,,
+        43936S21443-L,2439387.172_214373.799,0,43936S21443-L,0,A,,
+        ...
+
+
         """
         if isinstance(attribute_list, list):
-            attribute_list = np.array(attribute_list)
+            attribute_list = np.array(attribute_list)  # why do we need an numpy array?
 
         if not isinstance(attribute_list, np.ndarray):
             raise ValueError("Could not cast attribute list to Numpy array.")
 
         if args and isinstance(args[0], dict):
-            additional_information = args[0]
+            additional_information = args[0]  # typically {"type": "same-string-as-obj-arg"}, which gets added to the returned dict
+            # TODO make this update explicit if this is all that it is used for
         else:
             additional_information = {}
 
@@ -783,11 +783,8 @@ class Reader(AbstractReader):
 
         result = {}
 
-        # Check the presence of headers in the given line
-        checks = [self.check_object_in_line(line, obj) for obj in obj_list]
-
-        # If we have a least one
-        if any(checks):
+        # If header in line
+        if self.check_object_in_line(line, obj):
             # Get the next line
             next_line = next(self.content)
 
@@ -809,13 +806,13 @@ class Reader(AbstractReader):
                             idx2 = temp[0]
                             mapping[attribute_list[idx2]] = idx
                 except:
-                    pass
+                    logger.warn(f"Unable to parse CYME line FORMAT for {obj} in {next_line}")
 
                 next_line = next(self.content)
 
             # At this point, we should have the mapping for the parameters of interest
             # while next_line[0] not in ['[','',' ','\n','\r\n']:
-            while len(next_line) > 2:
+            while len(next_line) > 2:  # blank lines separate objects in CYME .txt files
                 if "=" not in next_line.lower():
 
                     data = next_line.split(",")
@@ -824,7 +821,7 @@ class Reader(AbstractReader):
 
                     if len(data) > 1:
 
-                        while ID in result:
+                        while ID in result: # redundant keys get *'s
                             ID += "*"
                         result[ID] = {}
 
@@ -862,10 +859,7 @@ class Reader(AbstractReader):
                         attribute_list = additional_attributes
                         additional_attributes = []
                     except:
-                        logger.warning(
-                            "Attempted to apply additional attributes but failed"
-                        )
-                        pass
+                        logger.warn(f"Unable to parse additional CYME line FORMAT for {obj} in {next_line}")
 
                 try:
                     next_line = next(self.content)
@@ -878,49 +872,43 @@ class Reader(AbstractReader):
         """
         Parse the CYME model to DiTTo.
 
-        :param model: DiTTo model
-        :type model: DiTTo model
-        :param verbose: Set the verbose mode. Optional. Default=True
+        :param model: DiTTo Store instance
+        :param verbose: Set the verbose mode. Optional. Default=False
         :type verbose: bool
         """
+        self.verbose = False
         if "verbose" in kwargs and isinstance(kwargs["verbose"], bool):
             self.verbose = kwargs["verbose"]
-        else:
-            self.verbose = False
 
-        if self.verbose:
-            logger.info("Parsing the header...")
+        if self.verbose: logger.info("Parsing the header...")
 
         self.parse_header()
+        
+        if self.verbose: logger.info("Parsing the Headnodes...")
+        self.parse_head_nodes(model)
 
-        logger.info("Parsing the sections...")
+        if self.verbose: logger.info("Parsing the sections...")
         self.parse_sections(model)
-
-        logger.info("Parsing the sources...")
-        self.parse_sources(model)
 
         # Call parse method of abtract reader
         super(Reader, self).parse(model, **kwargs)
 
-        logger.info("Parsing the network equivalents...")
+        if self.verbose: logger.info("Parsing the subnetwork connections...")
+        self.parse_subnetwork_connections(model)
+
+        if self.verbose: logger.info("Parsing the sources...")
+        self.parse_sources(model)
+
+        if self.verbose: logger.info("Parsing the network equivalents...")
         self.parse_network_equivalent(model)
 
-        # The variable self.network_type is set in the parse_sections() function.
-        # i.e. parse_sections
-        if self.network_type == "substation":
-            logger.info("Parsing the subnetwork connections...")
-            self.parse_subnetwork_connections(model)
-        else:
-            logger.info("Parsing the Headnodes...")
-            self.parse_head_nodes(model)
-
         self.fix_section_overlaps(model)
-
+        # overwriting 7_reg after this? yes. what is the point of set_names() ? it's called a bunch of times
         model.set_names()
+        if self.verbose: logger.info("Setting node and line nominal voltages...")
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
-
 
     def parse_header(self):
         """
@@ -966,9 +954,7 @@ class Reader(AbstractReader):
         self.cyme_version = cyme_version
 
         if self.use_SI is None:
-            raise ValueError(
-                "Could not find [SI] or [IMPERIAL] unit system information. Unable to parse."
-            )
+            raise ValueError("Could not find [SI] or [IMPERIAL] unit system information. Unable to parse.")
 
     def parse_subnetwork_connections(self, model):
         """Parse the subnetwork connections.
@@ -982,19 +968,21 @@ class Reader(AbstractReader):
             self.subnetwork_connections.update(
                 self.parser_helper(
                     line,
-                    ["subnetwork_connections"],
+                    "subnetwork_connections",
                     ["nodeid"],
                     mapp_subnetwork_connections,
                 )
             )
 
         for key in self.subnetwork_connections:
-            model[
-                self.subnetwork_connections[key]["nodeid"]
-            ].is_substation_connection = True
+            model[self.subnetwork_connections[key]["nodeid"]].is_substation_connection = True
 
     def parse_head_nodes(self, model):
-        """ This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes"""
+        """ 
+        This parses the [HEADNODES] objects and is used to build Feeder_metadata DiTTo objects which define the feeder names and feeder headnodes
+        HEADNODES maps NodeID <-> NetworkID
+        and NetworkID is used to identify SUBSTATION and FEEDER in [SECTION]
+        """
         # Open the network file
         self.get_file_content("network")
         mapp = {
@@ -1004,13 +992,15 @@ class Reader(AbstractReader):
         headnodes = {}
         for line in self.content:
             headnodes.update(
-                self.parser_helper(line, ["headnodes"], ["nodeid", "networkid"], mapp)
+                self.parser_helper(line, "headnodes", ["nodeid", "networkid"], mapp)
             )
+        self.headnodes = headnodes
 
-        for sid, headnode in headnodes.items():
-            feeder_metadata = Feeder_metadata(model)
-            feeder_metadata.name = headnode["networkid"].strip().lower()
-            feeder_metadata.headnode = headnode["nodeid"].strip().lower()
+        # for sid, headnode in headnodes.items():
+        #     feeder_metadata = Feeder_metadata(model)
+        #     feeder_metadata.name = headnode["networkid"].strip().lower()
+        #     feeder_metadata.headnode = headnode["nodeid"].strip().lower()
+        
 
     def parse_sources(self, model):
         """Parse the sources."""
@@ -1036,11 +1026,11 @@ class Reader(AbstractReader):
         subs = {}
         source_equivalents = {}
 
-        for line in self.content:
+        for line in self.content:  # parser_helper will only loop over lines in self.content if it finds obj in the `line`; o.w. returns empty dict
             sources.update(
                 self.parser_helper(
                     line,
-                    ["source"],
+                    "source",
                     ["sourceid", "nodeid", "networkid", "desiredvoltage"],
                     mapp,
                 )
@@ -1048,7 +1038,7 @@ class Reader(AbstractReader):
             source_equivalents.update(
                 self.parser_helper(
                     line,
-                    ["source_equivalent"],
+                    "source_equivalent",
                     [
                         "nodeid",
                         "voltage",
@@ -1078,7 +1068,7 @@ class Reader(AbstractReader):
         for line in self.content:
             subs.update(
                 self.parser_helper(
-                    line, ["substation"], ["id", "mva", "kvll", "conn"], mapp_sub
+                    line, "substation", ["id", "mva", "kvll", "conn"], mapp_sub
                 )
             )
         if len(sources.items()) == 0:
@@ -1098,11 +1088,8 @@ class Reader(AbstractReader):
                         _from = v["tonodeid"]
                         _to = v["fromnodeid"]
                         phases = list(v["phase"])
-                try:
-                    api_source = PowerSource(model)
-                except:
-                    pass
 
+                api_source = PowerSource(model)
                 api_source.name = _from + "_src"
 
                 try:
@@ -1116,8 +1103,18 @@ class Reader(AbstractReader):
                     api_source.phases = phases
                 except:
                     pass
-
-                api_source.is_sourcebus = True
+                
+                # If there is a substation then it should be the source bus not a feeder
+                # Or if there is only one source
+                # TODO multiple substations are multiple feeders without a substation?
+                if len(source_equivalent_data) == 1:
+                    api_source.is_sourcebus = True
+                else:
+                    if _from in self.headnodes.keys():
+                        if "type" in self.headnodes[_from]:
+                            if self.headnodes[_from]["type"] == "substation":
+                                api_source.is_sourcebus = True
+                
 
                 try:
                     api_source.rated_power = 10 ** 3 * float(
@@ -1371,7 +1368,7 @@ class Reader(AbstractReader):
             nodes.update(
                 self.parser_helper(
                     line,
-                    ["node"],
+                    "node",
                     ["nodeid", "coordx", "coordy", "ratedvoltage"],
                     mapp,
                     **kwargs
@@ -1381,7 +1378,7 @@ class Reader(AbstractReader):
         for line in self.content:
             node_connectors.update(
                 self.parser_helper(
-                    line, ["node_connector"], ["nodeid", "coordx", "coordy"], mapp
+                    line, "node_connector", ["nodeid", "coordx", "coordy"], mapp
                 )
             )
 
@@ -1556,8 +1553,8 @@ class Reader(AbstractReader):
         ...
 
         [SECTION]
-        FORMAT_section=sectionid,fromnodeid,tonodeid,phase
-        FORMAT_Feeder=networkid,headnodeid
+        FORMAT_section=sectionid,fromnodeid,...,tonodeid,...,phase 
+        FORMAT_Feeder=networkid,headnodeid,...
         Feeder=feeder_1,head_feeder_1
         section_1_feeder_1,node_1,node_2,ABC
         ...
@@ -1565,7 +1562,10 @@ class Reader(AbstractReader):
         Feeder=feeder_2,head_feeder_2
         section_1_feeder_2,node_1,node_2,ABC
         ...
+        FORMAT_SUBSTATION=NetworkID,HeadNodeID
+        SUBSTATION=substation_name,substation_node_id,
         ...
+
 
         **What is done in this function:**
 
@@ -1652,8 +1652,12 @@ class Reader(AbstractReader):
                             or line[:15].lower() == "generalnetwork="
                         ):
                             self.network_type = "feeder"
+                            network_type = "feeder"
                         if line[:11].lower() == "substation=":
                             self.network_type = "substation"
+                            network_type = "substation"
+                            # all sections parsed after this line are in a substation with the NetworkID
+                            # from SUBSTATION=THE_NTWK_ID (until a new FORMAT is found)
 
                         # We should have a format for sections and feeders,
                         # otherwise, raise an error...
@@ -1700,7 +1704,7 @@ class Reader(AbstractReader):
                             self.network_data[_netID][key] = value
 
                         # Then, we create a new entry in feeder_section_mapping
-                        self.feeder_section_mapping[_netID] = []
+                        self.feeder_section_mapping[_netID] = []  # never filled in ?
 
                     # Otherwise, we should have a new section...
                     else:
@@ -1734,9 +1738,14 @@ class Reader(AbstractReader):
                         # Populate this new entry
                         for key, value in zip(format_section, section_data):
                             self.section_phase_mapping[_sectionID][key] = value
+                            if key == "fromnodeid":
+                                if value in self.headnodes.keys():
+                                    self.headnodes[value]["type"] = network_type
 
                         # And finally, add a new entry to section_feeder_mapping
                         self.section_feeder_mapping[_sectionID] = _netID
+                        # section_feeder_mapping should be section_network_mapping
+                        # b/c network can be feeder or substation 
 
                     # Finally, move on to next line
                     line = next(self.content)
@@ -1947,7 +1956,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["overhead_unbalanced_line_settings"],
+                    "overhead_unbalanced_line_settings",
                     ["sectionid", "coordx", "coordy", "linecableid", "length"],
                     mapp_overhead,
                     {"type": "overhead_unbalanced"},
@@ -1964,7 +1973,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["overhead_line_settings"],
+                    "overhead_line_settings",
                     ["sectionid", "coordx", "coordy", "linecableid", "length"],
                     mapp_overhead,
                     {"type": "overhead_balanced"},
@@ -1981,7 +1990,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["overhead_byphase_settings"],
+                    "overhead_byphase_settings",
                     [
                         "sectionid",
                         "devicenumber",
@@ -2011,7 +2020,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["underground_line_settings"],
+                    "underground_line_settings",
                     ["sectionid", "coordx", "coordy", "linecableid", "length", "amps"],
                     mapp_underground,
                     {"type": "underground"},
@@ -2028,7 +2037,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["switch_settings"],
+                    "switch_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_switch,
                     {"type": "switch"},
@@ -2045,7 +2054,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["sectionalizer_settings"],
+                    "sectionalizer_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_sectionalizer,
                     {"type": "sectionalizer"},
@@ -2062,7 +2071,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["fuse_settings"],
+                    "fuse_settings",
                     ["sectionid", "coordx", "coordy", "eqid"],
                     mapp_switch,  # Same as switches
                     {"type": "fuse"},
@@ -2079,7 +2088,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["recloser_settings"],
+                    "recloser_settings",
                     ["sectionid", "coordx", "coordy", "eqid"],
                     mapp_switch,  # Same as switches
                     {"type": "recloser"},
@@ -2096,7 +2105,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["breaker_settings"],
+                    "breaker_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_switch,  # Same as switches
                     {"type": "breaker"},
@@ -2113,7 +2122,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["network_protector_settings"],
+                    "network_protector_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_switch,  # Same as switches
                     {"type": "network_protector"},
@@ -2130,7 +2139,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["section"],
+                    "section",
                     ["sectionid", "fromnodeid", "tonodeid", "phase"],
                     mapp_section,
                 ),
@@ -2157,7 +2166,7 @@ class Reader(AbstractReader):
             self.balanced_lines.update(
                 self.parser_helper(
                     line,
-                    ["line"],
+                    "line",
                     [
                         "id",
                         "phasecondid",
@@ -2185,7 +2194,7 @@ class Reader(AbstractReader):
             self.unbalanced_lines.update(
                 self.parser_helper(
                     line,
-                    ["unbalanced_line"],
+                    "unbalanced_line",
                     [
                         "id",
                         "condid_a",
@@ -2225,7 +2234,7 @@ class Reader(AbstractReader):
             self.spacings.update(
                 self.parser_helper(
                     line,
-                    ["spacing_table"],
+                    "spacing_table",
                     [
                         "id",
                         "posofcond1_x",
@@ -2252,7 +2261,7 @@ class Reader(AbstractReader):
             self.conductors.update(
                 self.parser_helper(
                     line,
-                    ["conductor"],
+                    "conductor",
                     ["id", "diameter", "gmr", "r25", "amps", "withstandrating"],
                     mapp_conductor,
                 )
@@ -2267,7 +2276,7 @@ class Reader(AbstractReader):
             self.concentric_neutral_cable.update(
                 self.parser_helper(
                     line,
-                    ["concentric_neutral_cable"],
+                    "concentric_neutral_cable",
                     [
                         "id",
                         "r1",
@@ -2291,7 +2300,7 @@ class Reader(AbstractReader):
             self.cables.update(
                 self.parser_helper(
                     line,
-                    ["cable"],
+                    "cable",
                     ["id", "r1", "r0", "x1", "x0", "amps"],
                     mapp_concentric_neutral_cable,
                 )
@@ -2305,7 +2314,7 @@ class Reader(AbstractReader):
             #
             self.switches.update(
                 self.parser_helper(
-                    line, ["switch"], ["id", "amps", "kvll"], mapp_switch_eq
+                    line, "switch", ["id", "amps", "kvll"], mapp_switch_eq
                 )
             )
 
@@ -2318,7 +2327,7 @@ class Reader(AbstractReader):
             self.fuses.update(
                 self.parser_helper(
                     line,
-                    ["fuse"],
+                    "fuse",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,  # Same as network protectors
                 )
@@ -2333,7 +2342,7 @@ class Reader(AbstractReader):
             self.reclosers.update(
                 self.parser_helper(
                     line,
-                    ["recloser"],
+                    "recloser",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,  # Same as network protectors
                 )
@@ -2348,7 +2357,7 @@ class Reader(AbstractReader):
             self.sectionalizers.update(
                 self.parser_helper(
                     line,
-                    ["sectionalizer"],
+                    "sectionalizer",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_sectionalizers,
                 )
@@ -2363,7 +2372,7 @@ class Reader(AbstractReader):
             self.breakers.update(
                 self.parser_helper(
                     line,
-                    ["breaker"],
+                    "breaker",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,  # Same as network protectors
                 )
@@ -2378,7 +2387,7 @@ class Reader(AbstractReader):
             self.network_protectors.update(
                 self.parser_helper(
                     line,
-                    ["network_protector"],
+                    "network_protector",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,
                 )
@@ -3024,7 +3033,6 @@ class Reader(AbstractReader):
                     line_data = self.concentric_neutral_cable[settings["linecableid"]]
                     line_data["type"] = "balanced_line"
                 if settings["linecableid"] in self.cables:
-                    logger.debug("cables {}".format(sectionID))
                     line_data = self.cables[settings["linecableid"]]
                     line_data["type"] = "balanced_line"
 
@@ -3848,13 +3856,33 @@ class Reader(AbstractReader):
             "switchedkvara": 13,
             "switchedkvarb": 14,
             "switchedkvarc": 15,
+            "voltageoverride": 20,
+            "voltageoverrideon": 21, 
+            "voltageoverrideoff": 22,
             "kv": 24,
+            "control": 25,
+            "onvaluea": 26,
+            "onvalueb": 27,
+            "onvaluec": 28,
+            "offvaluea": 29,
+            "offvalueb": 30,
+            "offvaluec": 31,
             "controllingphase": 35,
         }
         mapp_serie_capacitor = {"id": 0, "reactance": 6}
         mapp_shunt_capacitor = {"id": 0, "kvar": 1, "kv": 2, "type": 6}
         self.settings = {}
         self.capacitors = {}
+        cap_control_map = {  # cyme names in comments, None's don't have an equivalent in Ditto model
+            0: None, # "Manual Control",
+            1: "voltage", # "Voltage Control"
+            2: "currentFlow", # "Current Control"
+            3: None, # "Reactive Current Control",
+            4: "activePower", # "Power Factor Control",
+            5: None, # "Temperature Control",
+            6: "timeScheduled", # "Time Control",
+            7: "reactivePower", # "KVAR Control",
+        }
 
         #####################################################
         #                                                   #
@@ -3877,7 +3905,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["serie_capacitor_settings"],
+                    "serie_capacitor_settings",
                     ["sectionid", "eqid", "coordx", "coordy"],
                     mapp_serie_capacitor_settings,
                     {"type": "serie"},
@@ -3893,7 +3921,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["shunt_capacitor_settings"],
+                    "shunt_capacitor_settings",
                     [
                         "sectionid",
                         "shuntcapacitorid",
@@ -3906,6 +3934,16 @@ class Reader(AbstractReader):
                         "switchedkvarc",
                         "kv",
                         "controllingphase",
+                        "onvaluea",
+                        "onvalueb",
+                        "onvaluec",
+                        "offvaluea",
+                        "offvalueb",
+                        "offvaluec",
+                        "control",
+                        "voltageoverride",
+                        "voltageoverrideon", 
+                        "voltageoverrideoff",
                     ],
                     mapp_shunt_capacitor_settings,
                     {"type": "shunt"},
@@ -3932,7 +3970,7 @@ class Reader(AbstractReader):
             #
             self.capacitors.update(
                 self.parser_helper(
-                    line, ["serie_capacitor"], ["id", "reactance"], mapp_serie_capacitor
+                    line, "serie_capacitor", ["id", "reactance"], mapp_serie_capacitor
                 )
             )
 
@@ -3945,7 +3983,7 @@ class Reader(AbstractReader):
             self.capacitors.update(
                 self.parser_helper(
                     line,
-                    ["shunt_capacitor"],
+                    "shunt_capacitor",
                     ["id", "kvar", "kv", "type"],
                     mapp_shunt_capacitor,
                 )
@@ -3956,24 +3994,14 @@ class Reader(AbstractReader):
             sectionID = sectionID.strip("*").lower()
 
             # Instanciate Capacitor DiTTo objects
-            try:
-                api_capacitor = Capacitor(model)
-            except:
-                raise ValueError(
-                    "Unable to instanciate capacitor {id}".format(id=scap["sectionid"])
-                )
+            api_capacitor = Capacitor(model)
 
             # Set the name
-            try:
-                api_capacitor.name = "Cap_" + sectionID
-            except:
-                pass
+            api_capacitor.name = "Cap_" + sectionID
 
             # Set the connecting element (info is in the section)
             try:
-                api_capacitor.connecting_element = self.section_phase_mapping[
-                    sectionID
-                ]["fromnodeid"]
+                api_capacitor.connecting_element = self.section_phase_mapping[sectionID]["fromnodeid"]
             except:
                 pass
 
@@ -4008,12 +4036,11 @@ class Reader(AbstractReader):
                 pass
 
             # Get the device number
+            dev_num = None
             if "eqid" in settings:
                 dev_num = settings["eqid"]
             elif "shuntcapacitorid" in settings:
                 dev_num = settings["shuntcapacitorid"]
-            else:
-                dev_num = None
 
             capacitor_data = None
             if dev_num is not None:
@@ -4066,95 +4093,98 @@ class Reader(AbstractReader):
                     "Capacitor {name} is monitoring phase {p} which is not in the section {id} phase list {lis}.".format(
                         name=api_capacitor.name,
                         p=api_capacitor.pt_phase,
-                        id=scap["sectionid"],
+                        id=sectionID,
                         lis=phases,
                     )
                 )
 
-            # For each phase...
+            if "voltageoverride" in settings.keys() and settings["voltageoverride"]:
+                if "voltageoverrideon" in settings.keys():
+                    try: api_capacitor.vmin = float(settings["voltageoverrideon"])
+                    except: logger.warn(f"Could not set vmin for Capacitor {api_capacitor.name}")
+                if "voltageoverrideoff" in settings.keys():
+                    try: api_capacitor.vmax = float(settings["voltageoverrideoff"])
+                    except: logger.warn(f"Could not set vmax for Capacitor {api_capacitor.name}")
+
+            # For each phase make a PhaseCapacitor and set its rating
+            on_values = []
+            off_values = []
+            control_mode_ints = []
             for p in phases:
-
-                # Instanciate a PhaseCapacitor DiTTo object
-                try:
-                    api_phaseCapacitor = PhaseCapacitor(model)
-                except:
-                    raise ValueError(
-                        "Unable to instanciate PhaseCapacitor DiTTo object."
-                    )
-
-                # Set the phase
-                try:
-                    api_phaseCapacitor.phase = p
-                except:
-                    pass
+                api_phaseCapacitor = PhaseCapacitor(model)
+                api_phaseCapacitor.phase = p
 
                 # Set var value
+                fixed_key = "fixedkvar" + p.lower()  # p is one of "A", "B", "C"
+                switched_key = "switchedkvar" + p.lower()
                 if (
-                    "fixedkvara" in settings
-                    and "fixedkvarb" in settings
-                    and "fixedkvarc" in settings
-                    and max(
-                        float(settings["fixedkvara"]),
-                        max(
-                            float(settings["fixedkvarb"]), float(settings["fixedkvarc"])
-                        ),
-                    )
-                    > 0
+                    fixed_key in settings.keys() and settings[fixed_key] is not None and
+                    float(settings[fixed_key]) > 0
                 ):
-                    try:
-                        if p == "A":
-                            api_phaseCapacitor.var = (
-                                float(settings["fixedkvara"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "B":
-                            api_phaseCapacitor.var = (
-                                float(settings["fixedkvarb"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "C":
-                            api_phaseCapacitor.var = (
-                                float(settings["fixedkvarc"]) * 10 ** 3
-                            )  # Ditto in var
-                    except:
-                        pass
+                    api_phaseCapacitor.var = (
+                        float(settings[fixed_key]) * 10 ** 3
+                    )  # Ditto in var
                 elif (
-                    "switchedkvara" in settings
-                    and "switchedkvarb" in settings
-                    and "switchedkvarc" in settings
-                    and max(
-                        float(settings["switchedkvara"]),
-                        max(
-                            float(settings["switchedkvarb"]),
-                            float(settings["switchedkvarc"]),
-                        ),
-                    )
-                    > 0
+                    switched_key in settings.keys() and settings[switched_key] is not None and
+                    float(settings[switched_key]) > 0
                 ):
-                    try:
-                        if p == "A":
-                            api_phaseCapacitor.var = (
-                                float(settings["switchedkvara"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "B":
-                            api_phaseCapacitor.var = (
-                                float(settings["switchedkvarb"]) * 10 ** 3
-                            )  # Ditto in var
-                        if p == "C":
-                            api_phaseCapacitor.var = (
-                                float(settings["switchedkvarc"]) * 10 ** 3
-                            )  # Ditto in var
-                    except:
-                        pass
-
-                elif capacitor_data is not None:
-                    try:
+                    api_phaseCapacitor.var = (
+                        float(settings[switched_key]) * 10 ** 3
+                    )  # Ditto in var
+                    api_phaseCapacitor.switch = True
+                elif capacitor_data is not None and "kvar" in capacitor_data.keys():
+                    if capacitor_data["kvar"] is not None:
                         api_phaseCapacitor.var = (
                             float(capacitor_data["kvar"]) * 10 ** 3
                         )  # DiTTo in var
-                    except:
-                        pass
+                else:
+                    continue # can't make a capacitor without a rating
+
+                # check for on/off settings
+                on_key = "onvalue" + p.lower()
+                off_key = "offvalue" + p.lower()
+
+                if on_key in settings.keys() and settings[on_key] is not None:
+                    try:
+                        if float(settings[on_key]) > 0:
+                            on_values.append(float(settings[on_key]))
+                    except ValueError: pass  # empty string
+
+                if off_key in settings.keys() and settings[off_key] is not None:
+                    try:
+                        if float(settings[off_key]) > 0:
+                            off_values.append(float(settings[off_key]))
+                    except ValueError: pass  # empty string
+
+                if "control" in settings.keys() and settings["control"] is not None:
+                    try:
+                        control_mode_ints.append(int(settings["control"]))
+                    except ValueError: pass  # empty string
 
                 # Append the phase capacitor object to the capacitor
+                api_capacitor.measuring_element = sectionID  # the line for control measurements
                 api_capacitor.phase_capacitors.append(api_phaseCapacitor)
+            
+            if len(on_values) > 1:
+                if not all(x == on_values[0] for x in on_values[1:]):
+                    logger.warn(f"Not all of the on values for capacitor in section {sectionID} are the same. Using the lowest value.")
+                api_capacitor.low = min(on_values)
+            elif len(on_values) == 1:
+                api_capacitor.low = on_values[0]
+
+            if len(control_mode_ints) > 1:
+                if not all(x == control_mode_ints[0] for x in control_mode_ints[1:]):
+                    logger.warn(f"Not all of the control modes for capacitor in section {sectionID} are the same. Using the first value.")
+                api_capacitor.mode = cap_control_map[control_mode_ints[0]]
+            elif len(control_mode_ints) == 1:
+                api_capacitor.mode = cap_control_map[control_mode_ints[0]]
+
+            if len(off_values) > 1:
+                if not all(x == off_values[0] for x in off_values[1:]):
+                    logger.warn(f"Not all of the off values for capacitor in section {sectionID} are the same. Using the highest value.")
+                api_capacitor.high = max(off_values)
+            elif len(off_values) == 1:
+                api_capacitor.high = off_values[0]
 
             self._capacitors.append(api_capacitor)
             if not sectionID in self.section_duplicates:
@@ -4164,10 +4194,59 @@ class Reader(AbstractReader):
         return 1
 
     def parse_transformers(self, model):
-        """Parse the transformers from CYME to DiTTo. Since substation transformer can have LTCs attached, when parsing a transformer, we may also create a regulator. LTCs are represented as regulators."""
+        """
+        Parse the transformers from CYME to DiTTo. 
+        Since substation transformer can have LTCs attached, when parsing a transformer, 
+        we also create a regulator if "isltc" column is true. (LTCs are represented as regulators.)
+        CYME equipment that have "isltc" column include:
+        - TRANSFORMER
+        - AUTOTRANSFORMER
+
+        The [TRANSFORMER] section specifies generic transformers that can be place in the 
+        network via other section specifications. For example, 
+        [TRANSFORMER BYPHASE SETTING] contains columns for 
+        PhaseTransformerID1, PhaseTransformerID2, and PhaseTransformerID3
+        which must have at least one (string) value that corresponds to [TRANSFORMER] ID
+
+        List of sections parsed:
+
+        # network.txt
+        NOTE: When parsing the network values the "type" key is set to the corresponding
+        equipment.txt name by passing {"type": "grounding_transformer"} for example
+        to `parser_helper` when parsing "grounding_transformer_settings".
+
+        NOTE: seems like the SETTING values have required SectionID and EqID fields but
+        it may not be consistent (for example PHOTOVOLTAIC SETTINGS has a required
+        EquipmentID field and a rewquired DeviceNumber field)
+
+        NOTE: all of these SETTING sections start with SectionID (but there are exceptions
+        for other SETTING sections such as [CONVERTER CONTROL SETTING] that starts with DeviceNumber)
+
+        - [AUTO TRANSFORMER SETTING]
+        - [GROUNDINGTRANSFORMER SETTINGS]
+        - [THREE WINDING AUTO TRANSFORMER SETTING]
+        - [THREE WINDING TRANSFORMER SETTING]
+        - [TRANSFORMER SETTING]
+        - [TRANSFORMER BYPHASE SETTING]
+        - [PHASE SHIFTER TRANSFORMER SETTING]
+
+        # equipment.txt
+        NOTE: all equipment sections start with ID (not SectionID)
+        - [AUTO TRANSFORMER]
+        - [GROUNDING TRANSFORMER]
+        - [THREE WINDING AUTO TRANSFORMER]
+        - [THREE WINDING TRANSFORMER]
+        - [TRANSFORMER]
+        - TODO add [PHASE SHIFTER TRANSFORMER]
+
+        NOTE: it appears that all BYPHASE values are only SETTINGs (no BYPHASE equipment) and so
+        TRANSFORMER BYPHASE SETTING defines values for a TRANSFORMER (there are also 
+        REGULATOR BYHPASE SETTING and OVERHEAD BYPHASE SETTING)
+        """
         # Instanciate the list in which we store the DiTTo transformer objects
         self._transformers = []
 
+        # maps of object column names to indices
         mapp_auto_transformer_settings = {
             "sectionid": 0,
             "eqid": 2,
@@ -4283,7 +4362,15 @@ class Reader(AbstractReader):
             "coordx": 10,
             "coordy": 11,
         }
+        mapp_transformer_byphase_settings = {
+            "sectionid": 0,
+            "phasetransformerid1": 8, # maps to TRANSFORMER ID
+            "phasetransformerid2": 9,
+            "phasetransformerid3": 10,
+            "feedingnode": 16
+        }
 
+        # empty dicts to fill from txt files
         self.auto_transformers = {}
         self.grounding_transformers = {}
         self.three_winding_auto_transformers = {}
@@ -4300,19 +4387,19 @@ class Reader(AbstractReader):
         # Open the network file
         self.get_file_content("network")
 
-        # Loop over the network file
+        # Loop over the network file to get the SETTINGS
         for line in self.content:
 
             #########################################
             #                                       #
-            #             AUTO TRANSFORMER          #
+            #       AUTO TRANSFORMER SETTINGS       #
             #                                       #
             #########################################
             #
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["auto_transformer_settings"],
+                    "auto_transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4328,30 +4415,30 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #         GROUNDING TRANSFORMER         #
+            #    GROUNDING TRANSFORMER SETTINGS     #
             #                                       #
             #########################################
             #
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["grounding_transformer_settings"],
+                    "grounding_transformer_settings",
                     ["sectionid", "equipmentid", "connectionconfiguration", "phase"],
                     mapp_grounding_transformer_settings,
                     {"type": "grounding_transformer"},
                 )
             )
 
-            #########################################
-            #                                       #
-            #   THREE WINDING AUTO TRANSFORMER      #
-            #                                       #
-            #########################################
+            ###########################################
+            #                                         #
+            # THREE WINDING AUTO TRANSFORMER SETTINGS #
+            #                                         #
+            ###########################################
             #
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_auto_transformer_settings"],
+                    "three_winding_auto_transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4371,14 +4458,14 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #      THREE WINDING TRANSFORMER        #
+            #   THREE WINDING TRANSFORMER SETTINGS  #
             #                                       #
             #########################################
             #
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_transformer_settings"],
+                    "three_winding_transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4398,25 +4485,23 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #             TRANSFORMER               #
+            #          TRANSFORMER SETTINGS         #
             #                                       #
             #########################################
             #
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["transformer_settings"],
+                    "transformer_settings",
                     [
                         "sectionid",
                         "eqid",
                         "coordx",
                         "coordy",
-                        "primaryfixedtapsetting",
-                        "secondaryfixedtapsetting",
-                        "tertiaryfixedtapsetting",
+                        "primtap",
+                        "secondarytap",
                         "primarybasevoltage",
                         "secondarybasevoltage",
-                        "tertiarybasevoltage",
                         "setpoint",
                         "maxbuck",
                         "maxboost",
@@ -4430,14 +4515,30 @@ class Reader(AbstractReader):
 
             #########################################
             #                                       #
-            #    PHASE SHIFTER TRANSFORMER          #
+            #       TRANSFORMER BYPHASE SETTING     #
+            #                                       #
+            #########################################
+            
+            self.settings.update(  # why self.settings? (and not a local dict?)
+                self.parser_helper(
+                    line,
+                    "transformer_byphase_settings",
+                    list(mapp_transformer_byphase_settings.keys()),  # why a list of keys to parse separate from the mapp dict?
+                    mapp_transformer_byphase_settings,
+                    {"type": "transformer_byphase"},
+                )
+            )
+
+            #########################################
+            #                                       #
+            #    PHASE SHIFTER TRANSFORMER SETTINGS #
             #                                       #
             #########################################
             #
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["phase_shifter_transformer_settings"],
+                    "phase_shifter_transformer_settings",
                     ["sectionid", "eqid", "coordx", "coordy"],
                     mapp_phase_shifter_transformer_settings,
                     {"type": "phase_shifter_transformer"},
@@ -4465,7 +4566,7 @@ class Reader(AbstractReader):
             self.auto_transformers.update(
                 self.parser_helper(
                     line,
-                    ["auto_transformer"],
+                    "auto_transformer",
                     [
                         "id",
                         "kva",
@@ -4489,7 +4590,7 @@ class Reader(AbstractReader):
             self.grounding_transformers.update(
                 self.parser_helper(
                     line,
-                    ["grounding_transformer"],
+                    "grounding_transformer",
                     ["id", "ratedcapacity", "ratedvoltage", "connection_configuration"],
                     mapp_grounding_transformer,
                 )
@@ -4505,7 +4606,7 @@ class Reader(AbstractReader):
             self.three_winding_auto_transformers.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_auto_transformer"],
+                    "three_winding_auto_transformer",
                     [
                         "id",
                         "primaryratedcapacity",
@@ -4530,7 +4631,7 @@ class Reader(AbstractReader):
             self.three_winding_transformers.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_transformer"],
+                    "three_winding_transformer",
                     [
                         "id",
                         "primaryratedcapacity",
@@ -4554,7 +4655,7 @@ class Reader(AbstractReader):
             self.transformers.update(
                 self.parser_helper(
                     line,
-                    ["transformer"],
+                    "transformer",
                     [
                         "id",
                         "type",
@@ -4577,6 +4678,7 @@ class Reader(AbstractReader):
                 )
             )
 
+        # for each line in a SETTING section define a PowerTransformer
         for sectionID, settings in self.settings.items():
 
             sectionID = sectionID.strip("*").lower()
@@ -4597,6 +4699,7 @@ class Reader(AbstractReader):
 
             try:
                 phases = self.section_phase_mapping[sectionID]["phase"]
+                # phases is a string of length 1-3 with any combination of "A", "B", "C"
             except:
                 raise ValueError("Empty phases for transformer {}.".format(sectionID))
 
@@ -4739,54 +4842,14 @@ class Reader(AbstractReader):
                 else:
                     transformer_data = self.transformers["DEFAULT"]
 
-                # Resistance
-                #
-                # Note: Imported from Julietta's code
-                #
-                Z1 = float(transformer_data["z1"])
-                Z0 = float(transformer_data["z0"])
-                XR = float(transformer_data["xr"])
-                XR0 = float(transformer_data["xr0"])
-                if XR == 0:
-                    R1 = 0
-                    X1 = 0
-                else:
-                    R1 = Z1 / math.sqrt(1 + XR * XR)
-                    X1 = Z1 / math.sqrt(1 + 1 / (XR * XR))
-                if XR0 == 0:
-                    R0 = 0
-                    X0 = 0
-                else:
-                    R0 = Z0 / math.sqrt(1 + XR0 * XR0)
-                    X0 = Z0 / math.sqrt(1 + 1 / (XR0 * XR0))
-                complex0 = complex(R0, X0)
-                complex1 = complex(R1, X1)
-                matrix = np.array(
-                    [[complex0, 0, 0], [0, complex1, 0], [0, 0, complex1]]
-                )
-                a = 1 * cmath.exp(2 * math.pi * 1j / 3)
-                T = np.array([[1.0, 1.0, 1.0], [1.0, a * a, a], [1.0, a, a * a]])
-                T_inv = np.linalg.inv(T)
-                Zabc = T * matrix * T_inv
-                Z_perc = Zabc.item((0, 0))
-                R_perc = Z_perc.real / 2.0
-                xhl = Z_perc.imag
+                xhl, R_perc = get_transformer_xhl_Rpercent(transformer_data)
 
                 # Check if it's an LTC
                 #
                 if "isltc" in transformer_data and transformer_data["isltc"]:
                     # Instanciate a Regulator DiTTo object
-                    try:
-                        api_regulator = Regulator(model)
-                    except:
-                        raise ValueError(
-                            "Unable to instanciate Regulator DiTTo object."
-                        )
-
-                    try:
-                        api_regulator.name = "Reg_" + settings["sectionid"]
-                    except:
-                        pass
+                    api_regulator = Regulator(model)
+                    api_regulator.name = "Reg_" + settings["sectionid"]
                     api_regulator.feeder_name = self.section_feeder_mapping[sectionID]
 
                     try:
@@ -4823,77 +4886,8 @@ class Reader(AbstractReader):
                     pass
 
                 # Here we know that we have two windings...
-                for w in range(2):
-
-                    # Instanciate a Winding DiTTo object
-                    try:
-                        api_winding = Winding(model)
-                    except:
-                        raise ValueError("Unable to instanciate Winding DiTTo object.")
-
-                    # Set the rated power
-                    try:
-                        if w == 0:
-                            api_winding.rated_power = (
-                                float(transformer_data["kva"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        if w == 1:
-                            api_winding.rated_power = (
-                                float(transformer_data["kva"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                    except:
-                        pass
-
-                    # Set the nominal voltage
-                    try:
-                        if w == 0:
-                            api_winding.nominal_voltage = (
-                                float(transformer_data["kvllprim"]) * 10 ** 3
-                            )  # DiTTo in volt
-                        if w == 1:
-                            api_winding.nominal_voltage = (
-                                float(transformer_data["kvllsec"]) * 10 ** 3
-                            )  # DiTTo in volt
-                    except:
-                        pass
-
-                    # Connection configuration
-                    try:
-                        api_winding.connection_type = self.transformer_connection_configuration_mapping(
-                            transformer_data["conn"], w
-                        )
-                    except:
-                        pass
-
-                    # Resistance
-                    try:
-                        api_winding.resistance = R_perc
-                    except:
-                        pass
-
-                    # For each phase...
-                    for p in phases:
-
-                        # Instanciate a PhaseWinding DiTTo object
-                        try:
-                            api_phase_winding = PhaseWinding(model)
-                        except:
-                            raise ValueError(
-                                "Unable to instanciate PhaseWinding DiTTo object."
-                            )
-
-                        # Set the phase
-                        try:
-                            api_phase_winding.phase = p
-                        except:
-                            pass
-
-                        # Add the phase winding object to the winding
-                        api_winding.phase_windings.append(api_phase_winding)
-
-                    # Add the winding object to the transformer
-                    api_transformer.windings.append(api_winding)
-
+                add_two_windings(api_transformer, transformer_data, settings, model, phases, R_perc)
+            
             # Handle Grounding transformers
             if settings["type"] == "grounding_transformer":
 
@@ -4915,14 +4909,9 @@ class Reader(AbstractReader):
 
                     # Set the rated power
                     try:
-                        if w == 0:
-                            api_winding.rated_power = (
-                                float(transformer_data["ratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
-                        if w == 1:
-                            api_winding.rated_power = (
-                                float(transformer_data["ratedcapacity"]) * 10 ** 3
-                            )  # DiTTo in volt ampere
+                        api_winding.rated_power = (
+                            float(transformer_data["ratedcapacity"]) * 10 ** 3
+                        )  # DiTTo in volt ampere
                     except:
                         pass
 
@@ -4970,6 +4959,27 @@ class Reader(AbstractReader):
                     # Add the winding object to the transformer
                     api_transformer.windings.append(api_winding)
 
+            if settings["type"] == "transformer_byphase":
+                # at least one PhaseTransformerID is required, which corresponds
+                # with a self.transformers key
+                
+                trfx_id = None
+                for phs in [1,2,3]:
+                    k = "phasetransformerid"+str(phs)
+                    if (
+                        k in settings.keys() and
+                        len(settings[k]) > 1
+                    ):
+                        trfx_id = settings[k]
+                        break
+                    # TODO is it possible for TRANSFORMER BYPHASE SETTING to have more than one PhaseTransformerID?
+                
+                if trfx_id is not None and trfx_id in self.transformers.keys():
+                    transformer_data = self.transformers[trfx_id]
+                    xhl, R_perc = get_transformer_xhl_Rpercent(transformer_data)
+                    api_transformer.reactances = [float(xhl)]
+                    add_two_windings(api_transformer, transformer_data, settings, model, phases, R_perc)
+
             # Add the transformer object to the list of transformers
             self._transformers.append(api_transformer)
             if not sectionID in self.section_duplicates:
@@ -5012,6 +5022,7 @@ class Reader(AbstractReader):
             "phaseon": 9,
             "ct": 12,
             "pt": 13,
+            "settingoption": 14,  # TODO map, "T" = terminal, i.e. control voltage at regulator terminal (secondary winding in OpenDSS, use bus= in RegControl)
             "vseta": 16,
             "vsetb": 17,
             "vsetc": 18,
@@ -5042,7 +5053,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["regulator_settings"],
+                    "regulator_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -5081,7 +5092,7 @@ class Reader(AbstractReader):
             self.regulators.update(
                 self.parser_helper(
                     line,
-                    ["regulator"],
+                    "regulator",
                     [
                         "id",
                         "type",
@@ -5242,10 +5253,7 @@ class Reader(AbstractReader):
                 for w in range(2):
 
                     # Instanciate a Winding DiTTo object
-                    try:
-                        api_winding = Winding(model)
-                    except:
-                        raise ValueError("Unable to instanciate Winding DiTTo object.")
+                    api_winding = Winding(model)
 
                     # Set the rated power
                     try:
@@ -5265,7 +5273,7 @@ class Reader(AbstractReader):
 
                     # Set the nominal voltage
                     try:
-                        api_winding.nominal_voltage = float(regulator_data["kvln"])
+                        api_winding.nominal_voltage = float(regulator_data["kvln"]) * 10 ** 3
                     except:
                         pass
 
@@ -5359,7 +5367,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["network_equivalent_setting"],
+                    "network_equivalent_setting",
                     ['sectionid', 'devicenumber', 'coordx', 'coordy', 'zraa', 'zrab', 'zrac', 'zrba', 'zrbb', 'zrbc', 'zrca', 'zrcb', 'zrcc', 'zxaa', 'zxab', 'zxac', 'zxba', 'zxbb', 'zxbc', 'zxca', 'zxcb', 'zxcc', 'loadfromkwa', 'loadfromkwb', 'loadfromkwc', 'loadfromkvara', 'loadfromkvarb', 'loadfromkvarc', 'loadtokwa', 'loadtokwb', 'loadtokwc', 'loadtokvara', 'loadtokvarb', 'loadtokvarc', 'totallengtha', 'totallengthb', 'totallengthc'],
 
                     mapp_network_equivalents,
@@ -5377,7 +5385,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["section"],
+                    "section",
                     ["sectionid", "fromnodeid", "tonodeid", "phase"],
                     mapp_section,
                 ),
@@ -5557,9 +5565,6 @@ class Reader(AbstractReader):
     
                         api_load_to.phase_loads.append(api_phase_load_to)
     
-
-
-
     def parse_loads(self, model):
         """Parse the loads from CYME to DiTTo."""
         # Instanciate the list in which we store the DiTTo load objects
@@ -5621,7 +5626,7 @@ class Reader(AbstractReader):
             self.loads.update(
                 self.parser_helper(
                     line,
-                    ["loads"],
+                    "loads",
                     ["sectionid", "devicenumber", "loadtype", "connection"],
                     mapp_loads,
                 )
@@ -5636,7 +5641,7 @@ class Reader(AbstractReader):
             self.customer_loads.update(
                 self.parser_helper(
                     line,
-                    ["customer_loads"],
+                    "customer_loads",
                     [
                         "sectionid",
                         "devicenumber",
@@ -5664,7 +5669,7 @@ class Reader(AbstractReader):
             self.customer_class.update(
                 self.parser_helper(
                     line,
-                    ["customer_class"],
+                    "customer_class",
                     [
                         "id",
                         "constantpower",
@@ -5682,28 +5687,43 @@ class Reader(AbstractReader):
                 )
             )
 
-        duplicate_loads = set()
+        section_ids_with_more_than_one_load = set()
         for sectionID in self.customer_loads.keys():
             if sectionID.endswith("*"):
-                duplicate_loads.add(sectionID.lower().strip("*"))
+                section_ids_with_more_than_one_load.add(sectionID.lower().strip("*"))
+        
         for sectionID, settings in self.customer_loads.items():
+
+            """
+            if more than one loadmodelid is in Loads.txt then all of the loadmodels get added together in one Load object.
+            for example, four differnt loadmodelids on a phase Cresults in 4 loads on busName.3.3.3.3 added together :/
+            However, if the Reader is instantiated with a load_model_id then we only parse the loads with that load_model_id.
+            """
+            if self.load_model_id is not None and "loadmodelid" in settings:
+                # we only want to create a load if it has the matching LoadModelID
+                try:
+                    if self.load_model_id != int(settings["loadmodelid"]):
+                        continue
+                except ValueError:
+                    logger.warn(f"Cannot convert LoadModelID {settings['loadmodelid']} for {sectionID} to integer.")
 
             sectionID = sectionID.strip("*").lower()
 
             if sectionID in self.loads:
-                load_data = self.loads[sectionID]
+                # FORMAT_LOADS=SectionID,DeviceNumber,DeviceStage,Flags,LoadType,Connection,Location
+                load_data = self.loads[sectionID]  
             else:
                 load_data = {}
 
+            connectedkva = None
             if "connectedkva" in settings:
                 connectedkva = float(settings["connectedkva"])
-            else:
-                connectedkva = None
 
+            value_type = None
             if "valuetype" in settings:
                 value_type = int(settings["valuetype"])
 
-            if "value1" in settings and "value2" in settings:
+            if "value1" in settings and "value2" in settings and value_type is not None:
                 if (
                     float(settings["value1"]) == 0.0
                     and float(settings["value2"]) == 0.0
@@ -5714,9 +5734,7 @@ class Reader(AbstractReader):
                     try:
                         p, q = float(settings["value1"]), float(settings["value2"])
                     except:
-                        logger.warning(
-                            "WARNING:: Skipping load on section {}".format(sectionID)
-                        )
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=0 (P,Q). value1={settings['value1']}  value2={settings['value2']}")
                         continue
                 elif value_type == 1:  # KVA and PF are given
                     try:
@@ -5729,48 +5747,45 @@ class Reader(AbstractReader):
                         p = kva * PF
                         q = math.sqrt(kva ** 2 - p ** 2)
                     except:
-                        logger.warning(
-                            "WARNING:: Skipping load on section {}".format(sectionID)
-                        )
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=1 (kVa, PF). value1={settings['value1']}  value2={settings['value2']}")
                         continue
                 elif value_type == 2:  # P and PF are given
 
                     try:
                         p, PF = float(settings["value1"]), float(settings["value2"])
-                        if 0 <= PF <= 1:
+                        if PF == 0:
+                            q = 0
+                        elif 0 < abs(PF) <= 1:
                             q = p * math.sqrt((1 - PF ** 2) / PF ** 2)
-                        elif 1 < PF <= 100:
+                        elif 1 < abs(PF) <= 100:
                             PF /= 100.0
                             q = p * math.sqrt((1 - PF ** 2) / PF ** 2)
                         else:
-                            logger.warning("problem with PF")
-                            logger.warning(PF)
+                            logger.warning(f"Problem with load on section {sectionID} with value_type=2 (P, PF). value1={settings['value1']}  value2={settings['value2']}")
                     except:
-                        logger.warning("Skipping load on section {}".format(sectionID))
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=2 (P, PF). value1={settings['value1']}  value2={settings['value2']}")
                         continue
 
                 elif value_type == 3:  # AMP and PF are given
                     # TODO
                     logger.warning(
-                        "WARNING:: Skipping load on section {}".format(sectionID)
+                        "WARNING:: Skipping load on section {} because value_type=3 (AMP and PF)".format(sectionID)
                     )
                     continue
 
-                if p >= 0 or q >= 0:
+                if p >= 0 or q >= 0:  # then a Load is created
 
+                    phases = []
                     if "loadphase" in settings:
                         phases = settings["loadphase"]
-                    else:
-                        phases = []
-
 
                     fused = False
-                    if sectionID in duplicate_loads:
+                    if sectionID in section_ids_with_more_than_one_load:
                         fusion = True
-                        if sectionID in self._loads:
+                        if sectionID in self._loads:  # already created a Load for this sectionID
                             api_load = self._loads[sectionID]
                             fused = True
-                        elif p != 0:
+                        elif p != 0:  # have not created a load yet
                             api_load = Load(model)
                     else:
                         fusion = False
@@ -5784,9 +5799,8 @@ class Reader(AbstractReader):
 
                     try:
                         if fusion and sectionID in self._loads:
-                            api_load.name += "_" + reduce(
-                                lambda x, y: x + "_" + y, phases
-                            )
+                            # add phases to name with underscores
+                            api_load.name += "_" + reduce(lambda x, y: x + "_" + y, phases)
                         else:
                             api_load.name = (
                                 "Load_"
@@ -5800,18 +5814,12 @@ class Reader(AbstractReader):
                     try:
                         if not (fusion and sectionID in self._loads):
                             if connectedkva is not None:
-                                api_load.transformer_connected_kva = (
-                                    connectedkva * 10 ** 3
-                                )  # DiTTo in var
+                                api_load.transformer_connected_kva = (connectedkva * 10 ** 3)  # DiTTo in var
                         elif connectedkva is not None:
                             if api_load.transformer_connected_kva is None:
-                                api_load.transformer_connected_kva = (
-                                    connectedkva * 10 ** 3
-                                )  # DiTTo in var
+                                api_load.transformer_connected_kva = (connectedkva * 10 ** 3)  # DiTTo in var
                             else:
-                                api_load.transformer_connected_kva += (
-                                    connectedkva * 10 ** 3
-                                )  # DiTTo in var
+                                api_load.transformer_connected_kva += (connectedkva * 10 ** 3)  # DiTTo in var
                     except:
                         pass
 
@@ -5845,12 +5853,7 @@ class Reader(AbstractReader):
                     api_load.num_users = float(settings["numberofcustomer"])
 
                     for ph in phases:
-                        try:
-                            api_phase_load = PhaseLoad(model)
-                        except:
-                            raise ValueError(
-                                "Unable to instanciate PhaseLoad DiTTo object."
-                            )
+                        api_phase_load = PhaseLoad(model)
 
                         try:
                             api_phase_load.phase = ph
@@ -5895,7 +5898,6 @@ class Reader(AbstractReader):
                         # on the number of objects fail since we will have many more loads than there actually are...)
                         # if api_phase_load.p!=0 or api_phase_load.q!=0:
                         api_load.phase_loads.append(api_phase_load)
-
 
                     self._loads[sectionID] = api_load
                     if not sectionID in self.section_duplicates:
@@ -6025,7 +6027,7 @@ class Reader(AbstractReader):
             self.converter.update(
                 self.parser_helper(
                     line,
-                    ["converter"],
+                    "converter",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6051,7 +6053,7 @@ class Reader(AbstractReader):
             self.converter_settings.update(
                 self.parser_helper(
                     line,
-                    ["converter_control_settings"],
+                    "converter_control_settings",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6076,7 +6078,7 @@ class Reader(AbstractReader):
             self.photovoltaic_settings.update(
                 self.parser_helper(
                     line,
-                    ["photovoltaic_settings"],
+                    "photovoltaic_settings",
                     ["sectionid", "devicenumber", "eqphase", "ambienttemperature"],
                     mapp_photovoltaic_settings,
                     {"type": "photovoltaic_settings"},
@@ -6092,7 +6094,7 @@ class Reader(AbstractReader):
             self.bess_settings.update(
                 self.parser_helper(
                     line,
-                    ["bess_settings"],
+                    "bess_settings",
                     [
                         "sectionid",
                         "devicenumber",
@@ -6116,7 +6118,7 @@ class Reader(AbstractReader):
             self.long_term_dynamics.update(
                 self.parser_helper(
                     line,
-                    ["long_term_dynamics_curve_ext"],
+                    "long_term_dynamics_curve_ext",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6137,7 +6139,7 @@ class Reader(AbstractReader):
             self.dg_generation.update(
                 self.parser_helper(
                     line,
-                    ["dggenerationmodel"],
+                    "dggenerationmodel",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6171,7 +6173,7 @@ class Reader(AbstractReader):
             self.bess.update(
                 self.parser_helper(
                     line,
-                    ["bess"],
+                    "bess",
                     [
                         "id",
                         "ratedstorageenergy",
@@ -6464,9 +6466,9 @@ class Reader(AbstractReader):
         for i,j in self.section_duplicates.items():
             if len(j)>1:
                 multiple_elements[i] = j
+        # multiple_elements has keys of sectionID and values as list of DiTTo objects
 
         for sectionID in multiple_elements:
-            connectors = []
             regulators = []
             transformers = []
             lines = [] #Warning - if multiple lines are used the names will be the same
@@ -6508,6 +6510,11 @@ class Reader(AbstractReader):
             if from_element is None or to_element is None: # i.e. just loads, pvs and caps so no problem
                 continue
 
+            # if all we have is (single phase) regulators between nodes no need to fix it
+            # (looks like parse_regulators creates a Regulator for each phase)
+            if all(len(el) == 0 for el in [transformers, lines, loads, bess, capacitors]):
+                continue
+
             original_from_element = from_element
             original_from_node = model[from_element]
             intermediate_count = 0
@@ -6517,11 +6524,11 @@ class Reader(AbstractReader):
                         element.from_element = from_element
 
                     # Regulators go between the same two nodes
-                    if isinstance(element,Regulator):
+                    if isinstance(element, Regulator):
                         from_element = original_from_element+'_reg'
                     else:
                         from_element = original_from_element+'_sec_'+str(intermediate_count)
-                    intermediate_count +=1
+                    intermediate_count += 1
                     if intermediate_count != connector_count:
                         element.to_element = from_element
                         api_node = Node(model)
