@@ -442,6 +442,9 @@ class Reader(AbstractReader):
             "DevConductors", "ActualImpedance"
         )  # wenbo added this, to control using linegeometry or linecode
 
+        # may have defaults for cable R and X if bare, and for bare R and X if cable
+        ConductorType = self.get_data("DevConductors", "ConductorType") # 'Conc', 'ActZ', 'Bare', 'Tape', 'SepN'
+
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
         CableDiamConductor = self.get_data(
             "DevConductors", "CableDiamConductor_SUL"
@@ -491,6 +494,7 @@ class Reader(AbstractReader):
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
+                "ConductorType": ConductorType[idx],
                 "CableGMR": CableGMR[idx],
                 "CableDiamConductor": CableDiamConductor[idx],
                 "CableResistance": CableResistance[idx],
@@ -1382,12 +1386,19 @@ class Reader(AbstractReader):
                     # Represented in Ohms per meter
                     #
                     if api_line.length is not None:
-                        api_wire.resistance = convert_length_unit(
-                            conductor_mapping[conductor_name_raw]["CableResistance"],
-                            SynergiValueType.Per_LUL,
-                            LengthUnits,
-                        )
-
+                        # find resistance for cables vs. bare wire
+                        if conductor_mapping[conductor_name_raw]["ConductorType"] in ['Conc', 'Tape', 'SepN']:
+                            api_wire.resistance = convert_length_unit(
+                                conductor_mapping[conductor_name_raw]["CableResistance"],
+                                SynergiValueType.Per_LUL,
+                                LengthUnits,
+                            )
+                        else:
+                            api_wire.resistance = convert_length_unit(
+                                conductor_mapping[conductor_name_raw]["PosSequenceResistance_PerLUL"],
+                                SynergiValueType.Per_LUL,
+                                LengthUnits,
+                            )
                     # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
                     if (
                         conductor_mapping[conductor_name_raw]["CableDiamOutside"]
@@ -1718,28 +1729,36 @@ class Reader(AbstractReader):
                 print(
                     "WARNING: No transformer equipment found for section {}".format(obj)
                 )
-                print("Attempting to create transformer {} from limited info.".format(TransformerId[i]))
-            
+                print(
+                    "Attempting to create transformer {} from limited info.".format(
+                        TransformerId[i]
+                    )
+                )
+
             # if there wasn't anything in the warehouse for this transformer, try
             # to fill in info from the InstDTrans sheet info
             if TransformerType[i] is None or Count is None:
                 # try to fill information from other categories
                 # New Transformer.T1 buses="Hibus, lowbus" ~ conns=(delta, wye)
-                if HighSideConnCode[i] == 'YG' and LowSideConnCode[i] == 'YG':
+                if HighSideConnCode[i] == "YG" and LowSideConnCode[i] == "YG":
                     api_transformer.is_center_tap = True
                 else:
                     api_transformer.is_center_tap = False
-                if TransformerType[i] is not None and isinstance(TransformerType[i], str):
+                if TransformerType[i] is not None and isinstance(
+                    TransformerType[i], str
+                ):
                     api_transformer.install_type = TransformerType[i]
                 api_transformer.from_element = TransformerSectionId[i]
-                api_transformer.from_element_connection_index = int(LineID[LineID == TransformerSectionId[i]].index[0])
-                #api_transformer.to_element = LowSideConnCode[i]
+                api_transformer.from_element_connection_index = int(
+                    LineID[LineID == TransformerSectionId[i]].index[0]
+                )
+                # api_transformer.to_element = LowSideConnCode[i]
                 if TransPercentZ[i] is not None:
                     api_transformer.loadloss = TransPercentZ[i]
-                n_phases = min(len(ConnPhases[i].replace('N','').strip()),3)
+                n_phases = min(len(ConnPhases[i].replace("N", "").strip()), 3)
                 # assume not a substation
-                api_transformer.is_substation=False
-                phases = ConnPhases[i].strip().replace('G','')
+                api_transformer.is_substation = False
+                phases = ConnPhases[i].strip().replace("G", "")
                 n_phases = len(phases)
                 ##### Begin winding section for transformers without corresponding gear in warehouse
                 if n_phases == 3:
@@ -1757,38 +1776,34 @@ class Reader(AbstractReader):
                             HighSideConnCode[i] is not None
                             and len(HighSideConnCode[i]) > 0
                         ):
-                            w.connection_type = HighSideConnCode[i][
-                                :1
-                            ].upper()
+                            w.connection_type = HighSideConnCode[i][:1].upper()
                         elif HighSideConnCode[i] is not None:
                             w.connection_type = HighSideConnCode[i].upper()
 
                         # Set the Nominal voltage of the Winding
-                        #w.nominal_voltage = ?
+                        # w.nominal_voltage = ?
 
                     # Secondary
-                    elif winding >=1:
+                    elif winding >= 1:
                         # Set the Connection_type of the Winding
                         if (
                             LowSideConnCode[i] is not None
                             and len(LowSideConnCode[i]) > 0
                         ):
-                            w.connection_type = LowSideConnCode[i][
-                                :1
-                            ].upper()
+                            w.connection_type = LowSideConnCode[i][:1].upper()
                         elif LowSideConnCode[i] is not None:
                             w.connection_type = LowSideConnCode[i].upper()
 
                     # Set the rated power
                     if winding == 0 or winding == 1:
                         w.rated_power = (
-                            10 #TransformerRatedKva[Count]
+                            10  # TransformerRatedKva[Count]
                             # / float(n_windings) Wenbo changed
                             * 10
                             ** 3  # TODO: Fix this once the KVA Bug in DiTTo is fixed!!
                         )  # DiTTo in Vars
                     elif winding == 2:
-                        w.rated_power = 10*10**3 #TertiaryKva * 10**3
+                        w.rated_power = 10 * 10**3  # TertiaryKva * 10**3
                         # TODO: Check that this is correct...
 
                     # Create the PhaseWindings
@@ -1801,8 +1816,6 @@ class Reader(AbstractReader):
 
                     # Append the Winding to the Transformer
                     api_transformer.windings.append(w)
-                
-
 
             if Count is not None:
                 # Set the PT Ratio
