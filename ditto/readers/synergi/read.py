@@ -235,19 +235,19 @@ class Reader(AbstractReader):
 
         # group primary and secondaries together
         DTranId = self.get_data("InstDTrans", "DTranId")
-        TransformerId = pd.concat([TransformerId, DTranId])
+        #TransformerId = pd.concat([TransformerId, DTranId])
         DTransformerSectionId = self.get_data("InstDTrans", "SectionId")
-        TransformerSectionId = pd.concat([TransformerSectionId, DTransformerSectionId])
+        #TransformerSectionId = pd.concat([TransformerSectionId, DTransformerSectionId])
         DTransformerType = self.get_data("InstDTrans", "TransformerType")
-        TransformerType = pd.concat([TransformerType, DTransformerType])
+        #TransformerType = pd.concat([TransformerType, DTransformerType])
         DHighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
-        HighSideConnCode = pd.concat([HighSideConnCode, DHighSideConnCode])
+        #HighSideConnCode = pd.concat([HighSideConnCode, DHighSideConnCode])
         DLowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
-        LowSideConnCode = pd.concat([LowSideConnCode, DLowSideConnCode])
+        #LowSideConnCode = pd.concat([LowSideConnCode, DLowSideConnCode])
         DConnPhases = self.get_data("InstDTrans", "ConnPhases")
-        ConnPhases = pd.concat([ConnPhases, DConnPhases])
+        #ConnPhases = pd.concat([ConnPhases, DConnPhases])
         DTransPercentZ = self.get_data("InstDTrans", "PercentZ")
-        TransPercentZ = pd.concat([TransPercentZ, DTransPercentZ])
+        #TransPercentZ = pd.concat([TransPercentZ, DTransPercentZ])
 
         ## Substration Transformers ##
         # wenbo added
@@ -317,10 +317,12 @@ class Reader(AbstractReader):
             "InstPrimaryTransformers", "HighSideNearFromNode"
         )
         # all distribution transformers have the high side near the from node
-        if len(DTranId) > 0:
-            TransformerHighSideNearFromNode = pd.concat(
-                [TransformerHighSideNearFromNode, pd.Series([1] * len(DTranId))]
-            )
+        #if len(DTranId) > 0:
+        #    TransformerHighSideNearFromNode = pd.concat(
+        #        [TransformerHighSideNearFromNode, pd.Series([1] * len(DTranId))]
+        #    )
+        #print(f'THSNFN: {len(TransformerHighSideNearFromNode)} vs. {len(DTranId)} TransformerHighSideNearFromNode: {TransformerHighSideNearFromNode} ')
+        #quit()
 
         # NOTE: When the same information is given in the database and in the warehouse,
         # both are stored and the priority will be given to the information from the
@@ -1387,7 +1389,7 @@ class Reader(AbstractReader):
                     #
                     if api_line.length is not None:
                         # find resistance for cables vs. bare wire
-                        if conductor_mapping[conductor_name_raw]["ConductorType"] in ['Conc', 'Tape', 'SepN']:
+                        if conductor_mapping[conductor_name_raw]["ConductorType"] in ['Conc', 'Tape', 'SepN'] or api_line.line_type == "underground":
                             api_wire.resistance = convert_length_unit(
                                 conductor_mapping[conductor_name_raw]["CableResistance"],
                                 SynergiValueType.Per_LUL,
