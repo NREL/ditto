@@ -2842,8 +2842,9 @@ class Writer(AbstractWriter):
         lines_to_linecodify = []
         for i in model.models:
             if isinstance(i, Line):
-                use_linecodes = True # wenbo changed to always True
-
+                use_linecodes = False
+                
+                # Note: use linecodes mean impedance are from sequence impedance calculation
                 # Find out if we have all the information we need to export
                 # the line using geometries. If we miss something, use LineCodes.
                 #
@@ -2866,6 +2867,7 @@ class Writer(AbstractWriter):
                             use_linecodes = True
                 # For underground lines, we need a lot of data...
                 else:
+                    use_linecodes = True
                     if len(i.wires) == 0:
                         use_linecodes = True  # For empty lines
                     for wire in i.wires:

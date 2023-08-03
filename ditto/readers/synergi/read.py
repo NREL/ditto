@@ -421,13 +421,15 @@ class Reader(AbstractReader):
         ## Wires ###########
         ActualImpedance = self.get_data(
             "DevConductors", "ActualImpedance"
-        )  # wenbo added this, to control using linegeometry or linecode
+        )  # wenbo added this, to control using linegeometry or linecode # synergi has two cat: bare and cable calculation methods
 
         CableGMR = self.get_data("DevConductors", "CableGMR_MUL")
         CableDiamConductor = self.get_data(
             "DevConductors", "CableDiamConductor_SUL"
-        )  # "Diameter_SUL"
-        # )  # wenbo changed
+        ) 
+        Diameter_SUL = self.get_data(
+            "DevConductors", "Diameter_SUL"
+        )
         CableResistance = self.get_data("DevConductors", "CableResistance_PerLUL")
         ConductorName = self.get_data("DevConductors", "ConductorName")
         PosSequenceResistance_PerLUL = self.get_data(
@@ -472,6 +474,8 @@ class Reader(AbstractReader):
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
+                "ActualImpedance": ActualImpedance[idx],
+                "Diameter_SUL": Diameter_SUL[idx],
                 "CableGMR": CableGMR[idx],
                 "CableDiamConductor": CableDiamConductor[idx],
                 "CableResistance": CableResistance[idx],
@@ -867,9 +871,11 @@ class Reader(AbstractReader):
             elif "overhead" in LineDescription[i].lower():
                 api_line.line_type = "overhead"
             else:
-                api_line.line_type = "swgearbus_busbar"
+                api_line.line_type = "not_OH_not_UG"
             
             # when the line type is included in LineNote, uncomment the following codes
+            # need to improve the code to be automated.
+
             # if LineNote_[i].lower() == "underground":
             #     api_line.line_type = "underground"
             # elif LineNote_[i].lower() == "overhead":
@@ -895,12 +901,13 @@ class Reader(AbstractReader):
             # wenbo add this to get the line object nominal voltage
             api_line.LineDescription = LineDescription[i]
 
-            if 'voltage' in api_line.LineDescription:
-                api_line.nominal_voltage = (
-                    float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
-                )
-            else:
-                print('no line voltage')
+            # wenbo: this code no longer needed, can be deleted when pull request
+            # if 'voltage' in api_line.LineDescription:
+            #     api_line.nominal_voltage = (
+            #         float(LineDescription[i].rsplit("-", 1)[1]) * 10**3
+            #     )
+            # else:
+            #     print('no line voltage')
             # wenbo added, bus_nominal_voltage from line sections
 
             # Switching devices and network protection devices
@@ -1305,8 +1312,8 @@ class Reader(AbstractReader):
                         api_wire.Y = (
                             AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
                         )
-                print("api_line.name", api_line.name, "phase", phase, "api_wire.nameclass", api_wire.nameclass)
-                print("api_line.line_type", api_line.line_type)
+                #print("api_line.name", api_line.name, "phase", phase, "api_wire.nameclass", api_wire.nameclass)
+                #print("api_line.line_type", api_line.line_type)
                 if api_line.line_type == "underground":
                     api_wire.nameclass = "Cable_" + api_wire.nameclass
                 elif api_line.line_type == "swgearbus":
@@ -1335,12 +1342,24 @@ class Reader(AbstractReader):
                         SynergiValueType.MUL,
                         LengthUnits,
                     )
+                    # wenbo added block to update api_wire.gmr
+                    if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 0:
+                        print("update gmr for conductor", conductor_name_raw)
+                        x1_with_1ft_spacing = conductor_mapping[conductor_name_raw]["PosSequenceReactance_PerLUL"] # ohm/mile
+                        gmr_calculated = 1/(np.exp(x1_with_1ft_spacing/0.12134)) # in ft, this equation is based on Kersting book
+                        
+                        api_wire.gmr = convert_length_unit(
+                            gmr_calculated,
+                            SynergiValueType.MUL,
+                            LengthUnits,
+                        )
+                         
 
                     # Set the Diameter of the conductor
                     # Diameter is assumed to be given in inches and is converted to meters here
                     #
                     api_wire.diameter = convert_length_unit(
-                        conductor_mapping[conductor_name_raw]["CableDiamConductor"],
+                        conductor_mapping[conductor_name_raw]["Diameter_SUL"], # wenbo changed from CableDiamConductor to Diameter_SUL
                         SynergiValueType.SUL,
                         LengthUnits,
                     )
@@ -1365,11 +1384,20 @@ class Reader(AbstractReader):
                     # Represented in Ohms per meter
                     #
                     if api_line.length is not None:
-                        api_wire.resistance = convert_length_unit(
-                            conductor_mapping[conductor_name_raw]["CableResistance"],
-                            SynergiValueType.Per_LUL,
-                            LengthUnits,
-                        )
+                        if conductor_mapping[conductor_name_raw]["ActualImpedance"] == 0: 
+                            api_wire.resistance = convert_length_unit(
+                                conductor_mapping[conductor_name_raw]["PosSequenceResistance_PerLUL"], # this value is actual resistance
+                                SynergiValueType.Per_LUL,
+                                LengthUnits,
+                            )
+                        else:
+                            api_wire.resistance = convert_length_unit(
+                                conductor_mapping[conductor_name_raw]["CableResistance"],
+                                SynergiValueType.Per_LUL,
+                                LengthUnits,
+                            )
+
+
 
                     # Check outside diameter is greater than conductor diameter before applying concentric neutral settings
                     if (
@@ -2035,7 +2063,8 @@ class Reader(AbstractReader):
                         )[0]
 
                 except:
-                    print("Load nominal voltage not defined.")
+                    pass
+                    #print("Load nominal voltage not defined.")
                 
                 # now define api_load.vmin and api_load.vmax
                 api_load.vmin = 0.65
