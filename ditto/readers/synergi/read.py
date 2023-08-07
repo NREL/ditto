@@ -163,6 +163,10 @@ class Reader(AbstractReader):
         )
         ByPhVoltDegPh1 = self.get_data("InstFeeders", "ByPhVoltDegPh1")
 
+        UseMaxSourceZ = self.get_data("InstFeeders", "UseMaxSourceZ")
+
+
+
         ## Node ###########
         NodeID = self.get_data("Node", "NodeId")
         NodeX = self.get_data("Node", "X")
@@ -201,7 +205,9 @@ class Reader(AbstractReader):
         # add subtrans to feeder ID
         FeederId_subtrans = list(set(list(LineFeederId)) - set(FeederId))
 
-        FeederId = FeederId.append(pd.Series(FeederId_subtrans), ignore_index=True)
+        #FeederId = FeederId.append(pd.Series(FeederId_subtrans), ignore_index=True) 
+        FeederId = pd.concat([FeederId, pd.Series(FeederId_subtrans)], ignore_index=True)
+
 
         FromNodeId = self.get_data("InstSection", "FromNodeId")
         ToNodeId = self.get_data("InstSection", "ToNodeId")
@@ -263,25 +269,30 @@ class Reader(AbstractReader):
         #            TransformerSectionId = TransformerSectionId.append(pd.Series(LineID[idx]), ignore_index=True)
 
         # wenbo added for subtransmission
-        NominalKvll_src = NominalKvll_src.append(
-            SubstationTransformerV, ignore_index=True
-        )
+        # NominalKvll_src = NominalKvll_src.append(
+        #     SubstationTransformerV, ignore_index=True
+        # )
+        NominalKvll_src = pd.concat([NominalKvll_src, SubstationTransformerV], ignore_index=True)
+
 
         # wenbo added: BusVoltage level
         SubstationTransformerVoltageLevel = self.get_data(
             "InstSubstationTransformers", "BusVoltageLevel"
         )
-        BusVoltageLevel = BusVoltageLevel.append(
-            SubstationTransformerVoltageLevel, ignore_index=True
-        )
+        # BusVoltageLevel = BusVoltageLevel.append(
+        #     SubstationTransformerVoltageLevel, ignore_index=True
+        # )
+
+        BusVoltageLevel = pd.concat([BusVoltageLevel, SubstationTransformerVoltageLevel], ignore_index=True)
 
         SubtransByPhVoltDegPh1 = self.get_data(
             "InstSubstationTransformers", "ByPhVoltDegPh1"
         )
-        ByPhVoltDegPh1 = ByPhVoltDegPh1.append(
-            SubtransByPhVoltDegPh1, ignore_index=True
-        )
-
+        
+        # ByPhVoltDegPh1 = ByPhVoltDegPh1.append(
+        #     SubtransByPhVoltDegPh1, ignore_index=True
+        # )
+        ByPhVoltDegPh1 = pd.concat([ByPhVoltDegPh1, SubtransByPhVoltDegPh1], ignore_index=True)
         ## Transformer Setting ##
 
         TransformerTypesinStock = self.get_data("DevTransformers", "TransformerName")
@@ -612,26 +623,33 @@ class Reader(AbstractReader):
         LargeCustType = self.get_data("InstLargeCust", "Category")
         for i, x in enumerate(LargeCustType):
             if x.upper() == "L" or x.upper() == "C":
-                LoadName = LoadName.append(
-                    pd.Series(LargeCustDeviceId[i]), ignore_index=True
+                # LoadName = LoadName.append(
+                #     pd.Series(LargeCustDeviceId[i]), ignore_index=True
+                # )
+                LoadName = pd.concat([LoadName, pd.Series(LargeCustDeviceId[i])], ignore_index=True)
+                Phase1Kw = pd.concat([Phase1Kw, pd.Series(LargeCustLoadPhase1Kw[i])], ignore_index=True)
+                Phase2Kw = pd.concat([Phase2Kw, pd.Series(LargeCustLoadPhase2Kw[i])], ignore_index=True)
+                Phase3Kw = pd.concat([Phase3Kw, pd.Series(LargeCustLoadPhase3Kw[i])], ignore_index=True)
+                
+                
+                
+                # Phase1Kw = Phase1Kw.append(
+                #     pd.Series(LargeCustLoadPhase1Kw[i]), ignore_index=True
+                # )
+                # Phase2Kw = Phase2Kw.append(
+                #     pd.Series(LargeCustLoadPhase2Kw[i]), ignore_index=True
+                # )
+                # Phase3Kw = Phase3Kw.append(
+                #     pd.Series(LargeCustLoadPhase3Kw[i]), ignore_index=True
+                # )
+                Phase1Kvar = pd.concat([Phase1Kvar,
+                    pd.Series(LargeCustLoadPhase1Kvar[i])], ignore_index=True
                 )
-                Phase1Kw = Phase1Kw.append(
-                    pd.Series(LargeCustLoadPhase1Kw[i]), ignore_index=True
+                Phase2Kvar = pd.concat([Phase2Kvar,
+                    pd.Series(LargeCustLoadPhase2Kvar[i])], ignore_index=True
                 )
-                Phase2Kw = Phase2Kw.append(
-                    pd.Series(LargeCustLoadPhase2Kw[i]), ignore_index=True
-                )
-                Phase3Kw = Phase3Kw.append(
-                    pd.Series(LargeCustLoadPhase3Kw[i]), ignore_index=True
-                )
-                Phase1Kvar = Phase1Kvar.append(
-                    pd.Series(LargeCustLoadPhase1Kvar[i]), ignore_index=True
-                )
-                Phase2Kvar = Phase2Kvar.append(
-                    pd.Series(LargeCustLoadPhase2Kvar[i]), ignore_index=True
-                )
-                Phase3Kvar = Phase3Kvar.append(
-                    pd.Series(LargeCustLoadPhase3Kvar[i]), ignore_index=True
+                Phase3Kvar = pd.concat([Phase3Kvar,
+                    pd.Series(LargeCustLoadPhase3Kvar[i])], ignore_index=True
                 )
         #                Phase1Kva = Phase1Kva.append(pd.Series(LargeCustLoadPhase1Kva[i]),ignore_index=True)
         #                Phase2Kva = Phase2Kva.append(pd.Series(LargeCustLoadPhase2Kva[i]),ignore_index=True)
@@ -746,12 +764,15 @@ class Reader(AbstractReader):
             api_source.phase_angle = ByPhVoltDegPh1[i]
 
             # Set the positive sequence impedance of the source
-
+            # suppercept with 
             try:
                 api_source.positive_sequence_impedance = complex(
                     PosSequenceResistance_src[i], PosSequenceReactance_src[i]
                 )
             except:
+                api_source.positive_sequence_impedance = complex(0.01, 0.01)
+
+            if UseMaxSourceZ.iloc[0] == 0:
                 api_source.positive_sequence_impedance = complex(0.01, 0.01)
 
             # Set the zero sequence impedance of the source
@@ -762,6 +783,10 @@ class Reader(AbstractReader):
                 )
             except:
                 api_source.zero_sequence_impedance = complex(0.01, 0.01)
+            
+            if UseMaxSourceZ.iloc[0] == 0:
+                api_source.zero_sequence_impedance = complex(0.01, 0.01)
+            
             # Set the connecting element of the source
             api_source.connecting_element = obj.lower().replace(" ", "_")
             # wenbo to do: change the connecting_element based on the from node: keep the fromnode and tonode
