@@ -3023,7 +3023,7 @@ class Writer(AbstractWriter):
 
                 # is_fuse
                 if hasattr(i, "is_fuse") and i.is_fuse == 1:
-                    fuse_line = "New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y".format(
+                    fuse_line = "!New Fuse.Fuse_{name} monitoredobj=Line.{name} enabled=y".format(
                         name=i.name
                     )
                     if hasattr(i, "wires") and i.wires is not None:
