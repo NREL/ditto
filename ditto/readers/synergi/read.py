@@ -16,6 +16,7 @@ import operator
 import pandas as pd
 import re
 # Ditto imports #
+from tqdm import tqdm
 
 from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
@@ -804,7 +805,7 @@ class Reader(AbstractReader):
 
             # Set the name
             api_node.name = obj.lower().replace(" ", "_")
-
+            #print('node ', api_node.name)
             # Set the feeder name if in mapping
             if obj in self.section_feeder_mapping:
                 api_node.feeder_name = self.section_feeder_mapping[obj]
@@ -891,12 +892,17 @@ class Reader(AbstractReader):
             # line type need to be decided by decription or notes depend on the utility naming convension
 
 
-            if "underground" in LineDescription[i].lower():
-                api_line.line_type = "underground"
-            elif "overhead" in LineDescription[i].lower():
-                api_line.line_type = "overhead"
-            else:
-                api_line.line_type = "not_OH_not_UG"
+            # if "underground" in LineDescription[i].lower():
+            #     api_line.line_type = "underground"
+            # elif "overhead" in LineDescription[i].lower():
+            #     api_line.line_type = "overhead"
+            # else:
+            #     api_line.line_type = "not_identified"
+
+            # if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 0:
+            #     api_line.line_type == 'overhead'
+            # else:
+            #     api_line.line_type == 'underground'
             
             # when the line type is included in LineNote, uncomment the following codes
             # need to improve the code to be automated.
@@ -1037,19 +1043,19 @@ class Reader(AbstractReader):
             api_line.section_phases = SectionPhases_thisline
 
             # wenbo added: add section_phases to the dict self.node_nominal_voltage
-            self.node_nominal_voltage_mapping[api_line.from_element] = [
-                api_line.nominal_voltage
-            ]
-            self.node_nominal_voltage_mapping[api_line.from_element].append(
-                api_line.section_phases
-            )
+            # self.node_nominal_voltage_mapping[api_line.from_element] = [
+            #     api_line.nominal_voltage
+            # ]
+            # self.node_nominal_voltage_mapping[api_line.from_element].append(
+            #     api_line.section_phases
+            # )
 
-            self.node_nominal_voltage_mapping[api_line.to_element] = [
-                api_line.nominal_voltage
-            ]
-            self.node_nominal_voltage_mapping[api_line.to_element].append(
-                api_line.section_phases
-            )
+            # self.node_nominal_voltage_mapping[api_line.to_element] = [
+            #     api_line.nominal_voltage
+            # ]
+            # self.node_nominal_voltage_mapping[api_line.to_element].append(
+            #     api_line.section_phases
+            # )
 
             # Get the number of phases as the length of this list
             # Warning: Neutral will be included in this number: this is not necessarily true - Wenbo
@@ -1309,6 +1315,7 @@ class Reader(AbstractReader):
                     if (
                         NeutralConductorID is not None
                         and isinstance(NeutralConductorID[i], str)
+                        and NeutralConductorID[i].lower() != "unknown"
                         and len(NeutralConductorID[i]) > 0
                     ):
                         # Set the nameclass
@@ -1316,6 +1323,7 @@ class Reader(AbstractReader):
                         api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
                         # Cache the conductor name
                         conductor_name_raw = NeutralConductorID[i]
+
                     else: # 
                         api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
                         # Cache the conductor name
@@ -1339,6 +1347,13 @@ class Reader(AbstractReader):
                         )
                 #print("api_line.name", api_line.name, "phase", phase, "api_wire.nameclass", api_wire.nameclass)
                 #print("api_line.line_type", api_line.line_type)
+                
+                if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 0:
+                    api_line.line_type = 'overhead'
+                else:
+                    api_line.line_type = 'underground'                
+
+                
                 if api_line.line_type == "underground":
                     api_wire.nameclass = "Cable_" + api_wire.nameclass
                 elif api_line.line_type == "swgearbus":
@@ -1347,7 +1362,8 @@ class Reader(AbstractReader):
                     api_wire.nameclass = "Swgearbus" + api_wire.nameclass
                 else:
                     api_wire.nameclass = "Wire_" + api_wire.nameclass
-
+                    
+                    #api_wire.nameclass = "Swgearbus" + api_wire.nameclass
                 # Set the characteristics of the wire:
                 # - GMR
                 # - Diameter
@@ -1369,7 +1385,7 @@ class Reader(AbstractReader):
                     )
                     # wenbo added block to update api_wire.gmr
                     if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 0:
-                        print("update gmr for conductor", conductor_name_raw)
+                        #print("update gmr for conductor", conductor_name_raw)
                         x1_with_1ft_spacing = conductor_mapping[conductor_name_raw]["PosSequenceReactance_PerLUL"] # ohm/mile
                         gmr_calculated = 1/(np.exp(x1_with_1ft_spacing/0.12134)) # in ft, this equation is based on Kersting book
                         
@@ -1654,12 +1670,14 @@ class Reader(AbstractReader):
             if impedance_matrix is not None:
                 api_line.impedance_matrix = impedance_matrix
             else:
-                print("No impedance matrix for line {}".format(api_line.name))
+                pass
+                #print("No impedance matrix for line {}".format(api_line.name))
 
             if capacitance_matrix is not None:
                 api_line.capacitance_matrix = capacitance_matrix
             else:
-                print("No capacitance matrix for line {}".format(api_line.name))
+                pass
+                #print("No capacitance matrix for line {}".format(api_line.name))
 
         # print(self.node_nominal_voltage_mapping)
         ####################################################################################
@@ -2043,53 +2061,53 @@ class Reader(AbstractReader):
                 #                print('map(conelem)={}'.format(self.node_nominal_voltage_mapping.get(api_load.connecting_element)))
                 #                if api_load.name == "Load_1002094_oh":
                 #                    import pdb;pdb.set_trace()
-                try:
+                # try:
                 
-                    if (
-                        len(api_load.phase_loads) == 1
-                        and len(
-                            self.node_nominal_voltage_mapping.get(
-                                api_load.connecting_element
-                            )[1]
-                        )
-                        == 4
-                    ):
-                        api_load.nominal_voltage = round(
-                            self.node_nominal_voltage_mapping.get(
-                                api_load.connecting_element
-                            )[0]
-                            / 1.732,
-                            1,
-                        )
+                #     if (
+                #         len(api_load.phase_loads) == 1
+                #         and len(
+                #             self.node_nominal_voltage_mapping.get(
+                #                 api_load.connecting_element
+                #             )[1]
+                #         )
+                #         == 4
+                #     ):
+                #         api_load.nominal_voltage = round(
+                #             self.node_nominal_voltage_mapping.get(
+                #                 api_load.connecting_element
+                #             )[0]
+                #             / 1.732,
+                #             1,
+                #         )
 
-                    elif (
-                        len(api_load.phase_loads) > 1
-                        and len(
-                            self.node_nominal_voltage_mapping.get(
-                                api_load.connecting_element
-                            )[1]
-                        )
-                        == 3
-                        and self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[1][-1]
-                        == "N"
-                    ):
-                        api_load.nominal_voltage = round(
-                            self.node_nominal_voltage_mapping.get(
-                                api_load.connecting_element
-                            )[0]
-                            * 1.732,
-                            1,
-                        )
-                    else:
-                        api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
-                            api_load.connecting_element
-                        )[0]
+                #     elif (
+                #         len(api_load.phase_loads) > 1
+                #         and len(
+                #             self.node_nominal_voltage_mapping.get(
+                #                 api_load.connecting_element
+                #             )[1]
+                #         )
+                #         == 3
+                #         and self.node_nominal_voltage_mapping.get(
+                #             api_load.connecting_element
+                #         )[1][-1]
+                #         == "N"
+                #     ):
+                #         api_load.nominal_voltage = round(
+                #             self.node_nominal_voltage_mapping.get(
+                #                 api_load.connecting_element
+                #             )[0]
+                #             * 1.732,
+                #             1,
+                #         )
+                #     else:
+                #         api_load.nominal_voltage = self.node_nominal_voltage_mapping.get(
+                #             api_load.connecting_element
+                #         )[0]
 
-                except:
-                    pass
-                    #print("Load nominal voltage not defined.")
+                # except:
+                #     pass
+                #     #print("Load nominal voltage not defined.")
                 
                 # now define api_load.vmin and api_load.vmax
                 api_load.vmin = 0.65
