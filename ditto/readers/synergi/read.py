@@ -1410,7 +1410,7 @@ class Reader(AbstractReader):
                             conductor_mapping[conductor_name_raw][
                                 "CableConNeutResistance_PerLUL"
                             ]
-                            / 160934
+                            / 1609.34
                         )
                         api_wire.concentric_neutral_diameter = (
                             conductor_mapping[conductor_name_raw][
