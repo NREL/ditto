@@ -859,7 +859,7 @@ class Reader(AbstractReader):
             # Since this could contain spaces, replace them with "_"
             #
             api_line.name = obj.lower().replace(" ", "_")
-
+            
             # Set the feeder_name if it exists in the mapping
             if obj in self.section_feeder_mapping:
                 api_line.feeder_name = self.section_feeder_mapping[obj]
@@ -3005,8 +3005,8 @@ class Reader(AbstractReader):
         print("--> Identifying nominal voltage for node and lines...")
         
         model.set_names()
-        modifier = system_structure_modifier(model)
-        modifier.set_nominal_voltages_recur()
-        modifier.set_nominal_voltages_recur_line()
+        #modifier = system_structure_modifier(model)
+        #modifier.set_nominal_voltages_recur()
+        #modifier.set_nominal_voltages_recur_line()
 
         # end of parse function
