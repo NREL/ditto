@@ -225,29 +225,36 @@ class Reader(AbstractReader):
             self.section_from_to_mapping[section] = (FromNodeId[idx], ToNodeId[idx])
 
         ###### Transformer ##################
-        TransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
-        TransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
+        PTransformerId = self.get_data("InstPrimaryTransformers", "UniqueDeviceId")
+        PTransformerSectionId = self.get_data("InstPrimaryTransformers", "SectionId")
         TransformerType = self.get_data("InstPrimaryTransformers", "TransformerType")
-        HighSideConnCode = self.get_data("InstTrans", "HighSideConnCode")
-        LowSideConnCode = self.get_data("InstTrans", "LowSideConnCode")
-        ConnPhases = self.get_data("InstTrans", "ConnectedPhases")
-        TransPercentZ = self.get_data("InstTrans", "PercentImpedance")
+        HighSideConnCode = pd.Series([None]*len(PTransformerId))
+        LowSideConnCode = pd.Series([None]*len(PTransformerId))
+        ConnPhases = pd.Series([None]*len(PTransformerId))
+        TransPercentZ = pd.Series([None]*len(PTransformerId))
+        #HighSideConnCode = self.get_data("InstTrans", "HighSideConnCode")
+        #LowSideConnCode = self.get_data("InstTrans", "LowSideConnCode")
+        #ConnPhases = self.get_data("InstTrans", "ConnectedPhases")
+        #TransPercentZ = self.get_data("InstTrans", "PercentImpedance")
+        #print(f'lengths of all primaries: {len(TransformerId)}, {len(TransformerSectionId)}, {len(TransformerType)}, {len(HighSideConnCode)}, {len(LowSideConnCode)}, {len(ConnPhases)}, {len(TransPercentZ)}')
 
         # group primary and secondaries together
         DTranId = self.get_data("InstDTrans", "DTranId")
-        #TransformerId = pd.concat([TransformerId, DTranId])
+        TransformerId = pd.concat([PTransformerId, DTranId])
         DTransformerSectionId = self.get_data("InstDTrans", "SectionId")
-        #TransformerSectionId = pd.concat([TransformerSectionId, DTransformerSectionId])
+        TransformerSectionId = pd.concat([PTransformerSectionId, DTransformerSectionId])
         DTransformerType = self.get_data("InstDTrans", "TransformerType")
-        #TransformerType = pd.concat([TransformerType, DTransformerType])
+        TransformerType = pd.concat([TransformerType, DTransformerType])
         DHighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
-        #HighSideConnCode = pd.concat([HighSideConnCode, DHighSideConnCode])
+        HighSideConnCode = pd.concat([HighSideConnCode, DHighSideConnCode])
         DLowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
-        #LowSideConnCode = pd.concat([LowSideConnCode, DLowSideConnCode])
+        LowSideConnCode = pd.concat([LowSideConnCode, DLowSideConnCode])
         DConnPhases = self.get_data("InstDTrans", "ConnPhases")
-        #ConnPhases = pd.concat([ConnPhases, DConnPhases])
+        ConnPhases = pd.concat([ConnPhases, DConnPhases])
         DTransPercentZ = self.get_data("InstDTrans", "PercentZ")
-        #TransPercentZ = pd.concat([TransPercentZ, DTransPercentZ])
+        TransPercentZ = pd.concat([TransPercentZ, DTransPercentZ])
+        print(f'lengths of all service transformers: {len(DTranId)}, {len(DTransformerSectionId)}, {len(DTransformerType)}, {len(DHighSideConnCode)}, {len(DLowSideConnCode)}, {len(DConnPhases)}, {len(DTransPercentZ)}')
+
 
         ## Substration Transformers ##
         # wenbo added
@@ -317,10 +324,10 @@ class Reader(AbstractReader):
             "InstPrimaryTransformers", "HighSideNearFromNode"
         )
         # all distribution transformers have the high side near the from node
-        #if len(DTranId) > 0:
-        #    TransformerHighSideNearFromNode = pd.concat(
-        #        [TransformerHighSideNearFromNode, pd.Series([1] * len(DTranId))]
-        #    )
+        if len(DTranId) > 0:
+            TransformerHighSideNearFromNode = pd.concat(
+                [TransformerHighSideNearFromNode, pd.Series([0] * len(DTranId))]
+            )
         #print(f'THSNFN: {len(TransformerHighSideNearFromNode)} vs. {len(DTranId)} TransformerHighSideNearFromNode: {TransformerHighSideNearFromNode} ')
         #quit()
 
@@ -849,7 +856,11 @@ class Reader(AbstractReader):
         print("--> Parsing Lines...")
         for i, obj in enumerate(LineID):
             ## Do not parse sections with regulators or Transformers to Lines
-            if obj in RegulatorSectionId.values or obj in TransformerSectionId.values:
+            if obj in RegulatorSectionId.values: # or obj in TransformerSectionId.values:
+                continue
+
+            ## Do not parse sections which are Transformers which have been attached propperly 
+            if obj in PTransformerSectionId:
                 continue
 
             # Create a DiTTo Line object
@@ -1662,6 +1673,7 @@ class Reader(AbstractReader):
                 api_transformer.feeder_name = self.section_feeder_mapping[
                     TransformerSectionId[i]
                 ]
+                print(f'transformer {obj} feeder name set to feeder mapping {TransformerSectionId[i]}')
 
             # If it is not, try to remove the "tran" prefix that might have been added
             else:
@@ -1670,6 +1682,8 @@ class Reader(AbstractReader):
                     api_transformer.feeder_name = self.section_feeder_mapping[
                         cleaned_id
                     ]
+                else:
+                    print(f'cleaned_id {cleaned_id} not in feeder mapping')
 
             # wenbo added:
             # from feeder_substation_mapping get the substation name
@@ -1677,6 +1691,7 @@ class Reader(AbstractReader):
                 api_transformer.substation_name = self.feeder_substation_mapping[
                     api_transformer.feeder_name
                 ]
+                print(f'transformer {obj} mapped to substation {self.feeder_substation_mapping[api_transformer.feeder_name]}')
 
             # Find out the from and to elements which are available in the sections
             Count = None
@@ -1687,7 +1702,7 @@ class Reader(AbstractReader):
 
             # If no section found, print a warning
             if Count is None:
-                print("WARNING: No section found for section {}".format(obj))
+                print("WARNING: No transformer section found for section {}".format(obj))
 
             # Query the high side on either from element or to element
             # 0 meaning high side is at the to node; 1 meaning high side is at the from node
@@ -1695,8 +1710,8 @@ class Reader(AbstractReader):
                 api_transformer.HighSideNearFromNode = TransformerHighSideNearFromNode[
                     i
                 ]
-            # set the to element
-            if Count is not None:
+                # set the to element
+                # if Count is not None:
                 if api_transformer.HighSideNearFromNode == 1:
                     api_transformer.to_element = (
                         ToNodeId[Count].replace(" ", "_").lower()
@@ -1706,8 +1721,8 @@ class Reader(AbstractReader):
                         FromNodeId[Count].replace(" ", "_").lower()
                     )
 
-            # Set the From element
-            if Count is not None:
+                # Set the From element
+                # if Count is not None:
                 if api_transformer.HighSideNearFromNode == 1:
                     api_transformer.from_element = (
                         FromNodeId[Count].replace(" ", "_").lower()
@@ -1727,7 +1742,7 @@ class Reader(AbstractReader):
                         break
 
             # If no equipment found, print a warning
-            if Count is None:
+            """ if Count is None:
                 print(
                     "WARNING: No transformer equipment found for section {}".format(obj)
                 )
@@ -1735,11 +1750,11 @@ class Reader(AbstractReader):
                     "Attempting to create transformer {} from limited info.".format(
                         TransformerId[i]
                     )
-                )
+                ) """
 
             # if there wasn't anything in the warehouse for this transformer, try
             # to fill in info from the InstDTrans sheet info
-            if TransformerType[i] is None or Count is None:
+            """             if TransformerType[i] is None or Count is None:
                 # try to fill information from other categories
                 # New Transformer.T1 buses="Hibus, lowbus" ~ conns=(delta, wye)
                 if HighSideConnCode[i] == "YG" and LowSideConnCode[i] == "YG":
@@ -1757,16 +1772,16 @@ class Reader(AbstractReader):
                 # api_transformer.to_element = LowSideConnCode[i]
                 if TransPercentZ[i] is not None:
                     api_transformer.loadloss = TransPercentZ[i]
-                n_phases = min(len(ConnPhases[i].replace("N", "").strip()), 3)
+                #n_phases = min(len(ConnPhases[i].replace("N", "").strip()), 3)
                 # assume not a substation
                 api_transformer.is_substation = False
-                phases = ConnPhases[i].strip().replace("G", "")
-                n_phases = len(phases)
+                phases = ConnPhases[i].strip().replace("G", "").replace("N",'')
+                n_phases = min(len(phases), 3)
                 ##### Begin winding section for transformers without corresponding gear in warehouse
                 if n_phases == 3:
                     n_windings = 3
                 else:
-                    n_windings = 2
+                    n_windings = 2 
                 for winding in range(n_windings):
                     # Create a new Winding object
                     w = Winding(model)
@@ -1786,7 +1801,7 @@ class Reader(AbstractReader):
                         # w.nominal_voltage = ?
 
                     # Secondary
-                    elif winding >= 1:
+                    elif winding == 1:
                         # Set the Connection_type of the Winding
                         if (
                             LowSideConnCode[i] is not None
@@ -1795,6 +1810,21 @@ class Reader(AbstractReader):
                             w.connection_type = LowSideConnCode[i][:1].upper()
                         elif LowSideConnCode[i] is not None:
                             w.connection_type = LowSideConnCode[i].upper()
+
+                    # Tertiary
+                    elif winding == 2:
+                        # Set the Connection_type of the Winding
+                        if TertConnectCode is not None and len(TertConnectCode[i]) > 0:
+                            w.connection_type = TertConnectCode[i][:1].upper()
+                        elif TertiaryConnectionCode is not None:
+                            w.connection_type = TertiaryConnectionCode[Count][
+                                :1
+                            ].upper()
+
+                        # Set the Nominal voltage of the Winding
+                        w.nominal_voltage = (
+                            TertiaryRatedKv[Count] * 10**3
+                        )  # DiTTo in volts
 
                     # Set the rated power
                     if winding == 0 or winding == 1:
@@ -1817,7 +1847,7 @@ class Reader(AbstractReader):
                             w.phase_windings.append(pw)
 
                     # Append the Winding to the Transformer
-                    api_transformer.windings.append(w)
+                    api_transformer.windings.append(w) """
 
             if Count is not None:
                 # Set the PT Ratio
