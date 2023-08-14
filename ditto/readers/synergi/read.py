@@ -16,7 +16,6 @@ import operator
 import pandas as pd
 import re
 # Ditto imports #
-from tqdm import tqdm
 
 from ditto.readers.abstract_reader import AbstractReader
 from ditto.store import Store
@@ -3004,9 +3003,12 @@ class Reader(AbstractReader):
         #
         print("--> Identifying nominal voltage for node and lines...")
         
-        model.set_names()
-        #modifier = system_structure_modifier(model)
-        #modifier.set_nominal_voltages_recur()
-        #modifier.set_nominal_voltages_recur_line()
+        if len(FeederId) > 1:
+            print("WARNING: Multiple source found! no load KV define for loads")
+        else:     
+            model.set_names()
+            modifier = system_structure_modifier(model)
+            modifier.set_nominal_voltages_recur()
+            modifier.set_nominal_voltages_recur_line()
 
         # end of parse function
