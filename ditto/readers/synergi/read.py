@@ -482,6 +482,8 @@ class Reader(AbstractReader):
         CableDiamOutside = self.get_data("DevConductors", "CableDiamOutside_SUL")
         CableDiamOverInsul = self.get_data("DevConductors", "CableDiamOverInsul_SUL")
 
+        ConductorType = self.get_data("DevConductors", "ConductorType")
+
         conductor_mapping = {}
         for idx, cond in enumerate(ConductorName):
             conductor_mapping[cond] = {
@@ -501,6 +503,7 @@ class Reader(AbstractReader):
                 "CableConNeutStrandCount": CableConNeutStrandCount[idx],
                 "CableDiamOutside": CableDiamOutside[idx],
                 "CableDiamOverInsul": CableDiamOverInsul[idx],
+                "ConductorType":ConductorType[idx]
             }
 
         ## Loads #############
@@ -1177,20 +1180,20 @@ class Reader(AbstractReader):
                         and "Position1_Y_MUL" in config
                     ):
                         # Set X
-                        #                        api_wire.X = convert_length_unit(
-                        #                            config["Position1_X_MUL"], SynergiValueType.MUL, LengthUnits
-                        #                        )
-                        api_wire.X = config["Position1_X_MUL"]
+                        api_wire.X = convert_length_unit(
+                            config["Position1_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        )
+                        #api_wire.X = config["Position1_X_MUL"]
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"]
-                        )
-                    #                        api_wire.Y = convert_length_unit(
-                    #                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"],
-                    #                            SynergiValueType.MUL,
-                    #                            LengthUnits,
-                    #                        ) wenbo commented out, reason is define ft in opendss only is correct
+                        # api_wire.Y = (
+                        #     AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"]
+                        # )
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position1_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits,
+                        ) #
 
                     # Set the position of the second wire
                     if (
@@ -1200,20 +1203,20 @@ class Reader(AbstractReader):
                         and "Position2_Y_MUL" in config
                     ):
                         # Set X
-                        #                        api_wire.X = convert_length_unit(
-                        #                            config["Position2_X_MUL"], SynergiValueType.MUL, LengthUnits
-                        #                        )
-                        api_wire.X = config["Position2_X_MUL"]
+                        api_wire.X = convert_length_unit(
+                            config["Position2_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        )
+                        # api_wire.X = config["Position2_X_MUL"]
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"]
+                        # api_wire.Y = (
+                        #     AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"]
+                        # )
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits,
                         )
-                    #                        api_wire.Y = convert_length_unit(
-                    #                            AveHeightAboveGround_MUL[i] + config["Position2_Y_MUL"],
-                    #                            SynergiValueType.MUL,
-                    #                            LengthUnits,
-                    #                        )
 
                     # Set the position of the third wire
                     if (
@@ -1223,21 +1226,21 @@ class Reader(AbstractReader):
                         and "Position3_Y_MUL" in config
                     ):
                         # Set X
-                        api_wire.X = config["Position3_X_MUL"]
-                        #                        api_wire.X = convert_length_unit(
-                        #                            config["Position3_X_MUL"], SynergiValueType.MUL, LengthUnits
-                        #                        )
+                        #api_wire.X = config["Position3_X_MUL"]
+                        api_wire.X = convert_length_unit(
+                            config["Position3_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        )
 
                         # Set Y
                         # Add the reference height
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"]
+                        # api_wire.Y = (
+                        #     AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"]
+                        # )
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits,
                         )
-                    #                        api_wire.Y = convert_length_unit(
-                    #                            AveHeightAboveGround_MUL[i] + config["Position3_Y_MUL"],
-                    #                            SynergiValueType.MUL,
-                    #                            LengthUnits,
-                    #                        )
 
                     # Set the characteristics of the first wire. Use PhaseConductorID
                     #
@@ -1330,37 +1333,60 @@ class Reader(AbstractReader):
                     # Set the Spacing of the neutral
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:
                         # Set X
-                        #                        api_wire.X = convert_length_unit(
-                        #                            config["Neutral_X_MUL"], SynergiValueType.MUL, LengthUnits
-                        #                        )  # DiTTo is in meters
-                        api_wire.X = config["Neutral_X_MUL"]
+                        api_wire.X = convert_length_unit(
+                            config["Neutral_X_MUL"], SynergiValueType.MUL, LengthUnits
+                        )  # DiTTo is in meters
+                        # api_wire.X = config["Neutral_X_MUL"]
                         # Set Y
                         # Add the reference height
-                        #                        api_wire.Y = convert_length_unit(
-                        #                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"],
-                        #                            SynergiValueType.MUL,
-                        #                            LengthUnits,
-                        #                        )
-                        api_wire.Y = (
-                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
+                        api_wire.Y = convert_length_unit(
+                            AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"],
+                            SynergiValueType.MUL,
+                            LengthUnits,
                         )
+                        # api_wire.Y = (
+                        #     AveHeightAboveGround_MUL[i] + config["Neutral_Y_MUL"]
+                        # )
                 #print("api_line.name", api_line.name, "phase", phase, "api_wire.nameclass", api_wire.nameclass)
                 #print("api_line.line_type", api_line.line_type)
                 
-                if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 0:
-                    api_line.line_type = 'overhead'
-                else:
-                    api_line.line_type = 'underground'                
+                # define linetype: overhead bare, underground Act
 
-                
-                if api_line.line_type == "underground":
-                    api_wire.nameclass = "Cable_" + api_wire.nameclass
-                elif api_line.line_type == "swgearbus":
-                    print('Pass on swgearbus line type: fix later')
-                    continue
-                    api_wire.nameclass = "Swgearbus" + api_wire.nameclass
+                # if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 1:
+                #     api_line.line_type = 'underground'
+
+                # if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 0:
+                #     api_line.line_type = 'overhead'
+                # else:
+                #     api_line.line_type = 'underground'                
+
+                if conductor_mapping[conductor_name_raw]['ConductorType'] == 'actz':
+                    api_line.line_type = 'actz_underground'
+                    
+
+                elif conductor_mapping[conductor_name_raw]['ConductorType'] == 'bare':
+                    api_line.line_type = 'bare_overhead'
+                    api_wire.nameclass = 'wire_' + api_wire.nameclass
+
+                elif conductor_mapping[conductor_name_raw]['ConductorType'] == 'conc':
+                    api_line.line_type = 'conc_underground'
+                    api_wire.nameclass = 'conc_' + api_wire.nameclass
                 else:
-                    api_wire.nameclass = "Wire_" + api_wire.nameclass
+                    api_line.line_type = 'tape_underground'
+                    api_wire.nameclass = 'tape_' + api_wire.nameclass
+                
+                # this supercede the conduct type
+                if conductor_mapping[conductor_name_raw]['ActualImpedance'] == 1:
+                    api_line.line_type = 'actz_underground'
+                               
+                # if api_line.line_type == "underground":
+                #     api_wire.nameclass = "Cable_" + api_wire.nameclass
+                # elif api_line.line_type == "swgearbus":
+                #     print('Pass on swgearbus line type: fix later')
+                #     continue
+                #     api_wire.nameclass = "Swgearbus" + api_wire.nameclass
+                # else:
+                #     api_wire.nameclass = "Wire_" + api_wire.nameclass
                     
                     #api_wire.nameclass = "Swgearbus" + api_wire.nameclass
                 # Set the characteristics of the wire:
@@ -1424,7 +1450,7 @@ class Reader(AbstractReader):
                     # Represented in Ohms per meter
                     #
                     if api_line.length is not None:
-                        if conductor_mapping[conductor_name_raw]["ActualImpedance"] == 0: 
+                        if conductor_mapping[conductor_name_raw]["ActualImpedance"] == 0 and conductor_mapping[conductor_name_raw]['ConductorType'] == 'bare': 
                             api_wire.resistance = convert_length_unit(
                                 conductor_mapping[conductor_name_raw]["PosSequenceResistance_PerLUL"], # this value is actual resistance
                                 SynergiValueType.Per_LUL,
@@ -1444,57 +1470,84 @@ class Reader(AbstractReader):
                         conductor_mapping[conductor_name_raw]["CableDiamOutside"]
                         > conductor_mapping[conductor_name_raw]["CableDiamConductor"]
                     ):
-                        api_wire.concentric_neutral_resistance = (
-                            conductor_mapping[conductor_name_raw][
-                                "CableConNeutResistance_PerLUL"
-                            ]
-                            / 160934
+                        api_wire.concentric_neutral_resistance = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableConNeutResistance_PerLUL"],
+                            SynergiValueType.Per_LUL,
+                            LengthUnits,
                         )
-                        api_wire.concentric_neutral_diameter = (
-                            conductor_mapping[conductor_name_raw][
-                                "CableConNeutStrandDiameter_SUL"
-                            ]
-                            * 0.0254
+                        api_wire.concentric_neutral_diameter = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableConNeutStrandDiameter_SUL"],
+                            SynergiValueType.SUL,
+                            LengthUnits,
                         )  # multiplied by short unit length scale
-                        api_wire.concentric_neutral_gmr = (
+                        api_wire.concentric_neutral_gmr = convert_length_unit(
                             conductor_mapping[conductor_name_raw][
                                 "CableConNeutStrandDiameter_SUL"
                             ]
                             / 2.0
-                            * 0.7788
-                            * 0.0254
+                            * 0.7788,
+                            SynergiValueType.SUL,
+                            LengthUnits,
                         )  # multiplied by short unit length scale. Derived as 0.7788 * radius as per OpenDSS default
-                        api_wire.concentric_neutral_outside_diameter = (
-                            conductor_mapping[conductor_name_raw]["CableDiamOutside"]
-                            * 0.0254
+                        api_wire.concentric_neutral_outside_diameter = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableDiamOutside"],
+                            SynergiValueType.SUL,
+                            LengthUnits,
                         )  # multiplied by short unit length scale
                         api_wire.concentric_neutral_nstrand = int(
                             conductor_mapping[conductor_name_raw][
                                 "CableConNeutStrandCount"
                             ]
                         )
-                        api_wire.insulation_thickness = (
-                            (
-                                conductor_mapping[conductor_name_raw][
+                        api_wire.concentric_neutral_diameter_over_insulation = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableDiamOverInsul"],
+                            SynergiValueType.SUL,
+                            LengthUnits,
+                        )
+                        api_wire.concentric_neutral_diameter_conductor = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableDiamConductor"],
+                            SynergiValueType.SUL,
+                            LengthUnits,
+                        )
+
+                        
+                        api_wire.concentric_neutral_core_gmr = convert_length_unit(
+                            conductor_mapping[conductor_name_raw]["CableGMR"],
+                            SynergiValueType.MUL,
+                            LengthUnits,
+                        )
+
+
+
+                        api_wire.insulation_thickness = convert_length_unit(
+                                (conductor_mapping[conductor_name_raw][
                                     "CableDiamOverInsul"
                                 ]
                                 - conductor_mapping[conductor_name_raw][
                                     "CableDiamConductor"
-                                ]
-                            )
-                            / 2.0
-                            * 0.0254
+                                ])             
+                            / 2.0,
+                            SynergiValueType.SUL,
+                            LengthUnits,
                         )
 
                 # Add the new Wire to the line's list of wires
                 #
-                if api_line.line_type == "overhead":
-                    api_line.wires.append(api_wire)
-                if api_line.line_type == "swgearbus":
-                    api_line.wires.append(api_wire)
-                if api_line.line_type == "underground":
-                    if phase != "N":
-                        api_line.wires.append(api_wire)
+                # if api_line.line_type == "overhead":
+                #     api_line.wires.append(api_wire)
+                # if api_line.line_type == "swgearbus":
+                #     api_line.wires.append(api_wire)
+                # if api_line.line_type == "underground":
+                #     if phase != "N":
+                #         api_line.wires.append(api_wire)
+                api_line.wires.append(api_wire)
+                # if api_line.line_type == "overhead":
+                #     api_line.wires.append(api_wire)
+                # if api_line.line_type == "swgearbus":
+                #     api_line.wires.append(api_wire)
+                # if 'actz_underground' in api_line.line_type:
+                #     if phase != "N": # wenbo todo: check why this line might be needed.
+                #         api_line.wires.append(api_wire)
 
                 ############################################################
                 # END OF WIRES SECTION
@@ -1506,6 +1559,9 @@ class Reader(AbstractReader):
             # using geometries is prefered. This information will be stored in DiTTo and when
             # writing out to another format, geometries will be used instead of linecodes if possible.
             # We still compute the impedance matrix in case this possibility does not exist in the output format
+
+            # Wenbo notes: ActZ condutor type in synergi indicates the phase impedance matrix (linecode) should be used.
+            # phase impedance matrix are calculated from sequence impedance and admittance.
 
             # Use the Phase Conductor charateristics to build the matrix
             #
@@ -1527,8 +1583,9 @@ class Reader(AbstractReader):
                 x0 = ZeroSequenceReactance_PerLUL[Count]
 
                 # wenbo added
-                B1 = PosSequenceAdmittance_PerLUL[Count]
-                B0 = ZeroSequenceAdmittance_PerLUL[Count]
+                Y1 = PosSequenceAdmittance_PerLUL[Count] # actual letter should be B1
+                Y0 = ZeroSequenceAdmittance_PerLUL[Count] # acutal letter should be B0, Y=G+jB
+                # Wenbo notes: the admittance matrix is updated 
 
                 # In this case, we build the impedance matrix from Z+ and Z0 in the following way:
                 #         __________________________
@@ -1541,16 +1598,18 @@ class Reader(AbstractReader):
                 r1 = convert_length_unit(r1, SynergiValueType.Per_LUL, LengthUnits) / 3
                 x0 = convert_length_unit(x0, SynergiValueType.Per_LUL, LengthUnits) / 3
                 x1 = convert_length_unit(x1, SynergiValueType.Per_LUL, LengthUnits) / 3
-                B1 = (
-                    convert_length_unit(B1, SynergiValueType.Per_LUL, LengthUnits)
+                C1 = (
+                    convert_length_unit(Y1, SynergiValueType.Per_LUL, LengthUnits)
                     / 3
                     / 376.9911
+                    *1e3 # synergi assumes micro-S , where opendss needs nano Farady
                 )
-                B0 = (
-                    convert_length_unit(B0, SynergiValueType.Per_LUL, LengthUnits)
+                C0 = (
+                    convert_length_unit(Y0, SynergiValueType.Per_LUL, LengthUnits)
                     / 3
-                    / 376.9911
-                )
+                    / 376.9911 # 2*pi*f (f=60)
+                    *1e3
+                )  #ohm per km
 
                 # One phase case (One phase + neutral):
 
@@ -1575,7 +1634,7 @@ class Reader(AbstractReader):
                         )
 
                         impedance_matrix = [[a, b], [b, a]]
-                        capacitance_matrix = [[2 * B1, -B1], [-B1, 2 * B1]]
+                        capacitance_matrix = [[2 * C1 + C0, C0-C1], [C0-C1, 2 * C1+C0]]
 
                     else:
                         impedance_matrix = [
@@ -1585,7 +1644,7 @@ class Reader(AbstractReader):
                                 )
                             ]
                         ]
-                        capacitance_matrix = [[2 * B1]]
+                        capacitance_matrix = [[2 * C1 + C0]]
 
                 # Two phase case (Two phases + neutral)
                 #
@@ -1612,12 +1671,14 @@ class Reader(AbstractReader):
                         impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
 
                         capacitance_matrix = [
-                            [2 * B1, -B1, -B1],
-                            [-B1, 2 * B1, -B1],
-                            [-B1, -B1, 2 * B1],
+                            [2 * C1+C0, C0-C1, C0-C1],
+                            [C0-C1, 2 * C1+C0, C0-C1],
+                            [C0-C1, C0-C1, 2 * C1+C0],
                         ]
 
                     else:
+                        # 2 phases + neutral
+                        
                         b1 = float(r0) - float(r1)
                         b2 = float(x0) - float(x1)
 
@@ -1637,7 +1698,7 @@ class Reader(AbstractReader):
                         )
 
                         impedance_matrix = [[a, b], [b, a]]
-                        capacitance_matrix = [[2 * B1, -B1], [-B1, 2 * B1]]
+                        capacitance_matrix = [[2 * C1 + C0, C0-C1], [C0-C1, 2 * C1+C0]]
 
                 # Three phases case (Three phases + neutral)
                 #
@@ -1661,9 +1722,9 @@ class Reader(AbstractReader):
 
                     impedance_matrix = [[a, b, b], [b, a, b], [b, b, a]]
                     capacitance_matrix = [
-                        [2 * B1, -B1, -B1],
-                        [-B1, 2 * B1, -B1],
-                        [-B1, -B1, 2 * B1],
+                        [2 * C1+C0, C0-C1, C0-C1],
+                        [C0-C1, 2 * C1+C0, C0-C1],
+                        [C0-C1, C0-C1, 2 * C1+C0],
                     ]
 
             if impedance_matrix is not None:

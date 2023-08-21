@@ -97,8 +97,20 @@ class Wire(DiTToHasTraits):
         help="""The outside diameter of the concentric neutral cable.""",
         default_value=None,
     )
+    concentric_neutral_diameter_over_insulation = Float(
+        help="""The diameter over insulation.""",
+        default_value=None,
+    )
+    concentric_neutral_diameter_conductor = Float(
+        help="""The diameter of conductor.""",
+        default_value=None,
+    )
     concentric_neutral_nstrand = Int(
         help="""The number of strands for the concentric neutral cable.""",
+        default_value=None,
+    )
+    concentric_neutral_core_gmr = Float(
+        help="""The GMR of conductor""",
         default_value=None,
     )
     ###############################################################

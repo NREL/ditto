@@ -2848,8 +2848,9 @@ class Writer(AbstractWriter):
                 # Find out if we have all the information we need to export
                 # the line using geometries. If we miss something, use LineCodes.
                 #
-                # For overhead (and undefined lines...)
-                if i.line_type != "underground":
+                # For overhead (and undefined lines...), use line_geometry
+                #if i.line_type != "underground":
+                if 'underground' not in i.line_type:
                     if len(i.wires) == 0:
                         use_linecodes = True
                     for wire in i.wires:
@@ -2866,6 +2867,7 @@ class Writer(AbstractWriter):
                         if wire.ampacity is None:
                             use_linecodes = True
                 # For underground lines, we need a lot of data...
+                # For underground we either use actual Z (linecode), or concentric neutral (linegeometry)
                 else:
                     use_linecodes = True
                     if len(i.wires) == 0:
@@ -2899,6 +2901,21 @@ class Writer(AbstractWriter):
                         if wire.concentric_neutral_nstrand is None:
                             use_linecodes = True
 
+                # line type is from synergi reader to supercede the previous definition
+                # actz means use sequence impedance to calculate phase impedance
+
+                if 'actz' in i.line_type: 
+                    use_linecodes = True
+                elif 'bare' in i.line_type:
+                    use_linecodes = False
+                elif 'conc' in i.line_type:
+                    use_linecodes = False
+                else: 
+                    use_linecodes = False
+
+                
+                
+                
                 if use_linecodes:
                     lines_to_linecodify.append(i)
                 else:
@@ -3164,7 +3181,8 @@ class Writer(AbstractWriter):
             if isinstance(i, Line):
                 # If the line is overhead, then export to WireData
                 # If line_type wasn't defined, try to export as for overhead...
-                if i.line_type != "underground":
+                #if i.line_type != "underground":
+                if 'underground' not in i.line_type:
                     # Loop over the wires of this line
                     for wire in i.wires:
                         # Parse the wire to get a dictionary with all the available attributes
@@ -3199,6 +3217,7 @@ class Writer(AbstractWriter):
                                     cnt += 1
                 else:
                     # Loop over the wires of this line
+                    # for cable or underground type
                     for wire in i.wires:
                         # Parse the wire to get a dictionary with all the available attributes
                         parsed_cable = self.parse_cable(wire)
@@ -3770,6 +3789,8 @@ class Writer(AbstractWriter):
             result["InsLayer"] = wire.insulation_thickness
             if hasattr(wire, "diameter") and wire.diameter is not None:
                 result["DiaIns"] = wire.diameter + 2 * wire.insulation_thickness
+            if hasattr(wire, "concentric_neutral_diameter_over_insulation") and wire.concentric_neutral_diameter_over_insulation is not None:
+                result["DiaIns"] = wire.concentric_neutral_diameter_over_insulation
 
         # Number of concentric neutral strands
         if (
@@ -3798,6 +3819,9 @@ class Writer(AbstractWriter):
         if hasattr(wire, "diameter") and wire.diameter is not None:
             result["Diam"] = wire.diameter
 
+        if hasattr(wire, "diameter") and wire.diameter is not None:
+            result["Diam"] = wire.concentric_neutral_diameter_conductor
+
         # Outside diameter of the cable
         if (
             hasattr(wire, "concentric_neutral_outside_diameter")
@@ -3824,6 +3848,8 @@ class Writer(AbstractWriter):
         #
         if hasattr(wire, "gmr") and wire.gmr is not None:
             result["GMRac"] = wire.gmr
+        if hasattr(wire, "concentric_neutral_core_gmr") and wire.concentric_neutral_core_gmr is not None:
+            result["GMRac"] = wire.concentric_neutral_core_gmr
 
         # While the units are being integrated into DiTTo, we assume that
         # everything is in meters here, even if it doesn't make much sense for cable properties...
