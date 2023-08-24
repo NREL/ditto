@@ -3236,13 +3236,13 @@ class Writer(AbstractWriter):
                                     self.all_cables[wire.nameclass] = parsed_cable
                                 # Otherwise, there is nothing to do unless the dictionary we previously has is not
                                 # exactly the one we currently have
-                                else:
-                                    if self.all_cables[wire.nameclass] != parsed_cable:
-                                        self.all_cables[
-                                            wire.nameclass + "_" + str(cnt)
-                                        ] = parsed_cable
-                                        wire.nameclass = wire.nameclass + "_" + str(cnt)
-                                        cnt += 1
+                                #else:
+                                #    if self.all_cables[wire.nameclass] != parsed_cable:
+                                #        self.all_cables[
+                                #            wire.nameclass + "_" + str(cnt)
+                                #        ] = parsed_cable
+                                #        wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                #        cnt += 1
                             # If we don't have a nameclass, we use fake names "cncable_1", "cncable_2"...
                             else:
                                 cable_found = False
