@@ -967,7 +967,7 @@ class Reader(AbstractReader):
                     eqt_open = RecloserIsOpen[idd[0]]
 
             # Switch
-            if switch_sectionID is not None and obj in switch_sectionID.values:
+            elif switch_sectionID is not None and obj in switch_sectionID.values:
                 idd_db = np.argwhere(switch_sectionID.values == obj).flatten()
 
                 # Set the is_switch flag to True
@@ -983,7 +983,7 @@ class Reader(AbstractReader):
                     eqt_open = SwitchIsOpen[idd_db[0]]
 
             # Fuse
-            if fuse_sectionID is not None and obj in fuse_sectionID.values:
+            elif fuse_sectionID is not None and obj in fuse_sectionID.values:
                 idd = np.argwhere(fuse_sectionID.values == obj).flatten()
 
                 # Set the is_fuse flag to True
@@ -996,7 +996,7 @@ class Reader(AbstractReader):
                     eqt_open = fuse_is_open[idd[0]]
 
             # Protection Devices
-            if (
+            elif (
                 protective_device_sectionID is not None
                 and obj in protective_device_sectionID.values
             ):
@@ -1257,12 +1257,12 @@ class Reader(AbstractReader):
                         and isinstance(PhaseConductorID[i], str)
                         and len(PhaseConductorID[i]) > 0
                     ):
+                        # Cache the conductor name
+                        conductor_name_raw = PhaseConductorID[i]
                         # Set the Nameclass of the Wire
                         # The name can contain spaces. Replace them with "_"
                         #
                         api_wire.nameclass = PhaseConductorID[i].replace(" ", "_")
-                        # Cache the conductor name
-                        conductor_name_raw = PhaseConductorID[i]
 
                     # Set the characteristics of the second wire.
                     # If PhaseConductor2Id is provided, use it
@@ -1275,21 +1275,21 @@ class Reader(AbstractReader):
                             and len(PhaseConductor2Id[i]) > 0
                             and PhaseConductor2Id[i].lower() != "unknown"
                         ):
+                            # Cache the conductor name
+                            conductor_name_raw = PhaseConductor2Id[i]
                             # Set the nameclass
                             # Replace spaces with "_"
                             #
                             api_wire.nameclass = PhaseConductor2Id[i].replace(" ", "_")
 
-                            # Cache the conductor name
-                            conductor_name_raw = PhaseConductor2Id[i]
                         else:
                             try:
+                                conductor_name_raw = PhaseConductorID[i]
                                 api_wire.nameclass = PhaseConductorID[i].replace(
                                     " ", "_"
                                 )
-                                conductor_name_raw = PhaseConductorID[i]
                             except:
-                                pass
+                                print(f'WARNING: unable to get conductor name for wire {i}')
 
                     # Set the characteristics of the third wire in the same way
                     if idx == 2:
@@ -1299,21 +1299,21 @@ class Reader(AbstractReader):
                             and len(PhaseConductor3Id[i]) > 0
                             and PhaseConductor3Id[i].lower() != "unknown"
                         ):
+                            # Cache the conductor name
+                            conductor_name_raw = PhaseConductor3Id[i]
                             # Set the nameclass
                             # Replace spaces with "_"
                             #
                             api_wire.nameclass = PhaseConductor3Id[i].replace(" ", "_")
 
-                            # Cache the conductor name
-                            conductor_name_raw = PhaseConductor3Id[i]
                         else:
                             try:
+                                conductor_name_raw = PhaseConductorID[i]
                                 api_wire.nameclass = PhaseConductorID[i].replace(
                                     " ", "_"
                                 )
-                                conductor_name_raw = PhaseConductorID[i]
                             except:
-                                pass
+                                print(f'WARNING: unable to get conductor name for wire {i}')
 
                 if phase == "N":
                     if (
@@ -1321,10 +1321,10 @@ class Reader(AbstractReader):
                         and isinstance(NeutralConductorID[i], str)
                         and len(NeutralConductorID[i]) > 0
                     ):
-                        # Set the nameclass
-                        api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
                         # Cache the conductor name
                         conductor_name_raw = NeutralConductorID[i]
+                        # Set the nameclass
+                        api_wire.nameclass = NeutralConductorID[i].replace(" ", "_")
 
                     # Set the Spacing of the neutral
                     if "Neutral_X_MUL" in config and "Neutral_Y_MUL" in config:

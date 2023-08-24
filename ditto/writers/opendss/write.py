@@ -3203,13 +3203,13 @@ class Writer(AbstractWriter):
                                     self.all_wires[wire.nameclass] = parsed_wire
                                 # Otherwise, there is nothing to do unless the dictionary we previously has is not
                                 # exactly the one we currently have
-                                else:
-                                    if self.all_wires[wire.nameclass] != parsed_wire:
-                                        self.all_wires[
-                                            wire.nameclass + "_" + str(cnt)
-                                        ] = parsed_wire
-                                        wire.nameclass = wire.nameclass + "_" + str(cnt)
-                                        cnt += 1
+                                #else:
+                                #    if self.all_wires[wire.nameclass] != parsed_wire:
+                                #        self.all_wires[
+                                #            wire.nameclass + "_" + str(cnt)
+                                #        ] = parsed_wire
+                                #        wire.nameclass = wire.nameclass + "_" + str(cnt)
+                                #        cnt += 1
                             # If we don't have a nameclass, we use fake names "wire_1", "wire_2"...
                             else:
                                 wire_found = False
@@ -3916,7 +3916,7 @@ class Writer(AbstractWriter):
         result["conductor_list"] = []
         for cond, wire in enumerate(wire_list):
             result["conductor_list"].append({})
-            cond += 1
+            #cond += 1
             result["conductor_list"][-1]["cond"] = cond
             if wire.nameclass in self.all_wires:
                 result["conductor_list"][-1]["Wire"] = wire.nameclass
