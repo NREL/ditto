@@ -490,8 +490,10 @@ class Writer(AbstractWriter):
                             and i.windings[0].connection_type == "D"
                         ):
                             txt += " phases={Np}".format(Np=N_phases[0] - 1)
+                            num_phases = N_phases[0] - 1
                         else:
                             txt += " phases={Np}".format(Np=N_phases[0])
+                            num_phases = N_phases[0]
                         txt += " windings={N}".format(N=len(i.windings))
                     except:
                         logger.error(
@@ -608,13 +610,31 @@ class Writer(AbstractWriter):
                                 self._baseKV_.add(winding.nominal_voltage * 10**-3)
 
                             # Nominal voltage
+                            if (hasattr(i, "is_threephaseunit") 
+                                and i.is_threephaseunit is not None 
+                                and i.is_threephaseunit!=1
+                                and num_phases >1
+                            ): 
+                                flag_LL = True # this flag is to convert bank tranformers from LN to LL voltage
+                            else:
+                                flag_LL = False 
+                                
+                            
+                            
                             if (
                                 hasattr(winding, "nominal_voltage")
                                 and winding.nominal_voltage is not None
                             ):
-                                txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10**-3
-                                )  # OpenDSS in kvolts
+                                if flag_LL == True:
+                                    txt += " Kv={kv}".format(
+                                        kv=winding.nominal_voltage * 10**-3 *1.732
+                                    )  # OpenDSS in kvolts
+                                else:
+                                    txt += " Kv={kv}".format(
+                                        kv=winding.nominal_voltage * 10**-3
+                                    )  # OpenDSS in kvolts
+                                
+                                
                                 if (
                                     not substation_name + "_" + feeder_name
                                     in self._baseKV_feeders_
@@ -639,12 +659,22 @@ class Writer(AbstractWriter):
                                         * 10**-3
                                     )
                                 else:
-                                    self._baseKV_.add(
-                                        winding.nominal_voltage * 10**-3
-                                    )
-                                    self._baseKV_feeders_[
-                                        substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10**-3)
+                                    # wenbo changed: winding voltage to add should be L-L
+                                    if N_phases[0]==1:
+                                        
+                                        self._baseKV_.add(
+                                            winding.nominal_voltage * 10**-3 *1.732
+                                        )
+                                        self._baseKV_feeders_[
+                                            substation_name + "_" + feeder_name
+                                        ].add(winding.nominal_voltage * 10**-3 *1.732)
+                                    else:
+                                        self._baseKV_.add(
+                                            winding.nominal_voltage * 10**-3
+                                        )
+                                        self._baseKV_feeders_[
+                                            substation_name + "_" + feeder_name
+                                        ].add(winding.nominal_voltage * 10**-3)
 
                             # rated power
                             if (
@@ -2738,11 +2768,11 @@ class Writer(AbstractWriter):
 
                     # Low (CONTROL)
                     if hasattr(i, "low") and i.low is not None:
-                        txt += " Vmin={vmin}".format(vmin=i.low)
+                        txt += " ONsetting={vmin}".format(vmin=i.low) # wenbo change to ONsetting
 
                     # high (CONTROL)
                     if hasattr(i, "high") and i.high is not None:
-                        txt += " Vmax={vmax}".format(vmax=i.high)
+                        txt += " OFFsetting={vmax}".format(vmax=i.high) # wenbo change to OFFsetting
 
                     # Pt ratio (CONTROL)
                     if hasattr(i, "pt_ratio") and i.pt_ratio is not None:

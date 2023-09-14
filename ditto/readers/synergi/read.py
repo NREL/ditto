@@ -980,6 +980,7 @@ class Reader(AbstractReader):
                     eqt_open = SwitchIsOpen[idd_db[0]]
 
             # Fuse
+            # wenbo note: this is not correct way to identify fuses
             if fuse_sectionID is not None and obj in fuse_sectionID.values:
                 idd = np.argwhere(fuse_sectionID.values == obj).flatten()
 
@@ -992,7 +993,7 @@ class Reader(AbstractReader):
                     eqt_rating = re.findall(r'\d+',fuse_rating[idd[0]])[0] # fuse might contain letters, E-rated fuse are general purpose
                     eqt_interrupting_rating = fuse_blow_rating[idd[0]]
                     eqt_open = fuse_is_open[idd[0]]
-
+            api_line.is_fuse = False
             # Protection Devices
             if (
                 protective_device_sectionID is not None
@@ -1438,6 +1439,7 @@ class Reader(AbstractReader):
                             "ContinuousCurrentRating"
                         ]
 
+
                     # Set the Emergency ampacity of the conductor
                     #
                     # If emergency ampacity is already set (if we have a switch for example), skip that
@@ -1747,6 +1749,9 @@ class Reader(AbstractReader):
         ####################################################################################
         #
         print("--> Parsing Transformers...")
+
+        previous_transformer = None # this line is to check dubplicated load from previous load
+
         for i, obj in enumerate(TransformerId):
             # Create a PowerTransformer object
             api_transformer = PowerTransformer(model)
@@ -1756,6 +1761,10 @@ class Reader(AbstractReader):
             # wenbo changed this
             api_transformer.name = obj.replace(",", "").replace(" ", "_").lower()
 
+            if api_transformer.name == previous_transformer:
+                api_transformer.name = obj.replace(",", "").replace(" ", "_").lower() + '_dup'
+            
+            previous_transformer = api_transformer.name
             # Set the feeder_name if it is in the mapping
 
             if TransformerSectionId[i] in self.section_feeder_mapping:
@@ -1845,13 +1854,15 @@ class Reader(AbstractReader):
                     )
                 ]
 
+                api_transformer.is_threephaseunit = int(IsThreePhaseUnit[Count])
                 # Number of windings
                 # TODO: IS THIS RIGHT???
-                #
+                # Wenbo answer: this is no right.
                 if IsThreePhaseUnit[Count] == 1 and EnableTertiary[Count] == 1:
                     n_windings = 3
                 else:
                     n_windings = 2
+
 
                 # Get the phases:
                 phases = self.section_phase_mapping[TransformerSectionId[i]].replace(
@@ -1892,14 +1903,14 @@ class Reader(AbstractReader):
                     elif winding == 1:
                         # Set the Connection_type of the Winding
                         if (
-                            LowVoltageConnectionCode_W is not None
-                            and len(LowVoltageConnectionCode_W[i]) > 0
+                            LowVoltageConnectionCode_N is not None
+                            and len(LowVoltageConnectionCode_N[i]) > 0
                         ):
-                            w.connection_type = LowVoltageConnectionCode_W[i][
+                            w.connection_type = LowVoltageConnectionCode_N[i][
                                 :1
                             ].upper()
-                        elif LowVoltageConnectionCode_N is not None:
-                            w.connection_type = LowVoltageConnectionCode_N[Count][
+                        elif LowVoltageConnectionCode_W is not None:
+                            w.connection_type = LowVoltageConnectionCode_W[Count][
                                 :1
                             ].upper()
 
@@ -1976,7 +1987,7 @@ class Reader(AbstractReader):
             # Set the name
             api_load.name = "Load_" + obj.replace(" ", "_").lower()
             if api_load.name == previous_load:
-                api_load.name = "Load_" + obj.replace(" ", "_").lower() + '_du'
+                api_load.name = "Load_" + obj.replace(" ", "_").lower() + '_dup'
             
             previous_load = api_load.name
 

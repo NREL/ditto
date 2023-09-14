@@ -86,6 +86,11 @@ class PowerTransformer(DiTToHasTraits):
         help="""Set to 1 if the transformer is a substation or is inside a substation""",
     )
 
+    # Modification: Wenbo (Sep 2023)
+    is_threephaseunit = Int(
+        help="""Set to 1 if the transformer is a three phase unit, otherwise it is a bank of 1-3 single phase transformers""",
+    )
+
     # Modification: Nicolas (December 2017)
     # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.
     # I think we need both since a substation might have multiple feeders attached to it.
