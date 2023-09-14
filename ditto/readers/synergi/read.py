@@ -2253,7 +2253,7 @@ class Reader(AbstractReader):
             # Maps control modes from Synergi format to DiTTo format
             # TODO: Complete the mapping with other control modes
             #
-            control_mode_mapping = {"VOLTS": "voltage"}
+            control_mode_mapping = {"VOLTS": "voltage", "AMPS": "currentflow"}
 
             # Set the nominal voltage
             # Convert from KV to Volts since DiTTo is in volts

@@ -2740,6 +2740,9 @@ class Writer(AbstractWriter):
 
                 # Create CapControl
                 if create_capcontrol:
+                    # set all controllers to start at off unless ONSetting is met
+                    txt += " states=0"
+
                     txt += "\n\nNew CapControl.{name} Capacitor={name}".format(
                         name=i.name
                     )
@@ -2763,11 +2766,13 @@ class Writer(AbstractWriter):
 
                     # Low (CONTROL)
                     if hasattr(i, "low") and i.low is not None:
-                        txt += " Vmin={vmin}".format(vmin=i.low)
+                        #txt += " Vmin={vmin}".format(vmin=i.low) # this would be an emergency setting
+                        txt += f" OFFSetting={i.low}"
 
                     # high (CONTROL)
                     if hasattr(i, "high") and i.high is not None:
-                        txt += " Vmax={vmax}".format(vmax=i.high)
+                        #txt += " Vmax={vmax}".format(vmax=i.high) # this would be an emergency setting
+                        txt += f" ONSetting={i.high}"
 
                     # Pt ratio (CONTROL)
                     if hasattr(i, "pt_ratio") and i.pt_ratio is not None:
