@@ -601,13 +601,13 @@ class Writer(AbstractWriter):
 
                             # Voltage type (Not mapped)
 
-                            # volage basis
-                            if (
-                                hasattr(winding, "nominal_voltage")
-                                and winding.nominal_voltage is not None
-                                and winding.nominal_voltage > 0
-                            ):
-                                self._baseKV_.add(winding.nominal_voltage * 10**-3)
+                            # volage basis: wenbo change it because this value needs to be calculated based on LL or LN
+                            # if (
+                            #     hasattr(winding, "nominal_voltage")
+                            #     and winding.nominal_voltage is not None
+                            #     and winding.nominal_voltage > 0
+                            # ):
+                            #     self._baseKV_.add(winding.nominal_voltage * 10**-3)
 
                             # Nominal voltage
                             if (hasattr(i, "is_threephaseunit") 
@@ -615,9 +615,9 @@ class Writer(AbstractWriter):
                                 and i.is_threephaseunit!=1
                                 and num_phases >1
                             ): 
-                                flag_LL = True # this flag is to convert bank tranformers from LN to LL voltage
+                                flag_to_LL = True # this flag is to convert bank tranformers from LN to LL voltage
                             else:
-                                flag_LL = False 
+                                flag_to_LL = False 
                                 
                             
                             
@@ -625,16 +625,22 @@ class Writer(AbstractWriter):
                                 hasattr(winding, "nominal_voltage")
                                 and winding.nominal_voltage is not None
                             ):
-                                if flag_LL == True:
+                                if flag_to_LL == True:
                                     txt += " Kv={kv}".format(
                                         kv=winding.nominal_voltage * 10**-3 *1.732
                                     )  # OpenDSS in kvolts
+
+                                    # volage basis
+                                    self._baseKV_.add(round(winding.nominal_voltage * 10**-3*1.732,2))
+
+
                                 else:
                                     txt += " Kv={kv}".format(
                                         kv=winding.nominal_voltage * 10**-3
                                     )  # OpenDSS in kvolts
                                 
-                                
+                                    #self._baseKV_.add(round(winding.nominal_voltage * 10**-3,2))
+
                                 if (
                                     not substation_name + "_" + feeder_name
                                     in self._baseKV_feeders_
@@ -646,10 +652,10 @@ class Writer(AbstractWriter):
                                 if (
                                     winding.nominal_voltage < 300
                                 ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
+                                    self._baseKV_.add(round(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
-                                        * 10**-3
+                                        * 10**-3,2)
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
@@ -662,15 +668,15 @@ class Writer(AbstractWriter):
                                     # wenbo changed: winding voltage to add should be L-L
                                     if N_phases[0]==1:
                                         
-                                        self._baseKV_.add(
-                                            winding.nominal_voltage * 10**-3 *1.732
+                                        self._baseKV_.add(round(
+                                            winding.nominal_voltage * 10**-3 *1.732,2)
                                         )
                                         self._baseKV_feeders_[
                                             substation_name + "_" + feeder_name
                                         ].add(winding.nominal_voltage * 10**-3 *1.732)
                                     else:
-                                        self._baseKV_.add(
-                                            winding.nominal_voltage * 10**-3
+                                        self._baseKV_.add(round(
+                                            winding.nominal_voltage * 10**-3,2)
                                         )
                                         self._baseKV_feeders_[
                                             substation_name + "_" + feeder_name
@@ -681,9 +687,17 @@ class Writer(AbstractWriter):
                                 hasattr(winding, "rated_power")
                                 and winding.rated_power is not None
                             ):
-                                txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10**-3
-                                )
+                                
+                                if flag_to_LL == True:
+                                    txt += " kva={kva}".format(
+                                        kva=winding.rated_power * 10**-3*num_phases
+                                    )
+
+                                else:
+
+                                    txt += " kva={kva}".format(
+                                        kva=winding.rated_power * 10**-3
+                                    )
 
                             # emergency_power
                             if (
@@ -894,10 +908,10 @@ class Writer(AbstractWriter):
                                 if (
                                     winding.nominal_voltage < 300
                                 ):  # Line-Neutral voltage for 120 V
-                                    self._baseKV_.add(
+                                    self._baseKV_.add(round(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
-                                        * 10**-3
+                                        * 10**-3,2)
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
@@ -908,7 +922,7 @@ class Writer(AbstractWriter):
                                     )
                                 else:
                                     self._baseKV_.add(
-                                        winding.nominal_voltage * 10**-3
+                                        round(winding.nominal_voltage * 10**-3,2)
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
@@ -1136,7 +1150,7 @@ class Writer(AbstractWriter):
                             substation_name + "_" + feeder_name
                         ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10**-3)
+                        self._baseKV_.add(round(i.nominal_voltage * math.sqrt(3) * 10**-3,2))
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
                             i.nominal_voltage * math.sqrt(3) * 10**-3
                         )
@@ -2365,7 +2379,7 @@ class Writer(AbstractWriter):
                                     and i.windings[w].rated_power is not None
                                 ):
                                     kvas += (
-                                        str(i.windings[w].rated_power * 10**-3) + ", "
+                                        str(10*i.windings[w].rated_power * 10**-3) + ", " # wenbo: mulitply by 10 because regulator is not modeled as autotranformer here
                                     )
                             kvas = kvas[:-2]
                             kvas += ")"
