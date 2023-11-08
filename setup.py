@@ -40,7 +40,7 @@ numpy_dependency = "numpy~=1.20"
 
 extras_requires = [
     "lxml~=4.9",
-    "pandas~=2.0",
+    "pandas~=1.3.5", # Pyton 3.7 does not support pandas 1.4
     "scipy~=1.7",
     numpy_dependency,
     "XlsxWriter~=3.0",
@@ -123,7 +123,7 @@ setup(
         "six~=1.16",
         "traitlets~=5.1,<5.10",
         "json_tricks~=3.16",
-        "pandas",
+        "pandas~=1.3.5",
         numpy_dependency,
     ],
     extras_require={
