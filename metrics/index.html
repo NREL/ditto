@@ -8,7 +8,7 @@
     <title>Metrics documentation - ditto</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
@@ -17,12 +17,11 @@
         var mkdocs_page_url = null;
       </script>
     
-    <script src="../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -41,7 +40,7 @@
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                <li class="toctree-l1"><a class="reference internal" href="..">DiTTo documentation!</a>
                 </li>
               </ul>
               <ul>
@@ -140,13 +139,13 @@
               </ul>
               <p class="caption"><span class="caption-text">Developer guide</span></p>
               <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/">Index</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/">Developer Guide</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/docs/">Docs</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/docs/">Generating Documentation</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/install/">Install</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/install/">Installation</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/style/">Style</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer-guide/style/">Style Guide</a>
                   </li>
               </ul>
       </div>
@@ -162,8 +161,8 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-      <li>Metrics documentation</li>
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Metrics documentation</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -181,90 +180,90 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>mv_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>mv_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>mv_3ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage, 3 phase lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>mv_3ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage, 3 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>mv_oh_3ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage, overhead, 3 phase lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>mv_oh_3ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage, overhead, 3 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>mv_2ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage, 2 phase lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>mv_2ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage, 2 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>mv_oh_2ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage, overhead, 2 phase lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>mv_oh_2ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage, overhead, 2 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>mv_1ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage, 1 phase lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>mv_1ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage, 1 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>mv_oh_1ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of medium voltage, overhead, 1 phase lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>mv_oh_1ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of medium voltage, overhead, 1 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>perct_mv_oh_len</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Percentage of MV lines that are overhead lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>perct_mv_oh_len</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Percentage of MV lines that are overhead lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>ratio_mv_len_to_num_cust</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">mv_length_miles devided by the number of customers.</td>
-<td align="center">Needs nominal voltages and load information.</td>
+<td style="text-align: center;"><em>ratio_mv_len_to_num_cust</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">mv_length_miles devided by the number of customers.</td>
+<td style="text-align: center;">Needs nominal voltages and load information.</td>
 </tr>
 <tr>
-<td align="center"><em>max_sub_node_distance_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">Maximum distance between the substation and any node of the network.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>max_sub_node_distance_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">Maximum distance between the substation and any node of the network.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>nominal_medium_voltage_class</em></td>
-<td align="center">Float</td>
-<td align="center">Volts</td>
-<td align="center">Nominal voltage of medium voltage.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>nominal_medium_voltage_class</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Volts</td>
+<td style="text-align: center;">Nominal voltage of medium voltage.</td>
+<td style="text-align: center;"></td>
 </tr>
 </tbody>
 </table>
@@ -272,83 +271,83 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>lv_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>lv_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>lv_3ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage, 3 phase lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>lv_3ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage, 3 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>lv_oh_3ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage, overhead, 3 phase lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>lv_oh_3ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage, overhead, 3 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>lv_1ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage, 1 phase lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>lv_1ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage, 1 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>lv_oh_1ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage, overhead, 1 phase lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>lv_oh_1ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage, overhead, 1 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>max_lv_line:</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The maximum length between a distribution transformer and a low voltage customer.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>max_lv_line:</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The maximum length between a distribution transformer and a low voltage customer.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>lv_2ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage, 2 phase lines.</td>
-<td align="center">Needs the nominal voltages</td>
+<td style="text-align: center;"><em>lv_2ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage, 2 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages</td>
 </tr>
 <tr>
-<td align="center"><em>lv_oh_2ph_len_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">The total length of low voltage, overhead, 2 phase lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>lv_oh_2ph_len_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">The total length of low voltage, overhead, 2 phase lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>perct_lv_oh_len</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Percentage of LV lines that are overhead lines.</td>
-<td align="center">Needs the nominal voltages and line_type.</td>
+<td style="text-align: center;"><em>perct_lv_oh_len</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Percentage of LV lines that are overhead lines.</td>
+<td style="text-align: center;">Needs the nominal voltages and line_type.</td>
 </tr>
 <tr>
-<td align="center"><em>ratio_lv_len_to_num_cust</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">lv_length_miles devided by the number of customers.</td>
-<td align="center">Needs nominal voltages and load information.</td>
+<td style="text-align: center;"><em>ratio_lv_len_to_num_cust</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">lv_length_miles devided by the number of customers.</td>
+<td style="text-align: center;">Needs nominal voltages and load information.</td>
 </tr>
 </tbody>
 </table>
@@ -356,48 +355,48 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>num_regulators</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">The number of regulator objects.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_regulators</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">The number of regulator objects.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_capacitors</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">The number of capacitor banks.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_capacitors</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">The number of capacitor banks.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_boosters</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">The number of boosters.</td>
-<td align="center">Boosters are not currently implemented in DiTTo.</td>
+<td style="text-align: center;"><em>num_boosters</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">The number of boosters.</td>
+<td style="text-align: center;">Boosters are not currently implemented in DiTTo.</td>
 </tr>
 <tr>
-<td align="center"><em>avg_regulator_sub_distance_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">Mean distance between the substation and regulator objects.</td>
-<td align="center">If no regulator, this metric is Nan.</td>
+<td style="text-align: center;"><em>avg_regulator_sub_distance_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">Mean distance between the substation and regulator objects.</td>
+<td style="text-align: center;">If no regulator, this metric is Nan.</td>
 </tr>
 <tr>
-<td align="center"><em>avg_capacitor_sub_distance_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">Mean distance between the substation and capacitor bank objects.</td>
-<td align="center">If no capacitor, this metric is Nan.</td>
+<td style="text-align: center;"><em>avg_capacitor_sub_distance_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">Mean distance between the substation and capacitor bank objects.</td>
+<td style="text-align: center;">If no capacitor, this metric is Nan.</td>
 </tr>
 </tbody>
 </table>
@@ -405,55 +404,55 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>num_fuses</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of Fuses.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_fuses</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of Fuses.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_reclosers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of Reclosers.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_reclosers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of Reclosers.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_sectionalizers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of Sectionalizers.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_sectionalizers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of Sectionalizers.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_sectionalizers_per_recloser</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center"><em>No_of_Sectionalizers</em> divided by <em>No_of_Reclosers</em>.</td>
-<td align="center">If no recloser, this metric is Nan</td>
+<td style="text-align: center;"><em>num_sectionalizers_per_recloser</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;"><em>No_of_Sectionalizers</em> divided by <em>No_of_Reclosers</em>.</td>
+<td style="text-align: center;">If no recloser, this metric is Nan</td>
 </tr>
 <tr>
-<td align="center"><em>avg_recloser_sub_distance_mi</em></td>
-<td align="center">Float</td>
-<td align="center">miles</td>
-<td align="center">Mean distance between the substation and recloser objects.</td>
-<td align="center">If no recloser, this metric is Nan</td>
+<td style="text-align: center;"><em>avg_recloser_sub_distance_mi</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">miles</td>
+<td style="text-align: center;">Mean distance between the substation and recloser objects.</td>
+<td style="text-align: center;">If no recloser, this metric is Nan</td>
 </tr>
 <tr>
-<td align="center"><em>num_breakers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of Breakers.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_breakers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of Breakers.</td>
+<td style="text-align: center;"></td>
 </tr>
 </tbody>
 </table>
@@ -461,41 +460,41 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>num_switches</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of switches.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_switches</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of switches.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_interruptors</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of interruptors.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_interruptors</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of interruptors.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_links_adjacent_feeders</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of links between the current feeder and other feeders.</td>
-<td align="center">This metrics only works when computing metrics per feeder on a system with multiple feeders.</td>
+<td style="text-align: center;"><em>num_links_adjacent_feeders</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of links between the current feeder and other feeders.</td>
+<td style="text-align: center;">This metrics only works when computing metrics per feeder on a system with multiple feeders.</td>
 </tr>
 <tr>
-<td align="center"><em>num_loops</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of loops within the feeder.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_loops</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of loops within the feeder.</td>
+<td style="text-align: center;"></td>
 </tr>
 </tbody>
 </table>
@@ -503,55 +502,55 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>num_distribution_transformers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of distribution transformers.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_distribution_transformers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of distribution transformers.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_overloaded_transformers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of distribution transformers where its secondary KVA rating is smaller than the sum of downstream load KVA.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_overloaded_transformers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of distribution transformers where its secondary KVA rating is smaller than the sum of downstream load KVA.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>sum_distribution_transformer_mva</em></td>
-<td align="center">Float</td>
-<td align="center">MVA</td>
-<td align="center">Sum of distribution transformer total capacity (sum of ratings accross the windings)</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sum_distribution_transformer_mva</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">MVA</td>
+<td style="text-align: center;">Sum of distribution transformer total capacity (sum of ratings accross the windings)</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_1ph_transformers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of one phase transformers.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_1ph_transformers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of one phase transformers.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_3ph_transformers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of three phase transformers.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_3ph_transformers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of three phase transformers.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>ratio_1ph_to_3ph_transformers</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center"><em>nb_1ph_Xfrm</em> divided by <em>nb_3ph_Xfrm</em></td>
-<td align="center">if there is no three phase transformer, this metric is Nan.</td>
+<td style="text-align: center;"><em>ratio_1ph_to_3ph_transformers</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;"><em>nb_1ph_Xfrm</em> divided by <em>nb_3ph_Xfrm</em></td>
+<td style="text-align: center;">if there is no three phase transformer, this metric is Nan.</td>
 </tr>
 </tbody>
 </table>
@@ -559,27 +558,27 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>substation_name</em></td>
-<td align="center">String</td>
-<td align="center">-</td>
-<td align="center">The name of the substation.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>substation_name</em></td>
+<td style="text-align: center;">String</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">The name of the substation.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>sub_capacity_mva</em></td>
-<td align="center">Float</td>
-<td align="center">MVA</td>
-<td align="center">The capacity of the substation.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sub_capacity_mva</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">MVA</td>
+<td style="text-align: center;">The capacity of the substation.</td>
+<td style="text-align: center;"></td>
 </tr>
 </tbody>
 </table>
@@ -587,139 +586,139 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>sum_load_kw</em></td>
-<td align="center">Float</td>
-<td align="center">Watts</td>
-<td align="center">Total active power demand.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sum_load_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Watts</td>
+<td style="text-align: center;">Total active power demand.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>sum_load_pha_kw</em></td>
-<td align="center">Float</td>
-<td align="center">Watts</td>
-<td align="center">Total active power demand on phase A.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sum_load_pha_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Watts</td>
+<td style="text-align: center;">Total active power demand on phase A.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>sum_load_phb_kw</em></td>
-<td align="center">Float</td>
-<td align="center">Watts</td>
-<td align="center">Total active power demand on phase B.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sum_load_phb_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Watts</td>
+<td style="text-align: center;">Total active power demand on phase B.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>sum_load_phc_kw</em></td>
-<td align="center">Float</td>
-<td align="center">Watts</td>
-<td align="center">Total active power demand on phase C.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sum_load_phc_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Watts</td>
+<td style="text-align: center;">Total active power demand on phase C.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>sum_load_kvar</em></td>
-<td align="center">Float</td>
-<td align="center">Vars</td>
-<td align="center">Total reactive power demand.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>sum_load_kvar</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Vars</td>
+<td style="text-align: center;">Total reactive power demand.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>perct_lv_pha_load_kw</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Percentage of low voltage active power demand on phase A.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>perct_lv_pha_load_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Percentage of low voltage active power demand on phase A.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>perct_lv_phb_load_kw</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Percentage of low voltage active power demand on phase B.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>perct_lv_phb_load_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Percentage of low voltage active power demand on phase B.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>perct_lv_phc_load_kw</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Percentage of low voltage active power demand on phase C.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>perct_lv_phc_load_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Percentage of low voltage active power demand on phase C.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_lv_1ph_loads</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of low voltage, 1 phase loads</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_lv_1ph_loads</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of low voltage, 1 phase loads</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_lv_3ph_loads</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of low voltage, 3 phase loads</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_lv_3ph_loads</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of low voltage, 3 phase loads</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_mv_3ph_loads</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of medium voltage, 3 phase loads</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>num_mv_3ph_loads</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of medium voltage, 3 phase loads</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>avg_num_load_per_transformer</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Average number of loads per distribution transformer.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>avg_num_load_per_transformer</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Average number of loads per distribution transformer.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>avg_load_pf</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Average power factor for loads.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>avg_load_pf</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Average power factor for loads.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>avg_load_imbalance_by_phase</em></td>
-<td align="center">Float</td>
-<td align="center">Watts</td>
-<td align="center">TODO</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>avg_load_imbalance_by_phase</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">Watts</td>
+<td style="text-align: center;">TODO</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>num_customers</em></td>
-<td align="center">Integer</td>
-<td align="center">-</td>
-<td align="center">Number of customers.</td>
-<td align="center">Need customer information.</td>
+<td style="text-align: center;"><em>num_customers</em></td>
+<td style="text-align: center;">Integer</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Number of customers.</td>
+<td style="text-align: center;">Need customer information.</td>
 </tr>
 <tr>
-<td align="center"><em>customer_density</em></td>
-<td align="center">Float</td>
-<td align="center">per square miles</td>
-<td align="center"><em>No_of_Customers</em> divided by the convex Hull surface of the feeder.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>customer_density</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">per square miles</td>
+<td style="text-align: center;"><em>No_of_Customers</em> divided by the convex Hull surface of the feeder.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>load_density_kw</em></td>
-<td align="center">Float</td>
-<td align="center">per square miles</td>
-<td align="center"><em>Total_Demand_kW</em> divided by the convex Hull surface of the feeder.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>load_density_kw</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">per square miles</td>
+<td style="text-align: center;"><em>Total_Demand_kW</em> divided by the convex Hull surface of the feeder.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>load_density_kvar</em></td>
-<td align="center">Float</td>
-<td align="center">per square miles</td>
-<td align="center"><em>Total_Reactive_Power_kVar</em> divided by the convex Hull surface of the feeder.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>load_density_kvar</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">per square miles</td>
+<td style="text-align: center;"><em>Total_Reactive_Power_kVar</em> divided by the convex Hull surface of the feeder.</td>
+<td style="text-align: center;"></td>
 </tr>
 </tbody>
 </table>
@@ -727,34 +726,34 @@
 <table>
 <thead>
 <tr>
-<th align="center">Metric name</th>
-<th align="center">Type</th>
-<th align="center">Unit</th>
-<th align="center">Metric description</th>
-<th align="center">Comments</th>
+<th style="text-align: center;">Metric name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Unit</th>
+<th style="text-align: center;">Metric description</th>
+<th style="text-align: center;">Comments</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><em>avg_degree</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Mean degree.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>avg_degree</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Mean degree.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>Char_path_Length</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Average path length.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>Char_path_Length</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Average path length.</td>
+<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td align="center"><em>diameter</em></td>
-<td align="center">Float</td>
-<td align="center">-</td>
-<td align="center">Diameter of the graph.</td>
-<td align="center"></td>
+<td style="text-align: center;"><em>diameter</em></td>
+<td style="text-align: center;">Float</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: center;">Diameter of the graph.</td>
+<td style="text-align: center;"></td>
 </tr>
 </tbody>
 </table>
@@ -948,14 +947,15 @@ network_analyst.compute_all_metrics_per_feeder()
     
   </span>
 </div>
-    <script>var base_url = '..';</script>
-    <script src="../js/theme_extra.js" defer></script>
-    <script src="../js/theme.js" defer></script>
-      <script src="../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>
