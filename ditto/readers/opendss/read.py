@@ -36,6 +36,7 @@ from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
 from ditto.models.position import Position
 from ditto.models.storage import Storage
+from ditto.models.generator import Generator
 from ditto.models.phase_storage import PhaseStorage
 
 
@@ -2756,6 +2757,100 @@ class Reader(AbstractReader):
 
                 api_storage.phase_storages.append(api_phase_storage)
 
+
+    def parse_generators(self, model):
+        """Parse the generators.
+
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+        """
+        
+        generators = _dss_class_to_dict("generator")
+        self._generators = []
+
+        for name, data in generators.items():
+
+            api_generator = Generator(model)
+            api_generator.feeder_name = self.source_name
+
+            # Name
+            try:
+                generator_name = name.split("enerator.")[1].lower()
+                if generator_name not in self.all_object_names:
+                    self.all_object_names.append(generator_name)
+                api_generator.name = generator_name
+            except:
+                pass
+
+            try:
+                if "." in str(data["bus1"]):
+                    api_generator.connecting_element = str(data["bus1"]).split(
+                        "."
+                    )[0]
+                else:
+                    api_generator.connecting_element = str(data["bus1"])
+            except:
+                pass
+
+            # nominal_voltage
+            try:
+                api_generator.nominal_voltage = (
+                    float(data["kv"]) * 10 ** 3
+                )  # DiTTo in volts
+            except:
+                pass
+
+            # on
+            try:
+                api_generator.forced_on = str(data["forceon"])
+            except:
+                pass
+
+            # power factor
+            try:
+                api_generator.power_factor = float(data["pf"])
+            except:
+                pass
+
+            # rated_power
+            try:
+                api_generator.rated_power = (
+                    float(data["kVA"]) * 10 ** 3
+                )  # DiTTo in watts
+            except:
+                pass
+
+            # phases
+            try:
+                api_generator.phases = list(
+                    map(lambda x: Unicode(self.phase_mapping(x)), data["phases"])
+                )
+            except:
+                pass
+
+            # vmin
+            try:
+                api_generator.v_min_pu = float(data["Vminpu"])
+            except:
+                pass
+
+            # vmax
+            try:
+                api_generator.v_max_pu = float(data["Vmaxpu"])
+            except:
+                pass
+
+            # model
+            try:
+                api_generator.model= int(data["model"])
+            except:
+                pass
+
+            self._generators.append(api_generator)
+    
+        return 1
 
 def _dss_class_to_dict(class_name):
     return dss.utils.class_to_dataframe(class_name).to_dict(orient="index")
