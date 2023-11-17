@@ -121,7 +121,7 @@ setup(
         "future~=0.18",
         "networkx~=2.5",
         "six~=1.16",
-        "traitlets~=5.1,<5.10",
+        "traitlets~=5.1",
         "json_tricks~=3.16",
         "pandas~=1.3.5",
         numpy_dependency,
