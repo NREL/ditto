@@ -132,21 +132,28 @@ class Writer(AbstractWriter):
         # Call super
         super(Writer, self).__init__(**kwargs)
 
-        self._baseKV_ = set()
+        self._baseKV_ = set()  # should only be LL?
         self._baseKV_feeders_ = {}
 
         logger.info("DiTTo--->OpenDSS writer successfuly instanciated.")
 
     def float_to_str(self, f):
-        """ Used to create floats without being in scientific notation"""
+        """Used to create floats without being in scientific notation"""
         ctx = decimal.Context()
         d1 = ctx.create_decimal(repr(f))
         return format(d1, "f")
 
-    def write(self, model, separate_feeders = False, separate_substations = False, write_taps=False, verbose=False):
+    def write(
+        self,
+        model,
+        separate_feeders=False,
+        separate_substations=False,
+        write_taps=False,
+        verbose=False,
+    ):
         """General writing function responsible for calling the sub-functions.
 
-        Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS, 
+        Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS,
             which uses dots for phase designation and spaces for paramater delimiters.
 
         :param model: DiTTo model
@@ -167,7 +174,6 @@ class Writer(AbstractWriter):
         self.separate_substations = separate_substations
         self.write_taps = write_taps
         self.verbose = verbose
-
 
         # Write the bus coordinates
         if self.verbose:
@@ -269,13 +275,13 @@ class Writer(AbstractWriter):
 
         .. note:: Returns None if phase is not in ['A','B','C']
         """
-        if phase == u"A":
+        if phase == "A":
             return 1
-        elif phase == u"B":
+        elif phase == "B":
             return 2
-        elif phase == u"C":
+        elif phase == "C":
             return 3
-        elif phase == u"N":
+        elif phase == "N":
             return 0
         else:
             logger.debug("Warning - unknown phase detected")
@@ -298,7 +304,7 @@ class Writer(AbstractWriter):
         else:
             return None
 
-    def write_bus_coordinates(self, model, delimiter=','):
+    def write_bus_coordinates(self, model, delimiter=","):
         """Write the bus coordinates to a CSV file ('buscoords.csv' by default), with the following format:
 
         >>> bus_name,coordinate_X,coordinate_Y
@@ -317,7 +323,6 @@ class Writer(AbstractWriter):
         for i in model.models:
             # If we find a node
             if isinstance(i, Node):
-
                 # Extract the name and the coordinates
                 if (hasattr(i, "name") and i.name is not None) and (
                     hasattr(i, "positions")
@@ -350,7 +355,10 @@ class Writer(AbstractWriter):
                         txt = feeder_text_map[substation_name + "_" + feeder_name]
 
                     txt += "{name}{delimiter}{X}{delimiter}{Y}\n".format(
-                        name=re.sub('[^0-9a-zA-Z]+', '_', i.name.lower()), X=i.positions[0].long, Y=i.positions[0].lat, delimiter = delimiter
+                        name=re.sub("[^0-9a-zA-Z]+", "_", i.name.lower()),
+                        X=i.positions[0].long,
+                        Y=i.positions[0].lat,
+                        delimiter=delimiter,
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
 
@@ -358,8 +366,8 @@ class Writer(AbstractWriter):
             all_substation_buses = []
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -381,7 +389,9 @@ class Writer(AbstractWriter):
                             os.makedirs(output_folder)
                     all_substation_buses.append(txt)
                     self.all_buses.append(txt)
-                    if self.separate_feeders:  # Substation elements are written separately
+                    if (
+                        self.separate_feeders
+                    ):  # Substation elements are written separately
                         with open(
                             os.path.join(output_folder, self.output_filenames["buses"]),
                             "w",
@@ -493,11 +503,15 @@ class Writer(AbstractWriter):
                 if hasattr(i, "from_element") and i.from_element is not None:
                     bus1 = i.from_element
                 else:
-                    loggger.error("Missing a from_element connection in {name}".format(i.name))
+                    loggger.error(
+                        "Missing a from_element connection in {name}".format(i.name)
+                    )
                 if hasattr(i, "to_element") and i.to_element is not None:
                     bus2 = i.to_element
                 else:
-                    loggger.error("Missing a to_element connection in {name}".format(name=i.name))
+                    loggger.error(
+                        "Missing a to_element connection in {name}".format(name=i.name)
+                    )
 
                 buses = [bus1, bus2]
 
@@ -520,13 +534,11 @@ class Writer(AbstractWriter):
                 # Assume that we only have two or three windings. Three are used for center-tap transformers. Other single or three phase transformers use 2 windings
                 # For banked 3-phase transformers, separate single phase transformers are used
                 if hasattr(i, "windings") and i.windings is not None:
-
                     for cnt, winding in enumerate(i.windings):
                         if (
                             hasattr(winding, "phase_windings")
                             and winding.phase_windings is not None
                         ):
-
                             for phase_winding in winding.phase_windings:
                                 if (
                                     hasattr(phase_winding, "compensator_r")
@@ -565,9 +577,7 @@ class Writer(AbstractWriter):
                                         )
 
                     if len(i.windings) == 2:
-
                         for cnt, winding in enumerate(i.windings):
-
                             txt += " wdg={N}".format(N=cnt + 1)
 
                             # Connection type
@@ -594,7 +604,7 @@ class Writer(AbstractWriter):
                                 and winding.nominal_voltage is not None
                                 and winding.nominal_voltage > 0
                             ):
-                                self._baseKV_.add(winding.nominal_voltage * 10 ** -3)
+                                self._baseKV_.add(winding.nominal_voltage * 10**-3)
 
                             # Nominal voltage
                             if (
@@ -602,7 +612,7 @@ class Writer(AbstractWriter):
                                 and winding.nominal_voltage is not None
                             ):
                                 txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10 ** -3
+                                    kv=winding.nominal_voltage * 10**-3
                                 )  # OpenDSS in kvolts
                                 if (
                                     not substation_name + "_" + feeder_name
@@ -618,22 +628,22 @@ class Writer(AbstractWriter):
                                     self._baseKV_.add(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
-                                        * 10 ** -3
+                                        * 10**-3
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
                                     ].add(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
-                                        * 10 ** -3
+                                        * 10**-3
                                     )
                                 else:
                                     self._baseKV_.add(
-                                        winding.nominal_voltage * 10 ** -3
+                                        winding.nominal_voltage * 10**-3
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
+                                    ].add(winding.nominal_voltage * 10**-3)
 
                             # rated power
                             if (
@@ -641,7 +651,7 @@ class Writer(AbstractWriter):
                                 and winding.rated_power is not None
                             ):
                                 txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10 ** -3
+                                    kva=winding.rated_power * 10**-3
                                 )
 
                             # emergency_power
@@ -650,7 +660,7 @@ class Writer(AbstractWriter):
                                 and winding.emergency_power is not None
                             ):
                                 txt += " EmergHKVA={}".format(
-                                    winding.emergency_power * 10 ** -3
+                                    winding.emergency_power * 10**-3
                                 )  # OpenDSS in kWatts
 
                             # resistance
@@ -672,17 +682,16 @@ class Writer(AbstractWriter):
                                 hasattr(winding, "phase_windings")
                                 and winding.phase_windings is not None
                             ):
-
                                 if buses is not None:
                                     bus = buses[cnt]
-                                    txt += " bus={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', str(bus)))
+                                    txt += " bus={bus}".format(
+                                        bus=re.sub("[^0-9a-zA-Z]+", "_", str(bus))
+                                    )
 
                                 if len(winding.phase_windings) != 3:
-
                                     for j, phase_winding in enumerate(
                                         winding.phase_windings
                                     ):
-
                                         # Connection
                                         if (
                                             hasattr(phase_winding, "phase")
@@ -757,7 +766,6 @@ class Writer(AbstractWriter):
                         default_x = [2.04, 2.04, 1.36]
 
                         for cnt, winding in enumerate(i.windings):
-
                             txt += f" wdg={cnt+1}"
 
                             # conn = wye or delta
@@ -778,11 +786,14 @@ class Writer(AbstractWriter):
 
                             # Connection
                             if buses is not None:
-
                                 if cnt == 0 or cnt == 1:
-                                    txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt]))
+                                    txt += " bus={b}".format(
+                                        b=re.sub("[^0-9a-zA-Z]+", "_", buses[cnt])
+                                    )
                                 elif cnt == 2:
-                                    txt += " bus={b}".format(b=re.sub('[^0-9a-zA-Z]+', '_', buses[cnt - 1]))
+                                    txt += " bus={b}".format(
+                                        b=re.sub("[^0-9a-zA-Z]+", "_", buses[cnt - 1])
+                                    )
 
                                 # These are the configurations for center tap transformers
                                 if cnt == 0:
@@ -840,7 +851,7 @@ class Writer(AbstractWriter):
                                 and winding.nominal_voltage is not None
                             ):
                                 txt += " Kv={kv}".format(
-                                    kv=winding.nominal_voltage * 10 ** -3
+                                    kv=winding.nominal_voltage * 10**-3
                                 )  # OpenDSS in kvolts
                                 if (
                                     not substation_name + "_" + feeder_name
@@ -855,22 +866,22 @@ class Writer(AbstractWriter):
                                     self._baseKV_.add(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
-                                        * 10 ** -3
+                                        * 10**-3
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
                                     ].add(
                                         winding.nominal_voltage
                                         * math.sqrt(3)
-                                        * 10 ** -3
+                                        * 10**-3
                                     )
                                 else:
                                     self._baseKV_.add(
-                                        winding.nominal_voltage * 10 ** -3
+                                        winding.nominal_voltage * 10**-3
                                     )
                                     self._baseKV_feeders_[
                                         substation_name + "_" + feeder_name
-                                    ].add(winding.nominal_voltage * 10 ** -3)
+                                    ].add(winding.nominal_voltage * 10**-3)
 
                             # rated power
                             if (
@@ -878,7 +889,7 @@ class Writer(AbstractWriter):
                                 and winding.rated_power is not None
                             ):
                                 txt += " kva={kva}".format(
-                                    kva=winding.rated_power * 10 ** -3
+                                    kva=winding.rated_power * 10**-3
                                 )
 
                             # emergency_power
@@ -888,7 +899,7 @@ class Writer(AbstractWriter):
                                 and winding.emergency_power is not None
                             ):
                                 txt += " EmergHKVA={}".format(
-                                    winding.emergency_power * 10 ** -3
+                                    winding.emergency_power * 10**-3
                                 )  # OpenDSS in kWatts
 
                             # Tap position
@@ -945,8 +956,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1047,21 +1058,23 @@ class Writer(AbstractWriter):
 
                 # Phases
                 if hasattr(i, "phase_storages") and i.phase_storages is not None:
-                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V   
-                        txt += " phases=1"  
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        txt += " phases=1"
                     else:
-                        txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
+                        txt += " phases={N_phases}".format(
+                            N_phases=len(i.phase_storages)
+                        )
 
                     # kW (Need to sum over the phase_storage elements)
                     if sum([1 for phs in i.phase_storages if phs.p is None]) == 0:
                         p_tot = sum([phs.p for phs in i.phase_storages])
-                        txt += " kW={kW}".format(kW=p_tot * 10 ** -3)  # DiTTo in watts
+                        txt += " kW={kW}".format(kW=p_tot * 10**-3)  # DiTTo in watts
 
                         # Power factor
                         if sum([1 for phs in i.phase_storages if phs.q is None]) == 0:
                             q_tot = sum([phs.q for phs in i.phase_storages])
                             if q_tot != 0 and p_tot != 0:
-                                pf = float(p_tot) / math.sqrt(p_tot ** 2 + q_tot ** 2)
+                                pf = float(p_tot) / math.sqrt(p_tot**2 + q_tot**2)
                                 txt += " pf={pf}".format(pf=pf)
 
                 # connecting_element
@@ -1069,9 +1082,11 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    if i.nominal_voltage is None:   
+                    if i.nominal_voltage is None:
                         i.nominal_voltage = model[i.connecting_element].nominal_voltage
-                    txt += " bus1={elt}".format(elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
+                    txt += " bus1={elt}".format(
+                        elt=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
+                    )
                     if (
                         hasattr(i, "phase_storages")
                         and i.phase_storages is not None
@@ -1083,43 +1098,43 @@ class Writer(AbstractWriter):
                 # nominal_voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     txt += " kV={volt}".format(
-                        volt=i.nominal_voltage * 10 ** -3
+                        volt=i.nominal_voltage * 10**-3
                     )  # DiTTo in volts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            i.nominal_voltage * math.sqrt(3) * 10**-3
                         )
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                            i.nominal_voltage * 10**-3
                         )
                     if hasattr(i, "active_rating") and i.active_rating is not None:
                         pf_local = 1.0
                         if i.power_factor is not None:
                             pf_local = abs(i.power_factor)
                         txt += " kVA={kva}".format(
-                            kva=i.active_rating / pf_local * 10 ** -3
+                            kva=i.active_rating / pf_local * 10**-3
                         )  # DiTTo in watts
 
                 # rated_power
                 if hasattr(i, "rated_power") and i.rated_power is not None:
                     txt += " kWRated={kW}".format(
-                        kW=i.rated_power * 10 ** -3
+                        kW=i.rated_power * 10**-3
                     )  # DiTTo in watts
 
                 # rated_kWh
                 if hasattr(i, "rated_kWh") and i.rated_kWh is not None:
-                    txt += " kWhRated={kWh}".format(kWh=i.rated_kWh * 10 ** -3)
+                    txt += " kWhRated={kWh}".format(kWh=i.rated_kWh * 10**-3)
 
                 # stored_kWh
                 if hasattr(i, "stored_kWh") and i.stored_kWh is not None:
-                    txt += " kWhStored={stored}".format(stored=i.stored_kWh * 10 ** -3)
+                    txt += " kWhStored={stored}".format(stored=i.stored_kWh * 10**-3)
 
                 # state
                 if hasattr(i, "state") and i.state is not None:
@@ -1129,7 +1144,7 @@ class Writer(AbstractWriter):
 
                 # reserve
                 if hasattr(i, "reserve") and i.reserve is not None:
-                    txt += " %reserve={reserve}".format(reserve=i.reserve * 10 ** -3)
+                    txt += " %reserve={reserve}".format(reserve=i.reserve * 10**-3)
 
                 # discharge_rate
                 if hasattr(i, "discharge_rate") and i.discharge_rate is not None:
@@ -1173,7 +1188,7 @@ class Writer(AbstractWriter):
 
                 # Yearly/Daily/Duty/Charge trigger/Discharge trigger
                 #
-                # TODO 
+                # TODO
 
                 txt += "\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
@@ -1181,8 +1196,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1291,7 +1306,9 @@ class Writer(AbstractWriter):
                     and i.connecting_element is not None
                 ):
                     txt += " bus1={connecting_elt}".format(
-                        connecting_elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element)
+                        connecting_elt=re.sub(
+                            "[^0-9a-zA-Z]+", "_", i.connecting_element
+                        )
                     )
                     if hasattr(i, "phases") and i.phases is not None:
                         for phase in i.phases:
@@ -1303,13 +1320,13 @@ class Writer(AbstractWriter):
                         if hasattr(i, "phases") and i.phases is not None:
                             txt += " phases=1"
                         txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10 ** -3
+                            kV=i.nominal_voltage * 10**-3
                         )  # DiTTo in volts
                     else:
                         if hasattr(i, "phases") and i.phases is not None:
                             txt += " phases=3"
                         txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10 ** -3
+                            kV=i.nominal_voltage * 10**-3
                         )  # DiTTo in volts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
@@ -1318,14 +1335,14 @@ class Writer(AbstractWriter):
                     if (
                         i.nominal_voltage < 300
                     ):  # Line-Neutral voltage for 120 V (i.e. 240V)
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 2 * 10 ** -3
+                            i.nominal_voltage * 2 * 10**-3
                         )
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                            i.nominal_voltage * 10**-3
                         )
                 else:
                     parent = model[i.connecting_element]
@@ -1337,13 +1354,13 @@ class Writer(AbstractWriter):
                             if hasattr(i, "phases") and i.phases is not None:
                                 txt += " phases=1"
                             txt += " kV={kV}".format(
-                                kV=parent.nominal_voltage * 10 ** -3
+                                kV=parent.nominal_voltage * 10**-3
                             )  # DiTTo in volts
                         else:
                             if hasattr(i, "phases") and i.phases is not None:
                                 txt += " phases=3"
                             txt += " kV={kV}".format(
-                                kV=parent.nominal_voltage * 10 ** -3
+                                kV=parent.nominal_voltage * 10**-3
                             )  # DiTTo in volts
                         if (
                             not substation_name + "_" + feeder_name
@@ -1355,24 +1372,22 @@ class Writer(AbstractWriter):
                         if (
                             parent.nominal_voltage < 300
                         ):  # Line-Line voltage for 120 V (i.e. 240V)
-                            self._baseKV_.add(
-                                parent.nominal_voltage * 10 ** -3
-                            )
+                            self._baseKV_.add(parent.nominal_voltage * 10**-3)
                             self._baseKV_feeders_[
                                 substation_name + "_" + feeder_name
-                            ].add(parent.nominal_voltage * 2 * 10 ** -3)
+                            ].add(parent.nominal_voltage * 2 * 10**-3)
                         else:
-                            self._baseKV_.add(parent.nominal_voltage * 10 ** -3)
+                            self._baseKV_.add(parent.nominal_voltage * 10**-3)
                             self._baseKV_feeders_[
                                 substation_name + "_" + feeder_name
-                            ].add(parent.nominal_voltage * 10 ** -3)
+                            ].add(parent.nominal_voltage * 10**-3)
 
                 if hasattr(i, "active_rating") and i.active_rating is not None:
                     pf_local = 1.0
                     if i.power_factor is not None:
                         pf_local = abs(i.power_factor)
                     txt += " kVA={kva}".format(
-                        kva=i.active_rating / pf_local * 10 ** -3
+                        kva=i.active_rating / pf_local * 10**-3
                     )  # DiTTo in watts
 
                     if not (hasattr(i, "rated_power") and i.rated_power is not None):
@@ -1460,12 +1475,12 @@ class Writer(AbstractWriter):
                     voltvar_nodes.add(i.name)
 
                 if (
-                   hasattr(i, "control_type")    
-                    and i.control_type is not None   
-                    and i.control_type == "voltwatt_voltvar" 
-                ):  
-                    txt += " Model=1"   
-                    voltwatt_voltvar_nodes.add(i.name)  
+                    hasattr(i, "control_type")
+                    and i.control_type is not None
+                    and i.control_type == "voltwatt_voltvar"
+                ):
+                    txt += " Model=1"
+                    voltwatt_voltvar_nodes.add(i.name)
 
                 if (
                     hasattr(i, "timeseries")
@@ -1477,17 +1492,19 @@ class Writer(AbstractWriter):
                         if (
                             hasattr(ts, "data_location")
                             and ts.data_location is not None
-                            and os.path.isfile(os.path.join(self.output_path,ts.data_location))
+                            and os.path.isfile(
+                                os.path.join(self.output_path, ts.data_location)
+                            )
                         ):
                             filename = self.timeseries_datasets[
                                 substation_name + "_" + feeder_name
                             ][ts.data_location]
                             if self.remove_loadshapes:
-                                optional_comment = '!'
+                                optional_comment = "!"
                             else:
-                                optional_comment = ''
+                                optional_comment = ""
                             txt += " {optional_comment}{ts_format}={filename}".format(
-                                optional_comment = optional_comment,
+                                optional_comment=optional_comment,
                                 ts_format=self.timeseries_format[filename],
                                 filename=filename,
                             )
@@ -1515,17 +1532,16 @@ class Writer(AbstractWriter):
                 voltwatt_voltvar_nodes = feeder_voltwatt_voltvar_map[
                     substation_name + "_" + feeder_name
                 ]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 inv_txt = ""
-                if len(voltvar_nodes) > 0 and len(voltwatt_nodes) ==0:
+                if len(voltvar_nodes) > 0 and len(voltwatt_nodes) == 0:
                     inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format(
                         loc=substation_name + "_" + feeder_name
                     )  # Default voltvar curve used is 1547 Cat-B
                     for node in voltvar_nodes:
-
                         inv_txt += "New InvControl.InvPVCtrVV_{node} mode=VOLTVAR voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS DeltaQ_factor=0.25 PVSystemlist=[{node}]\n\n".format(
-                            node=node,loc=substation_name + "_" + feeder_name
+                            node=node, loc=substation_name + "_" + feeder_name
                         )
 
                 if len(voltwatt_nodes) > 0:
@@ -1539,14 +1555,19 @@ class Writer(AbstractWriter):
                     inv_txt = inv_txt.strip(",")
                     inv_txt += "]"
 
-    
-                if len(voltwatt_voltvar_nodes) > 0: 
-                    if not len(voltvar_nodes) > 0:  
-                        inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default voltvar curve used is 1547 Cat-B 
-                    if not len(voltwatt_nodes) > 0: 
-                        inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default volt-watt curve used    
-                    for node in voltwatt_voltvar_nodes: 
-                        inv_txt += "New InvControl.InvPVCtrVW_{node} Combimode=VV_VW voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format( loc=substation_name + "_" + feeder_name, node=node)
+                if len(voltwatt_voltvar_nodes) > 0:
+                    if not len(voltvar_nodes) > 0:
+                        inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format(
+                            loc=substation_name + "_" + feeder_name
+                        )  # Default voltvar curve used is 1547 Cat-B
+                    if not len(voltwatt_nodes) > 0:
+                        inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format(
+                            loc=substation_name + "_" + feeder_name
+                        )  # Default volt-watt curve used
+                    for node in voltwatt_voltvar_nodes:
+                        inv_txt += "New InvControl.InvPVCtrVW_{node} Combimode=VV_VW voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format(
+                            loc=substation_name + "_" + feeder_name, node=node
+                        )
 
                 if txt != "":
                     txt += "\n" + inv_txt
@@ -1660,13 +1681,16 @@ class Writer(AbstractWriter):
                         continue
                     # WARNING - this step can be slow for big systems with lots of data
                     npoints = len(
-                        pd.read_csv(os.path.join(self.output_path, i.data_location)),header=None
+                        pd.read_csv(os.path.join(self.output_path, i.data_location)),
+                        header=None,
                     )
 
                     if self.timeseries_iternumber is None:
                         self.timeseries_iternumber = npoints
                     else:
-                        self.timeseries_iternumber = min(self.timeseries_iternumber,npoints)
+                        self.timeseries_iternumber = min(
+                            self.timeseries_iternumber, npoints
+                        )
 
                     if (
                         npoints == 24 or npoints == 24 * 60 or npoints == 24 * 60 * 60
@@ -1683,7 +1707,7 @@ class Writer(AbstractWriter):
                         interval = i.interval
 
                     if i.data_location_kvar is not None:
-                        q_mult = " qmult = (file="+i.data_location_kvar+")"
+                        q_mult = " qmult = (file=" + i.data_location_kvar + ")"
                         data_location_kvar = i.data_location_kvar
                     else:
                         q_mult = ""
@@ -1693,7 +1717,7 @@ class Writer(AbstractWriter):
                             filename=filename,
                             npoints=npoints,
                             data_location=location,
-                            data_location_kvar = data_location_kvar,
+                            data_location_kvar=data_location_kvar,
                             interv=interval,
                         )
                         self.timeseries_datasets[substation_name + "_" + feeder_name][
@@ -1730,7 +1754,9 @@ class Writer(AbstractWriter):
                     if self.timeseries_iternumber is None:
                         self.timeseries_iternumber = npoints
                     else:
-                        self.timeseries_iternumber = min(self.timeseries_iternumber,npoints)
+                        self.timeseries_iternumber = min(
+                            self.timeseries_iternumber, npoints
+                        )
 
                     timeseries.iloc[:, [0]] = timeseries.iloc[:, [0]] * i.scale_factor
                     timeseries.to_csv(scaled_data_location, index=False)
@@ -1749,7 +1775,7 @@ class Writer(AbstractWriter):
                         interval = i.interval
 
                     if i.data_location_kvar is not None:
-                        q_mult = " qmult = (file="+i.data_location_kvar+")"
+                        q_mult = " qmult = (file=" + i.data_location_kvar + ")"
                         data_location_kvar = i.data_location_kvar
                     else:
                         q_mult = ""
@@ -1759,7 +1785,7 @@ class Writer(AbstractWriter):
                             filename=filename,
                             npoints=npoints,
                             data_location=scaled_data_location,
-                            data_location_kvar = data_location_kvar,
+                            data_location_kvar=data_location_kvar,
                             interval=interval,
                         )
                         self.timeseries_datasets[substation_name + "_" + feeder_name][
@@ -1767,16 +1793,19 @@ class Writer(AbstractWriter):
                         ] = filename
                         feeder_text_map[substation_name + "_" + feeder_name] = txt
                 else:
-                   logger.error("Problem exists with loadshape{filename}".format(filename=filename))
+                    logger.error(
+                        "Problem exists with loadshape{filename}".format(
+                            filename=filename
+                        )
+                    )
 
-
-                #TODO: write the timeseries data if it's in memory
+                # TODO: write the timeseries data if it's in memory
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -1839,59 +1868,181 @@ class Writer(AbstractWriter):
         :returns: 1 for success, -1 for failure
         :rtype: int
         """
-
         substation_text_map = {}
         feeder_text_map = {}
-        for i in model.models:
-            if isinstance(i, Load):
+
+        def append_time_series(i, txt):
+            for ts in i.timeseries:
+                substation = "DEFAULT"
+                feeder = "DEFAULT"
+                if ts.feeder_name is not None:
+                    feeder = ts.feeder_name
+                if ts.substation_name is not None:
+                    substation = ts.substation_name
                 if (
-                    self.separate_feeders
-                    and hasattr(i, "feeder_name")
-                    and i.feeder_name is not None
+                    hasattr(ts, "data_location")
+                    and ts.data_label is not None
+                    and ts.data_location is not None
                 ):
-                    feeder_name = i.feeder_name
+                    filename = self.timeseries_datasets[substation + "_" + feeder][
+                        ts.data_location
+                    ]
+                    txt += " {ts_format}={filename}".format(
+                        ts_format=self.timeseries_format[filename],
+                        filename=filename,
+                    )
+            # TODO: manage the data correctly when it is only in memory
+            return txt
+
+        for i in model.iter_models(Load):
+            if not (hasattr(i, "name") and i.name is not None):
+                logger.error("Name missing for Load")  # gotta have a name
+
+            if not (hasattr(i, "phase_loads") and i.phase_loads is not None):
+                continue  # no loads
+
+            if not (
+                hasattr(i, "connecting_element") and i.connecting_element is not None
+            ):
+                logger.error(
+                    f"connecting_element missing for Load {i.name} (necessary to define bus1)"
+                )
+
+            feeder_name = "DEFAULT"
+            if (
+                self.separate_feeders
+                and hasattr(i, "feeder_name")
+                and i.feeder_name is not None
+            ):
+                feeder_name = i.feeder_name
+
+            substation_name = "DEFAULT"
+            if (
+                self.separate_substations
+                and hasattr(i, "substation_name")
+                and i.substation_name is not None
+            ):
+                substation_name = i.substation_name
+
+            if not substation_name in substation_text_map:
+                substation_text_map[substation_name] = set([feeder_name])
+            else:
+                substation_text_map[substation_name].add(feeder_name)
+
+            txt = ""  # first Load in the loop for the substation and feeder
+            sub_fdr_key = substation_name + "_" + feeder_name
+            if sub_fdr_key in feeder_text_map:
+                txt = feeder_text_map[sub_fdr_key]
+                # we are appending to the text to be written (last entry should be \n\n)
+
+            kws = []
+            kvars = []
+            for phase_load in i.phase_loads:
+                if hasattr(phase_load, "p") and phase_load.p is not None:
+                    kws.append(phase_load.p * 10**-3)
+                if hasattr(phase_load, "q") and phase_load.q is not None:
+                    kvars.append(phase_load.q * 10**-3)
+
+            if len(kws) == 0 and len(kvars) == 0:
+                continue
+
+            balanced_load = True
+
+            if len(kws) > 1 and len(kvars) > 1:
+                p1, q1 = kws[0], kvars[0]
+                if any(p1 != p for p in kws[1:]):
+                    balanced_load = False
+                if any(q1 != q for q in kvars[1:]):
+                    balanced_load = False
+
+            # define shared values
+            # Connection type
+            conn_type_txt = ""
+            if hasattr(i, "connection_type") and i.connection_type is not None:
+                if i.connection_type == "Y":
+                    conn_type_txt = " conn=wye"
+                elif i.connection_type == "D":
+                    conn_type_txt = " conn=delta"
+
+            bus1_txt = " bus1={bus}".format(
+                bus=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
+            )
+
+            nomimal_voltage_txt = ""
+            nominal_voltage = 0.0
+            if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                    nominal_voltage = i.nominal_voltage * math.sqrt(3) * 10**-3
+                    nomimal_voltage_txt = f" kV={nominal_voltage}"
                 else:
-                    feeder_name = "DEFAULT"
-                if (
-                    self.separate_substations
-                    and hasattr(i, "substation_name")
-                    and i.substation_name is not None
-                ):
-                    substation_name = i.substation_name
-                else:
-                    substation_name = "DEFAULT"
+                    nominal_voltage = i.nominal_voltage * 10**-3
+                    nomimal_voltage_txt = f" kV={nominal_voltage}"
 
-                if not substation_name in substation_text_map:
-                    substation_text_map[substation_name] = set([feeder_name])
-                else:
-                    substation_text_map[substation_name].add(feeder_name)
+                if not sub_fdr_key in self._baseKV_feeders_:
+                    self._baseKV_feeders_[sub_fdr_key] = set()
 
-                txt = ""
-                if substation_name + "_" + feeder_name in feeder_text_map:
-                    txt = feeder_text_map[substation_name + "_" + feeder_name]
+                self._baseKV_.add(nominal_voltage)
+                self._baseKV_feeders_[sub_fdr_key].add(nominal_voltage)
 
-                # Name
-                if hasattr(i, "name") and i.name is not None:
-                    txt += "New Load." + i.name
-                else:
-                    logger.error("Name missing for Load")
-                    continue
+            vmin_txt = ""
+            if hasattr(i, "vmin") and i.vmin is not None:
+                vmin_txt = " Vminpu={vmin}".format(vmin=i.vmin)
 
-                # Connection type
-                if hasattr(i, "connection_type") and i.connection_type is not None:
-                    if i.connection_type == "Y":
-                        txt += " conn=wye"
-                    elif i.connection_type == "D":
-                        txt += " conn=delta"
+            vmax_txt = ""
+            if hasattr(i, "vmax") and i.vmax is not None:
+                vmax_txt = " Vmaxpu={vmax}".format(vmax=i.vmax)
 
-                # Connecting element
-                if (
-                    hasattr(i, "connecting_element")
-                    and i.connecting_element is not None
-                ):
-                    txt += " bus1={bus}".format(bus=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
-                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
-                        for phase_load in i.phase_loads:
+            if (
+                balanced_load
+            ):  # only need to define one New Load regardless of number of phases
+                txt += "New Load." + i.name
+                txt += bus1_txt
+                # balanced_load case:
+                for phase_load in i.phase_loads:  # add the .phs1.phs2 etc
+                    # add all phases onto Bus1
+                    if hasattr(phase_load, "phase") and phase_load.phase is not None:
+                        txt += f".{self.phase_mapping(phase_load.phase)}"
+
+                    # handle Delta connections
+                    if i.connection_type == "D" and len(i.phase_loads) == 1:
+                        if self.phase_mapping(i.phase_loads[0].phase) == 1:
+                            txt += ".2"
+                        if self.phase_mapping(i.phase_loads[0].phase) == 2:
+                            txt += ".3"
+                        if self.phase_mapping(i.phase_loads[0].phase) == 3:
+                            txt += ".1"
+
+                # if i.connection_type=='Y':
+                txt += " Phases={N}".format(N=len(i.phase_loads))
+                # elif i.connection_type=='D' and len(i.phase_loads)==3:
+                #    fp.write(' Phases=3')
+                # elif i.connection_type=='D' and len(i.phase_loads)==2:
+                #    fp.write(' Phases=1')
+
+                txt += nomimal_voltage_txt
+
+                txt += " kW={P}".format(P=sum(kws))
+
+                txt += " model={N}".format(N=i.phase_loads[0].model)
+
+                txt += conn_type_txt
+
+                txt += " kvar={Q}".format(Q=sum(kvars))
+
+                txt += vmin_txt
+
+                txt += vmax_txt
+
+                # positions (Not mapped)
+
+                for phase_load in i.phase_loads:
+                    # ZIP load model
+                    if (
+                        hasattr(phase_load, "use_zip")
+                        and phase_load.use_zip is not None
+                    ):
+                        if phase_load.use_zip:
+                            # Get the coefficients
                             if (
                                 hasattr(phase_load, "phase")
                                 and phase_load.phase is not None
@@ -1901,7 +2052,9 @@ class Writer(AbstractWriter):
                                 )
 
                         if i.connection_type == "D" and len(i.phase_loads) == 1:
-                            logger.warning( "Warning - only one phase specified for a delta system - adding another connection")
+                            logger.warning(
+                                "Warning - only one phase specified for a delta system - adding another connection"
+                            )
                             if self.phase_mapping(i.phase_loads[0].phase) == 1:
                                 txt += ".2"
                             if self.phase_mapping(i.phase_loads[0].phase) == 2:
@@ -1912,24 +2065,22 @@ class Writer(AbstractWriter):
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     if i.nominal_voltage < 300:
-                        txt += " kV={volt}".format(
-                            volt=i.nominal_voltage * 10 ** -3
-                        )
+                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                     else:
-                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * math.sqrt(3) * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            i.nominal_voltage * math.sqrt(3) * 10**-3
                         )
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                            i.nominal_voltage * 10**-3
                         )
 
                 # Vmin
@@ -1950,7 +2101,7 @@ class Writer(AbstractWriter):
                     for phase_load in i.phase_loads:
                         if hasattr(phase_load, "p") and phase_load.p is not None:
                             total_P += phase_load.p
-                    txt += " kW={P}".format(P=total_P * 10 ** -3)
+                    txt += " kW={P}".format(P=total_P * 10**-3)
 
                 # Kva
                 total_Q = 0
@@ -1958,11 +2109,10 @@ class Writer(AbstractWriter):
                     for phase_load in i.phase_loads:
                         if hasattr(phase_load, "q") and phase_load.q is not None:
                             total_Q += phase_load.q
-                    txt += " kvar={Q}".format(Q=total_Q * 10 ** -3)
+                    txt += " kvar={Q}".format(Q=total_Q * 10**-3)
 
                 # phase_loads
                 if hasattr(i, "phase_loads") and i.phase_loads is not None:
-
                     # if i.connection_type=='Y':
                     if i.nominal_voltage is not None and i.nominal_voltage < 300:
                         txt += " Phases=1"
@@ -1970,7 +2120,6 @@ class Writer(AbstractWriter):
                         txt += " Phases={N}".format(N=len(i.phase_loads))
 
                     for phase_load in i.phase_loads:
-
                         # P
                         # if hasattr(phase_load, 'p') and phase_load.p is not None:
                         #    fp.write(' kW={P}'.format(P=phase_load.p*10**-3))
@@ -1985,7 +2134,6 @@ class Writer(AbstractWriter):
                             and phase_load.use_zip is not None
                         ):
                             if phase_load.use_zip:
-
                                 # Get the coefficients
                                 if (
                                     (
@@ -2013,7 +2161,6 @@ class Writer(AbstractWriter):
                                         and i.qpercentpower is not None
                                     )
                                 ):
-
                                     txt += (
                                         " model=8 ZIPV=[%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]"
                                         % (
@@ -2028,42 +2175,65 @@ class Writer(AbstractWriter):
 
                 # timeseries object
                 if hasattr(i, "timeseries") and i.timeseries is not None:
-                    for ts in i.timeseries:
-                        substation = "DEFAULT"
-                        feeder = "DEFAULT"
-                        if ts.feeder_name is not None:
-                            feeder = ts.feeder_name
-                        if ts.substation_name is not None:
-                            substation = ts.substation_name
-                        if (
-                            hasattr(ts, "data_location")
-                            and ts.data_label is not None
-                            and ts.data_location is not None
-                        ):
-                            filename = self.timeseries_datasets[
-                                substation + "_" + feeder
-                            ][ts.data_location]
-                            if self.remove_loadshapes:
-                                optional_comment = '!'
-                            else:
-                                optional_comment = ''
-                            txt += " {optional_comment}{ts_format}={filename}".format(
-                                optional_comment = optional_comment,
-                                ts_format=self.timeseries_format[filename],
-                                filename=filename,
-                            )
-                        else:
-                            pass
-                            # TODO: manage the data correctly when it is only in memory
+                    txt = append_time_series(i, txt)
 
                 txt += "\n\n"
-                feeder_text_map[substation_name + "_" + feeder_name] = txt
-        
+
+            else:  # unbalanced load, need to define more than one New Load
+                for n, phase_load in enumerate(i.phase_loads):
+                    txt += "New Load." + i.name + "_" + str(n + 1)  # need unique names
+                    txt += bus1_txt
+                    if hasattr(phase_load, "phase") and phase_load.phase is not None:
+                        dss_phase = self.phase_mapping(phase_load.phase)
+                        txt += f".{dss_phase}"
+
+                        # handle Delta connections
+                        if i.connection_type == "D":
+                            if dss_phase == 1:
+                                txt += ".2"
+                            if dss_phase == 2:
+                                txt += ".3"
+                            if dss_phase == 3:
+                                txt += ".1"
+
+                    txt += " Phases=1"
+
+                    nomimal_voltage_txt = ""
+                    if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                        nominal_voltage = i.nominal_voltage * 10**-3
+                        if not (i.connection_type == "D" or nominal_voltage < 300):
+                            # single phase connections in openDSS should specify LN voltage
+                            # if not delta connection or not already LN
+                            nominal_voltage = round(nominal_voltage / math.sqrt(3), 4)
+                        nomimal_voltage_txt = f" kV={nominal_voltage}"
+
+                    txt += nomimal_voltage_txt
+
+                    txt += " kW={P}".format(P=kws[n])
+
+                    txt += " model={N}".format(N=phase_load.model)
+
+                    txt += conn_type_txt
+
+                    txt += " kvar={Q}".format(Q=kvars[n])
+
+                    txt += vmin_txt
+                    txt += vmax_txt
+                    # positions (Not mapped)
+
+                    # timeseries object
+                    if hasattr(i, "timeseries") and i.timeseries is not None:
+                        txt = append_time_series(i, txt)
+
+                    txt += "\n\n"
+
+            feeder_text_map[sub_fdr_key] = txt
+
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2131,7 +2301,6 @@ class Writer(AbstractWriter):
 
         for i in model.models:
             if isinstance(i, Regulator):
-
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
@@ -2168,16 +2337,16 @@ class Writer(AbstractWriter):
 
                 # Connected transformer
                 if hasattr(i, "connected_transformer"):
-
                     # If we have a valid connected_transformer then job's easy...
-                    if i.connected_transformer is not None:  # not setting the connected_transformer in reader parse_regulators
+                    if (
+                        i.connected_transformer is not None
+                    ):  # not setting the connected_transformer in reader parse_regulators
                         txt += " transformer={trans}".format(
                             trans=i.connected_transformer
                         )
 
                     # Otherwise, we have to create a new transformer and write it to the transformers file
                     else:
-
                         # Initialize the string:
                         transfo_creation_string += "New Transformer."
 
@@ -2223,8 +2392,12 @@ class Writer(AbstractWriter):
                             and hasattr(i, "to_element")
                             and i.to_element is not None
                         ):
-                            transfo_creation_string += " buses=({b1}.{p},{b2}.{p})".format(
-                                b1=re.sub('[^0-9a-zA-Z]+', '_', i.from_element), b2=re.sub('[^0-9a-zA-Z]+', '_', i.to_element), p=phase_string
+                            transfo_creation_string += (
+                                " buses=({b1}.{p},{b2}.{p})".format(
+                                    b1=re.sub("[^0-9a-zA-Z]+", "_", i.from_element),
+                                    b2=re.sub("[^0-9a-zA-Z]+", "_", i.to_element),
+                                    p=phase_string,
+                                )
                             )
 
                         # Conns
@@ -2248,7 +2421,7 @@ class Writer(AbstractWriter):
                             for w, winding in enumerate(i.windings):
                                 if hasattr(i.windings[w], "nominal_voltage"):
                                     kvs += (
-                                        str(i.windings[w].nominal_voltage * 10 ** -3)
+                                        str(i.windings[w].nominal_voltage * 10**-3)
                                         + ", "
                                     )
                                     if (
@@ -2264,22 +2437,22 @@ class Writer(AbstractWriter):
                                         self._baseKV_.add(
                                             i.windings[w].nominal_voltage
                                             * math.sqrt(3)
-                                            * 10 ** -3
+                                            * 10**-3
                                         )
                                         self._baseKV_feeders_[
                                             substation_name + "_" + feeder_name
                                         ].add(
                                             winding.nominal_voltage
                                             * math.sqrt(3)
-                                            * 10 ** -3
+                                            * 10**-3
                                         )
                                     else:
                                         self._baseKV_.add(
-                                            i.windings[w].nominal_voltage * 10 ** -3
+                                            i.windings[w].nominal_voltage * 10**-3
                                         )
                                         self._baseKV_feeders_[
                                             substation_name + "_" + feeder_name
-                                        ].add(winding.nominal_voltage * 10 ** -3)
+                                        ].add(winding.nominal_voltage * 10**-3)
 
                             kvs = kvs[:-2]
                             kvs += ")"
@@ -2294,7 +2467,7 @@ class Writer(AbstractWriter):
                                     and i.windings[w].rated_power is not None
                                 ):
                                     kvas += (
-                                        str(i.windings[w].rated_power * 10 ** -3) + ", "
+                                        str(i.windings[w].rated_power * 10**-3) + ", "
                                     )
                             kvas = kvas[:-2]
                             kvas += ")"
@@ -2326,8 +2499,8 @@ class Writer(AbstractWriter):
                                 )
                                 pass
                             # XLT:
-                            try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
-                                if isinstance(i.reactances[1], (int, float)):  
+                            try:  # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
+                                if isinstance(i.reactances[1], (int, float)):
                                     transfo_creation_string += " XLT={}".format(
                                         i.reactances[1]
                                     )
@@ -2339,7 +2512,7 @@ class Writer(AbstractWriter):
                                 )
                                 pass
                             # XHT:
-                            try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
+                            try:  # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
                                 if isinstance(i.reactances[2], (int, float)):
                                     transfo_creation_string += " XHT={}".format(
                                         i.reactances[2]
@@ -2462,8 +2635,8 @@ class Writer(AbstractWriter):
                     ]
                 else:
                     transfo_creation_string = ""
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2541,9 +2714,7 @@ class Writer(AbstractWriter):
         substation_text_map = {}
         feeder_text_map = {}
         for i in model.models:
-
             if isinstance(i, Capacitor):
-
                 if (
                     self.separate_feeders
                     and hasattr(i, "feeder_name")
@@ -2577,7 +2748,7 @@ class Writer(AbstractWriter):
 
                 # Connecting element
                 if i.connecting_element is not None:
-                    txt += " bus1=" + re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element)
+                    txt += " bus1=" + re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
 
                     # For a 3-phase capbank we don't add any suffixes to the output.
                     if (
@@ -2586,7 +2757,6 @@ class Writer(AbstractWriter):
                         and len(i.phase_capacitors) != 3
                     ):
                         for phase_capacitor in i.phase_capacitors:
-
                             if (
                                 hasattr(phase_capacitor, "phase")
                                 and phase_capacitor.phase is not None
@@ -2602,28 +2772,28 @@ class Writer(AbstractWriter):
                 if hasattr(i, "phase_capacitors") and i.phase_capacitors is not None:
                     num_phases = 3
                     # For line-line connection set phases=1
-                    if len(i.phase_capacitors) ==2 or len(i.phase_capacitors) ==1:
+                    if len(i.phase_capacitors) == 2 or len(i.phase_capacitors) == 1:
                         num_phases = 1
                     txt += " phases={N}".format(N=num_phases)
 
                 # nominal_voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     txt += " Kv={volt}".format(
-                        volt=i.nominal_voltage * 10 ** -3
+                        volt=i.nominal_voltage * 10**-3
                     )  # OpenDSS in Kvolts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
                     if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * math.sqrt(3) * 10 ** -3
+                            i.nominal_voltage * math.sqrt(3) * 10**-3
                         )
                     else:
-                        self._baseKV_.add(i.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(i.nominal_voltage * 10**-3)
                         self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10 ** -3
+                            i.nominal_voltage * 10**-3
                         )
 
                 # connection type
@@ -2658,7 +2828,7 @@ class Writer(AbstractWriter):
                                     )
                                 )
                                 pass
-                    total_var *= 10 ** -3  # OpenDSS in Kvar
+                    total_var *= 10**-3  # OpenDSS in Kvar
                     txt += " Kvar={kvar}".format(kvar=total_var)
 
                 # We create a CapControl if we have valid input
@@ -2723,8 +2893,8 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -2904,11 +3074,15 @@ class Writer(AbstractWriter):
                 else:
                     continue
 
-                if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0: 
+                if (
+                    hasattr(i, "positions")
+                    and i.positions is not None
+                    and len(i.positions) > 0
+                ):
                     intermediate_txt += i.name
-                    for position in i.positions:    
-                        intermediate_txt +=f';({position.long},{position.lat})' 
-                    intermediate_txt+='\n\n'    
+                    for position in i.positions:
+                        intermediate_txt += f";({position.long},{position.lat})"
+                    intermediate_txt += "\n\n"
 
                 # Set the units in miles for comparison (IEEE 13 nodes feeder)
                 # TODO: Let the user specify the export units
@@ -2918,7 +3092,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "length") and i.length is not None:
                     txt += " Length={length}".format(
                         length=max(
-                            0.001, self.convert_from_meters(np.real(i.length), u"km")
+                            0.001, self.convert_from_meters(np.real(i.length), "km")
                         )
                     )
 
@@ -2928,7 +3102,9 @@ class Writer(AbstractWriter):
 
                 # from_element
                 if hasattr(i, "from_element") and i.from_element is not None:
-                    txt += " bus1={from_el}".format(from_el=re.sub('[^0-9a-zA-Z]+', '_', i.from_element))
+                    txt += " bus1={from_el}".format(
+                        from_el=re.sub("[^0-9a-zA-Z]+", "_", i.from_element)
+                    )
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -2940,7 +3116,9 @@ class Writer(AbstractWriter):
 
                 # to_element
                 if hasattr(i, "to_element") and i.to_element is not None:
-                    txt += " bus2={to_el}".format(to_el=re.sub('[^0-9a-zA-Z]+', '_', i.to_element))
+                    txt += " bus2={to_el}".format(
+                        to_el=re.sub("[^0-9a-zA-Z]+", "_", i.to_element)
+                    )
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -3002,7 +3180,9 @@ class Writer(AbstractWriter):
                 if i in lines_to_geometrify:
                     txt += " geometry={g}".format(g=i.nameclass)
                 elif i in lines_to_linecodify:
-                    txt += " Linecode={c}".format(c=re.sub('[^0-9a-zA-Z]+', '_', i.nameclass))
+                    txt += " Linecode={c}".format(
+                        c=re.sub("[^0-9a-zA-Z]+", "_", i.nameclass)
+                    )
 
                 txt += "\n\n"
                 if fuse_line != "":
@@ -3010,15 +3190,18 @@ class Writer(AbstractWriter):
                     txt += "\n\n"
 
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
-                feeder_text_intermediate_map[substation_name + "_" + feeder_name] = intermediate_txt
-
+                feeder_text_intermediate_map[
+                    substation_name + "_" + feeder_name
+                ] = intermediate_txt
 
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                intermediate_txt = feeder_text_intermediate_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                intermediate_txt = feeder_text_intermediate_map[
+                    substation_name + "_" + feeder_name
+                ]
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if txt != "":
                     output_folder = None
                     output_redirect = None
@@ -3066,28 +3249,31 @@ class Writer(AbstractWriter):
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["lines"])
                     )
-                if intermediate_txt != "":  
-                    output_folder = None    
-                    output_redirect = None  
-                    if self.separate_substations:   
-                        output_folder = os.path.join(self.output_path, substation_name) 
-                        output_redirect = substation_name   
-                        if not os.path.exists(output_folder):   
-                            os.makedirs(output_folder)  
-                    else:   
-                        output_folder = os.path.join(self.output_path)  
-                        output_redirect = ""    
-                        if not os.path.exists(output_folder):   
-                            os.makedirs(output_folder)  
-                    if self.separate_feeders:   
-                        output_folder = os.path.join(output_folder, feeder_name)    
-                        output_redirect = os.path.join(output_redirect, feeder_name)    
-                        if not os.path.exists(output_folder):   
-                            os.makedirs(output_folder)  
-                    with open(  
-                        os.path.join(output_folder, self.output_filenames["intermediates"]), "w"    
-                    ) as fp:    
-                        fp.write(intermediate_txt)  
+                if intermediate_txt != "":
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path, substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ""
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder, feeder_name)
+                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(
+                        os.path.join(
+                            output_folder, self.output_filenames["intermediates"]
+                        ),
+                        "w",
+                    ) as fp:
+                        fp.write(intermediate_txt)
                         # Just write the file - don't redirect it
 
         return 1
@@ -3401,10 +3587,8 @@ class Writer(AbstractWriter):
         substation_feeder_lookup = {}
         for i in list_of_lines:
             if isinstance(i, Line):
-
                 parsed_line = self.parse_line(i)
                 if len(parsed_line) > 0:
-
                     if (
                         self.separate_feeders
                         and hasattr(i, "feeder_name")
@@ -3504,10 +3688,9 @@ class Writer(AbstractWriter):
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 if len(txt) != 0:
-
                     output_folder = None
                     output_redirect = None
                     if self.separate_substations:
@@ -3560,7 +3743,11 @@ class Writer(AbstractWriter):
                         "w",
                     ) as fp:
                         for linecode_name, linecode_data in txt.items():
-                            fp.write("New Linecode.{name}".format(name=re.sub('[^0-9a-zA-Z]+', '_', linecode_name)))
+                            fp.write(
+                                "New Linecode.{name}".format(
+                                    name=re.sub("[^0-9a-zA-Z]+", "_", linecode_name)
+                                )
+                            )
                             for k, v in linecode_data.items():
                                 fp.write(" {k}={v}".format(k=k, v=v))
                             fp.write("\n\n")
@@ -3882,7 +4069,10 @@ class Writer(AbstractWriter):
                     ):
                         fp.write(
                             "bus1={name} pu={pu}".format(
-                                name=re.sub('[^0-9a-zA-Z]+', '_', obj.connecting_element), pu=obj.per_unit
+                                name=re.sub(
+                                    "[^0-9a-zA-Z]+", "_", obj.connecting_element
+                                ),
+                                pu=obj.per_unit,
                             )
                         )
                     else:
@@ -3893,7 +4083,8 @@ class Writer(AbstractWriter):
                         )
                         fp.write(
                             "bus1={name} pu={pu}".format(
-                                name=re.sub('[^0-9a-zA-Z]+', '_', cleaned_name), pu=obj.per_unit
+                                name=re.sub("[^0-9a-zA-Z]+", "_", cleaned_name),
+                                pu=obj.per_unit,
                             )
                         )
 
@@ -3902,9 +4093,9 @@ class Writer(AbstractWriter):
                         and obj.nominal_voltage is not None
                     ):
                         fp.write(
-                            " basekV={volt}".format(volt=obj.nominal_voltage * 10 ** -3)
+                            " basekV={volt}".format(volt=obj.nominal_voltage * 10**-3)
                         )  # DiTTo in volts
-                        self._baseKV_.add(obj.nominal_voltage * 10 ** -3)
+                        self._baseKV_.add(obj.nominal_voltage * 10**-3)
 
                     if (
                         hasattr(obj, "positive_sequence_impedance")
@@ -3992,9 +4183,14 @@ class Writer(AbstractWriter):
                     "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                 )  # The buscoords are also written to base folder as well as the subfolders
 
-            fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed 
+            fp.write("set maxcontroliter=50\n")  # for volt-var convergence if needed
             if self.has_timeseries:
-                fp.write("\nSolve mode={timestep} number={iternumber}\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_iternumber)) #Run for first day of year
+                fp.write(
+                    "\nSolve mode={timestep} number={iternumber}\n".format(
+                        timestep=self.timeseries_solve_format,
+                        iternumber=self.timeseries_iternumber,
+                    )
+                )  # Run for first day of year
 
             else:
                 fp.write("\nSolve\n")
@@ -4004,11 +4200,11 @@ class Writer(AbstractWriter):
             if isinstance(i, Node) and i.is_substation_connection:
                 feeder_name = i.feeder_name
                 substation_name = i.substation_name
-                feeder_name = re.sub('[^0-9a-zA-Z]+', '_', feeder_name.lower())
-                substation_name = re.sub('[^0-9a-zA-Z]+', '_', substation_name.lower())
+                feeder_name = re.sub("[^0-9a-zA-Z]+", "_", feeder_name.lower())
+                substation_name = re.sub("[^0-9a-zA-Z]+", "_", substation_name.lower())
                 # Note that subtransmission has no substation_connection and hence doesn't have a master file, even though it does have other .dss files
                 if (
-                    feeder_name == "" #and i.nominal_voltage < 30000
+                    feeder_name == ""  # and i.nominal_voltage < 30000
                 ):  # A hack to deal with dangling feeders. TODO: Fix this in layerstack
                     continue
                 with open(
@@ -4020,7 +4216,6 @@ class Writer(AbstractWriter):
                     ),
                     "w",
                 ) as fp:
-
                     if (
                         substation_name in self.substations_redirect
                         and feeder_name == ""
@@ -4040,10 +4235,14 @@ class Writer(AbstractWriter):
                         fp.write(
                             "Clear\n\nNew Circuit.feeder_{name} ".format(name=i.name)
                         )
-                    fp.write("bus1={name} pu={pu}".format(name=re.sub('[^0-9a-zA-Z]+', '_', i.name), pu=i.setpoint))
+                    fp.write(
+                        "bus1={name} pu={pu}".format(
+                            name=re.sub("[^0-9a-zA-Z]+", "_", i.name), pu=i.setpoint
+                        )
+                    )
                     if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                         fp.write(
-                            " basekV={volt}".format(volt=i.nominal_voltage * 10 ** -3)
+                            " basekV={volt}".format(volt=i.nominal_voltage * 10**-3)
                         )  # DiTTo in volts
                     fp.write(
                         " R1={R1} X1={X1}".format(R1=0.00001, X1=0.00001)
@@ -4088,11 +4287,16 @@ class Writer(AbstractWriter):
                             "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                         )  # The buscoords are also written to base folder as well as the subfolders
 
-                    fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed 
+                    fp.write(
+                        "set maxcontroliter=50\n"
+                    )  # for volt-var convergence if needed
                     if self.has_timeseries:
-                        fp.write("\nSolve mode={timestep} number={iternumber}\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_iternumber)) #Run for first day of year
-        
+                        fp.write(
+                            "\nSolve mode={timestep} number={iternumber}\n".format(
+                                timestep=self.timeseries_solve_format,
+                                iternumber=self.timeseries_iternumber,
+                            )
+                        )  # Run for first day of year
+
                     else:
                         fp.write("\nSolve\n")
-
-
