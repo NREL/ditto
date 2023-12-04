@@ -40,7 +40,7 @@ numpy_dependency = "numpy~=1.20"
 
 extras_requires = [
     "lxml~=4.9",
-    "pandas~=1.3.5", # Pyton 3.7 does not support pandas 1.4
+    "pandas~=2.0",
     "scipy~=1.7",
     numpy_dependency,
     "XlsxWriter~=3.0",
@@ -111,9 +111,11 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     test_suite="tests",
     install_requires=[
@@ -123,7 +125,7 @@ setup(
         "six~=1.16",
         "traitlets~=5.1",
         "json_tricks~=3.16",
-        "pandas~=1.3.5",
+        "pandas~=2.0",
         numpy_dependency,
     ],
     extras_require={
