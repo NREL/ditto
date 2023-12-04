@@ -146,7 +146,7 @@ class Writer(AbstractWriter):
     def write(self, model, separate_feeders = False, separate_substations = False, write_taps=False, verbose=False):
         """General writing function responsible for calling the sub-functions.
 
-        Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS, 
+        Note: re.sub('[^0-9a-zA-Z]+', '_', object_name) is used to fix node/bus names for OpenDSS,
             which uses dots for phase designation and spaces for paramater delimiters.
 
         :param model: DiTTo model
@@ -1047,8 +1047,8 @@ class Writer(AbstractWriter):
 
                 # Phases
                 if hasattr(i, "phase_storages") and i.phase_storages is not None:
-                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V   
-                        txt += " phases=1"  
+                    if i.nominal_voltage < 300:  # Line-Neutral voltage for 120 V
+                        txt += " phases=1"
                     else:
                         txt += " phases={N_phases}".format(N_phases=len(i.phase_storages))
 
@@ -1069,7 +1069,7 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    if i.nominal_voltage is None:   
+                    if i.nominal_voltage is None:
                         i.nominal_voltage = model[i.connecting_element].nominal_voltage
                     txt += " bus1={elt}".format(elt=re.sub('[^0-9a-zA-Z]+', '_', i.connecting_element))
                     if (
@@ -1173,7 +1173,7 @@ class Writer(AbstractWriter):
 
                 # Yearly/Daily/Duty/Charge trigger/Discharge trigger
                 #
-                # TODO 
+                # TODO
 
                 txt += "\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
@@ -1460,12 +1460,12 @@ class Writer(AbstractWriter):
                     voltvar_nodes.add(i.name)
 
                 if (
-                   hasattr(i, "control_type")    
-                    and i.control_type is not None   
-                    and i.control_type == "voltwatt_voltvar" 
-                ):  
-                    txt += " Model=1"   
-                    voltwatt_voltvar_nodes.add(i.name)  
+                   hasattr(i, "control_type")
+                    and i.control_type is not None
+                    and i.control_type == "voltwatt_voltvar"
+                ):
+                    txt += " Model=1"
+                    voltwatt_voltvar_nodes.add(i.name)
 
                 if (
                     hasattr(i, "timeseries")
@@ -1539,13 +1539,13 @@ class Writer(AbstractWriter):
                     inv_txt = inv_txt.strip(",")
                     inv_txt += "]"
 
-    
-                if len(voltwatt_voltvar_nodes) > 0: 
-                    if not len(voltvar_nodes) > 0:  
-                        inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default voltvar curve used is 1547 Cat-B 
-                    if not len(voltwatt_nodes) > 0: 
-                        inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default volt-watt curve used    
-                    for node in voltwatt_voltvar_nodes: 
+
+                if len(voltwatt_voltvar_nodes) > 0:
+                    if not len(voltvar_nodes) > 0:
+                        inv_txt += "New XYCurve.VoltVarCurve_{loc} npts=6 Yarray=(1.0,1.0,0.0,0.0,-1.0,-1.0) Xarray=(0.5,0.92,0.98,1.02,1.08,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default voltvar curve used is 1547 Cat-B
+                    if not len(voltwatt_nodes) > 0:
+                        inv_txt += "New XYCurve.VoltWattCurve_{loc} npts=4  Yarray=(1.0,1.0,0.0,0.0) XArray=(0.5,1.06,1.1,1.5)\n\n".format( loc=substation_name + "_" + feeder_name)  # Default volt-watt curve used
+                    for node in voltwatt_voltvar_nodes:
                         inv_txt += "New InvControl.InvPVCtrVW_{node} Combimode=VV_VW voltage_curvex_ref=rated vvc_curve1=VoltVarCurve_{loc} VV_RefReactivePower=VARMAX_VARS VoltwattYAxis=PAVAILABLEPU voltwatt_curve=VoltWattCurve_{loc} eventlog=yes DeltaQ_factor = 0.25 DeltaP_factor=0.25 PVSystemlist=[{node}]\n\n".format( loc=substation_name + "_" + feeder_name, node=node)
 
                 if txt != "":
@@ -1660,7 +1660,7 @@ class Writer(AbstractWriter):
                         continue
                     # WARNING - this step can be slow for big systems with lots of data
                     npoints = len(
-                        pd.read_csv(os.path.join(self.output_path, i.data_location)),header=None
+                        pd.read_csv(os.path.join(self.output_path, i.data_location),header=None)
                     )
 
                     if self.timeseries_iternumber is None:
@@ -2058,7 +2058,7 @@ class Writer(AbstractWriter):
 
                 txt += "\n\n"
                 feeder_text_map[substation_name + "_" + feeder_name] = txt
-        
+
         for substation_name in substation_text_map:
             for feeder_name in substation_text_map[substation_name]:
                 txt = feeder_text_map[substation_name + "_" + feeder_name]
@@ -2327,7 +2327,7 @@ class Writer(AbstractWriter):
                                 pass
                             # XLT:
                             try: # probably an index error b/c cyme reader only has api_transformer.reactances = [float(xhl)]
-                                if isinstance(i.reactances[1], (int, float)):  
+                                if isinstance(i.reactances[1], (int, float)):
                                     transfo_creation_string += " XLT={}".format(
                                         i.reactances[1]
                                     )
@@ -2904,11 +2904,11 @@ class Writer(AbstractWriter):
                 else:
                     continue
 
-                if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0: 
+                if hasattr(i,'positions') and i.positions is not None and len(i.positions) > 0:
                     intermediate_txt += i.name
-                    for position in i.positions:    
-                        intermediate_txt +=f';({position.long},{position.lat})' 
-                    intermediate_txt+='\n\n'    
+                    for position in i.positions:
+                        intermediate_txt +=f';({position.long},{position.lat})'
+                    intermediate_txt+='\n\n'
 
                 # Set the units in miles for comparison (IEEE 13 nodes feeder)
                 # TODO: Let the user specify the export units
@@ -3066,28 +3066,28 @@ class Writer(AbstractWriter):
                     self.files_to_redirect.append(
                         os.path.join(output_redirect, self.output_filenames["lines"])
                     )
-                if intermediate_txt != "":  
-                    output_folder = None    
-                    output_redirect = None  
-                    if self.separate_substations:   
-                        output_folder = os.path.join(self.output_path, substation_name) 
-                        output_redirect = substation_name   
-                        if not os.path.exists(output_folder):   
-                            os.makedirs(output_folder)  
-                    else:   
-                        output_folder = os.path.join(self.output_path)  
-                        output_redirect = ""    
-                        if not os.path.exists(output_folder):   
-                            os.makedirs(output_folder)  
-                    if self.separate_feeders:   
-                        output_folder = os.path.join(output_folder, feeder_name)    
-                        output_redirect = os.path.join(output_redirect, feeder_name)    
-                        if not os.path.exists(output_folder):   
-                            os.makedirs(output_folder)  
-                    with open(  
-                        os.path.join(output_folder, self.output_filenames["intermediates"]), "w"    
-                    ) as fp:    
-                        fp.write(intermediate_txt)  
+                if intermediate_txt != "":
+                    output_folder = None
+                    output_redirect = None
+                    if self.separate_substations:
+                        output_folder = os.path.join(self.output_path, substation_name)
+                        output_redirect = substation_name
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    else:
+                        output_folder = os.path.join(self.output_path)
+                        output_redirect = ""
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    if self.separate_feeders:
+                        output_folder = os.path.join(output_folder, feeder_name)
+                        output_redirect = os.path.join(output_redirect, feeder_name)
+                        if not os.path.exists(output_folder):
+                            os.makedirs(output_folder)
+                    with open(
+                        os.path.join(output_folder, self.output_filenames["intermediates"]), "w"
+                    ) as fp:
+                        fp.write(intermediate_txt)
                         # Just write the file - don't redirect it
 
         return 1
@@ -3992,7 +3992,7 @@ class Writer(AbstractWriter):
                     "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                 )  # The buscoords are also written to base folder as well as the subfolders
 
-            fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed 
+            fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed
             if self.has_timeseries:
                 fp.write("\nSolve mode={timestep} number={iternumber}\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_iternumber)) #Run for first day of year
 
@@ -4088,11 +4088,9 @@ class Writer(AbstractWriter):
                             "Buscoords {f}\n".format(f=self.output_filenames["buses"])
                         )  # The buscoords are also written to base folder as well as the subfolders
 
-                    fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed 
+                    fp.write("set maxcontroliter=50\n") # for volt-var convergence if needed
                     if self.has_timeseries:
                         fp.write("\nSolve mode={timestep} number={iternumber}\n".format(timestep=self.timeseries_solve_format,iternumber=self.timeseries_iternumber)) #Run for first day of year
-        
+
                     else:
                         fp.write("\nSolve\n")
-
-
