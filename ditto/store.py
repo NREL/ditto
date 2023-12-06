@@ -44,24 +44,20 @@ class Store(object):
     >>> M = ditto.Store()
 
     >>> M
-    <ditto.Store(elements=0, models=0)>
+    <ditto.Store(models=0)>
 
     """
 
-    __store_factory = dict
-
     def __init__(self):
 
-        self._cim_store = self.__store_factory()
         self._model_store = list()
         self._model_names = {}
         self._network = Network()
 
     def __repr__(self):
-        return "<%s.%s(elements=%s, models=%s) object at %s>" % (
+        return "<%s.%s(models=%s) object at %s>" % (
             self.__class__.__module__,
             self.__class__.__name__,
-            len(self.elements),
             len(self.models),
             hex(id(self)),
         )
@@ -71,18 +67,6 @@ class Store(object):
 
     def __setitem__(self, k, v):
         self._model_names[k] = v
-
-    def iter_elements(self, type=DiTToBase):
-
-        if type == None:
-            type = DiTToBase
-
-        if not issubclass(type, DiTToBase):
-            raise AttributeError("Unable to find {} in ditto.environment".format(type))
-
-        for e in self.elements:
-            if isinstance(e, type):
-                yield e
 
     def iter_models(self, type=None):
 
@@ -94,24 +78,11 @@ class Store(object):
                 yield m
 
     @property
-    def elements(self):
-        return list(self.cim_store[k] for k in self.cim_store)
-
-    @property
     def models(self):
         return tuple(m for m in self.model_store)
 
     def remove_element(self, element):
         self._model_store.remove(element)
-
-    def add_element(self, element):
-        if not isinstance(element, DiTToBase):
-            raise DiTToTypeError(
-                "element must be of type DiTToBase. Please check the documentation"
-            )
-        else:
-            element.link_model = self
-            self.cim_store[element.UUID] = element
 
     def set_names(self):
         """ All objects with a name field included in a dictionary which maps the name to the object. Set in set_name() on the object itself if the object has a name. The dictionary is reset to empty first"""
@@ -202,82 +173,9 @@ class Store(object):
         return self._network.find_internal_edges(nodeset)
 
     @property
-    def cim_store(self):
-        return self._cim_store
-
-    @property
     def model_store(self):
         return self._model_store
 
     @property
     def model_names(self):
         return self._model_names
-
-
-class EnvAttributeIntercepter(object):
-    def __init__(self, model):
-        self.model = model
-        self.generate_attributes()
-
-    def generate_attributes(self):
-
-        for function_name, klass in self.model._env.get_clsmembers().items():
-
-            f = partial(model_builder, klass=klass, model=self.model)
-            f.__doc__ = klass.__doc__
-            f.__name__ = klass.__name__
-
-            setattr(
-                self, function_name, types.MethodType(f, self, EnvAttributeIntercepter)
-            )
-
-
-def model_builder(self, klass, model, *args, **kwargs):
-
-    ic = partial(init_callback, model=model)
-    ic.__name__ = init_callback.__name__
-
-    cim_object = klass(
-        init_callback=ic,
-        get_callback=get_callback,
-        set_callback=set_callback,
-        del_callback=del_callback,
-        **kwargs
-    )
-
-    return cim_object
-
-
-def init_callback(self, model, **kwargs):
-
-    self.link_model = model
-    if self.UUID is None:
-        self.UUID = uuid.uuid4()
-    self.link_model.cim_store[self.UUID] = self
-
-
-def get_callback(self, name, val):
-    assert (
-        self.UUID in self.link_model.cim_store
-    ), "UUID {} not found in Store {}. {} attributes value is {}".format(
-        self.UUID, self.link_model, name, val
-    )
-
-
-def set_callback(self, name, value):
-    assert self.UUID in self.link_model.cim_store, "{} not found in Store {}".format(
-        self.UUID, self.link_model
-    )
-    if isinstance(value, tuple):
-        for v in value:
-            assert (
-                v.UUID in self.link_model.cim_store
-            ), "{} not found in Store {}".format(self.UUID, self.link_model)
-    else:
-        assert (
-            value.UUID in self.link_model.cim_store
-        ), "{} not found in Store {}".format(self.UUID, self.link_model)
-
-
-def del_callback(self, name, obj):
-    pass
