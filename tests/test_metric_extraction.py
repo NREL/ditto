@@ -53,7 +53,6 @@ def test_metric_extraction():
             ),
         )
         r.parse(m)
-        m.set_names()
 
         # Create a modifier object
         modifier = system_structure_modifier(m)
@@ -64,7 +63,6 @@ def test_metric_extraction():
 
         # Create a Network analyszer object with the modified model
         net = network_analyzer(modifier.model, True, "sourcebus")
-        net.model.set_names()
 
         # Compute all the available metrics
         net.compute_all_metrics()

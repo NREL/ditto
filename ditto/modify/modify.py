@@ -191,8 +191,6 @@ class Modifier:
         """
         Find all the objects in model_1 with the same name as model_2 and augment them with the attributes with those from model_2 which have been set (are not None). If overwrite is True, any existing attributes are overwritten, otherwise they are skipped
         """
-        model_1.set_names()
-        model_2.set_names()
         for (
             obj_name
         ) in (
@@ -217,19 +215,15 @@ class Modifier:
                 obj_1 = model_1.model_names[obj_name]
                 self.set_attributes(model_1, obj_1, obj_2, overwrite)
 
-        model_1.set_names()
         return model_1
 
     def add(self, model_1, model_2):
         """
         Add all the named objects in model_2 are added to model_1
         """
-        model_1.set_names()
-        model_2.set_names()
         for obj_name in model_2.model_names:
             new_obj = self.copy(model_1, model_2.model_names[obj_name])
 
-        model_1.set_names()
         return model_1
 
     def delete(self, model_1, model_2):
@@ -237,8 +231,6 @@ class Modifier:
         Delete the named objects in model_2 (and their sub-objects) from model_1.
         NOTE that this only uses the names of the nodes to do the deletion
         """
-        model_1.set_names()
-        model_2.set_names()
         for obj_name in model_2.model_names:
             if (
                 obj_name in model_1.model_names
@@ -254,5 +246,4 @@ class Modifier:
                 self.delete_element(
                     model_1, obj_1
                 )  # model_1 updated automatically since passing by reference
-        model_1.set_names()
         return model_1

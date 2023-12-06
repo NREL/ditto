@@ -261,7 +261,6 @@ class Reader(AbstractReader):
         Then loop over the objects and set the kv base using the connecting element.
         .. warning: This has to be called last in parse.
         """
-        model.set_names()
         AllBusNames = dss.Circuit.AllBusNames()
         for bus_name in AllBusNames:
             # Set the active bus

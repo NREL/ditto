@@ -26,7 +26,6 @@ def test_powersource():
         buscoordinates_file=os.path.join(current_directory, "buscoord.dss"),
     )
     r.parse(m)
-    m.set_names()
 
     assert m["Vsource.source"].name == "Vsource.source"
     assert m["Vsource.source"].nominal_voltage == 230.0 * 10 ** 3

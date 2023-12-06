@@ -317,7 +317,6 @@ class Store(object):
         self.build_networkx()  # Should be redundant since the networkx graph is only build on connected elements
 
     def set_node_voltages(self):
-        self.set_names()
         for i in self.models:
             if isinstance(i, Node) and hasattr(i, "name") and i.name is not None:
                 upstream_transformer = self._network.get_upstream_transformer(

@@ -18,7 +18,6 @@ def update_persistence_jsons():
                 #Update with other tests if they get added to the persistence tests
                 continue
             reader.parse(m)
-            m.set_names()
             print("Writing "+dirpath)
             w = Writer(output_path=dirpath, log_path=dirpath)
             w.write(m)

@@ -26,7 +26,6 @@ def test_capacitor_connectivity():
         master_file=os.path.join(current_directory, "test_capacitor_connectivity.dss")
     )
     r.parse(m)
-    m.set_names()
 
     # Reading OpenDSS default values
     d_v = Default_Values(

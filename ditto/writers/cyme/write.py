@@ -274,7 +274,6 @@ class Writer(AbstractWriter):
 
         This must be called before write_equipment_file since the linecodes dictionary is built here and is needed for the equipment file.
         """
-        model.set_names()
         # Output network file
         output_file = self.output_path + "/network.txt"
 

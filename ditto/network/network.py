@@ -366,7 +366,6 @@ class Network:
         This might be handy when trying to find all the objects below a substation such that the network can be properly seperated in different feeders for analysis.
         """
         _elts = set()
-        model.set_names()
 
         # Checking that the network is already built
         # TODO: Log instead of printing...
@@ -411,7 +410,6 @@ class Network:
                     _elts.add(edge_equipment_name[(destination, source)])
 
         # Get the corresponding DiTTo objects
-        # Warning: This will fail if set_names() has not been called before.
         _obj = []
         for x in _elts:
             try:

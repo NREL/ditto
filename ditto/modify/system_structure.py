@@ -93,11 +93,8 @@ class system_structure_modifier(Modifier):
         self.G = Network()
         self.G.build(self.model, source=self.source)
 
-        self.model.set_names()
         # Set the attributes in the graph
         self.G.set_attributes(self.model)
-
-        self.model.set_names()
 
         # Equipment types and names on the edges
         self.edge_equipment = nx.get_edge_attributes(self.G.graph, "equipment")
@@ -543,7 +540,6 @@ class system_structure_modifier(Modifier):
 
         .. TODO:: Find out why the results of this and set_nominal_voltages_recur don't match...
         """
-        self.model.set_names()
 
         # We will remove all edges representing transformers
         edges_to_remove = [
@@ -648,7 +644,6 @@ class system_structure_modifier(Modifier):
 
         .. TODO:: Remove this once everything is stable.
         """
-        self.model.set_names()
         # Loop over the objects
         for obj in self.model.models:
 
@@ -733,7 +728,6 @@ class system_structure_modifier(Modifier):
         """
         # Set the names in the model.
         # Required if we wish to access objects by names directly instead of looping
-        self.model.set_names()
 
         # Build a list of all the loads in the DiTTo model
         #
@@ -838,7 +832,6 @@ class system_structure_modifier(Modifier):
         # For every transformer name...
         for t_name in transformer_names:
             # Try to get the corresponding DiTTo object by name
-            # Note: This should work if set_names() has been called before...
             # If it fails, raise an error...
             try:
                 t_obj = self.model[t_name]
@@ -985,7 +978,6 @@ class system_structure_modifier(Modifier):
         """
         # Set the names in the model.
         # Required if we wish to access objects by names directly instead of looping
-        self.model.set_names()
 
         for _obj in self.model.models:
             if isinstance(_obj, Load):
@@ -1082,7 +1074,6 @@ class system_structure_modifier(Modifier):
             - If the switch has attribute R1 equals to 1e11, then the switch is open
             - Otherwise it is closed.
         """
-        self.model.set_names()
         with open(path_to_dss_file, "r") as f:
             lines = f.readlines()
 

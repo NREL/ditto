@@ -23,7 +23,6 @@ def fix_undersized_transformers(model,verbose=True):
     transformer_load_map = {} # provides a mapping of all the loads connected to a transformer if there's a path from the load to a source
     result = True
     transformer_sizes = [15,25,50,75,100,300,500,1000,2000,3000,5000] # upgrade sizes in kva
-    model.set_names()
 
     for i in model.models:
         if isinstance(i,PowerSource) and i.connecting_element is not None:

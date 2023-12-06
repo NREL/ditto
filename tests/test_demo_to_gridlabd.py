@@ -26,7 +26,6 @@ def test_demo_to_gridlabd():
         m = Store()
         r = Reader(input_file=os.path.join(current_directory,'data/small_cases/demo',model))
         r.parse(m)
-        m.set_names()
         print('>Demo model {model} read...'.format(model=os.path.join(current_directory,'data/small_cases/demo',model)))
         output_path = tempfile.TemporaryDirectory()
         w = Writer(output_path=output_path.name, log_path=output_path)

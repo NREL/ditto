@@ -916,7 +916,6 @@ class Reader(AbstractReader):
 
         self.fix_section_overlaps(model)
 
-        model.set_names()
         modifier = system_structure_modifier(model)
         modifier.set_nominal_voltages_recur()
         modifier.set_nominal_voltages_recur_line()
@@ -974,7 +973,6 @@ class Reader(AbstractReader):
         """Parse the subnetwork connections.
         These specify the interconnection points for a substation
         """
-        model.set_names()
         self.get_file_content("network")
         mapp_subnetwork_connections = {"nodeid": 1}
         self.subnetwork_connections = {}
@@ -6459,7 +6457,6 @@ class Reader(AbstractReader):
         :param verbose: Set the verbose mode. Optional. Default=True
         :type verbose: bool
         """
-        model.set_names()
         multiple_elements = {}
         for i,j in self.section_duplicates.items():
             if len(j)>1:

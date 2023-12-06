@@ -52,7 +52,6 @@ class MetricComputer(Converter):
         self.reader.parse(self.m)
 
         self.net = network_analyzer(self.m)
-        self.net.model.set_names()
         # If we compute the metrics per feeder, we need to have the objects taged with their feeder_names
         if self.by_feeder:
             # Split the network into feeders (assumes objects have been taged)

@@ -30,7 +30,6 @@ def test_line_length():
     m = Store()
     r = Reader(master_file=os.path.join(current_directory, "test_line_length.dss"))
     r.parse(m)
-    m.set_names()
 
     # Reading OpenDSS default values
     d_v = Default_Values(

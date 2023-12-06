@@ -30,7 +30,6 @@ def test_nodes():
         buscoordinates_file=os.path.join(current_directory, "buscoord.dss"),
     )
     r.parse(m)
-    m.set_names()
 
     assert (m["bus1"].name) == "bus1"
     assert (m["bus1"].nominal_voltage) == float(12.47) * 10 ** 3
