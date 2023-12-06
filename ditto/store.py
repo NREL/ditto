@@ -26,7 +26,6 @@ import types
 from functools import partial
 from .network.network import Network
 
-from .core import DiTToBase, DiTToTypeError
 from .modify.modify import Modifier
 from .models.node import Node
 
@@ -127,14 +126,14 @@ class Store(object):
         Parameters
         ----------
         element : object
-            The element to be added to the Store. Must be a subclass of DiTToHasTraits.
+            The element to be added to the Store. Must be a subclass of DiTToBaseModel.
 
         Returns
         -------
         None
 
         """
-        if not isinstance(element, DiTToHasTraits):
+        if not isinstance(element, DiTToBaseModel):
             raise InvalidElementType(f"type={type(element)} cannot be added")
         if not hasattr(element, "name"):
             raise InvalidElementType(f"type={type(element)} cannot be added. Must define 'name' attribute.")
@@ -166,7 +165,7 @@ class Store(object):
             element name
         Returns
         -------
-        [DiTToHasTraits,..]
+        [DiTToBaseModel,..]
         Raises
         ------
         ElementNotFoundError
@@ -190,7 +189,7 @@ class Store(object):
             true.
         Yields
         ------
-        DiTToHasTraits
+        DiTToBaseModel
         Raises
         ------
         ElementNotFoundError
@@ -223,7 +222,7 @@ class Store(object):
         Returns
         -------
         list
-            list of DiTToHasTraits
+            list of DiTToBaseModel
         Raises
         ------
         ElementNotFoundError
@@ -235,7 +234,7 @@ class Store(object):
         """Remove all elements that match the parameter type and name from the store.
         Parameters
         ----------
-        element : DiTToHasTraits
+        element : DiTToBaseModel
         Raises
         ------
         ElementNotFoundError
