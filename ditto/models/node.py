@@ -1,35 +1,38 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
+from pydantic import BaseModel, Field
 
 from .base import DiTToBaseModel
-from .units import Voltage, VoltageUnit, Phase
+from .units import Voltage, Phase, Distance
 from .position import Position
+from typing_extensions import Annotated
+from typing import Optional, List
 
 
-class Node(DiTToHasTraits):
+class Node(DiTToBaseModel):
     
-    nominal_voltage: Optional[Voltage] = Field( 
+    nominal_voltage: Annotated[Optional[Voltage], Field( 
         description = "The nominal voltage at the node",
         title = "Nominal voltage",
-        cim_value="nomU"
-    )
+        json_schema_extra = {"cim_value":"nomU"}
+    )]
 
-    phases: Optional[List[Phase]] = Field( 
+    phases: Annotated[Optional[List[Phase]], Field( 
         description="Phases at the node",
-        title="phases"
-        cim_value="phases"
-    )
+        title="phases",
+        json_schema_extra = {"cim_value":"phases"}
+    )]
 
-    is_substation_connection: Optional[bool] = Field(
+    is_substation_connection: Annotated[Optional[bool], Field(
         description="1 if the node connects from inside a substation to outside, 0 otherwise. These indicate if a node connects a substation to a feeder or high voltage source",
         title="is_substation_connection",
         default=False,
-        cim_value="NA"
-    )
+        json_schema_extra = {"cim_value":"NA"}
+    )]
 
-    setpoint: Optional[Voltage] = Field(
+    setpoint: Annotated[Optional[Voltage], Field(
         description="Value that the node must be set to. This is typically used for feeder head points",
         title="setpoint",
-        cim_value="NA"
-    )
+        json_schema_extra={"cim_value": "NA"},
+    )]
