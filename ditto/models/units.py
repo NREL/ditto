@@ -2,33 +2,32 @@
 from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 from pydantic import BaseModel, Field, ValidationError
-from pydantic.json import isoformat, timedelta_isoformat
+from enum import Enum
 
 import warnings
+import pint
 import logging
 
 logger = logging.getLogger(__name__)
 
-class Voltage(BaseModel):
-    """This class is used to represent the voltage at a node or a line. It is a simple container for the voltage value and the unit.
+class Distance(pint.Quantity):
+    """This class is used to represent a distance value.
     """
-    value: float = Field(
-        title="value",
-        description="The value of the voltage",
-    )
-    unit: VoltageUnit = Field(
-        description="The unit of the voltage",
-        title="unit",
-        default="V",
-    )
+    def __new__(cls, value, units, **kwargs):
+        instance = super().__new__(cls, value, units, **kwargs)
+        if not instance.is_compatible_with("meter"):
+            raise ValueError(f"Distance must be compatible with meter, not {value.units}")
+        return instance
 
-class VoltageUnit(str, Enum):
-    """This class is used to represent the possible units of voltage.
+class Voltage(pint.Quantity):
+    """This class is used to represent a voltage value.
+       Must be constructued with a value and units.
     """
-    V = "V"
-    kV = "kV"
-    MV = "MV"
-
+    def __new__(cls, value, units, **kwargs):
+        instance = super().__new__(cls, value, units, **kwargs)
+        if not instance.is_compatible_with("volt"):
+            raise ValueError(f"Voltage must be compatible with volt, not {instance.units}")
+        return instance
 
 class Phase(str, Enum):
     """This class is used to represent a single phase from a set of possible values.
