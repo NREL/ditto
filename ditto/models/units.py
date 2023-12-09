@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 from pydantic import BaseModel, Field, ValidationError
 from enum import Enum
+import json
 
 import warnings
 import pint
@@ -10,6 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+#TODO: Make a general unit that things inherit from since we reuse this code a lot
 class Distance(pint.Quantity):
     """This class is used to represent a distance value.
     """
@@ -18,6 +20,8 @@ class Distance(pint.Quantity):
         if not instance.is_compatible_with("meter"):
             raise ValueError(f"Distance must be compatible with meter, not {value.units}")
         return instance
+    def json(self):
+        return {"value":self.magnitude,"units":str(self.units)}
 
 class Voltage(pint.Quantity):
     """This class is used to represent a voltage value.
@@ -28,6 +32,8 @@ class Voltage(pint.Quantity):
         if not instance.is_compatible_with("volt"):
             raise ValueError(f"Voltage must be compatible with volt, not {instance.units}")
         return instance
+    def json(self):
+        return {"value":self.magnitude,"units":str(self.units)}
 
 class Phase(str, Enum):
     """This class is used to represent a single phase from a set of possible values.

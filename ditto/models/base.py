@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import super, range, zip, round, map
 from pydantic import BaseModel, Field, ValidationError, ConfigDict
 from typing_extensions import Annotated
-from typing import Optional, List
+from typing import Optional, List, ClassVar
 
 import warnings
 import logging
@@ -16,14 +16,17 @@ logger = logging.getLogger(__name__)
 class DiTToBaseModel(BaseModel):
     """ Base pydantic class for all DiTTo models.
         A name is required for all DiTTo models.
+        Model can be dumped to json by calling element.model_dump_json() 
     """
 
+    json_encoders: ClassVar[dict] = { Voltage: lambda v: v.json(), Distance: lambda d: d.json() }
     model_config = ConfigDict(
         validate_assignment = True,
         validate_default = True,
         use_enum_values = False,
         arbitrary_types_allowed = True,
-        populate_by_name = True
+        populate_by_name = True,
+        json_encoders = json_encoders
     )
 
     name: Annotated[str,Field(
@@ -45,4 +48,3 @@ class DiTToBaseModel(BaseModel):
         default = "",
         json_schema_extra = {"cim_value":"EquipmentContainer.name"}
     )]
-            
