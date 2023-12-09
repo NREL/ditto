@@ -15,17 +15,11 @@ logger = logging.getLogger(__name__)
 
 class Network:
     def __init__(self):
-        self.graph = None
-        self.digraph = None  # Doesn't contain attributes, just topology
-        self.class_map = (
-            {}
-        )  # Map the networkx names to the object type (not included in attributes)
-        self.is_built = (
-            False  # Flag that indicates whether the Network has been built or not.
-        )
-        self.attributes_set = (
-            False  # Flag that indicates whether the attributes have been set or not.
-        )
+        self.graph = None  # becomes nx.Graph() in self.build
+        self.digraph = None  # becomes nx.DiGraph() in self.build. Doesn't contain attributes, just topology
+        self.class_map = {} # Map the networkx names to the object type (not included in attributes)
+        self.is_built = False  # Flag that indicates whether the Network has been built or not.
+        self.attributes_set = False  # Flag that indicates whether the attributes have been set or not.
 
     def provide_graphs(self, graph, digraph):
         """
@@ -346,7 +340,7 @@ class Network:
                     if self.digraph.has_edge(m.to_element, m.from_element):
                         self.digraph.remove_edge(m.to_element, m.from_element)
 
-    def get_upstream_transformer(self, model, node):
+    def get_upstream_transformer(self, node):
 
         curr_node = node
         curr = list(self.digraph.predecessors(node))
@@ -369,21 +363,19 @@ class Network:
         model.set_names()
 
         # Checking that the network is already built
-        # TODO: Log instead of printing...
         if not self.is_built:
-            logger.debug(
+            logger.warn(
                 "Warning. Trying to use Network model without building the network."
             )
-            logger.debug("Calling build() with source={}".format(source))
+            logger.warn("Calling build() with source={}".format(source))
             self.build(model, source=source)
 
         # Checking that the attributes have been set
-        # TODO: Log instead of printing...
         if not self.attributes_set:
-            logger.debug(
+            logger.warn(
                 "Warning. Trying to use Network model without setting the attributes first."
             )
-            logger.debug("Setting the attributes...")
+            logger.warn("Setting the attributes...")
             self.set_attributes(model)
 
         # Run the dfs or die trying...

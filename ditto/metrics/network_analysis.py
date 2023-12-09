@@ -157,7 +157,7 @@ class NetworkAnalyzer(object):
             self.edge_equipment_name = None
 
         modifier = system_structure_modifier(self.model, source)
-        modifier.set_nominal_voltages()
+        modifier.set_nominal_voltages_recur()
         # IMPORTANT: the following two parameters define what is LV and what is MV.
         # - Object is LV if object.nominal_voltage<=LV_threshold
         # - Object is MV if MV_threshold>=object.nominal_voltage>LV_threshold
@@ -205,12 +205,10 @@ class NetworkAnalyzer(object):
         """
         Use this function to add the feeder information if available.
 
-        :param feeder_names: List of the feeder names
-        :type feeder_names: List(str)
-        :param feeder_nodes: List of lists containing feeder nodes
-        :type feeder_nodes: List of Lists of strings
-        :param feeder_types: List of feeder types.
-        :type feeder_types: List or string if all feeders have the same type
+        :param feeder_names: List(str) of the feeder names
+        :param feeder_nodes: List of lists of strings containing feeder nodes
+        :param substations: List(str) of the substations names
+        :param feeder_types: List(str) of feeder types or string if all feeders have the same type
         """
         if len(feeder_names) != len(feeder_nodes):
             raise ValueError(
@@ -465,7 +463,7 @@ class NetworkAnalyzer(object):
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
                                 and prev_obj.feeder_name is not None
-                                and prev_obj.feeder_name is not ""
+                                and prev_obj.feeder_name != ""
                                 and prev_obj.name
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
@@ -498,7 +496,7 @@ class NetworkAnalyzer(object):
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
                                 and prev_obj.feeder_name is not None
-                                and prev_obj.feeder_name is not ""
+                                and prev_obj.feeder_name != ""
                                 and prev_obj.name
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):
@@ -525,7 +523,7 @@ class NetworkAnalyzer(object):
                                 hasattr(prev_obj, "feeder_name")
                                 and hasattr(prev_obj, "name")
                                 and prev_obj.feeder_name is not None
-                                and prev_obj.feeder_name is not ""
+                                and prev_obj.feeder_name != ""
                                 and prev_obj.name
                                 in self.node_feeder_mapping  # In case a default value has been set for all feeder_name values
                             ):

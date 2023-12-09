@@ -224,9 +224,10 @@ class system_structure_modifier(Modifier):
             previous = self.source
         else:
             node, voltage, previous = args
-        if (previous, node) in self.edge_equipment and self.edge_equipment[
-            (previous, node)
-        ] == "PowerTransformer":
+        if (
+            (previous, node) in self.edge_equipment and 
+            self.edge_equipment[(previous, node)] == "PowerTransformer"
+        ):
             trans_name = self.edge_equipment_name[(previous, node)]
             new_value = min(
                 [
@@ -235,9 +236,10 @@ class system_structure_modifier(Modifier):
                     if w.nominal_voltage is not None
                 ]
             )
-        elif (node, previous) in self.edge_equipment and self.edge_equipment[
-            (node, previous)
-        ] == "PowerTransformer":
+        elif (
+            (node, previous) in self.edge_equipment and 
+            self.edge_equipment[(node, previous)] == "PowerTransformer"
+        ):
             trans_name = self.edge_equipment_name[(node, previous)]
             new_value = min(
                 [
@@ -248,8 +250,11 @@ class system_structure_modifier(Modifier):
             )
         else:
             new_value = voltage
+        
         if hasattr(self.model[node], "nominal_voltage"):
-            self.model[node].nominal_voltage = new_value
+            if new_value != self.model[node].nominal_voltage:
+                logger.debug(f"Setting node {node} nominal voltage to {new_value} from {self.model[node].nominal_voltage}")
+                self.model[node].nominal_voltage = new_value
         for child in self.G.digraph.successors(node):
             self.set_nominal_voltages_recur(child, new_value, node)
 
@@ -519,205 +524,6 @@ class system_structure_modifier(Modifier):
                             "Feeder {n} and feeder {m} intersect:".format(n=i, m=j)
                         )
                         logger.debug(intersection)
-
-    def set_nominal_voltages(self):
-        """This function does the exact same thing as _set_nominal_voltages.
-        The implementation is less obvious but should be much faster.
-
-        **Algorithm:**
-
-            - Find all edges modeling transformers in the network
-            - Disconnect these edges (which should disconnect the network)
-            - Compute the connected components
-            - Group the nodes according to these connected components
-            - Re-connect the network by adding back the removed edges
-            - For every group of nodes:
-                - Find the nominal voltage of one node (look at secondary voltage of the upstream transformer)
-                - All nodes in this group get the same nominal voltage
-            - For every line:
-                - Set nominal voltage as the nominal voltage of one of the end-points (that we have thanks to the previous loop...)
-
-        .. note:: This should be faster than _set_nominal_voltages since we only look upstream once for every group instead of doing it once for every node.
-
-        .. warning:: Use set_nominal_voltages_recur instead.
-
-        .. TODO:: Find out why the results of this and set_nominal_voltages_recur don't match...
-        """
-        self.model.set_names()
-
-        # We will remove all edges representing transformers
-        edges_to_remove = [
-            edge
-            for edge in self.G.graph.edges(data=True)
-            if "equipment" in edge[2] and edge[2]["equipment"] == "PowerTransformer"
-        ]
-
-        # Do it!!
-        self.G.graph.remove_edges_from(edges_to_remove)
-
-        # Get the connected components
-        cc = nx.connected_components(self.G.graph)
-
-        # Extract the groups of nodes with same nominal voltage
-        node_mapping = [component for component in cc]
-
-        # Restaure the network by addind back the edges previously removed
-        self.G.graph.add_edges_from(edges_to_remove)
-
-        # Graph should be connected, otherwise we broke it...
-        assert nx.is_connected(self.G.graph)
-
-        # Instanciate the list of nominal voltages (one value for each group)
-        nominal_voltage_group = [None for _ in node_mapping]
-        upstream_transformer_name_group = [None for _ in node_mapping]
-
-        # For every group...
-        for idx, group in enumerate(node_mapping):
-
-            # ...first node is volonteered to be searched
-            volonteer = group.pop()
-            while not isinstance(self.model[volonteer], Node):
-                volonteer = group.pop()
-
-            # Get the name of the upstream transformer
-            upstream_transformer_name = self.G.get_upstream_transformer(
-                self.model, volonteer
-            )
-
-            # If we got None, there is nothing we can do. Otherwise...
-            if upstream_transformer_name is not None:
-
-                # ...get the transformer object
-                upstream_transformer_object = self.model[upstream_transformer_name]
-                upstream_transformer_name_group[idx] = upstream_transformer_name
-
-                # Get the nominal voltage of the secondary
-                if (
-                    hasattr(upstream_transformer_object, "windings")
-                    and upstream_transformer_object.windings is not None
-                ):
-
-                    volts = []
-                    for winding in upstream_transformer_object.windings:
-                        if (
-                            hasattr(winding, "nominal_voltage")
-                            and winding.nominal_voltage is not None
-                        ):
-                            volts.append(winding.nominal_voltage)
-
-                    secondary_voltage = min(volts)
-                    # And assign this value as the nominal voltage for the group of nodes
-                    nominal_voltage_group[idx] = secondary_voltage
-
-        # Now, we simply loop over all the groups
-        for idx, group in enumerate(node_mapping):
-
-            # And all the nodes inside of the groups
-            for n in group:
-
-                # And set the nominal voltage as the group value
-                self.model[n].nominal_voltage = nominal_voltage_group[idx]
-                if isinstance(self.model[n], Load):
-                    self.model[
-                        n
-                    ].upstream_transformer_name = upstream_transformer_name_group[idx]
-
-        # Now we take care of the Lines.
-        # Since we should have the nominal voltage for every node (in a perfect world),
-        # We just have to grab the nominal voltage of one of the end-points.
-        for obj in self.model.models:
-            # If we get a line
-            if isinstance(obj, Line) and obj.nominal_voltage is None:
-                # Get the from node
-                if hasattr(obj, "from_element") and obj.from_element is not None:
-                    node_from_object = self.model[obj.from_element]
-
-                    # If the from node has a known nominal voltage, then use this value
-                    if (
-                        hasattr(node_from_object, "nominal_voltage")
-                        and node_from_object.nominal_voltage is not None
-                    ):
-                        obj.nominal_voltage = node_from_object.nominal_voltage
-
-    def _set_nominal_voltages(self):
-        """This function looks for all nodes and lines which have empty nominal_voltage fields.
-        The function goes upstream in the network representation to find a transformer.
-        The nominal voltage of the secondary of this transformer is then used to fill the empty nominal_voltage fields.
-
-        .. warning:: DO NOT USE. Use set_nominal_voltages instead
-
-        .. TODO:: Remove this once everything is stable.
-        """
-        self.model.set_names()
-        # Loop over the objects
-        for obj in self.model.models:
-
-            # If we get a Node with an empty nominal_voltage field
-            if isinstance(obj, Node) and obj.nominal_voltage is None:
-                # Get the upstream transformer name
-                try:
-                    upstream_transformer_name = self.G.get_upstream_transformer(
-                        self.model, obj.name
-                    )
-                except:
-                    continue
-                if upstream_transformer_name is not None:
-                    # Get the corresponding object
-                    upstream_transformer_object = self.model[upstream_transformer_name]
-                    # If possible, get all the winding voltages and select the minimum as the secondary voltage
-                    if (
-                        hasattr(upstream_transformer_object, "windings")
-                        and upstream_transformer_object.windings is not None
-                    ):
-                        volts = []
-                        for winding in upstream_transformer_object.windings:
-                            if (
-                                hasattr(winding, "nominal_voltage")
-                                and winding.nominal_voltage is not None
-                            ):
-                                volts.append(winding.nominal_voltage)
-                        secondary_voltage = min(volts)
-                        # Finally, assign this value to the object's nominal voltage
-                        obj.nominal_voltage = secondary_voltage
-
-            # If we get a line
-            if isinstance(obj, Line) and obj.nominal_voltage is None:
-                # Get the from node
-                if hasattr(obj, "from_element") and obj.from_element is not None:
-                    node_from_object = self.model[obj.from_element]
-
-                    # If the from node has a known nominal voltage, then use this value
-                    if (
-                        hasattr(node_from_object, "nominal_voltage")
-                        and node_from_object.nominal_voltage is not None
-                    ):
-                        obj.nominal_voltage = node_from_object.nominal_voltage
-
-                    # Otherwise, do as before with the from node
-                    #
-                    # TODO: Put the following code into a function
-                    #
-                    else:
-                        upstream_transformer_name = self.G.get_upstream_transformer(
-                            self.model, node_from_object.name
-                        )
-                        if upstream_transformer_name is not None:
-                            upstream_transformer_object = self.model[
-                                upstream_transformer_name
-                            ]
-                            if (
-                                hasattr(upstream_transformer_object, "windings")
-                                and upstream_transformer_object.windings is not None
-                            ):
-                                volts = []
-                                for winding in upstream_transformer_object.windings:
-                                    if (
-                                        hasattr(winding, "nominal_voltage")
-                                        and winding.nominal_voltage is not None
-                                    ):
-                                        volts.append(winding.nominal_voltage)
-                                secondary_voltage = min(volts)
-                                obj.nominal_voltage = secondary_voltage
 
     def center_tap_load_preprocessing(self):
         """Performs the center tap load pre-processing step.
