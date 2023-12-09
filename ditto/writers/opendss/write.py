@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 
 from functools import reduce
+from functools import cmp_to_key
 
 # DiTTo imports
 from ditto.models.node import Node
@@ -142,6 +143,41 @@ class Writer(AbstractWriter):
         ctx = decimal.Context()
         d1 = ctx.create_decimal(repr(f))
         return format(d1, "f")
+
+    def order_output(self,s1,s2):   
+        """ Order the outputs as:   
+            - wiredata  
+            - CNDATA    
+            - linegeometry  
+            - linecodes 
+            - lines 
+            - transformers  
+            - regulators    
+            - loadshapes    
+            - loads 
+            - capacitors    
+        """ 
+        ordered_elements = ['wiredata','CNDATA','linegeometry','linecodes','lines','transformers','regulators','loadshapes','loads','capacitors','storage','PVSystems'] 
+        for element_key in ordered_elements:    
+            element = self.output_filenames[element_key]    
+            if element in s1 and not element in s2: 
+                return -1   
+            if element in s2 and not element in s1: 
+                return 1    
+            if element in s1 and element in s2: 
+                if s1<s2:   
+                    return -1   
+                if s2<s1:   
+                    return 1    
+                if s1==s2:  
+                    return 0    
+        if s1<s2:   
+            return -1   
+        if s2<s1:   
+            return 1    
+        if s1==s2:  
+            return 0    
+
 
     def write(self, model, separate_feeders = False, separate_substations = False, write_taps=False, verbose=False):
         """General writing function responsible for calling the sub-functions.
@@ -4056,7 +4092,7 @@ class Writer(AbstractWriter):
                         substation_name in self.substations_redirect
                         and feeder_name == ""
                     ):  # i.e. it's a substation
-                        for element in self.substations_redirect[substation_name]:
+                        for element in sorted(self.substations_redirect[substation_name],key=cmp_to_key(self.order_output)):
                             fp.write("Redirect " + element + "\n")
                     if (
                         os.path.join(substation_name, feeder_name)
@@ -4064,9 +4100,7 @@ class Writer(AbstractWriter):
                         and not os.path.join(substation_name, feeder_name).strip("/")
                         in self.substations_redirect
                     ):  # i.e. it's a feeder
-                        for element in self.feeders_redirect[
-                            os.path.join(substation_name, feeder_name)
-                        ]:
+                        for element in sorted(self.feeders_redirect[os.path.join(substation_name, feeder_name)], key=cmp_to_key(self.order_output)):
                             fp.write("Redirect " + element + "\n")
                     if i.substation_name + "_" + i.feeder_name in self._baseKV_feeders_:
                         _baseKV_list_ = list(
