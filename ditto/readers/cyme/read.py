@@ -328,9 +328,9 @@ class Reader(AbstractReader):
         # Replace the old mapping by the new one
         self.header_mapping = new_mapping
 
-    def get_file_content(self, filename):
+    def get_file_content(self, filename: str) -> None:
         """
-        Open the requested file and returns the content.
+        Open the requested file and set self.content to iter(file_pointer.readlines())
         For convinience, filename can be either the full file path or:
 
             -'network': Will get the content of the network file given in the constructor
@@ -719,7 +719,7 @@ class Reader(AbstractReader):
 
         return res[winding]
 
-    def check_object_in_line(self, line, obj):
+    def check_object_in_line(self, line: str, obj: str) -> bool:
         """
         Check if the header corresponding to object is in the given line.
 
@@ -754,13 +754,14 @@ class Reader(AbstractReader):
 
         return np.any([x in line for x in self.header_mapping[obj]])
 
-    def parser_helper(self, line, obj_list, attribute_list, mapping, *args, **kwargs):
+    def parser_helper(self, line, obj, attribute_list, mapping: dict, *args, **kwargs) -> dict:
         """
         .. warning:: This is a helper function for the parsers. Do not use directly.
 
-        Takes as input the list of objects we want to parse as well as the list of attributes we want to extract.
-        Also takes the default positions of the attributes (mapping).
-        The function returns a list of dictionaries, where each dictionary contains the values of the desired attributes of a CYME object.
+        Takes as input the object we want to parse (eg. "section" maps to "[SECTION]") 
+        as well as the list of attributes we want to extract (eg. ["sectionid", "fromnodeid", "tonodeid", "phase"]).
+        Also takes the default positions of the attributes (mapping), which is overwritten if "format" is found in the lines.
+        The function returns a dictionary of dictionaries, where each sub-dictionary contains the values of the desired attributes of a CYME object.
         """
         if isinstance(attribute_list, list):
             attribute_list = np.array(attribute_list)
@@ -783,11 +784,8 @@ class Reader(AbstractReader):
 
         result = {}
 
-        # Check the presence of headers in the given line
-        checks = [self.check_object_in_line(line, obj) for obj in obj_list]
-
-        # If we have a least one
-        if any(checks):
+        # If header in line
+        if self.check_object_in_line(line, obj):
             # Get the next line
             next_line = next(self.content)
 
@@ -809,13 +807,13 @@ class Reader(AbstractReader):
                             idx2 = temp[0]
                             mapping[attribute_list[idx2]] = idx
                 except:
-                    pass
+                    logger.warn(f"Unable to parse CYME line FORMAT for {obj} in {next_line}")
 
                 next_line = next(self.content)
 
             # At this point, we should have the mapping for the parameters of interest
             # while next_line[0] not in ['[','',' ','\n','\r\n']:
-            while len(next_line) > 2:
+            while len(next_line) > 2:  # blank lines separate objects in CYME .txt files
                 if "=" not in next_line.lower():
 
                     data = next_line.split(",")
@@ -824,7 +822,7 @@ class Reader(AbstractReader):
 
                     if len(data) > 1:
 
-                        while ID in result:
+                        while ID in result: # redundant keys get *'s
                             ID += "*"
                         result[ID] = {}
 
@@ -862,10 +860,7 @@ class Reader(AbstractReader):
                         attribute_list = additional_attributes
                         additional_attributes = []
                     except:
-                        logger.warning(
-                            "Attempted to apply additional attributes but failed"
-                        )
-                        pass
+                        logger.warn(f"Unable to parse additional CYME line FORMAT for {obj} in {next_line}")
 
                 try:
                     next_line = next(self.content)
@@ -982,7 +977,7 @@ class Reader(AbstractReader):
             self.subnetwork_connections.update(
                 self.parser_helper(
                     line,
-                    ["subnetwork_connections"],
+                    "subnetwork_connections",
                     ["nodeid"],
                     mapp_subnetwork_connections,
                 )
@@ -1004,7 +999,7 @@ class Reader(AbstractReader):
         headnodes = {}
         for line in self.content:
             headnodes.update(
-                self.parser_helper(line, ["headnodes"], ["nodeid", "networkid"], mapp)
+                self.parser_helper(line, "headnodes", ["nodeid", "networkid"], mapp)
             )
 
         for sid, headnode in headnodes.items():
@@ -1036,11 +1031,11 @@ class Reader(AbstractReader):
         subs = {}
         source_equivalents = {}
 
-        for line in self.content:
+        for line in self.content:  # parser_helper will only loop over lines in self.content if it finds obj in the `line`; o.w. returns empty dict
             sources.update(
                 self.parser_helper(
                     line,
-                    ["source"],
+                    "source",
                     ["sourceid", "nodeid", "networkid", "desiredvoltage"],
                     mapp,
                 )
@@ -1048,7 +1043,7 @@ class Reader(AbstractReader):
             source_equivalents.update(
                 self.parser_helper(
                     line,
-                    ["source_equivalent"],
+                    "source_equivalent",
                     [
                         "nodeid",
                         "voltage",
@@ -1078,7 +1073,7 @@ class Reader(AbstractReader):
         for line in self.content:
             subs.update(
                 self.parser_helper(
-                    line, ["substation"], ["id", "mva", "kvll", "conn"], mapp_sub
+                    line, "substation", ["id", "mva", "kvll", "conn"], mapp_sub
                 )
             )
         if len(sources.items()) == 0:
@@ -1371,7 +1366,7 @@ class Reader(AbstractReader):
             nodes.update(
                 self.parser_helper(
                     line,
-                    ["node"],
+                    "node",
                     ["nodeid", "coordx", "coordy", "ratedvoltage"],
                     mapp,
                     **kwargs
@@ -1381,7 +1376,7 @@ class Reader(AbstractReader):
         for line in self.content:
             node_connectors.update(
                 self.parser_helper(
-                    line, ["node_connector"], ["nodeid", "coordx", "coordy"], mapp
+                    line, "node_connector", ["nodeid", "coordx", "coordy"], mapp
                 )
             )
 
@@ -1556,7 +1551,7 @@ class Reader(AbstractReader):
         ...
 
         [SECTION]
-        FORMAT_section=sectionid,fromnodeid,tonodeid,phase
+        FORMAT_section=sectionid,fromnodeid,tonodeid,phase 
         FORMAT_Feeder=networkid,headnodeid
         Feeder=feeder_1,head_feeder_1
         section_1_feeder_1,node_1,node_2,ABC
@@ -1947,7 +1942,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["overhead_unbalanced_line_settings"],
+                    "overhead_unbalanced_line_settings",
                     ["sectionid", "coordx", "coordy", "linecableid", "length"],
                     mapp_overhead,
                     {"type": "overhead_unbalanced"},
@@ -1964,7 +1959,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["overhead_line_settings"],
+                    "overhead_line_settings",
                     ["sectionid", "coordx", "coordy", "linecableid", "length"],
                     mapp_overhead,
                     {"type": "overhead_balanced"},
@@ -1981,7 +1976,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["overhead_byphase_settings"],
+                    "overhead_byphase_settings",
                     [
                         "sectionid",
                         "devicenumber",
@@ -2011,7 +2006,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["underground_line_settings"],
+                    "underground_line_settings",
                     ["sectionid", "coordx", "coordy", "linecableid", "length", "amps"],
                     mapp_underground,
                     {"type": "underground"},
@@ -2028,7 +2023,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["switch_settings"],
+                    "switch_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_switch,
                     {"type": "switch"},
@@ -2045,7 +2040,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["sectionalizer_settings"],
+                    "sectionalizer_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_sectionalizer,
                     {"type": "sectionalizer"},
@@ -2062,7 +2057,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["fuse_settings"],
+                    "fuse_settings",
                     ["sectionid", "coordx", "coordy", "eqid"],
                     mapp_switch,  # Same as switches
                     {"type": "fuse"},
@@ -2079,7 +2074,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["recloser_settings"],
+                    "recloser_settings",
                     ["sectionid", "coordx", "coordy", "eqid"],
                     mapp_switch,  # Same as switches
                     {"type": "recloser"},
@@ -2096,7 +2091,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["breaker_settings"],
+                    "breaker_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_switch,  # Same as switches
                     {"type": "breaker"},
@@ -2113,7 +2108,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["network_protector_settings"],
+                    "network_protector_settings",
                     ["sectionid", "coordx", "coordy", "eqid", "closedphase"],
                     mapp_switch,  # Same as switches
                     {"type": "network_protector"},
@@ -2130,7 +2125,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["section"],
+                    "section",
                     ["sectionid", "fromnodeid", "tonodeid", "phase"],
                     mapp_section,
                 ),
@@ -2157,7 +2152,7 @@ class Reader(AbstractReader):
             self.balanced_lines.update(
                 self.parser_helper(
                     line,
-                    ["line"],
+                    "line",
                     [
                         "id",
                         "phasecondid",
@@ -2185,7 +2180,7 @@ class Reader(AbstractReader):
             self.unbalanced_lines.update(
                 self.parser_helper(
                     line,
-                    ["unbalanced_line"],
+                    "unbalanced_line",
                     [
                         "id",
                         "condid_a",
@@ -2225,7 +2220,7 @@ class Reader(AbstractReader):
             self.spacings.update(
                 self.parser_helper(
                     line,
-                    ["spacing_table"],
+                    "spacing_table",
                     [
                         "id",
                         "posofcond1_x",
@@ -2252,7 +2247,7 @@ class Reader(AbstractReader):
             self.conductors.update(
                 self.parser_helper(
                     line,
-                    ["conductor"],
+                    "conductor",
                     ["id", "diameter", "gmr", "r25", "amps", "withstandrating"],
                     mapp_conductor,
                 )
@@ -2267,7 +2262,7 @@ class Reader(AbstractReader):
             self.concentric_neutral_cable.update(
                 self.parser_helper(
                     line,
-                    ["concentric_neutral_cable"],
+                    "concentric_neutral_cable",
                     [
                         "id",
                         "r1",
@@ -2291,7 +2286,7 @@ class Reader(AbstractReader):
             self.cables.update(
                 self.parser_helper(
                     line,
-                    ["cable"],
+                    "cable",
                     ["id", "r1", "r0", "x1", "x0", "amps"],
                     mapp_concentric_neutral_cable,
                 )
@@ -2305,7 +2300,7 @@ class Reader(AbstractReader):
             #
             self.switches.update(
                 self.parser_helper(
-                    line, ["switch"], ["id", "amps", "kvll"], mapp_switch_eq
+                    line, "switch", ["id", "amps", "kvll"], mapp_switch_eq
                 )
             )
 
@@ -2318,7 +2313,7 @@ class Reader(AbstractReader):
             self.fuses.update(
                 self.parser_helper(
                     line,
-                    ["fuse"],
+                    "fuse",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,  # Same as network protectors
                 )
@@ -2333,7 +2328,7 @@ class Reader(AbstractReader):
             self.reclosers.update(
                 self.parser_helper(
                     line,
-                    ["recloser"],
+                    "recloser",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,  # Same as network protectors
                 )
@@ -2348,7 +2343,7 @@ class Reader(AbstractReader):
             self.sectionalizers.update(
                 self.parser_helper(
                     line,
-                    ["sectionalizer"],
+                    "sectionalizer",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_sectionalizers,
                 )
@@ -2363,7 +2358,7 @@ class Reader(AbstractReader):
             self.breakers.update(
                 self.parser_helper(
                     line,
-                    ["breaker"],
+                    "breaker",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,  # Same as network protectors
                 )
@@ -2378,7 +2373,7 @@ class Reader(AbstractReader):
             self.network_protectors.update(
                 self.parser_helper(
                     line,
-                    ["network_protector"],
+                    "network_protector",
                     ["id", "amps", "kvll", "interruptingrating"],
                     mapp_network_protectors,
                 )
@@ -3024,7 +3019,6 @@ class Reader(AbstractReader):
                     line_data = self.concentric_neutral_cable[settings["linecableid"]]
                     line_data["type"] = "balanced_line"
                 if settings["linecableid"] in self.cables:
-                    logger.debug("cables {}".format(sectionID))
                     line_data = self.cables[settings["linecableid"]]
                     line_data["type"] = "balanced_line"
 
@@ -3877,7 +3871,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["serie_capacitor_settings"],
+                    "serie_capacitor_settings",
                     ["sectionid", "eqid", "coordx", "coordy"],
                     mapp_serie_capacitor_settings,
                     {"type": "serie"},
@@ -3893,7 +3887,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["shunt_capacitor_settings"],
+                    "shunt_capacitor_settings",
                     [
                         "sectionid",
                         "shuntcapacitorid",
@@ -3932,7 +3926,7 @@ class Reader(AbstractReader):
             #
             self.capacitors.update(
                 self.parser_helper(
-                    line, ["serie_capacitor"], ["id", "reactance"], mapp_serie_capacitor
+                    line, "serie_capacitor", ["id", "reactance"], mapp_serie_capacitor
                 )
             )
 
@@ -3945,7 +3939,7 @@ class Reader(AbstractReader):
             self.capacitors.update(
                 self.parser_helper(
                     line,
-                    ["shunt_capacitor"],
+                    "shunt_capacitor",
                     ["id", "kvar", "kv", "type"],
                     mapp_shunt_capacitor,
                 )
@@ -4312,7 +4306,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["auto_transformer_settings"],
+                    "auto_transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4335,7 +4329,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["grounding_transformer_settings"],
+                    "grounding_transformer_settings",
                     ["sectionid", "equipmentid", "connectionconfiguration", "phase"],
                     mapp_grounding_transformer_settings,
                     {"type": "grounding_transformer"},
@@ -4351,7 +4345,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_auto_transformer_settings"],
+                    "three_winding_auto_transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4378,7 +4372,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_transformer_settings"],
+                    "three_winding_transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4405,7 +4399,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["transformer_settings"],
+                    "transformer_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -4437,7 +4431,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["phase_shifter_transformer_settings"],
+                    "phase_shifter_transformer_settings",
                     ["sectionid", "eqid", "coordx", "coordy"],
                     mapp_phase_shifter_transformer_settings,
                     {"type": "phase_shifter_transformer"},
@@ -4465,7 +4459,7 @@ class Reader(AbstractReader):
             self.auto_transformers.update(
                 self.parser_helper(
                     line,
-                    ["auto_transformer"],
+                    "auto_transformer",
                     [
                         "id",
                         "kva",
@@ -4489,7 +4483,7 @@ class Reader(AbstractReader):
             self.grounding_transformers.update(
                 self.parser_helper(
                     line,
-                    ["grounding_transformer"],
+                    "grounding_transformer",
                     ["id", "ratedcapacity", "ratedvoltage", "connection_configuration"],
                     mapp_grounding_transformer,
                 )
@@ -4505,7 +4499,7 @@ class Reader(AbstractReader):
             self.three_winding_auto_transformers.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_auto_transformer"],
+                    "three_winding_auto_transformer",
                     [
                         "id",
                         "primaryratedcapacity",
@@ -4530,7 +4524,7 @@ class Reader(AbstractReader):
             self.three_winding_transformers.update(
                 self.parser_helper(
                     line,
-                    ["three_winding_transformer"],
+                    "three_winding_transformer",
                     [
                         "id",
                         "primaryratedcapacity",
@@ -4554,7 +4548,7 @@ class Reader(AbstractReader):
             self.transformers.update(
                 self.parser_helper(
                     line,
-                    ["transformer"],
+                    "transformer",
                     [
                         "id",
                         "type",
@@ -5042,7 +5036,7 @@ class Reader(AbstractReader):
             self.settings.update(
                 self.parser_helper(
                     line,
-                    ["regulator_settings"],
+                    "regulator_settings",
                     [
                         "sectionid",
                         "eqid",
@@ -5081,7 +5075,7 @@ class Reader(AbstractReader):
             self.regulators.update(
                 self.parser_helper(
                     line,
-                    ["regulator"],
+                    "regulator",
                     [
                         "id",
                         "type",
@@ -5359,7 +5353,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["network_equivalent_setting"],
+                    "network_equivalent_setting",
                     ['sectionid', 'devicenumber', 'coordx', 'coordy', 'zraa', 'zrab', 'zrac', 'zrba', 'zrbb', 'zrbc', 'zrca', 'zrcb', 'zrcc', 'zxaa', 'zxab', 'zxac', 'zxba', 'zxbb', 'zxbc', 'zxca', 'zxcb', 'zxcc', 'loadfromkwa', 'loadfromkwb', 'loadfromkwc', 'loadfromkvara', 'loadfromkvarb', 'loadfromkvarc', 'loadtokwa', 'loadtokwb', 'loadtokwc', 'loadtokvara', 'loadtokvarb', 'loadtokvarc', 'totallengtha', 'totallengthb', 'totallengthc'],
 
                     mapp_network_equivalents,
@@ -5377,7 +5371,7 @@ class Reader(AbstractReader):
                 self.settings,
                 self.parser_helper(
                     line,
-                    ["section"],
+                    "section",
                     ["sectionid", "fromnodeid", "tonodeid", "phase"],
                     mapp_section,
                 ),
@@ -5621,7 +5615,7 @@ class Reader(AbstractReader):
             self.loads.update(
                 self.parser_helper(
                     line,
-                    ["loads"],
+                    "loads",
                     ["sectionid", "devicenumber", "loadtype", "connection"],
                     mapp_loads,
                 )
@@ -5636,7 +5630,7 @@ class Reader(AbstractReader):
             self.customer_loads.update(
                 self.parser_helper(
                     line,
-                    ["customer_loads"],
+                    "customer_loads",
                     [
                         "sectionid",
                         "devicenumber",
@@ -5664,7 +5658,7 @@ class Reader(AbstractReader):
             self.customer_class.update(
                 self.parser_helper(
                     line,
-                    ["customer_class"],
+                    "customer_class",
                     [
                         "id",
                         "constantpower",
@@ -5714,9 +5708,7 @@ class Reader(AbstractReader):
                     try:
                         p, q = float(settings["value1"]), float(settings["value2"])
                     except:
-                        logger.warning(
-                            "WARNING:: Skipping load on section {}".format(sectionID)
-                        )
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=0 (P,Q). value1={settings['value1']}  value2={settings['value2']}")
                         continue
                 elif value_type == 1:  # KVA and PF are given
                     try:
@@ -5729,30 +5721,29 @@ class Reader(AbstractReader):
                         p = kva * PF
                         q = math.sqrt(kva ** 2 - p ** 2)
                     except:
-                        logger.warning(
-                            "WARNING:: Skipping load on section {}".format(sectionID)
-                        )
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=1 (kVa, PF). value1={settings['value1']}  value2={settings['value2']}")
                         continue
                 elif value_type == 2:  # P and PF are given
 
                     try:
                         p, PF = float(settings["value1"]), float(settings["value2"])
-                        if 0 <= PF <= 1:
+                        if PF == 0:
+                            q = 0
+                        elif 0 < abs(PF) <= 1:
                             q = p * math.sqrt((1 - PF ** 2) / PF ** 2)
-                        elif 1 < PF <= 100:
+                        elif 1 < abs(PF) <= 100:
                             PF /= 100.0
                             q = p * math.sqrt((1 - PF ** 2) / PF ** 2)
                         else:
-                            logger.warning("problem with PF")
-                            logger.warning(PF)
+                            logger.warning(f"Problem with load on section {sectionID} with value_type=2 (P, PF). value1={settings['value1']}  value2={settings['value2']}")
                     except:
-                        logger.warning("Skipping load on section {}".format(sectionID))
+                        logger.warning(f"Problem with load on section {sectionID} with value_type=2 (P, PF). value1={settings['value1']}  value2={settings['value2']}")
                         continue
 
                 elif value_type == 3:  # AMP and PF are given
                     # TODO
                     logger.warning(
-                        "WARNING:: Skipping load on section {}".format(sectionID)
+                        "WARNING:: Skipping load on section {} because value_type=3 (AMP and PF)".format(sectionID)
                     )
                     continue
 
@@ -6025,7 +6016,7 @@ class Reader(AbstractReader):
             self.converter.update(
                 self.parser_helper(
                     line,
-                    ["converter"],
+                    "converter",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6051,7 +6042,7 @@ class Reader(AbstractReader):
             self.converter_settings.update(
                 self.parser_helper(
                     line,
-                    ["converter_control_settings"],
+                    "converter_control_settings",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6076,7 +6067,7 @@ class Reader(AbstractReader):
             self.photovoltaic_settings.update(
                 self.parser_helper(
                     line,
-                    ["photovoltaic_settings"],
+                    "photovoltaic_settings",
                     ["sectionid", "devicenumber", "eqphase", "ambienttemperature"],
                     mapp_photovoltaic_settings,
                     {"type": "photovoltaic_settings"},
@@ -6092,7 +6083,7 @@ class Reader(AbstractReader):
             self.bess_settings.update(
                 self.parser_helper(
                     line,
-                    ["bess_settings"],
+                    "bess_settings",
                     [
                         "sectionid",
                         "devicenumber",
@@ -6116,7 +6107,7 @@ class Reader(AbstractReader):
             self.long_term_dynamics.update(
                 self.parser_helper(
                     line,
-                    ["long_term_dynamics_curve_ext"],
+                    "long_term_dynamics_curve_ext",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6137,7 +6128,7 @@ class Reader(AbstractReader):
             self.dg_generation.update(
                 self.parser_helper(
                     line,
-                    ["dggenerationmodel"],
+                    "dggenerationmodel",
                     [
                         "devicenumber",
                         "devicetype",
@@ -6171,7 +6162,7 @@ class Reader(AbstractReader):
             self.bess.update(
                 self.parser_helper(
                     line,
-                    ["bess"],
+                    "bess",
                     [
                         "id",
                         "ratedstorageenergy",

@@ -30,6 +30,9 @@ class Winding(DiTToHasTraits):
     nominal_voltage = Float(
         help="""The nominal voltage of the transformer winding""", default_value=None
     )
+    base_voltage = Float(
+        help="""The voltage basis for per unit calculations""", default_value=None
+    )
     voltage_limit = Float(
         help="""The maximum voltage allowed on the PT secondary.""", default_value=None
     )
