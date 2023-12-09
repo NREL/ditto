@@ -21,10 +21,11 @@ class Position(DiTToBaseModel):
         alias="lat",
         json_schema_extra = {"cim_value":"Location.PositionPoint.yPosition", "projection": "latitude"}
     )]
-    z_position: Annotated[Distance, Field(
+    z_position: Annotated[Optional[Distance], Field(
         description="Z coordinate in distance units. Default is meters",
         title="z_position",
         alias="elevation",
+        default = Distance(0,"m"),
         json_schema_extra = {"cim_value":"Location.PositionPoint.zPosition"} 
     )]
 

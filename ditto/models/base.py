@@ -35,12 +35,14 @@ class DiTToBaseModel(BaseModel):
     substation_name: Annotated[Optional[str], Field(
         description="Name of the substation the element is under",
         title="substation_name",
+        default = "",
         json_schema_extra = {"cim_value":"EquipmentContainer.Substation.name"}
     )]
 
     feeder_name: Annotated[Optional[str],Field(
         description="Name of the feeder the element is on",
         title="feeder_name",
+        default = "",
         json_schema_extra = {"cim_value":"EquipmentContainer.name"}
     )]
             

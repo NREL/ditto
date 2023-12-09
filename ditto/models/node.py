@@ -15,12 +15,14 @@ class Node(DiTToBaseModel):
     nominal_voltage: Annotated[Optional[Voltage], Field( 
         description = "The nominal voltage at the node",
         title = "Nominal voltage",
+        default = None,
         json_schema_extra = {"cim_value":"nomU"}
     )]
 
     phases: Annotated[Optional[List[Phase]], Field( 
         description="Phases at the node",
         title="phases",
+        default = [],
         json_schema_extra = {"cim_value":"phases"}
     )]
 
@@ -34,5 +36,6 @@ class Node(DiTToBaseModel):
     setpoint: Annotated[Optional[Voltage], Field(
         description="Value that the node must be set to. This is typically used for feeder head points",
         title="setpoint",
+        default = None,
         json_schema_extra={"cim_value": "NA"},
     )]
