@@ -29,9 +29,16 @@ class DiTToBaseModel(BaseModel):
         json_encoders = json_encoders
     )
 
-    name: Annotated[str,Field(
+    UUID: Annotated[str,Field(
         description="Name of the element in the DiTTo model",
         title="name",
+        json_schema_extra = {"cim_value":"name"}
+    )]
+
+    name: Annotated[Optional[str],Field(
+        description="Name of the element in the DiTTo model",
+        title="name",
+        default = None
         json_schema_extra = {"cim_value":"name"}
     )]
 
