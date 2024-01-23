@@ -224,6 +224,7 @@ class system_structure_modifier(Modifier):
             previous = self.source
         else:
             node, voltage, previous = args
+        
         if (previous, node) in self.edge_equipment and self.edge_equipment[
             (previous, node)
         ] == "PowerTransformer":
@@ -235,6 +236,13 @@ class system_structure_modifier(Modifier):
                     if w.nominal_voltage is not None
                 ]
             )
+            num_phases = len(self.model[trans_name].windings[0].phase_windings)
+            if num_phases!=3:
+                new_value = new_value *1.732
+            print(f"1num_phases={num_phases}")
+            print(f"1trans_name={trans_name}")
+            print(f"1new_value={new_value}")          
+
         elif (node, previous) in self.edge_equipment and self.edge_equipment[
             (node, previous)
         ] == "PowerTransformer":
@@ -246,6 +254,11 @@ class system_structure_modifier(Modifier):
                     if w.nominal_voltage is not None
                 ]
             )
+            num_phases = len(self.model[trans_name].windings[0].phase_windings)
+            if num_phases!=3:
+                new_value = new_value *1.732
+            print(f"2trans_name={trans_name}")
+            print(f"2new_value={new_value}")
         else:
             new_value = voltage
         if hasattr(self.model[node], "nominal_voltage"):

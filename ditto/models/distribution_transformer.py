@@ -18,7 +18,7 @@ from .position import Position
 from .winding import Winding
 
 
-class PowerTransformer(DiTToHasTraits):
+class DistributionTransformer(DiTToHasTraits):
 
     name = Unicode(help="""Name of the transformer object""", default_value="")
 
@@ -54,6 +54,14 @@ class PowerTransformer(DiTToHasTraits):
         help="""Index of the position in the node that the 'to' end of the line connects to (e.g. for a long bus)""",
         default_value=None,
     )
+    connecting_element = Any(
+        help="""Name of the node which connects to the transformer""",
+        default_value=None,
+    )
+    phase_loads = Any(
+        help="""phase_loads which connects to the transformer""",
+        default_value=None,
+    )
 
     reactances = List(
         Float(),
@@ -86,11 +94,22 @@ class PowerTransformer(DiTToHasTraits):
         help="""Set to 1 if the transformer is a substation or is inside a substation""",
     )
 
-    # Modification: Wenbo (Sep 2023)
+    # Modification: Wenbo (Nov. 2023)
     is_threephaseunit = Int(
         help="""Set to 1 if the transformer is a three phase unit, otherwise it is a bank of 1-3 single phase transformers""",
     )
     ConnKvaPh = List(help="ConnKvaPh1, ConnKvaPh2, ConnKvaPh3", default_value=None)
+    
+    nominal_voltage = Any(help=""" voltage can be primary only or pri - sec """, default_value=None)
+    
+    xhl = Float(help="xhl for dtransformer", default_value=None)
+    pct_loadloss = Float(help="pct_loadloss", default_value=None)
+    bus1 = Unicode(help="Primary node", default_value=None)
+    bus2 = Unicode(help="Secondary node", default_value=None)
+    conn = List(help="conn1, conn2", default_value=None)
+
+    kvas = List(help="kva1, kva2", default_value=None)
+
 
     # Modification: Nicolas (December 2017)
     # Multiple feeder support. Each element keeps track of the name of the substation it is connected to, as well as the name of the feeder.

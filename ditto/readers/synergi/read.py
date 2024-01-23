@@ -28,6 +28,7 @@ from ditto.models.wire import Wire
 from ditto.models.capacitor import Capacitor
 from ditto.models.phase_capacitor import PhaseCapacitor
 from ditto.models.powertransformer import PowerTransformer
+from ditto.models.distribution_transformer import DistributionTransformer
 from ditto.models.winding import Winding
 from ditto.models.phase_winding import PhaseWinding
 from ditto.models.power_source import PowerSource
@@ -241,6 +242,9 @@ class Reader(AbstractReader):
         HighSideConnCode = self.get_data("InstDTrans", "HighSideConnCode")
         LowSideConnCode = self.get_data("InstDTrans", "LowSideConnCode")
         ConnPhases = self.get_data("InstDTrans", "ConnPhases")
+        DTranConnKvaPh1 = self.get_data("InstDTrans", "ConnKvaPh1")
+        DTranConnKvaPh2 = self.get_data("InstDTrans", "ConnKvaPh2")
+        DTranConnKvaPh3 = self.get_data("InstDTrans", "ConnKvaPh3")
 
         ## Substration Transformers ##
         # wenbo added
@@ -515,9 +519,9 @@ class Reader(AbstractReader):
         Phase2Kvar = self.get_data("Loads", "Phase2Kvar")
         Phase3Kvar = self.get_data("Loads", "Phase3Kvar")
 
-        #        Phase1Kva = self.get_data("Loads", "Phase1Kva")
-        #        Phase2Kva = self.get_data("Loads", "Phase2Kva")
-        #        Phase3Kva = self.get_data("Loads", "Phase3Kva")
+        Phase1Kva = self.get_data("Loads", "Phase1Kva")
+        Phase2Kva = self.get_data("Loads", "Phase2Kva")
+        Phase3Kva = self.get_data("Loads", "Phase3Kva")
 
         ## Capacitors ################
         CapacitorSectionID = self.get_data("InstCapacitors", "SectionId")
@@ -609,9 +613,9 @@ class Reader(AbstractReader):
         LargeCustLoadPhase1Kvar = self.get_data("InstLargeCust", "LoadPhase1Kvar")
         LargeCustLoadPhase2Kvar = self.get_data("InstLargeCust", "LoadPhase2Kvar")
         LargeCustLoadPhase3Kvar = self.get_data("InstLargeCust", "LoadPhase3Kvar")
-        #        LargeCustLoadPhase1Kva = np.sqrt(np.array(LargeCustLoadPhase1Kw)**2+np.array(LargeCustLoadPhase1Kvar)**2)
-        #        LargeCustLoadPhase2Kva = np.sqrt(np.array(LargeCustLoadPhase2Kw)**2+np.array(LargeCustLoadPhase2Kvar)**2)
-        #        LargeCustLoadPhase3Kva = np.sqrt(np.array(LargeCustLoadPhase3Kw)**2+np.array(LargeCustLoadPhase3Kvar)**2)
+        LargeCustLoadPhase1Kva = np.sqrt(np.array(LargeCustLoadPhase1Kw)**2+np.array(LargeCustLoadPhase1Kvar)**2)
+        LargeCustLoadPhase2Kva = np.sqrt(np.array(LargeCustLoadPhase2Kw)**2+np.array(LargeCustLoadPhase2Kvar)**2)
+        LargeCustLoadPhase3Kva = np.sqrt(np.array(LargeCustLoadPhase3Kw)**2+np.array(LargeCustLoadPhase3Kvar)**2)
         #
         PVUniqueDeviceId = self.get_data("InstLargeCust", "UniqueDeviceId")
         PVSectionId = self.get_data("InstLargeCust", "SectionId")
@@ -624,53 +628,57 @@ class Reader(AbstractReader):
         PVGenPhase3Kvar = self.get_data("InstLargeCust", "GenPhase3Kvar")
         # wenbo added: for large cust there there are 3 types (C = cogenerator; D= DG-PV; L=load)
         LargeCustType = self.get_data("InstLargeCust", "Category")
-        for i, x in enumerate(LargeCustType):
-            if x.upper() == "L" or x.upper() == "C":
-                # LoadName = LoadName.append(
-                #     pd.Series(LargeCustDeviceId[i]), ignore_index=True
-                # )
-                LoadName = pd.concat([LoadName, pd.Series(LargeCustDeviceId[i])], ignore_index=True)
-                Phase1Kw = pd.concat([Phase1Kw, pd.Series(LargeCustLoadPhase1Kw[i])], ignore_index=True)
-                Phase2Kw = pd.concat([Phase2Kw, pd.Series(LargeCustLoadPhase2Kw[i])], ignore_index=True)
-                Phase3Kw = pd.concat([Phase3Kw, pd.Series(LargeCustLoadPhase3Kw[i])], ignore_index=True)
+        # for i, x in enumerate(LargeCustType):
+        #     if x.upper() == "L" or x.upper() == "C":
+        #         # LoadName = LoadName.append(
+        #         #     pd.Series(LargeCustDeviceId[i]), ignore_index=True
+        #         # )
+        #         LoadName = pd.concat([LoadName, pd.Series(LargeCustDeviceId[i])], ignore_index=True)
+        #         Phase1Kw = pd.concat([Phase1Kw, pd.Series(LargeCustLoadPhase1Kw[i])], ignore_index=True)
+        #         Phase2Kw = pd.concat([Phase2Kw, pd.Series(LargeCustLoadPhase2Kw[i])], ignore_index=True)
+        #         Phase3Kw = pd.concat([Phase3Kw, pd.Series(LargeCustLoadPhase3Kw[i])], ignore_index=True)
                 
                 
                 
-                # Phase1Kw = Phase1Kw.append(
-                #     pd.Series(LargeCustLoadPhase1Kw[i]), ignore_index=True
-                # )
-                # Phase2Kw = Phase2Kw.append(
-                #     pd.Series(LargeCustLoadPhase2Kw[i]), ignore_index=True
-                # )
-                # Phase3Kw = Phase3Kw.append(
-                #     pd.Series(LargeCustLoadPhase3Kw[i]), ignore_index=True
-                # )
-                Phase1Kvar = pd.concat([Phase1Kvar,
-                    pd.Series(LargeCustLoadPhase1Kvar[i])], ignore_index=True
-                )
-                Phase2Kvar = pd.concat([Phase2Kvar,
-                    pd.Series(LargeCustLoadPhase2Kvar[i])], ignore_index=True
-                )
-                Phase3Kvar = pd.concat([Phase3Kvar,
-                    pd.Series(LargeCustLoadPhase3Kvar[i])], ignore_index=True
-                )
-        #                Phase1Kva = Phase1Kva.append(pd.Series(LargeCustLoadPhase1Kva[i]),ignore_index=True)
-        #                Phase2Kva = Phase2Kva.append(pd.Series(LargeCustLoadPhase2Kva[i]),ignore_index=True)
-        #                Phase3Kva = Phase3Kva.append(pd.Series(LargeCustLoadPhase3Kva[i]),ignore_index=True)
-        # drop 0 load
-        indx = []
-        for i, x in enumerate(LoadName):
-            if Phase1Kw[i] == 0 and Phase2Kw[i] == 0 and Phase3Kw[i] == 0:
-                indx.append(i)
+        #         # Phase1Kw = Phase1Kw.append(
+        #         #     pd.Series(LargeCustLoadPhase1Kw[i]), ignore_index=True
+        #         # )
+        #         # Phase2Kw = Phase2Kw.append(
+        #         #     pd.Series(LargeCustLoadPhase2Kw[i]), ignore_index=True
+        #         # )
+        #         # Phase3Kw = Phase3Kw.append(
+        #         #     pd.Series(LargeCustLoadPhase3Kw[i]), ignore_index=True
+        #         # )
+        #         Phase1Kvar = pd.concat([Phase1Kvar,
+        #             pd.Series(LargeCustLoadPhase1Kvar[i])], ignore_index=True
+        #         )
+        #         Phase2Kvar = pd.concat([Phase2Kvar,
+        #             pd.Series(LargeCustLoadPhase2Kvar[i])], ignore_index=True
+        #         )
+        #         Phase3Kvar = pd.concat([Phase3Kvar,
+        #             pd.Series(LargeCustLoadPhase3Kvar[i])], ignore_index=True
+        #         )
+        #         #Phase1Kva = Phase1Kva.append(pd.Series(LargeCustLoadPhase1Kva[i]),ignore_index=True)
 
-        LoadName = pd.Series(list(LoadName.drop(index=indx)))
+        #         #Phase2Kva = Phase2Kva.append(pd.Series(LargeCustLoadPhase2Kva[i]),ignore_index=True)
+        #         #Phase3Kva = Phase3Kva.append(pd.Series(LargeCustLoadPhase3Kva[i]),ignore_index=True)
+        #         Phase1Kva = pd.concat([Phase1Kva, pd.Series([LargeCustLoadPhase1Kva[i]])], ignore_index=True)
+        #         Phase2Kva = pd.concat([Phase2Kva, pd.Series([LargeCustLoadPhase2Kva[i]])], ignore_index=True)
+        #         Phase3Kva = pd.concat([Phase3Kva, pd.Series([LargeCustLoadPhase3Kva[i]])], ignore_index=True)
+        # # drop 0 load
+        # indx = []
+        # for i, x in enumerate(LoadName):
+        #     if Phase1Kw[i] == 0 and Phase2Kw[i] == 0 and Phase3Kw[i] == 0:
+        #         indx.append(i)
 
-        Phase1Kw = pd.Series(list(Phase1Kw.drop(index=indx)))
-        Phase2Kw = pd.Series(list(Phase2Kw.drop(index=indx)))
-        Phase3Kw = pd.Series(list(Phase3Kw.drop(index=indx)))
-        Phase1Kvar = pd.Series(list(Phase1Kvar.drop(index=indx)))
-        Phase2Kvar = pd.Series(list(Phase2Kvar.drop(index=indx)))
-        Phase3Kvar = pd.Series(list(Phase3Kvar.drop(index=indx)))
+        # LoadName = pd.Series(list(LoadName.drop(index=indx)))
+
+        # Phase1Kw = pd.Series(list(Phase1Kw.drop(index=indx)))
+        # Phase2Kw = pd.Series(list(Phase2Kw.drop(index=indx)))
+        # Phase3Kw = pd.Series(list(Phase3Kw.drop(index=indx)))
+        # Phase1Kvar = pd.Series(list(Phase1Kvar.drop(index=indx)))
+        # Phase2Kvar = pd.Series(list(Phase2Kvar.drop(index=indx)))
+        # Phase3Kvar = pd.Series(list(Phase3Kvar.drop(index=indx)))
 
         ## Adding Distributed Gen PV ####
 
@@ -705,7 +713,6 @@ class Reader(AbstractReader):
         GeneratorKvRating = self.get_data("DevGenerators", "KvRating")
         GeneratorKwRating = self.get_data("DevGenerators", "KwRating")
         GeneratorPercentPFRating = self.get_data("DevGenerators", "PercentPFRating")
-
         ####################################################################################
         ####################################################################################
         ######                                                                        ######
@@ -1750,7 +1757,7 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Transformers...")
 
-        previous_transformer = None # this line is to check dubplicated load from previous load
+        previous_transformer = None # this line is to check duplicated load from previous load
 
         for i, obj in enumerate(TransformerId):
             # Create a PowerTransformer object
@@ -1965,11 +1972,14 @@ class Reader(AbstractReader):
                     # Append the Winding to the Transformer
                     api_transformer.windings.append(w)
 
+
+
         #                    print('Transformername = {}'.format(api_transformer.name))
         #                    for winding in api_transformer.windings:
         #                        print('winding={}'.format(winding.rated_power))
         #                        for pw in winding.phase_windings:
         #                            print('winding.phase_windings.phase={}'.format(pw.phase))
+
 
         ####################################################################################
         #                                                                                  #
@@ -1979,16 +1989,20 @@ class Reader(AbstractReader):
         #
         print("--> Parsing Loads...")
         
+        load_bus_map = {}
+
         previous_load = None # this line is to check dubplicated load from previous load
         for i, obj in enumerate(LoadName):
             # Create a Load DiTTo object
             api_load = Load(model)
-
+            # if obj.replace(" ", "_").lower() == '230632.0DF0'.lower():
+            #     breakpoint()
             # Set the name
             api_load.name = "Load_" + obj.replace(" ", "_").lower()
             if api_load.name == previous_load:
                 api_load.name = "Load_" + obj.replace(" ", "_").lower() + '_dup'
-            
+
+            #print(f'load_name = {api_load.name}')
             previous_load = api_load.name
 
             # Set the feeder_name if in the mapping
@@ -2047,14 +2061,9 @@ class Reader(AbstractReader):
                 LoadPF = 0.95
                 LoadQFactor = (1 - LoadPF**2) ** 0.5
 
-                #                PLoadkva = map(
-                #                    lambda x: x * 10 ** 3,
-                #                    [
-                #                        Phase1Kva[i] * LoadPF, # wenbo to check
-                #                        Phase2Kva[i] * LoadPF,
-                #                        Phase3Kva[i] * LoadPF,
-                #                    ],
-                #                )
+                PLoadkva = map(
+                    lambda x: x * 10 ** 3,[Phase1Kva[i], Phase2Kva[i],Phase3Kva[i]]
+                )
                 #
                 #                QLoadkva = map(
                 #                    lambda x: x * 10 ** 3,
@@ -2070,11 +2079,12 @@ class Reader(AbstractReader):
                 #                    PLoad, QLoad, PLoadkva, QLoadkva, ["A", "B", "C"]
                 #                ):
                 # wenbo edit
-                for P, Q, phase in zip(PLoad, QLoad, ["A", "B", "C"]):
+                for P, Q, kva, phase in zip(PLoad, QLoad, PLoadkva, ["A", "B", "C"]):
                     # print('inside for loop')
-                    # print('P={}, Q={}, Pkva={}, Qkva={}, phase={}'.format(PLoad,QLoad,PLoadkva,QLoadkva,phase))
+                    
+                    #print(f'P={P}, Q={Q}, kva ={kva}, phase={phase}')
                     # Only create a PhaseLoad is P OR Q is not zero
-                    if P != 0 or Q != 0:  # phase load added from large cust
+                    if P != 0 or Q != 0:  
                         # Create the PhaseLoad DiTTo object
                         phase_load = PhaseLoad(model)
 
@@ -2089,6 +2099,29 @@ class Reader(AbstractReader):
 
                         # Add the PhaseLoad to the list
                         api_load.phase_loads.append(phase_load)
+                    
+                    elif kva!=0:
+
+
+                    # else:
+
+                    #  # if there is no load information, place a small load instead of writing zero to the load
+                        phase_load = PhaseLoad(model)
+                    
+                        # Set the Phase
+                        phase_load.phase = phase
+                    
+                        # Set P
+                        phase_load.p = 0.01
+                    
+                        # Set Q
+                        phase_load.q = 0.01
+                    
+                        # Add the PhaseLoad to the list
+                        api_load.phase_loads.append(phase_load)
+
+            if api_load.name not in load_bus_map:
+                load_bus_map[obj.replace(" ", "_").lower()] = [api_load.connecting_element, api_load.phase_loads]
 
                 #                    else: # wenbo edit: kva is not read in synergi
                 #                       # Create the PhaseLoad DiTTo object
@@ -2181,8 +2214,8 @@ class Reader(AbstractReader):
                 #     #print("Load nominal voltage not defined.")
                 
                 # now define api_load.vmin and api_load.vmax
-                api_load.vmin = 0.65
-                api_load.vmax = 1.1
+            api_load.vmin = 0.65
+            api_load.vmax = 1.1
 
                 # print('phase_load.phase={}, phase_load.p={}, phase_load.q={}'.format(phase_load.phase, phase_load.p, phase_load.q))
 
@@ -2202,6 +2235,51 @@ class Reader(AbstractReader):
                 #
                 #     # Add the PhaseLoad to the list
                 #     api_load.phase_loads.append(phase_load)
+
+
+
+
+        ### wenbo added this:model distribution/service transformers in opendss
+        ####################################################################################
+        #                                                                                  #
+        #                              Distribution Transformers DTransformers.dss                                 #
+        #                                                                                  #
+        ####################################################################################
+        #
+        print("--> Parsing Distribution Transformers ...")
+        
+        previous_dtransformer = None # this line is to check duplicated load from previous load
+
+        for i, obj in enumerate(DTranId):
+            api_transformer = DistributionTransformer(model)
+            api_transformer.name = 'DTran_' + DTransformerSectionId[i]
+            if api_transformer.name == previous_transformer:
+                api_transformer.name = 'DTran_' + DTransformerSectionId[i] + '_dup'
+            previous_transformer = api_transformer.name
+            api_transformer.ConnKvaPh = [DTranConnKvaPh1[i],DTranConnKvaPh2[i],DTranConnKvaPh3[i]]
+            
+            # connected bus should be the load bus
+            api_transformer.connecting_element = load_bus_map[DTransformerSectionId[i]][0]
+            api_transformer.phase_loads = load_bus_map[DTransformerSectionId[i]][1]
+
+            # api_transformer.bus1 = 'trans_bus1'
+            # api_transformer.bus2 = 'trans_bus1_lv'
+            
+            # primary kv should come from load 
+            # if len(api_transformer.ConnKvaPh)>1:
+            #     kv1 = 1
+            #     kv2 = 0.208
+                
+            # else:
+            #     kv1 = 13.28
+            #     kv2 = 0.24
+
+            #api_transformer.nominal_voltage = [kv1, kv2]
+            api_transformer.xhl = 0.1
+            api_transformer.pct_loadloss = 0.1
+            api_transformer.conn = ['wye' , 'wye']
+            api_transformer.kvas = api_transformer.ConnKvaPh
+
 
         ####################################################################################
         #                                                                                  #

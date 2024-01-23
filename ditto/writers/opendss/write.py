@@ -23,6 +23,7 @@ from ditto.models.wire import Wire
 from ditto.models.capacitor import Capacitor
 from ditto.models.timeseries import Timeseries
 from ditto.models.powertransformer import PowerTransformer
+from ditto.models.distribution_transformer import DistributionTransformer
 from ditto.models.winding import Winding
 from ditto.models.storage import Storage
 from ditto.models.phase_storage import PhaseStorage
@@ -101,7 +102,11 @@ class Writer(AbstractWriter):
         self.files_to_redirect = []
         self.substations_redirect = {}
         self.feeders_redirect = {}
+        self.mv_load_voltage_dict = {}
+        self.feeder_head_line = None
+        self.model_dtrans = False
 
+        self.write_distribution_transformers = True
         self.write_taps = False
         self.separate_feeders = False
         self.separate_substations = False
@@ -114,6 +119,7 @@ class Writer(AbstractWriter):
         self.output_filenames = {
             "buses": "Buscoords.dss",
             "transformers": "Transformers.dss",
+            "dtransformers": "DTransformers.dss",
             "loads": "Loads.dss",
             "regulators": "Regulators.dss",
             "capacitors": "Capacitors.dss",
@@ -190,6 +196,7 @@ class Writer(AbstractWriter):
         if self.verbose and s != -1:
             logger.debug("Succesful!")
 
+
         # Write the regulators
         if self.verbose:
             logger.debug("Writing the regulators...")
@@ -210,6 +217,14 @@ class Writer(AbstractWriter):
         s = self.write_loads(model)
         if self.verbose and s != -1:
             logger.debug("Succesful!")
+
+        # Write the dtransformers
+        if self.model_dtrans:
+            if self.verbose:
+                logger.debug("Writing the distribution transformers...")
+            s = self.write_dtransformers(model)
+            if self.verbose and s != -1:
+                logger.debug("Succesful!")
 
         # Write the lines
         if self.verbose:
@@ -1059,6 +1074,124 @@ class Writer(AbstractWriter):
 
         return 1
 
+    
+    def write_dtransformers(self, model):
+        """Write the transformers to an OpenDSS file (DTransformers.dss by default).
+
+        :param model: DiTTo model
+        :type model: DiTTo model
+        :returns: 1 for success, -1 for failure
+        :rtype: int
+
+        .. note::
+
+            - This model is different from Power Transformer.
+            - This might subject to change
+        """
+        # Create and open the transformer DSS file
+        substation_text_map = {}
+        feeder_text_map = {}
+
+        # Loop over the DiTTo objects
+        txt = ""
+        for i in model.models:
+            
+            # If we get a transformer object...
+            if isinstance(i, DistributionTransformer):
+                
+                if hasattr(i, "name") and i.name is not None:
+                    txt += "New Transformer." + i.name
+                else:
+                    logger.error("Tansformer {obj} is misssing name.".format(obj=i))
+                if hasattr(i, "windings") and i.windings is not None:
+                    txt += " windings=2"
+                if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                    txt += f" phases={len(i.phase_loads)}"
+            
+                if hasattr(i, "connecting_element") and i.connecting_element is not None:
+                    txt += " buses=({bus}".format(
+                        bus=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
+                    )
+                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                        for phase_load in i.phase_loads:
+                            if (
+                                hasattr(phase_load, "phase")
+                                and phase_load.phase is not None
+                            ):
+                                txt += ".{p}".format(
+                                    p=self.phase_mapping(phase_load.phase)
+                                )           
+                    txt += " {bus}_lv_node".format(
+                        bus=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
+                    )
+                    if hasattr(i, "phase_loads") and i.phase_loads is not None:
+                        for phase_load in i.phase_loads:
+                            if (
+                                hasattr(phase_load, "phase")
+                                and phase_load.phase is not None
+                            ):
+                                txt += ".{p}".format(
+                                    p=self.phase_mapping(phase_load.phase)
+                                )                 
+
+                    txt += ") "    
+
+                # if hasattr(i, "bus1") and i.bus1 is not None:
+                #     txt += " buses=("+i.bus1 +" "
+                # if hasattr(i, "bus2") and i.bus2 is not None:
+                #     txt += i.bus2 + ")"
+                if hasattr(i, "conn") and i.conn is not None:
+                    txt += f" conn = ({i.conn[0]}, {i.conn[1]})"
+
+                if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
+                    #txt += f" kvs = ({i.nominal_voltage/1000}, 0.24)"
+                    if hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
+                        try:
+                            kv1 = self.mv_load_voltage_dict[i.name.split('DTran_')[1]]
+                        except:
+                            kv1 = 0
+                        
+                        txt += f" kvs = ({kv1}, 0.24)"
+                    else:
+                        try:
+                            kv1 = self.mv_load_voltage_dict[i.name.split('DTran_')[1]]
+                        except:
+                            kv1 = 0                                
+                        txt += f" kvs = ({kv1}, 0.208)"
+
+                        
+                if hasattr(i, "kvas") and i.kvas is not None:
+                    txt += f" kvas = ({sum(i.kvas)}, {sum(i.kvas)})"
+                if hasattr(i, "xhl") and i.conn is not None:
+                    txt += f" xhl=0.1"
+                if hasattr(i, "pct_loadloss") and i.pct_loadloss is not None:
+                    txt += f" %loadloss={i.pct_loadloss}"
+                txt +="\n\n"
+                  
+        # todo, voltage level and phases
+        # todo, change load to secondary Loads.dss
+        
+        txt += "\n\n"
+        
+        
+        if txt != "":
+            output_folder = os.path.join(self.output_path)
+            output_redirect = ""
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+            with open(
+                os.path.join(
+                    output_folder, self.output_filenames["dtransformers"]
+                ),
+                "w",
+            ) as fp:
+                fp.write(txt)
+            self.files_to_redirect.append(
+                        os.path.join(output_redirect, self.output_filenames["dtransformers"])
+                    )        
+                    
+        return 1
+    
     def write_storages(self, model):
         """Write the storage devices stored in the model.
 
@@ -1921,7 +2054,9 @@ class Writer(AbstractWriter):
 
         substation_text_map = {}
         feeder_text_map = {}
+        load_list = []
         for i in model.models:
+            
             if isinstance(i, Load):
                 if (
                     self.separate_feeders
@@ -1951,7 +2086,13 @@ class Writer(AbstractWriter):
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
-                    txt += "New Load." + i.name
+                    if i.name not in load_list:
+                    
+                        txt += "New Load." + i.name
+                        load_list.append(i.name)
+                    else:
+                        txt += "New Load." + i.name + '_dup'
+                    #print(f"i.name = {i.name}")
                 else:
                     logger.error("Name missing for Load")
                     continue
@@ -1968,9 +2109,15 @@ class Writer(AbstractWriter):
                     hasattr(i, "connecting_element")
                     and i.connecting_element is not None
                 ):
-                    txt += " bus1={bus}".format(
-                        bus=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
-                    )
+                    if self.model_dtrans:
+
+                        txt += " bus1={bus}_lv_node".format(
+                            bus=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
+                        )
+                    else:
+                        txt += " bus1={bus}".format(
+                            bus=re.sub("[^0-9a-zA-Z]+", "_", i.connecting_element)
+                        )
                     if hasattr(i, "phase_loads") and i.phase_loads is not None:
                         for phase_load in i.phase_loads:
                             if (
@@ -1994,14 +2141,28 @@ class Writer(AbstractWriter):
 
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    if i.nominal_voltage < 300:
-                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
-                    # Wenbo: This is added because single phase load should be L-N, not L-L
-                    elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
-                        txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2))
+                    #print(f"i.nominal_voltage = {i.nominal_voltage}")
+                    #print(f"i.phase_loads length = {len(i.phase_loads)}")
+                    if self.model_dtrans:
+                        if i.nominal_voltage < 300:
+                            txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
+                        # Wenbo: This is added because single phase load should be L-N, not L-L
+                        elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
+                            #txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2))
+                            txt += " kV=0.24"
+                            self.mv_load_voltage_dict[i.name.split('Load_')[1]] = round(i.nominal_voltage * 10**-3/1.732,2)
+                        elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)>1:
+                            txt += " kV=0.208"
+                            self.mv_load_voltage_dict[i.name.split('Load_')[1]] = round(i.nominal_voltage * 10**-3,2)
+                            #txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                     else:
-                        txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
-                     
+                        if i.nominal_voltage < 300:
+                            txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
+                        # Wenbo: This is added because single phase load should be L-N, not L-L
+                        elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
+                            txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2))
+                        else:
+                            txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                    
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
@@ -3036,6 +3197,9 @@ class Writer(AbstractWriter):
                     txt += " bus1={from_el}".format(
                         from_el=re.sub("[^0-9a-zA-Z]+", "_", i.from_element)
                     )
+                    if i.feeder_name == i.from_element.split('.')[0]:
+                        self.feeder_head_line = i.name
+
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -3050,6 +3214,8 @@ class Writer(AbstractWriter):
                     txt += " bus2={to_el}".format(
                         to_el=re.sub("[^0-9a-zA-Z]+", "_", i.to_element)
                     )
+                    if i.feeder_name == i.to_element.split('.')[0]:
+                        self.feeder_head_line = i.name
                     if hasattr(i, "wires") and i.wires is not None:
                         for wire in i.wires:
                             if (
@@ -4015,6 +4181,7 @@ class Writer(AbstractWriter):
                                 pu=obj.per_unit,
                             )
                         )
+                        
                     else:
                         logger.warning(
                             "No valid name for connecting element of source {}. Using name of the source instead...".format(
@@ -4110,7 +4277,7 @@ class Writer(AbstractWriter):
                 ):
                     fp.write("Redirect {file}\n".format(file=file))
 
-            _baseKV_list_ = list(self._baseKV_)
+            _baseKV_list_ = list(self._baseKV_) + [0.208, 0.416]
             _baseKV_list_ = sorted(_baseKV_list_)
             fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 
@@ -4124,6 +4291,10 @@ class Writer(AbstractWriter):
                 )  # The buscoords are also written to base folder as well as the subfolders
 
             fp.write("set maxcontroliter=50\n")  # for volt-var convergence if needed
+            
+            if self.feeder_head_line is not None:
+                fp.write(f"New Energymeter.m1 Line.{self.feeder_head_line} 1\n")
+            
             if self.has_timeseries:
                 fp.write(
                     "\nSolve mode={timestep} number={iternumber}\n".format(
