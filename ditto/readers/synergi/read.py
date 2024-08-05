@@ -172,6 +172,13 @@ class Reader(AbstractReader):
         NodeID = self.get_data("Node", "NodeId")
         NodeX = self.get_data("Node", "X")
         NodeY = self.get_data("Node", "Y")
+        
+        
+        NodeX = self.get_data("Node", "Latitude") # lat
+        NodeY = self.get_data("Node", "Longitude") # lon
+
+
+
 
         ## Preferences ########
         LengthUnits = self.get_data("SAI_Equ_Control", "LengthUnits")
@@ -1990,16 +1997,19 @@ class Reader(AbstractReader):
         print("--> Parsing Loads...")
         
         load_bus_map = {}
+        bus_load_map = {}
 
         previous_load = None # this line is to check dubplicated load from previous load
+        previous_downstream_load = None
         for i, obj in enumerate(LoadName):
             # Create a Load DiTTo object
             api_load = Load(model)
-            # if obj.replace(" ", "_").lower() == '230632.0DF0'.lower():
-            #     breakpoint()
+            # if obj.replace(" ", "_").lower() == '440723.1df0'.lower():
+            #     print('hold')
             # Set the name
             api_load.name = "Load_" + obj.replace(" ", "_").lower()
             if api_load.name == previous_load:
+                #continue
                 api_load.name = "Load_" + obj.replace(" ", "_").lower() + '_dup'
 
             #print(f'load_name = {api_load.name}')
@@ -2122,6 +2132,15 @@ class Reader(AbstractReader):
 
             if api_load.name not in load_bus_map:
                 load_bus_map[obj.replace(" ", "_").lower()] = [api_load.connecting_element, api_load.phase_loads]
+                
+                downstream_load = [load.p for load in api_load.phase_loads]
+
+                if 'dup' in api_load.name:
+                    bus_load_map[api_load.connecting_element] += np.array(downstream_load)
+                else:    
+                    bus_load_map[api_load.connecting_element] = downstream_load
+
+                #previous_downstream_load = downstream_load
 
                 #                    else: # wenbo edit: kva is not read in synergi
                 #                       # Create the PhaseLoad DiTTo object
@@ -2217,24 +2236,6 @@ class Reader(AbstractReader):
             api_load.vmin = 0.65
             api_load.vmax = 1.1
 
-                # print('phase_load.phase={}, phase_load.p={}, phase_load.q={}'.format(phase_load.phase, phase_load.p, phase_load.q))
-
-                # else:
-                #
-                #     # if there is no load information, place a small load instead of writing zero to the load
-                #     phase_load = PhaseLoad(model)
-                #
-                #     # Set the Phase
-                #     phase_load.phase = phase
-                #
-                #     # Set P
-                #     phase_load.p = 0.01
-                #
-                #     # Set Q
-                #     phase_load.q = 0.01
-                #
-                #     # Add the PhaseLoad to the list
-                #     api_load.phase_loads.append(phase_load)
 
 
 
@@ -2280,7 +2281,12 @@ class Reader(AbstractReader):
             api_transformer.conn = ['wye' , 'wye']
             api_transformer.kvas = api_transformer.ConnKvaPh
 
-
+            # check if kvas and ConnKvaPh is enough to carry the load, then update it if needed 
+            bus_loads = bus_load_map[api_transformer.connecting_element]
+            need_kvas = bus_loads
+            if sum(api_transformer.kvas)<sum(need_kvas):
+                new_kvas = [float((int(str(int(num))[0]) + 1) * 10 ** (len(str(int(num))) - 1)) for num in need_kvas]
+                api_transformer.kvas = new_kvas
         ####################################################################################
         #                                                                                  #
         #                              CAPACITORS                                          #

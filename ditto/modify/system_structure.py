@@ -237,6 +237,8 @@ class system_structure_modifier(Modifier):
                 ]
             )
             num_phases = len(self.model[trans_name].windings[0].phase_windings)
+            if self.model[trans_name].is_threephaseunit == 0:
+                new_value = new_value *1.732
             if num_phases!=3:
                 new_value = new_value *1.732
             print(f"1num_phases={num_phases}")
@@ -255,6 +257,9 @@ class system_structure_modifier(Modifier):
                 ]
             )
             num_phases = len(self.model[trans_name].windings[0].phase_windings)
+            if self.model[trans_name].is_threephaseunit == 0: # wenbo added this because naming convention in synergi warehouse.mdb
+                new_value = new_value *1.732
+            
             if num_phases!=3:
                 new_value = new_value *1.732
             print(f"2trans_name={trans_name}")

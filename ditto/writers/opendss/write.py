@@ -104,7 +104,7 @@ class Writer(AbstractWriter):
         self.feeders_redirect = {}
         self.mv_load_voltage_dict = {}
         self.feeder_head_line = None
-        self.model_dtrans = False
+        self.model_dtrans = True # this will decide if model secondary / dtrans
 
         self.write_distribution_transformers = True
         self.write_taps = False
@@ -372,8 +372,8 @@ class Writer(AbstractWriter):
 
                     txt += "{name}{delimiter}{X}{delimiter}{Y}\n".format(
                         name=re.sub("[^0-9a-zA-Z]+", "_", i.name.lower()),
-                        X=i.positions[0].long,
-                        Y=i.positions[0].lat,
+                        X=i.positions[0].lat,
+                        Y=i.positions[0].long,
                         delimiter=delimiter,
                     )
                     feeder_text_map[substation_name + "_" + feeder_name] = txt
@@ -1141,23 +1141,28 @@ class Writer(AbstractWriter):
                 # if hasattr(i, "bus2") and i.bus2 is not None:
                 #     txt += i.bus2 + ")"
                 if hasattr(i, "conn") and i.conn is not None:
-                    txt += f" conn = ({i.conn[0]}, {i.conn[1]})"
+                    txt += f" conns = ({i.conn[0]}, {i.conn[1]})"
 
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
                     #txt += f" kvs = ({i.nominal_voltage/1000}, 0.24)"
                     if hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
                         try:
-                            kv1 = self.mv_load_voltage_dict[i.name.split('DTran_')[1]]
+                            kv1 = self.mv_load_voltage_dict[i.name.split('_')[1]]
                         except:
+                            
                             kv1 = 0
-                        
+                            logger.warning('WARNING: There is kv1=0 in dtrans object!')
+
+
                         txt += f" kvs = ({kv1}, 0.24)"
                     else:
                         try:
-                            kv1 = self.mv_load_voltage_dict[i.name.split('DTran_')[1]]
+                            kv1 = self.mv_load_voltage_dict[i.name.split('_')[1]]
                         except:
-                            kv1 = 0                                
-                        txt += f" kvs = ({kv1}, 0.208)"
+                            kv1 = 0
+                            logger.warning('WARNING: There is kv1=0 in dtrans object!')
+                                
+                        txt += f" kvs = ({kv1}, 0.416)"
 
                         
                 if hasattr(i, "kvas") and i.kvas is not None:
@@ -1495,35 +1500,50 @@ class Writer(AbstractWriter):
 
                 # nominal voltage
                 if hasattr(i, "nominal_voltage") and i.nominal_voltage is not None:
-                    if i.nominal_voltage < 300:
-                        if hasattr(i, "phases") and i.phases is not None:
-                            txt += " phases=1"
-                        txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10**-3
-                        )  # DiTTo in volts
-                    else:
-                        if hasattr(i, "phases") and i.phases is not None:
-                            txt += " phases=3"
-                        txt += " kV={kV}".format(
-                            kV=i.nominal_voltage * 10**-3
-                        )  # DiTTo in volts
+                    if hasattr(i, "phases") and i.phases is not None:
+                        txt += f" phases={len(i.phases)}"
+                        if len(i.phases) == 1:
+                            txt +=f" kV={round(i.nominal_voltage * 10**-3/1.732,2)}"
+                        else:
+                            txt += f" kV={i.nominal_voltage * 10**-3}" # DiTTo in volts          
+
+                    # if i.nominal_voltage < 300:
+                    #     if hasattr(i, "phases") and i.phases is not None:
+                    #         txt += " phases=1"
+                    #     txt += " kV={kV}".format(
+                    #         kV=i.nominal_voltage * 10**-3
+                    #     )  # DiTTo in volts
+                    # else:
+                    #     if hasattr(i, "phases") and i.phases is not None:
+                    #         txt += " phases=3"
+                    #     txt += " kV={kV}".format(
+                    #         kV=i.nominal_voltage * 10**-3
+                    #     )  # DiTTo in volts
                     if not substation_name + "_" + feeder_name in self._baseKV_feeders_:
                         self._baseKV_feeders_[
                             substation_name + "_" + feeder_name
                         ] = set()
-                    if (
-                        i.nominal_voltage < 300
-                    ):  # Line-Neutral voltage for 120 V (i.e. 240V)
-                        self._baseKV_.add(i.nominal_voltage * 10**-3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 2 * 10**-3
-                        )
-                    else:
-                        self._baseKV_.add(i.nominal_voltage * 10**-3)
-                        self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
-                            i.nominal_voltage * 10**-3
-                        )
+                    # if (
+                    #     i.nominal_voltage < 300
+                    # ):  # Line-Neutral voltage for 120 V (i.e. 240V)
+                    #     self._baseKV_.add(i.nominal_voltage * 10**-3)
+                    #     self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                    #         i.nominal_voltage * 2 * 10**-3
+                    #     )
+                    # else:
+                    #     self._baseKV_.add(i.nominal_voltage * 10**-3)
+                    #     self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                    #         i.nominal_voltage * 10**-3
+                    #     )
+                    self._baseKV_.add(i.nominal_voltage * 10**-3)
+                    self._baseKV_feeders_[substation_name + "_" + feeder_name].add(
+                        i.nominal_voltage * 10**-3
+                    )
+
                 else:
+                    logger.warning(
+                                "Warning - check PV definition, possible no kv defined."
+                            )
                     parent = model[i.connecting_element]
                     if (
                         hasattr(parent, "nominal_voltage")
@@ -1563,7 +1583,7 @@ class Writer(AbstractWriter):
 
                 if hasattr(i, "active_rating") and i.active_rating is not None:
                     pf_local = 1.0
-                    if i.power_factor is not None:
+                    if i.power_factor is not None and i.power_factor > 0:
                         pf_local = abs(i.power_factor)
                     txt += " kVA={kva}".format(
                         kva=i.active_rating / pf_local * 10**-3
@@ -1578,6 +1598,13 @@ class Writer(AbstractWriter):
                             ** -3  # Set the inverter to be oversized by 10% if active rating not specified
                         )  # DiTTo in watts
 
+                else:
+                    # wenbo note: if no active rating, kva need to be defined still.
+                    pf_local = 1.0
+                    txt += " kVA={kva}".format(
+                        kva=i.rated_power / pf_local * 10**-3
+                    )  # DiTTo in watts                    
+
                 if hasattr(i, "rated_power") and i.rated_power is not None:
                     txt += " Pmpp={kw}".format(
                         kw=i.rated_power
@@ -1585,16 +1612,16 @@ class Writer(AbstractWriter):
                         ** -3  # Set the inverter to be oversized by 10% if active rating not specified
                     )  # DiTTo in watts
 
-                if hasattr(i, "reactive_rating") and i.reactive_rating is not None:
-                    if self.opendss_version >= 9:
-                        kvarlimit_key = " kvarMax="
-                    else:
-                        kvarlimit_key = " kvarlimit="
-                    txt += kvarlimit_key + "{kvar}".format(
-                        kvar=i.reactive_rating
-                        * 10
-                        ** -3  # Set the inverter to be oversized by 10% if active rating not specified
-                    )  # DiTTo in watts
+                # if hasattr(i, "reactive_rating") and i.reactive_rating is not None:
+                #     if self.opendss_version >= 9:
+                #         kvarlimit_key = " kvarMax="
+                #     else:
+                #         kvarlimit_key = " kvarlimit="
+                #     txt += kvarlimit_key + "{kvar}".format(
+                #         kvar=i.reactive_rating
+                #         * 10
+                #         ** -3  # Set the inverter to be oversized by 10% if active rating not specified
+                #     )  # DiTTo in watts
 
                 # connection type
                 if hasattr(i, "connection_type") and i.connection_type is not None:
@@ -1636,7 +1663,7 @@ class Writer(AbstractWriter):
                 if hasattr(i, "control_type") and (
                     i.control_type is None or i.control_type == "powerfactor"
                 ):  # use powerfactor as default mode
-                    if hasattr(i, "power_factor") and i.power_factor is not None:
+                    if hasattr(i, "power_factor") and i.power_factor is not None and i.power_factor>0:
                         txt += " Model=1 pf={power_factor}".format(
                             power_factor=i.power_factor
                         )
@@ -2086,11 +2113,14 @@ class Writer(AbstractWriter):
 
                 # Name
                 if hasattr(i, "name") and i.name is not None:
+                    
+                    
                     if i.name not in load_list:
                     
                         txt += "New Load." + i.name
                         load_list.append(i.name)
                     else:
+                        continue
                         txt += "New Load." + i.name + '_dup'
                     #print(f"i.name = {i.name}")
                 else:
@@ -2145,6 +2175,7 @@ class Writer(AbstractWriter):
                     #print(f"i.phase_loads length = {len(i.phase_loads)}")
                     if self.model_dtrans:
                         if i.nominal_voltage < 300:
+
                             txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                         # Wenbo: This is added because single phase load should be L-N, not L-L
                         elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
@@ -2152,7 +2183,7 @@ class Writer(AbstractWriter):
                             txt += " kV=0.24"
                             self.mv_load_voltage_dict[i.name.split('Load_')[1]] = round(i.nominal_voltage * 10**-3/1.732,2)
                         elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)>1:
-                            txt += " kV=0.208"
+                            txt += " kV=0.416"
                             self.mv_load_voltage_dict[i.name.split('Load_')[1]] = round(i.nominal_voltage * 10**-3,2)
                             #txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                     else:
@@ -2160,7 +2191,7 @@ class Writer(AbstractWriter):
                             txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                         # Wenbo: This is added because single phase load should be L-N, not L-L
                         elif hasattr(i, "phase_loads") and i.phase_loads is not None and len(i.phase_loads)==1:
-                            txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2))
+                            txt += " kV={volt}".format(volt=round(i.nominal_voltage * 10**-3/math.sqrt(3),2)) 
                         else:
                             txt += " kV={volt}".format(volt=i.nominal_voltage * 10**-3)
                    
@@ -4277,7 +4308,7 @@ class Writer(AbstractWriter):
                 ):
                     fp.write("Redirect {file}\n".format(file=file))
 
-            _baseKV_list_ = list(self._baseKV_) + [0.208, 0.416]
+            _baseKV_list_ = list(self._baseKV_) + [0.24, 0.416]
             _baseKV_list_ = sorted(_baseKV_list_)
             fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 
