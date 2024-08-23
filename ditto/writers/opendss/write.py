@@ -106,7 +106,7 @@ class Writer(AbstractWriter):
         self.feeder_head_line = None
         self.model_dtrans = True # this will decide if model secondary / dtrans
 
-        self.write_distribution_transformers = True
+        #self.write_distribution_transformers = True
         self.write_taps = False
         self.separate_feeders = False
         self.separate_substations = False
@@ -1166,7 +1166,10 @@ class Writer(AbstractWriter):
 
                         
                 if hasattr(i, "kvas") and i.kvas is not None:
-                    txt += f" kvas = ({sum(i.kvas)}, {sum(i.kvas)})"
+                    if sum(i.kvas)*10**-3 <5:
+                        txt += f" kvas = (100, 100)"
+                    else:
+                        txt += f" kvas = ({sum(i.kvas)*10**-3}, {sum(i.kvas)*10**-3})"
                 if hasattr(i, "xhl") and i.conn is not None:
                     txt += f" xhl=0.1"
                 if hasattr(i, "pct_loadloss") and i.pct_loadloss is not None:
@@ -2120,7 +2123,7 @@ class Writer(AbstractWriter):
                         txt += "New Load." + i.name
                         load_list.append(i.name)
                     else:
-                        continue
+                        #continue
                         txt += "New Load." + i.name + '_dup'
                     #print(f"i.name = {i.name}")
                 else:
@@ -4308,7 +4311,7 @@ class Writer(AbstractWriter):
                 ):
                     fp.write("Redirect {file}\n".format(file=file))
 
-            _baseKV_list_ = list(self._baseKV_) + [0.24, 0.416]
+            _baseKV_list_ = list(self._baseKV_) + [0.416]
             _baseKV_list_ = sorted(_baseKV_list_)
             fp.write("\nSet Voltagebases={}\n".format(_baseKV_list_))
 

@@ -2279,7 +2279,7 @@ class Reader(AbstractReader):
             api_transformer.xhl = 0.1
             api_transformer.pct_loadloss = 0.1
             api_transformer.conn = ['wye' , 'wye']
-            api_transformer.kvas = api_transformer.ConnKvaPh
+            api_transformer.kvas = api_transformer.ConnKvaPh*10**3
 
             # check if kvas and ConnKvaPh is enough to carry the load, then update it if needed 
             bus_loads = bus_load_map[api_transformer.connecting_element]
@@ -2784,7 +2784,7 @@ class Reader(AbstractReader):
         ### wenbo added this:model pv as generator in opendss
         ####################################################################################
         #                                                                                  #
-        #                              Generator genpv.dss                                 #
+        #                              Photovoltaic model (PVsystem/pvgenerator)           #
         #                                                                                  #
         ####################################################################################
         #
@@ -3166,5 +3166,5 @@ class Reader(AbstractReader):
             modifier = system_structure_modifier(model)
             modifier.set_nominal_voltages_recur()
             modifier.set_nominal_voltages_recur_line()
-
+            #print('hold')
         # end of parse function

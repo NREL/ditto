@@ -241,9 +241,9 @@ class system_structure_modifier(Modifier):
                 new_value = new_value *1.732
             if num_phases!=3:
                 new_value = new_value *1.732
-            print(f"1num_phases={num_phases}")
-            print(f"1trans_name={trans_name}")
-            print(f"1new_value={new_value}")          
+            #print(f"1num_phases={num_phases}")
+            #print(f"1trans_name={trans_name}")
+            #print(f"1new_value={new_value}")          
 
         elif (node, previous) in self.edge_equipment and self.edge_equipment[
             (node, previous)
@@ -262,8 +262,8 @@ class system_structure_modifier(Modifier):
             
             if num_phases!=3:
                 new_value = new_value *1.732
-            print(f"2trans_name={trans_name}")
-            print(f"2new_value={new_value}")
+            #print(f"2trans_name={trans_name}")
+            #print(f"2new_value={new_value}")
         else:
             new_value = voltage
         if hasattr(self.model[node], "nominal_voltage"):
